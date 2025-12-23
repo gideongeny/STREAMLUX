@@ -1,14 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { FunctionComponent } from "react";
+import { FunctionComponent, useState } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-
 import { getSearchResult } from "../../services/search";
-import { ItemsPage } from "../../shared/types";
+import { ItemsPage, Item } from "../../shared/types";
 import FilmItem from "../Common/FilmItem";
 import Skeleton from "../Common/Skeleton";
 import VideoPlayerModal from "../Explore/VideoPlayerModal";
 import Pagination from "./Pagination";
-import { useState } from "react";
 
 interface SearchResultProps {
   currentTab: string;
@@ -31,7 +29,7 @@ const SearchResult: FunctionComponent<SearchResultProps> = ({
     }
   );
 
-  if (error) return <div>ERROR: ${error.message}</div>;
+  if (error) return <div>ERROR: {error.message}</div>;
 
   const changePageHandler = (page: number): string => {
     if (isPreviousData) return "";
