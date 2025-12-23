@@ -1,101 +1,101 @@
 import React from 'react';
-import YouTubeSectionSlider from '../Slider/YouTubeSectionSlider';
+import HybridSectionSlider from '../Slider/HybridSectionSlider';
 
 interface DiverseContentProps {
   currentTab: "movie" | "tv" | "sports";
 }
 
 const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
-  // We use currentTab to determine whether to fetch movies or tv shows from YouTube via classification
-  const ytType = currentTab === "movie" ? "movie" : "tv";
+  // We use currentTab to determine whether to fetch movies or tv shows
+  const mediaType = currentTab === "movie" ? "movie" : "tv";
 
   return (
     <div className="space-y-8 mt-8">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-3">
-          🌍 World Cinema <span className="text-xs bg-primary px-2 py-1 rounded">YOUTUBE EDITION</span>
+          🌍 World Cinema <span className="text-xs bg-primary px-2 py-1 rounded">PREMIUM SELECTION</span>
         </h2>
         <p className="text-gray-400 text-lg">
-          Discover hand-picked movies and TV shows from around the world, free on YouTube
+          Discover hand-picked movies and TV shows from around the world
         </p>
       </div>
 
       {/* Recommended Global Content */}
-      <YouTubeSectionSlider
+      <HybridSectionSlider
         title="🔥 Trending Global Cinema"
         category="global"
-        type={ytType}
+        type={mediaType}
       />
 
       {/* African Cinema */}
-      <YouTubeSectionSlider
+      <HybridSectionSlider
         title="✊🏿 African Cinema & Nollywood"
         region="africa"
-        type={ytType}
+        type={mediaType}
       />
 
       {/* Asian Cinema */}
-      <YouTubeSectionSlider
+      <HybridSectionSlider
         title="🌏 Asian Masterpieces"
         region="asia"
-        type={ytType}
+        type={mediaType}
       />
 
       {/* Korean Drama / Cinema */}
-      <YouTubeSectionSlider
+      <HybridSectionSlider
         title="🇰🇷 Korean Wave (K-Drama & Film)"
         region="kr"
         category="drama"
-        type={ytType}
+        type={mediaType}
       />
 
       {/* Bollywood */}
-      <YouTubeSectionSlider
+      <HybridSectionSlider
         title="🎭 Bollywood & Indian Cinema"
         region="in"
-        type={ytType}
+        type={mediaType}
       />
 
       {/* Latin American */}
-      <YouTubeSectionSlider
+      <HybridSectionSlider
         title="💃 Latin American Cinema"
         region="latin"
-        type={ytType}
+        type={mediaType}
       />
 
       {/* Middle Eastern */}
-      <YouTubeSectionSlider
-        title="🕌 Middle Eastern Cinema"
+      <HybridSectionSlider
+        title="Middle Eastern Cinema"
         region="middleeast"
-        type={ytType}
+        type={mediaType}
       />
 
       {/* Filipino */}
-      <YouTubeSectionSlider
+      <HybridSectionSlider
         title="🇵🇭 Filipino Cinema & Shows"
         region="philippines"
-        type={ytType}
+        type={mediaType}
       />
 
       {/* Action Categories */}
-      <YouTubeSectionSlider
+      <HybridSectionSlider
         title="💥 Action & Adventure"
         category="action"
-        type={ytType}
+        type={mediaType}
       />
 
       {/* Horror Categories */}
-      <YouTubeSectionSlider
+      <HybridSectionSlider
         title="👻 Horror & Thriller"
         category="horror"
-        type={ytType}
+        type={mediaType}
       />
 
       {/* Documentary */}
-      <YouTubeSectionSlider
+      <HybridSectionSlider
         title="📹 Documentaries"
         category="documentary"
-        type={ytType}
+        type={mediaType}
       />
     </div>
   );

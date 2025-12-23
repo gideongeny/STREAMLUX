@@ -39,6 +39,9 @@ export function useYouTubeVideos(options: UseYouTubeOptions) {
 
                     setVideos(filteredVideos);
                     setNextPageToken(result.nextPageToken);
+                    if (result.error) {
+                        setError(result.error);
+                    }
                 }
             } catch (e: any) {
                 if (!cancelled) {

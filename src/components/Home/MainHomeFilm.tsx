@@ -3,7 +3,7 @@ import { BannerInfo, HomeFilms } from "../../shared/types";
 import Skeleton from "../Common/Skeleton";
 import BannerSlider from "../Slider/BannerSlider";
 import SectionSlider from "../Slider/SectionSlider";
-import YouTubeSectionSlider from "../Slider/YouTubeSectionSlider";
+import HybridSectionSlider from "../Slider/HybridSectionSlider";
 
 interface MainHomeFilmsProps {
   data: HomeFilms | undefined;
@@ -27,7 +27,7 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
       />
 
       <div className="mt-8">
-        <YouTubeSectionSlider
+        <HybridSectionSlider
           title="🌟 Featured: Free Full Movies"
           category="popular"
           type="movie"

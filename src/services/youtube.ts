@@ -64,57 +64,54 @@ function parseDuration(duration: string): number {
 export async function fetchYouTubeVideos(
   query: string,
   pageToken?: string
-): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string }> {
-  // Logic: Try searching with "official full" first, fallback to studio names if needed
-  const attempts = [
-    `${query} full movie official`,
-    `${query} full episode official`,
-    `${query} ABS-CBN StarTimes GMA`, // Studio boost
-  ];
+): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string; error?: string }> {
+  // Combine keywords for a single efficient search call to save quota
+  // Heuristic: Search for both "Movie" and "Official" in one go
+  const optimizedQuery = `${query} full movie official | full episode official | ABS-CBN StarTimes GMA`;
 
-  for (const enhancedQuery of attempts) {
-    try {
-      const searchResponse = await youtube.get("/search", {
-        params: {
-          part: "snippet",
-          maxResults: 50, // INCREASED: Increase density for better filtering
-          q: enhancedQuery,
-          type: "video",
-          // videoDuration: "long", // REMOVED: Allow all durations ("Free Will")
-          pageToken: pageToken,
-          key: API_KEY,
-        },
-      });
+  try {
+    const searchResponse = await youtube.get("/search", {
+      params: {
+        part: "snippet",
+        maxResults: 50,
+        q: optimizedQuery,
+        type: "video",
+        pageToken: pageToken,
+        key: API_KEY,
+      },
+    });
 
-      if (!searchResponse.data.items || searchResponse.data.items.length === 0) continue;
-
-      const videoIds = searchResponse.data.items.map((item: any) => item.id.videoId);
-      const details = await fetchVideosDetail(videoIds);
-
-      const videos: YouTubeVideo[] = details
-        .map((item: any) => ({
-          id: item.id,
-          title: item.snippet.title,
-          description: item.snippet.description,
-          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
-          channelTitle: item.snippet.channelTitle,
-          type: classifyVideo(item.snippet.title, item.snippet.description),
-          duration: parseDuration(item.contentDetails.duration),
-        }))
-        .filter((video: any) =>
-          video.type !== "other"
-          // video.duration >= 2400 // REMOVED: Allow all content ("Free Will")
-        );
-
-      if (videos.length > 0) {
-        return { videos, nextPageToken: searchResponse.data.nextPageToken };
-      }
-    } catch (error) {
-      console.error("Error fetching YouTube videos:", error);
+    if (!searchResponse.data.items || searchResponse.data.items.length === 0) {
+      return { videos: [], nextPageToken: undefined };
     }
-  }
 
-  return { videos: [], nextPageToken: undefined };
+    const videoIds = searchResponse.data.items.map((item: any) => item.id.videoId);
+    const details = await fetchVideosDetail(videoIds);
+
+    const videos: YouTubeVideo[] = details
+      .map((item: any) => ({
+        id: item.id,
+        title: item.snippet.title,
+        description: item.snippet.description,
+        thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+        channelTitle: item.snippet.channelTitle,
+        type: classifyVideo(item.snippet.title, item.snippet.description),
+        duration: parseDuration(item.contentDetails.duration),
+      }))
+      .filter((video: any) => video.type !== "other");
+
+    return { videos, nextPageToken: searchResponse.data.nextPageToken };
+  } catch (error: any) {
+    const errorMsg = error.response?.data?.error?.message || error.message;
+    console.error("YouTube API Error:", errorMsg);
+
+    // Check if it's a quota issue
+    if (errorMsg?.toLowerCase().includes("quota") || error.response?.status === 403) {
+      return { videos: [], nextPageToken: undefined, error: "QUOTA_EXCEEDED" };
+    }
+
+    return { videos: [], nextPageToken: undefined, error: errorMsg };
+  }
 }
 
 /**
