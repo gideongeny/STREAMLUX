@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { FunctionComponent, useState } from "react";
+import { FunctionComponent } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { getSearchResult } from "../../services/search";
-import { ItemsPage, Item } from "../../shared/types";
+import { ItemsPage } from "../../shared/types";
 import FilmItem from "../Common/FilmItem";
 import Skeleton from "../Common/Skeleton";
-import VideoPlayerModal from "../Explore/VideoPlayerModal";
 import Pagination from "./Pagination";
 
 interface SearchResultProps {
@@ -19,8 +18,6 @@ const SearchResult: FunctionComponent<SearchResultProps> = ({
   query,
   page,
 }) => {
-  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
-
   const { data, error, isPreviousData } = useQuery<ItemsPage, Error>(
     ["search-result", currentTab, query, page],
     () => getSearchResult(currentTab, query, page),
@@ -34,12 +31,6 @@ const SearchResult: FunctionComponent<SearchResultProps> = ({
   const changePageHandler = (page: number): string => {
     if (isPreviousData) return "";
     return `/search?query=${encodeURIComponent(query)}&page=${page}`;
-  };
-
-  const handleFilmClick = (item: Item) => {
-    if (item.youtubeId) {
-      setSelectedVideoId(item.youtubeId);
-    }
   };
 
   return (
@@ -62,7 +53,7 @@ const SearchResult: FunctionComponent<SearchResultProps> = ({
         {data &&
           data.results.map((item) => (
             <li key={item.youtubeId || item.id}>
-              <FilmItem item={item} onClick={handleFilmClick} />
+              <FilmItem item={item} />
             </li>
           ))}
         {!data &&
@@ -77,13 +68,6 @@ const SearchResult: FunctionComponent<SearchResultProps> = ({
           maxPage={data.total_pages}
           currentPage={data.page}
           onChangePage={changePageHandler}
-        />
-      )}
-
-      {selectedVideoId && (
-        <VideoPlayerModal
-          videoId={selectedVideoId}
-          onClose={() => setSelectedVideoId(null)}
         />
       )}
     </div>

@@ -20,7 +20,6 @@ const YouTubeSectionSlider: FC<YouTubeSectionSliderProps> = ({
     type = "movie"
 }) => {
     const { videos, loading, error } = useYouTubeVideos({ region, category, type });
-    const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
 
     if (error && !loading) return null; // Hide if error and no data
 
@@ -59,7 +58,7 @@ const YouTubeSectionSlider: FC<YouTubeSectionSliderProps> = ({
                     ) : (
                         videos?.map((video) => (
                             <SwiperSlide key={video.id} className="!w-[220px]">
-                                <YouTubeFilmItem video={video} onClick={(id) => setSelectedVideoId(id)} />
+                                <YouTubeFilmItem video={video} />
                             </SwiperSlide>
                         ))
                     )}
@@ -74,12 +73,6 @@ const YouTubeSectionSlider: FC<YouTubeSectionSliderProps> = ({
                 </Swiper>
             </div>
 
-            {selectedVideoId && (
-                <VideoPlayerModal
-                    videoId={selectedVideoId}
-                    onClose={() => setSelectedVideoId(null)}
-                />
-            )}
         </div>
     );
 };

@@ -9,66 +9,139 @@ export interface YouTubeVideo {
   thumbnail: string;
   channelTitle: string;
   type: VideoType;
+  duration?: number;
+  viewCount?: string;
+  likeCount?: string;
+  commentCount?: string;
+  publishedAt?: string;
+  tags?: string[];
 }
 
 const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY || "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc";
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 
+const youtube = axios.create({
+  baseURL: BASE_URL,
+});
+
+const STUDIOS = ["ABS-CBN Entertainment", "StarTimes", "GMA Network", "FilmRise", "Viu"];
+
 /**
- * Build a search query for a given region or genre.
- * The `region` parameter maps to a YouTube channel or a search keyword.
+ * Fetch video details (including duration) for a list of video IDs.
  */
-function buildQueryParams(params: Record<string, string | number>) {
-  const url = new URL(BASE_URL + "/search");
-  url.searchParams.append("key", API_KEY ?? "");
-  url.searchParams.append("part", "snippet");
-  url.searchParams.append("type", "video");
-  url.searchParams.append("maxResults", "20");
-  Object.entries(params).forEach(([k, v]) => url.searchParams.append(k, String(v)));
-  return url.toString();
+export async function fetchVideosDetail(ids: string[]): Promise<any[]> {
+  if (ids.length === 0) return [];
+  try {
+    const response = await youtube.get("/videos", {
+      params: {
+        part: "snippet,contentDetails,statistics",
+        id: ids.join(","),
+        key: API_KEY,
+      },
+    });
+    return response.data.items;
+  } catch (error) {
+    console.error("Error fetching video details:", error);
+    return [];
+  }
 }
 
 /**
- * Fetch videos for a given keyword (region, genre, or custom query).
- * Returns an array of YouTubeVideo objects.
+ * Converts ISO 8601 duration string (e.g. PT1H2M10S) to seconds.
+ */
+function parseDuration(duration: string): number {
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return 0;
+  const hours = parseInt(match[1] || "0");
+  const minutes = parseInt(match[2] || "0");
+  const seconds = parseInt(match[3] || "0");
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
+/**
+ * Fetch videos for a given keyword.
  */
 export async function fetchYouTubeVideos(
   query: string,
   pageToken?: string
 ): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string }> {
-  // Enhance query to find full movies/episodes specifically
-  const enhancedQuery = `${query} full movie official`;
-  const params: Record<string, string | number> = { q: enhancedQuery };
-  if (pageToken) params["pageToken"] = pageToken;
+  // Logic: Try searching with "official full" first, fallback to studio names if needed
+  const attempts = [
+    `${query} full movie official`,
+    `${query} full episode official`,
+    `${query} ABS-CBN StarTimes GMA`, // Studio boost
+  ];
 
-  const url = buildQueryParams(params);
-  const response = await axios.get(url);
-  const items = response.data.items as any[];
-  const videos: YouTubeVideo[] = items
-    .map((item) => {
-      const { videoId } = item.id;
-      const { title, description, thumbnails, channelTitle } = item.snippet;
-      return {
-        id: videoId,
-        title,
-        description,
-        thumbnail: thumbnails?.high?.url ?? thumbnails?.default?.url ?? "",
-        channelTitle,
-        type: classifyVideo(title, description),
-      };
-    })
-    .filter((video) => video.type !== "other"); // Strict filtering
-  return { videos, nextPageToken: response.data.nextPageToken };
+  for (const enhancedQuery of attempts) {
+    try {
+      const searchResponse = await youtube.get("/search", {
+        params: {
+          part: "snippet",
+          maxResults: 20,
+          q: enhancedQuery,
+          type: "video",
+          videoDuration: "long", // API filter for > 20 mins
+          pageToken: pageToken,
+          key: API_KEY,
+        },
+      });
+
+      if (!searchResponse.data.items || searchResponse.data.items.length === 0) continue;
+
+      const videoIds = searchResponse.data.items.map((item: any) => item.id.videoId);
+      const details = await fetchVideosDetail(videoIds);
+
+      const videos: YouTubeVideo[] = details
+        .map((item: any) => ({
+          id: item.id,
+          title: item.snippet.title,
+          description: item.snippet.description,
+          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+          channelTitle: item.snippet.channelTitle,
+          type: classifyVideo(item.snippet.title, item.snippet.description),
+          duration: parseDuration(item.contentDetails.duration),
+        }))
+        .filter((video: any) =>
+          video.type !== "other" &&
+          video.duration >= 2400 // LOWER THRESHOLD: 40 MINUTES
+        );
+
+      if (videos.length > 0) {
+        return { videos, nextPageToken: searchResponse.data.nextPageToken };
+      }
+    } catch (error) {
+      console.error("Error fetching YouTube videos:", error);
+    }
+  }
+
+  return { videos: [], nextPageToken: undefined };
 }
 
 /**
- * Helper to fetch videos by region name.
+ * Get a single video's full details for the Detail page.
  */
+export async function getYouTubeVideoDetail(id: string): Promise<YouTubeVideo | null> {
+  const details = await fetchVideosDetail([id]);
+  if (!details || details.length === 0) return null;
+  const item = details[0];
+  return {
+    id: item.id,
+    title: item.snippet.title,
+    description: item.snippet.description,
+    thumbnail: item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+    channelTitle: item.snippet.channelTitle,
+    type: classifyVideo(item.snippet.title, item.snippet.description),
+    duration: parseDuration(item.contentDetails.duration),
+    viewCount: item.statistics.viewCount,
+    likeCount: item.statistics.likeCount,
+    commentCount: item.statistics.commentCount,
+    publishedAt: item.snippet.publishedAt,
+    tags: item.snippet.tags,
+  };
+}
+
 export const fetchByRegion = (region: string, pageToken?: string) =>
   fetchYouTubeVideos(region, pageToken);
 
-/**
- * Helper to fetch videos by genre/category.
- */
 export const fetchByCategory = (category: string, pageToken?: string) =>
   fetchYouTubeVideos(category, pageToken);

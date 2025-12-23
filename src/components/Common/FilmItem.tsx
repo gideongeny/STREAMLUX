@@ -54,24 +54,24 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item, onClick }) => {
     </div>
   );
 
-  if (onClick || item.youtubeId) {
+  if (onClick && !item.youtubeId) {
     return (
-      <div onClick={() => onClick ? onClick(item) : null}>
+      <div onClick={() => onClick(item)}>
         {content}
       </div>
     );
   }
 
+  const linkTo = item.youtubeId
+    ? `/youtube/${item.youtubeId}`
+    : item.media_type === "movie"
+      ? `/movie/${item.id}`
+      : item.media_type === "tv"
+        ? `/tv/${item.id}`
+        : `/`;
+
   return (
-    <Link
-      to={
-        item.media_type === "movie"
-          ? `/movie/${item.id}`
-          : item.media_type === "tv"
-            ? `/tv/${item.id}`
-            : `/`
-      }
-    >
+    <Link to={linkTo}>
       {content}
     </Link>
   );

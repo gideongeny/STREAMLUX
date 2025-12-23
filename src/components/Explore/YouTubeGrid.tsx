@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import VideoPlayerModal from './VideoPlayerModal';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { YouTubeVideo } from '../../services/youtube';
 
 interface YouTubeGridProps {
@@ -9,8 +9,6 @@ interface YouTubeGridProps {
 }
 
 const YouTubeGrid: React.FC<YouTubeGridProps> = ({ videos, loading, error }) => {
-    const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
-
     if (loading) {
         return (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -44,10 +42,10 @@ const YouTubeGrid: React.FC<YouTubeGridProps> = ({ videos, loading, error }) => 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {videos.map((video) => (
-                <div
+                <Link
                     key={video.id}
-                    className="group cursor-pointer bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-primary/50 transition-all duration-300"
-                    onClick={() => setSelectedVideoId(video.id)}
+                    to={`/youtube/${video.id}`}
+                    className="group cursor-pointer bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-primary/50 transition-all duration-300 block"
                 >
                     <div className="relative aspect-video">
                         <img
@@ -76,15 +74,8 @@ const YouTubeGrid: React.FC<YouTubeGridProps> = ({ videos, loading, error }) => 
                             {video.channelTitle}
                         </p>
                     </div>
-                </div>
+                </Link>
             ))}
-
-            {selectedVideoId && (
-                <VideoPlayerModal
-                    videoId={selectedVideoId}
-                    onClose={() => setSelectedVideoId(null)}
-                />
-            )}
         </div>
     );
 };

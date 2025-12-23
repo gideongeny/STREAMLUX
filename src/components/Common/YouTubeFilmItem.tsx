@@ -1,17 +1,17 @@
 import { FunctionComponent } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+import { Link } from "react-router-dom";
 import { YouTubeVideo } from "../../services/youtube";
 
 interface YouTubeFilmItemProps {
     video: YouTubeVideo;
-    onClick: (id: string) => void;
 }
 
-const YouTubeFilmItem: FunctionComponent<YouTubeFilmItemProps> = ({ video, onClick }) => {
+const YouTubeFilmItem: FunctionComponent<YouTubeFilmItemProps> = ({ video }) => {
     return (
-        <div
-            className="shadow-sm bg-dark-darken pb-2 rounded-md overflow-hidden hover:scale-105 hover:brightness-110 transition duration-300 relative group cursor-pointer"
-            onClick={() => onClick(video.id)}
+        <Link
+            to={`/youtube/${video.id}`}
+            className="shadow-sm bg-dark-darken pb-2 rounded-md overflow-hidden hover:scale-105 hover:brightness-110 transition duration-300 relative group cursor-pointer block"
         >
             <div className="relative aspect-video">
                 <LazyLoadImage
@@ -39,7 +39,7 @@ const YouTubeFilmItem: FunctionComponent<YouTubeFilmItemProps> = ({ video, onCli
             <p className="text-[10px] text-gray-500 text-center px-2">
                 {video.channelTitle}
             </p>
-        </div>
+        </Link>
     );
 };
 
