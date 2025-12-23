@@ -77,7 +77,7 @@ export async function fetchYouTubeVideos(
       const searchResponse = await youtube.get("/search", {
         params: {
           part: "snippet",
-          maxResults: 20,
+          maxResults: 50, // INCREASED: Increase density for better filtering
           q: enhancedQuery,
           type: "video",
           // videoDuration: "long", // REMOVED: Allow all durations ("Free Will")

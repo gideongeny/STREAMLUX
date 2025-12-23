@@ -89,5 +89,6 @@ export function classifyVideo(title: string, description: string): VideoType {
         return "tv";
     }
 
-    return "other";
+    // DEFAULT to movie instead of other to maximize discovery ("Free Will")
+    return "movie";
 }

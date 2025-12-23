@@ -108,8 +108,24 @@ export const useTMDBCollectionQuery = (
           ? await getExploreMovie(1, exploreConfig).catch(() => ({ results: [] }))
           : await getExploreTV(1, exploreConfig).catch(() => ({ results: [] }));
 
+        let resultsPage1 = exploreResult.results || [];
+
+        // ENHANCED FALLBACK: If regional search, also fetch Page 2 to ensure coverage
+        if (region && resultsPage1.length < 40) {
+          try {
+            const page2Result = mediaType === "movie"
+              ? await getExploreMovie(2, exploreConfig).catch(() => ({ results: [] }))
+              : await getExploreTV(2, exploreConfig).catch(() => ({ results: [] }));
+            if (page2Result.results) {
+              resultsPage1 = [...resultsPage1, ...page2Result.results];
+            }
+          } catch (e) {
+            console.warn("Regional Page 2 fetch failed", e);
+          }
+        }
+
         // Get results from explore (already includes multiple sources)
-        let uniqueResults = exploreResult.results || [];
+        let uniqueResults = resultsPage1;
 
         // Apply client-side filters (like MovieBox does)
         let filteredResults = uniqueResults;

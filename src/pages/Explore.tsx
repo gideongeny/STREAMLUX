@@ -207,7 +207,7 @@ const Explore = () => {
               <ExploreResult
                 data={combinedItems}
                 isLoading={isLoading || ytLoading}
-                error={error || ytError}
+                error={data && data.length > 0 ? (error || null) : (error || ytError)}
                 currentTab={currentTab}
               />
             )}
