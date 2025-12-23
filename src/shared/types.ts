@@ -27,6 +27,9 @@ export interface Item {
 
   // Person
   profile_path?: string;
+
+  // YouTube integration
+  youtubeId?: string;
 }
 
 export interface DetailMovie {

@@ -165,8 +165,13 @@ const Explore = () => {
           </div>
 
           <div className="lg:col-span-3">
-            {filters.region || searchParams.get("category") ? (
-              <YouTubeGrid videos={ytVideos} loading={ytLoading} error={ytError} />
+            {searchParams.get("source") === "youtube" || filters.region || searchParams.get("category") ? (
+              <YouTubeGrid
+                videos={ytVideos}
+                loading={ytLoading}
+                error={ytError}
+              // If no region/category but source is youtube, it uses the default internal search in hook
+              />
             ) : (
               <ExploreResult
                 data={data}

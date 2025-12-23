@@ -6,7 +6,9 @@ import { getSearchResult } from "../../services/search";
 import { ItemsPage } from "../../shared/types";
 import FilmItem from "../Common/FilmItem";
 import Skeleton from "../Common/Skeleton";
+import VideoPlayerModal from "../Explore/VideoPlayerModal";
 import Pagination from "./Pagination";
+import { useState } from "react";
 
 interface SearchResultProps {
   currentTab: string;
@@ -19,6 +21,8 @@ const SearchResult: FunctionComponent<SearchResultProps> = ({
   query,
   page,
 }) => {
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+
   const { data, error, isPreviousData } = useQuery<ItemsPage, Error>(
     ["search-result", currentTab, query, page],
     () => getSearchResult(currentTab, query, page),
@@ -32,6 +36,12 @@ const SearchResult: FunctionComponent<SearchResultProps> = ({
   const changePageHandler = (page: number): string => {
     if (isPreviousData) return "";
     return `/search?query=${encodeURIComponent(query)}&page=${page}`;
+  };
+
+  const handleFilmClick = (item: Item) => {
+    if (item.youtubeId) {
+      setSelectedVideoId(item.youtubeId);
+    }
   };
 
   return (
@@ -53,8 +63,8 @@ const SearchResult: FunctionComponent<SearchResultProps> = ({
       <ul className="grid grid-cols-sm md:grid-cols-lg gap-x-8 gap-y-10">
         {data &&
           data.results.map((item) => (
-            <li key={item.id}>
-              <FilmItem item={item} />
+            <li key={item.youtubeId || item.id}>
+              <FilmItem item={item} onClick={handleFilmClick} />
             </li>
           ))}
         {!data &&
@@ -69,6 +79,13 @@ const SearchResult: FunctionComponent<SearchResultProps> = ({
           maxPage={data.total_pages}
           currentPage={data.page}
           onChangePage={changePageHandler}
+        />
+      )}
+
+      {selectedVideoId && (
+        <VideoPlayerModal
+          videoId={selectedVideoId}
+          onClose={() => setSelectedVideoId(null)}
         />
       )}
     </div>

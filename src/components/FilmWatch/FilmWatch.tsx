@@ -55,35 +55,23 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   // Generate all available video sources
   const getVideoSources = () => {
     // Get IMDB ID for movies, use TMDB ID as fallback for TV shows
-    const imdbId = media_type === "movie" 
-      ? (detail as DetailMovie)?.imdb_id || detail?.id?.toString() 
+    const imdbId = media_type === "movie"
+      ? (detail as DetailMovie)?.imdb_id || detail?.id?.toString()
       : detail?.id?.toString();
     const tmdbId = detail?.id?.toString() || "";
-    
+
     if (media_type === "movie") {
       return [
         `${EMBED_ALTERNATIVES.VIDSRC}/${detail?.id}`,
-        // New video sources - added after VIDSRC
         `https://vidsrc.me/embed/${imdbId}`,
+        `https://v2.apimdb.net/e/movie/${tmdbId}`,
+        `https://vidsrc.pro/embed/movie/${tmdbId}`,
+        `https://vidsrc.in/embed/movie/${tmdbId}`,
+        `https://autoembed.to/movie/tmdb/${tmdbId}`,
+        `https://smashy.stream/movie/${tmdbId}`,
         `https://fsapi.xyz/movie/${imdbId}`,
         `https://curtstream.com/movies/imdb/${imdbId}`,
         `https://moviewp.com/se.php?video_id=${imdbId}`,
-        `https://v2.apimdb.net/e/movie/${imdbId}`,
-        `https://gomo.to/movie/${imdbId}`,
-        `https://vidcloud.stream/${imdbId}.html`,
-        `https://getsuperembed.link/?video_id=${imdbId}`,
-        `https://databasegdriveplayer.co/player.php?type=movie&tmdb=${tmdbId}`,
-        `https://123movies.com/movie/${imdbId}`,
-        `https://fmovies.to/movie/${imdbId}`,
-        `https://yesmovies.to/movie/${imdbId}`,
-        `https://gomovies.sx/movie/${imdbId}`,
-        `${EMBED_ALTERNATIVES.EMBEDTO}/movie?id=${detail?.id}`,
-        `${EMBED_ALTERNATIVES.TWOEMBED}/movie?tmdb=${detail?.id}`,
-        `${EMBED_ALTERNATIVES.VIDEMBED}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.MOVIEBOX}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.WATCHMOVIES}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.STREAMSB}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.VIDSTREAM}/movie/${detail?.id}`,
         // African and non-Western content - Updated sources
         `${EMBED_ALTERNATIVES.AFRIKAN}/movie/${detail?.id}`,
         `${EMBED_ALTERNATIVES.NOLLYWOOD}/movie/${detail?.id}`,
@@ -302,7 +290,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     if (source.includes('watchmovieshd.ru')) return 'WatchMovies';
     if (source.includes('streamsb.net')) return 'StreamSB';
     if (source.includes('vidstream.pro')) return 'VidStream';
-    
+
     // African and non-Western content
     if (source.includes('afrikan.tv')) return 'Afrikan TV';
     if (source.includes('nollywood.tv')) return 'Nollywood TV';
@@ -310,7 +298,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     if (source.includes('asian.tv')) return 'Asian TV';
     if (source.includes('latino.tv')) return 'Latino TV';
     if (source.includes('arabic.tv')) return 'Arabic TV';
-    
+
     // New African content sources
     if (source.includes('afrikanflix.com')) return 'AfrikanFlix';
     if (source.includes('nollywoodplus.com')) return 'NollywoodPlus';
@@ -321,13 +309,13 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     if (source.includes('nollywoodtv.com')) return 'Nollywood TV';
     if (source.includes('kenyanflix.com')) return 'KenyanFlix';
     if (source.includes('nigerianflix.com')) return 'NigerianFlix';
-    
+
     // Regional African streaming services
     if (source.includes('showmax.com')) return 'ShowMax';
     if (source.includes('irokotv.com')) return 'Iroko TV';
     if (source.includes('bongotv.com')) return 'Bongo TV';
     if (source.includes('kwese.iflix.com')) return 'Kwese iFlix';
-    
+
     // Asian content sources
     if (source.includes('dramacool.com')) return 'DramaCool';
     if (source.includes('kissasian.com')) return 'KissAsian';
@@ -336,17 +324,17 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     if (source.includes('viki.com')) return 'Viki';
     if (source.includes('kisskh.com')) return 'KissKH';
     if (source.includes('ugc-anime.com')) return 'UGC Anime';
-    
+
     // Latin American content
     if (source.includes('cuevana.com')) return 'Cuevana';
     if (source.includes('pelisplus.com')) return 'PelisPlus';
     if (source.includes('repelis.com')) return 'Repelis';
     if (source.includes('latinomovies.com')) return 'Latino Movies';
-    
+
     // Middle Eastern content
     if (source.includes('shahid.mbc.net')) return 'Shahid MBC';
     if (source.includes('osn.com')) return 'OSN';
-    
+
     // Universal working sources
     if (source.includes('superembed.com')) return 'SuperEmbed';
     if (source.includes('embedmovie.com')) return 'EmbedMovie';
@@ -357,14 +345,14 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     if (source.includes('streamwish.com')) return 'StreamWish';
     if (source.includes('filemoon.com')) return 'FileMoon';
     if (source.includes('doodstream.com')) return 'DoodStream';
-    
+
     // Regional-specific sources
     if (source.includes('zee5.com')) return 'ZEE5';
     if (source.includes('hotstar.com')) return 'Disney+ Hotstar';
     if (source.includes('viu.com')) return 'Viu';
     if (source.includes('iwanttfc.com')) return 'iWantTFC';
     if (source.includes('abs-cbn.com')) return 'ABS-CBN';
-    
+
     // Additional sources
     if (source.includes('ailok.pe')) return 'Ailok';
     if (source.includes('sz.googotv.com')) return 'GoogoTV';
@@ -375,7 +363,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     if (source.includes('solarmovie.to')) return 'SolarMovie';
     if (source.includes('fmovies.to')) return 'FMovies';
     if (source.includes('drive.google.com')) return 'Google Drive';
-    
+
     // Major streaming platforms
     if (source.includes('netflix.com')) return 'Netflix';
     if (source.includes('amazon.com')) return 'Amazon Prime Video';
@@ -383,18 +371,18 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     if (source.includes('hbomax.com')) return 'HBO Max';
     if (source.includes('hulu.com')) return 'Hulu';
     if (source.includes('tv.apple.com')) return 'Apple TV+';
-    
+
     // Video platforms
     if (source.includes('youtube.com')) return 'YouTube';
     if (source.includes('vimeo.com')) return 'Vimeo';
     if (source.includes('dailymotion.com')) return 'Dailymotion';
-    
+
     // FZMovies CMS sources
     if (source.includes('fzmovies.cms')) return 'FZMovies';
     if (source.includes('fzmovies.net')) return 'FZMovies (Alt)';
     if (source.includes('fzmovies.watch')) return 'FZMovies Watch';
     if (source.includes('fzmovies.to')) return 'FZMovies To';
-    
+
     // Extract domain name as fallback
     try {
       const url = new URL(source);
@@ -408,7 +396,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const handleVideoError = () => {
     console.log(`Video source ${currentSourceIndex + 1} failed, trying next...`);
     setVideoError(true);
-    
+
     // Try next source if available
     if (currentSourceIndex < videoSources.length - 1) {
       setTimeout(() => {
@@ -439,14 +427,30 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   useEffect(() => {
     if (videoError && currentSourceIndex < videoSources.length - 1) {
       const timer = setTimeout(() => {
-        setCurrentSourceIndex(currentSourceIndex + 1);
+        setCurrentSourceIndex(prev => prev + 1);
         setVideoError(false);
         setIsLoadingVideo(true);
-      }, 2000);
-      
+      }, 1500); // Slightly faster failover
+
       return () => clearTimeout(timer);
     }
   }, [videoError, currentSourceIndex, videoSources.length]);
+
+  // Loading timeout: If source doesn't load in 6 seconds, assume it's stuck and try next
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    if (isLoadingVideo && !videoError) {
+      timeoutId = setTimeout(() => {
+        console.log(`Source ${currentSourceIndex + 1} timed out, trying next...`);
+        handleVideoError();
+      }, 6000); // 6 second timeout for slow sources
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isLoadingVideo, videoError, currentSourceIndex]);
 
   // Reset source when detail changes
   useEffect(() => {
@@ -517,11 +521,9 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     <>
       {detail && (
         <Title
-          value={`Watch: ${
-            (detail as DetailMovie).title || (detail as DetailTV).name
-          } ${
-            media_type === "tv" ? `- Season ${seasonId} - Ep ${episodeId}` : ""
-          } | StreamLux`}
+          value={`Watch: ${(detail as DetailMovie).title || (detail as DetailTV).name
+            } ${media_type === "tv" ? `- Season ${seasonId} - Ep ${episodeId}` : ""
+            } | StreamLux`}
         />
       )}
 
@@ -574,7 +576,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                       </option>
                     ))}
                   </select>
-                  
+
                   {/* Download Button */}
                   {downloadInfo && (
                     <button
@@ -592,7 +594,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     </button>
                   )}
                 </div>
-                
+
                 <iframe
                   className="absolute w-full h-full top-0 left-0"
                   src={currentSource}
@@ -741,7 +743,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   : currentEpisode?.overview}
               </ReadMore>
             )}
-            
+
             {/* Download Section */}
             {downloadInfo && (
               <div id="download-section" className="mt-6">

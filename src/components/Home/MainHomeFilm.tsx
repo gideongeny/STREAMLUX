@@ -3,6 +3,7 @@ import { BannerInfo, HomeFilms } from "../../shared/types";
 import Skeleton from "../Common/Skeleton";
 import BannerSlider from "../Slider/BannerSlider";
 import SectionSlider from "../Slider/SectionSlider";
+import YouTubeSectionSlider from "../Slider/YouTubeSectionSlider";
 
 interface MainHomeFilmsProps {
   data: HomeFilms | undefined;
@@ -25,6 +26,14 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
         isLoadingBanner={isLoadingBanner}
       />
 
+      <div className="mt-8">
+        <YouTubeSectionSlider
+          title="🌟 Featured: Free Full Movies"
+          category="popular"
+          type="movie"
+        />
+      </div>
+
       <ul className="flex flex-col gap-10 mt-12">
         {isLoadingSection ? (
           <>
@@ -42,7 +51,7 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
               // Generate seeMore link based on section name
               const sectionName = section[0].toLowerCase();
               let seeMoreParams: Record<string, string> | undefined;
-              
+
               // Map common section names to explore filters
               if (sectionName.includes("popular")) {
                 seeMoreParams = { sort_by: "popularity.desc" };
@@ -53,11 +62,11 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
               } else if (sectionName.includes("now playing") || sectionName.includes("on the air")) {
                 seeMoreParams = { sort_by: "release_date.desc" };
               }
-              
+
               return (
                 <li key={index}>
-                  <SectionSlider 
-                    films={section[1]} 
+                  <SectionSlider
+                    films={section[1]}
                     title={section[0]}
                     seeMoreParams={seeMoreParams}
                   />

@@ -1,6 +1,7 @@
 import axios from "../shared/axios";
 import { getRecommendGenres2Type, Item, ItemsPage } from "../shared/types";
 import { searchFZMovies } from "./fzmovies";
+import { fetchYouTubeVideos, YouTubeVideo } from "./youtube";
 
 export const getSearchKeyword = async (query: string): Promise<string[]> => {
   return (
@@ -31,7 +32,34 @@ export const getSearchResult: (
   query: string,
   page: number
 ) => Promise<ItemsPage> = async (typeSearch, query, page) => {
-  const [tmdbData, fzResults] = await Promise.all([
+  // If explicitly searching youtube
+  if (typeSearch === "youtube") {
+    const ytResults = await fetchYouTubeVideos(query);
+    const results: Item[] = ytResults.videos.map((video: YouTubeVideo) => ({
+      id: video.id as any,
+      title: video.title,
+      name: video.title,
+      overview: video.description,
+      poster_path: video.thumbnail,
+      backdrop_path: video.thumbnail,
+      media_type: video.type === "movie" ? "movie" : "tv",
+      vote_average: 0,
+      vote_count: 0,
+      popularity: 0,
+      genre_ids: [],
+      original_language: "en",
+      youtubeId: video.id,
+    } as any));
+
+    return {
+      page: 1,
+      results,
+      total_results: results.length,
+      total_pages: 1,
+    };
+  }
+
+  const [tmdbData, fzResults, ytResults] = await Promise.all([
     axios.get(`/search/${typeSearch}`, {
       params: {
         query,
@@ -43,6 +71,8 @@ export const getSearchResult: (
       query,
       typeSearch === "multi" ? "all" : typeSearch as "movie" | "tv"
     ),
+    // Search YouTube as well (only for first page of multi/movie/tv)
+    page === 1 ? fetchYouTubeVideos(query) : Promise.resolve({ videos: [] }),
   ]);
 
   const tmdbResults = tmdbData.data.results
@@ -52,13 +82,31 @@ export const getSearchResult: (
     }))
     .filter((item: Item) => item.poster_path || item.profile_path);
 
-  // Merge with FZMovies results
-  const combined = [...tmdbResults, ...fzResults];
-  const seen = new Set<number>();
+  // Map YouTube results to Item format
+  const ytMappedResults: Item[] = ytResults.videos.map((video: YouTubeVideo) => ({
+    id: video.id as any, // Cast string ID to any to bypass number restriction for now
+    title: video.title,
+    name: video.title, // for TV/All
+    overview: video.description,
+    poster_path: video.thumbnail,
+    backdrop_path: video.thumbnail,
+    media_type: video.type === "movie" ? "movie" : "tv",
+    vote_average: 0,
+    vote_count: 0,
+    popularity: 0,
+    genre_ids: [],
+    original_language: "en",
+    youtubeId: video.id, // Keep the original string ID
+  } as any));
+
+  // Merge with FZMovies and YouTube results
+  const combined = [...tmdbResults, ...fzResults, ...ytMappedResults];
+  const seen = new Set<string | number>();
   const results = combined.filter((item) => {
-    if (seen.has(item.id)) return false;
-    seen.add(item.id);
-    return item.poster_path || item.profile_path;
+    const itemKey = item.youtubeId || item.id;
+    if (seen.has(itemKey)) return false;
+    seen.add(itemKey);
+    return item.poster_path || item.profile_path || item.youtubeId;
   });
 
   return {
