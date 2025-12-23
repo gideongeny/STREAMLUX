@@ -8,6 +8,7 @@ import ExploreResult from "../components/Explore/ExploreResult";
 import { useTMDBCollectionQuery } from "../hooks/useCollectionQuery";
 import { useYouTubeVideos } from "../hooks/useYouTube";
 import YouTubeGrid from "../components/Explore/YouTubeGrid";
+import SeasonalBanner from "../components/Explore/SeasonalBanner";
 
 const Explore = () => {
   const [searchParams] = useSearchParams();
@@ -36,9 +37,10 @@ const Explore = () => {
     filters.region // Pass region to the query
   );
 
-  // Use YouTube hook when a region is selected (and we want YouTube content)
+  // Use YouTube hook when a region or category is selected
   const { videos: ytVideos, loading: ytLoading, error: ytError } = useYouTubeVideos({
     region: filters.region || undefined,
+    category: searchParams.get("category") || undefined,
     type: currentTab,
   });
 
@@ -145,6 +147,13 @@ const Explore = () => {
           )}
         </div>
 
+        <SeasonalBanner onSelectCategory={(cat) => {
+          const newParams = new URLSearchParams(searchParams);
+          newParams.set("category", cat);
+          newParams.delete("region"); // Clear region if category is selected
+          navigate(`?${newParams.toString()}`);
+        }} />
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-1">
             <ExploreFilter
@@ -156,7 +165,7 @@ const Explore = () => {
           </div>
 
           <div className="lg:col-span-3">
-            {filters.region ? (
+            {filters.region || searchParams.get("category") ? (
               <YouTubeGrid videos={ytVideos} loading={ytLoading} error={ytError} />
             ) : (
               <ExploreResult
