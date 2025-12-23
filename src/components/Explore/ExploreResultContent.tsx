@@ -1,9 +1,10 @@
-import { FunctionComponent } from "react";
+import { FunctionComponent, useState } from "react";
 import { Item, ItemsPage } from "../../shared/types";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import InfiniteScroll from "react-infinite-scroll-component";
 import FilmItem from "../Common/FilmItem";
 import Skeleton from "../Common/Skeleton";
+import VideoPlayerModal from "./VideoPlayerModal";
 
 interface ExploreResultContentProps {
   data: ItemsPage[] | undefined;
@@ -18,16 +19,24 @@ const ExploreResultContent: FunctionComponent<ExploreResultContentProps> = ({
   hasMore,
   currentTab,
 }) => {
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+
   // Filter by media_type if currentTab is specified
   const allItems = data?.reduce(
     (acc: Item[], current: ItemsPage) => [...acc, ...current.results],
     [] as Item[]
   ) || [];
-  
-  const filteredItems = currentTab 
-    ? allItems.filter((item) => item.media_type === currentTab)
+
+  const filteredItems = currentTab
+    ? allItems.filter((item) => item.media_type === currentTab || item.youtubeId) // Keep YouTube items regardless of tab if they were interleaved
     : allItems;
-  
+
+  const handleFilmClick = (item: Item) => {
+    if (item.youtubeId) {
+      setSelectedVideoId(item.youtubeId);
+    }
+  };
+
   return (
     <>
       {filteredItems.length === 0 ? (
@@ -42,7 +51,7 @@ const ExploreResultContent: FunctionComponent<ExploreResultContentProps> = ({
         </div>
       ) : (
         <InfiniteScroll
-          dataLength={data?.length || 0}
+          dataLength={filteredItems.length}
           next={() => fetchNext()}
           hasMore={!!hasMore}
           loader={<div>Loading...</div>}
@@ -50,8 +59,8 @@ const ExploreResultContent: FunctionComponent<ExploreResultContentProps> = ({
         >
           <ul className="grid grid-cols-sm lg:grid-cols-lg gap-x-8 gap-y-10 pt-2 px-2">
             {filteredItems.map((item) => (
-              <li key={item.id}>
-                <FilmItem item={item} />
+              <li key={item.youtubeId || item.id}>
+                <FilmItem item={item} onClick={handleFilmClick} />
               </li>
             ))}
             {!data &&
@@ -62,6 +71,13 @@ const ExploreResultContent: FunctionComponent<ExploreResultContentProps> = ({
               ))}
           </ul>
         </InfiniteScroll>
+      )}
+
+      {selectedVideoId && (
+        <VideoPlayerModal
+          videoId={selectedVideoId}
+          onClose={() => setSelectedVideoId(null)}
+        />
       )}
     </>
   );

@@ -11,7 +11,7 @@ export interface YouTubeVideo {
   type: VideoType;
 }
 
-const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY || "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc";
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 
 /**

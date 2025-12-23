@@ -96,6 +96,33 @@ const Explore = () => {
     return regionTitles[region] || "Explore Movies & TV Shows";
   };
 
+  // Map YouTube videos to Item type for hybrid display
+  const mappedYtItems: any[] = (ytVideos || []).map(video => ({
+    id: video.id as any,
+    title: video.title,
+    name: video.title,
+    overview: video.description,
+    poster_path: video.thumbnail,
+    backdrop_path: video.thumbnail,
+    media_type: video.type === "movie" ? "movie" : "tv",
+    vote_average: 0,
+    vote_count: 0,
+    popularity: 0,
+    genre_ids: [],
+    original_language: "en",
+    youtubeId: video.id,
+  }));
+
+  // Interleave TMDB and YouTube results for the hybrid view
+  const combinedItems: any[] = [];
+  const maxLen = Math.max(data?.length || 0, mappedYtItems.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (data && i < data.length) combinedItems.push(data[i]);
+    if (i < mappedYtItems.length) combinedItems.push(mappedYtItems[i]);
+  }
+
+  const currentSource = searchParams.get("source") || "tmdb";
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-8">
@@ -165,18 +192,17 @@ const Explore = () => {
           </div>
 
           <div className="lg:col-span-3">
-            {searchParams.get("source") === "youtube" || filters.region || searchParams.get("category") ? (
+            {currentSource === "youtube" ? (
               <YouTubeGrid
                 videos={ytVideos}
                 loading={ytLoading}
                 error={ytError}
-              // If no region/category but source is youtube, it uses the default internal search in hook
               />
             ) : (
               <ExploreResult
-                data={data}
-                isLoading={isLoading}
-                error={error}
+                data={combinedItems}
+                isLoading={isLoading || ytLoading}
+                error={error || ytError}
                 currentTab={currentTab}
               />
             )}

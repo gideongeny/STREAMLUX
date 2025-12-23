@@ -33,7 +33,7 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
     const year = searchParams.get("year");
     const runtime = searchParams.get("runtime");
     const region = searchParams.get("region");
-    
+
     if (genre) config.with_genres = genre;
     if (sortBy) config.sort_by = sortBy;
     if (year) {
@@ -82,7 +82,7 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
       // First try to use the filtered data from useTMDBCollectionQuery
       if (!isLoading && !error && data && data.length > 0) {
         // Convert the filtered data array to ItemsPage format
-        const filteredByType = data.filter((item) => item.media_type === currentTab);
+        const filteredByType = data.filter((item) => item.media_type === currentTab || item.youtubeId);
         if (filteredByType.length > 0) {
           const result: ItemsPage = {
             page: 1,
@@ -95,7 +95,7 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
           return;
         }
       }
-      
+
       // Fallback: If no data or error, use explore functions
       if (!isLoading) {
         try {
@@ -103,20 +103,20 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
           setCurrentPage(1);
           setHasMore(true);
           const config = buildConfig();
-          
+
           // Try with config first
-          let result = currentTab === "movie" 
+          let result = currentTab === "movie"
             ? await getExploreMovie(1, config)
             : await getExploreTV(1, config);
-          
+
           // If no results, try popular content immediately (explore.ts should handle this, but double-check)
           if (!result || !result.results || result.results.length === 0) {
             console.log("No results from explore, trying popular content directly");
-            result = currentTab === "movie" 
+            result = currentTab === "movie"
               ? await getExploreMovie(1, {}) // Empty config = popular
               : await getExploreTV(1, {});
           }
-          
+
           if (result && result.results && result.results.length > 0) {
             setPages([result]);
             setHasMore(result.page < result.total_pages);
@@ -127,12 +127,12 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
                 currentTab === "movie" ? "/movie/popular" : "/tv/popular",
                 { params: { page: 1 }, timeout: 5000 }
               ).catch(() => ({ data: { results: [] } }));
-              
+
               const popularItems = (popularResponse.data?.results || []).slice(0, 20).map((item: any) => ({
                 ...item,
                 media_type: currentTab,
               })).filter((item: Item) => item.poster_path);
-              
+
               if (popularItems.length > 0) {
                 setPages([{
                   page: 1,
@@ -159,12 +159,12 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
               currentTab === "movie" ? "/movie/popular" : "/tv/popular",
               { params: { page: 1 }, timeout: 5000 }
             ).catch(() => ({ data: { results: [] } }));
-            
+
             const popularItems = (popularResponse.data?.results || []).slice(0, 20).map((item: any) => ({
               ...item,
               media_type: currentTab,
             })).filter((item: Item) => item.poster_path);
-            
+
             if (popularItems.length > 0) {
               setPages([{
                 page: 1,
@@ -184,7 +184,7 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
         }
       }
     };
-    
+
     loadData();
   }, [currentTab, data, isLoading, error, searchParams.toString()]);
 
