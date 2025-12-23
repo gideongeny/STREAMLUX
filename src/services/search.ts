@@ -75,6 +75,25 @@ export const getSearchResult: (
     page === 1 ? fetchYouTubeVideos(query) : Promise.resolve({ videos: [] }),
   ]);
 
+  // FALLBACK: If YouTube results are sparse or missing, fetch an extra page of TMDB content to "cover" the gap
+  let fallbackTMDBResults: Item[] = [];
+  if (page === 1 && ytResults.videos.length < 5) {
+    try {
+      const fallbackResponse = await axios.get(`/search/${typeSearch}`, {
+        params: {
+          query,
+          page: 2, // Fetch second page as fallback
+        },
+      });
+      fallbackTMDBResults = fallbackResponse.data.results.map((item: Item) => ({
+        ...item,
+        ...(typeSearch !== "multi" && { media_type: typeSearch }),
+      }));
+    } catch (e) {
+      console.error("TMDB Fallback fetch failed", e);
+    }
+  }
+
   const tmdbResults = tmdbData.data.results
     .map((item: Item) => ({
       ...item,
@@ -99,8 +118,8 @@ export const getSearchResult: (
     youtubeId: video.id, // Keep the original string ID
   } as any));
 
-  // Merge with FZMovies and YouTube results
-  const combined = [...tmdbResults, ...fzResults, ...ytMappedResults];
+  // Merge with FZMovies, YouTube results, and fallback TMDB results
+  const combined = [...tmdbResults, ...fzResults, ...ytMappedResults, ...fallbackTMDBResults];
   const seen = new Set<string | number>();
   const results = combined.filter((item) => {
     const itemKey = item.youtubeId || item.id;

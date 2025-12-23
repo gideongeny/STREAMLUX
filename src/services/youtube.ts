@@ -80,7 +80,7 @@ export async function fetchYouTubeVideos(
           maxResults: 20,
           q: enhancedQuery,
           type: "video",
-          videoDuration: "long", // API filter for > 20 mins
+          // videoDuration: "long", // REMOVED: Allow all durations ("Free Will")
           pageToken: pageToken,
           key: API_KEY,
         },
@@ -102,8 +102,8 @@ export async function fetchYouTubeVideos(
           duration: parseDuration(item.contentDetails.duration),
         }))
         .filter((video: any) =>
-          video.type !== "other" &&
-          video.duration >= 2400 // LOWER THRESHOLD: 40 MINUTES
+          video.type !== "other"
+          // video.duration >= 2400 // REMOVED: Allow all content ("Free Will")
         );
 
       if (videos.length > 0) {
