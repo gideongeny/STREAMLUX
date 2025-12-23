@@ -140,6 +140,85 @@ export async function getYouTubeVideoDetail(id: string): Promise<YouTubeVideo | 
   };
 }
 
+/**
+ * Fetch related videos for a given video ID.
+ */
+export async function getRelatedVideos(videoId: string): Promise<YouTubeVideo[]> {
+  try {
+    const response = await youtube.get("/search", {
+      params: {
+        part: "snippet",
+        maxResults: 6,
+        relatedToVideoId: videoId,
+        type: "video",
+        key: API_KEY,
+      },
+    });
+
+    const ids = response.data.items.map((item: any) => item.id.videoId);
+    const details = await fetchVideosDetail(ids);
+
+    return details.map((item: any) => ({
+      id: item.id,
+      title: item.snippet.title,
+      description: item.snippet.description,
+      thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+      channelTitle: item.snippet.channelTitle,
+      type: classifyVideo(item.snippet.title, item.snippet.description),
+      duration: parseDuration(item.contentDetails.duration),
+    }));
+  } catch (error) {
+    console.error("Error fetching related videos:", error);
+    return [];
+  }
+}
+
+/**
+ * Estimate a 1-10 rating based on view/like ratio or just return a default "StreamLux Certified" 9.5
+ */
+export function calculateRating(viewCount?: string, likeCount?: string): number {
+  if (!viewCount || !likeCount) return 9.5;
+  const views = parseInt(viewCount);
+  const likes = parseInt(likeCount);
+  if (views === 0) return 9.0;
+  // Heuristic: Likes/Views usually around 2-5%. 5% = 10/10.
+  const ratio = (likes / views) * 100;
+  const rating = Math.min(10, 8 + (ratio / 2));
+  return parseFloat(rating.toFixed(1));
+}
+
+/**
+ * Fetch top comments for a video and map to StreamLux Reviews format.
+ */
+export async function getYouTubeComments(videoId: string): Promise<any[]> {
+  try {
+    const response = await youtube.get("/commentThreads", {
+      params: {
+        part: "snippet",
+        videoId: videoId,
+        maxResults: 10,
+        order: "relevance",
+        key: API_KEY,
+      },
+    });
+
+    return response.data.items.map((item: any) => ({
+      author: item.snippet.topLevelComment.snippet.authorDisplayName,
+      content: item.snippet.topLevelComment.snippet.textDisplay,
+      created_at: item.snippet.topLevelComment.snippet.publishedAt,
+      author_details: {
+        name: item.snippet.topLevelComment.snippet.authorDisplayName,
+        username: item.snippet.topLevelComment.snippet.authorDisplayName,
+        avatar_path: item.snippet.topLevelComment.snippet.authorProfileImageUrl,
+        rating: null
+      }
+    }));
+  } catch (error) {
+    console.error("Error fetching YouTube comments:", error);
+    return [];
+  }
+}
+
 export const fetchByRegion = (region: string, pageToken?: string) =>
   fetchYouTubeVideos(region, pageToken);
 
