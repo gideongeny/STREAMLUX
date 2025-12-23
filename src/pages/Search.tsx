@@ -28,7 +28,6 @@ const Search: FunctionComponent<SearchProps> = () => {
     { label: "Movie", value: "movie", id: 2 },
     { label: "TV Show", value: "tv", id: 3 },
     { label: "YouTube", value: "youtube", id: 5 },
-    { label: "People", value: "person", id: 4 },
   ];
   return (
     <>

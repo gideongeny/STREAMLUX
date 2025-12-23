@@ -80,7 +80,7 @@ export const getSearchResult: (
       ...item,
       ...(typeSearch !== "multi" && { media_type: typeSearch }),
     }))
-    .filter((item: Item) => item.poster_path || item.profile_path);
+    .filter((item: Item) => (item.media_type === "movie" || item.media_type === "tv") && item.poster_path);
 
   // Map YouTube results to Item format
   const ytMappedResults: Item[] = ytResults.videos.map((video: YouTubeVideo) => ({
