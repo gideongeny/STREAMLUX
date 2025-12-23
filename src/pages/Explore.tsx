@@ -21,11 +21,14 @@ const Explore = () => {
   );
   const [isSidebarActive, setIsSidebarActive] = useState(false);
   const [filters, setFilters] = useState({
-    sortBy: "popularity.desc",
-    genres: [] as number[],
-    year: "",
-    runtime: "",
-    region: searchParams.get("region") || "" // Add region filter
+    sortBy: searchParams.get("sort_by") || "popularity.desc",
+    genres: searchParams.get("genre") ? searchParams.get("genre")!.split(",").map(Number) : [] as number[],
+    year: searchParams.get("year") || "",
+    runtime: searchParams.get("runtime") || "",
+    region: searchParams.get("region") || "",
+    voteAverageGte: searchParams.get("vote_average.gte") || "0",
+    withOriginalLanguage: searchParams.get("with_original_language") || "",
+    status: searchParams.get("status") || ""
   });
 
   const { data, isLoading, error } = useTMDBCollectionQuery(
@@ -34,7 +37,9 @@ const Explore = () => {
     filters.genres,
     filters.year,
     filters.runtime,
-    filters.region // Pass region to the query
+    filters.region,
+    filters.voteAverageGte,
+    filters.withOriginalLanguage
   );
 
   // Use YouTube hook when a region or category is selected

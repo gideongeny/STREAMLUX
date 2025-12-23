@@ -16,6 +16,8 @@ interface TMDBCollectionQueryParams {
   year: string;
   runtime: string;
   region: string;
+  voteAverageGte: string;
+  withOriginalLanguage: string;
 }
 
 interface TMDBCollectionQueryResult {
@@ -30,7 +32,9 @@ export const useTMDBCollectionQuery = (
   genres: number[] = [],
   year: string = "",
   runtime: string = "",
-  region: string = ""
+  region: string = "",
+  voteAverageGte: string = "0",
+  withOriginalLanguage: string = ""
 ): TMDBCollectionQueryResult => {
   const [data, setData] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -91,14 +95,16 @@ export const useTMDBCollectionQuery = (
         const exploreConfig: any = {
           sort_by: sortBy,
           ...(genres.length > 0 && { with_genres: genres.join(",") }),
-          ...(region && targetCountries.length > 0 && { 
+          ...(region && targetCountries.length > 0 && {
             with_origin_country: targetCountries.join("|"),
-            region: region 
+            region: region
           }),
+          ...(voteAverageGte !== "0" && { "vote_average.gte": voteAverageGte }),
+          ...(withOriginalLanguage && { with_original_language: withOriginalLanguage }),
         };
 
         // Use enhanced explore functions that fetch from all sources
-        const exploreResult = mediaType === "movie" 
+        const exploreResult = mediaType === "movie"
           ? await getExploreMovie(1, exploreConfig).catch(() => ({ results: [] }))
           : await getExploreTV(1, exploreConfig).catch(() => ({ results: [] }));
 
@@ -120,7 +126,7 @@ export const useTMDBCollectionQuery = (
           const currentYear = new Date().getFullYear();
           let startYear = 0;
           let endYear = currentYear;
-          
+
           if (year === "2020s") {
             startYear = 2020;
             endYear = currentYear;
@@ -134,10 +140,10 @@ export const useTMDBCollectionQuery = (
             startYear = 1990;
             endYear = 1999;
           }
-          
+
           filteredResults = filteredResults.filter((item) => {
-            const releaseDate = mediaType === "movie" 
-              ? item.release_date 
+            const releaseDate = mediaType === "movie"
+              ? item.release_date
               : item.first_air_date;
             if (!releaseDate) return false;
             const itemYear = Number.parseInt(releaseDate.split("-")[0], 10);
@@ -187,14 +193,14 @@ export const useTMDBCollectionQuery = (
         if (filteredResults.length === 0) {
           console.log("No results after filtering, falling back to popular content");
           try {
-            const fallbackResult = mediaType === "movie" 
+            const fallbackResult = mediaType === "movie"
               ? await getExploreMovie(1, {}).catch(() => ({ results: [] }))
               : await getExploreTV(1, {}).catch(() => ({ results: [] }));
-            
+
             const fallbackItems = (fallbackResult.results || [])
               .filter((item: Item) => item.media_type === mediaType && Boolean(item.poster_path))
               .slice(0, 20);
-            
+
             if (fallbackItems.length > 0) {
               setData(fallbackItems);
               setIsLoading(false);
@@ -210,14 +216,14 @@ export const useTMDBCollectionQuery = (
         console.error("Error fetching collection data:", err);
         // Try fallback on error too
         try {
-          const fallbackResult = mediaType === "movie" 
+          const fallbackResult = mediaType === "movie"
             ? await getExploreMovie(1, {}).catch(() => ({ results: [] }))
             : await getExploreTV(1, {}).catch(() => ({ results: [] }));
-          
+
           const fallbackItems = (fallbackResult.results || [])
             .filter((item: Item) => item.media_type === mediaType && Boolean(item.poster_path))
             .slice(0, 20);
-          
+
           if (fallbackItems.length > 0) {
             setData(fallbackItems);
             setError(null); // Clear error if fallback succeeds

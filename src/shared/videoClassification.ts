@@ -8,6 +8,34 @@ export type VideoType = "movie" | "tv" | "other";
 export function classifyVideo(title: string, description: string): VideoType {
     const combined = (title + " " + description).toLowerCase();
 
+    // Strict EXCLUSION keywords (Songs, Trailers, Random clips)
+    const exclusionKeywords = [
+        "karaoke",
+        "official video",
+        "music video",
+        "lyric video",
+        "official lyrics",
+        "song",
+        "soundtrack",
+        "teaser",
+        "trailer",
+        "behind the scenes",
+        "making of",
+        "interview",
+        "review",
+        "reaction",
+        "highlight",
+        "best of",
+        "top 10",
+        "gameplay",
+        "tutorial",
+        "how to"
+    ];
+
+    if (exclusionKeywords.some(keyword => combined.includes(keyword))) {
+        return "other";
+    }
+
     // Keywords for TV shows/Episodes
     const tvKeywords = [
         "episode",
@@ -25,6 +53,10 @@ export function classifyVideo(title: string, description: string): VideoType {
         "official movie",
         "animated film",
         "film complete",
+        "complete movie",
+        "full duration movie",
+        "hd movie",
+        "4k movie",
         "movie 2024", "movie 2025"
     ];
 
@@ -36,6 +68,10 @@ export function classifyVideo(title: string, description: string): VideoType {
         return "movie";
     }
 
-    // Default to 'other' or a heuristic based on length/description
+    // Heuristic: If it's a long description and contains "full" and "movie" it might be a movie
+    if (combined.includes("full") && (combined.includes("movie") || combined.includes("film"))) {
+        return "movie";
+    }
+
     return "other";
 }

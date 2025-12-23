@@ -36,24 +36,28 @@ export async function fetchYouTubeVideos(
   query: string,
   pageToken?: string
 ): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string }> {
-  const params: Record<string, string | number> = { q: query };
+  // Enhance query to find full movies/episodes specifically
+  const enhancedQuery = `${query} full movie official`;
+  const params: Record<string, string | number> = { q: enhancedQuery };
   if (pageToken) params["pageToken"] = pageToken;
 
   const url = buildQueryParams(params);
   const response = await axios.get(url);
   const items = response.data.items as any[];
-  const videos: YouTubeVideo[] = items.map((item) => {
-    const { videoId } = item.id;
-    const { title, description, thumbnails, channelTitle } = item.snippet;
-    return {
-      id: videoId,
-      title,
-      description,
-      thumbnail: thumbnails?.high?.url ?? thumbnails?.default?.url ?? "",
-      channelTitle,
-      type: classifyVideo(title, description),
-    };
-  });
+  const videos: YouTubeVideo[] = items
+    .map((item) => {
+      const { videoId } = item.id;
+      const { title, description, thumbnails, channelTitle } = item.snippet;
+      return {
+        id: videoId,
+        title,
+        description,
+        thumbnail: thumbnails?.high?.url ?? thumbnails?.default?.url ?? "",
+        channelTitle,
+        type: classifyVideo(title, description),
+      };
+    })
+    .filter((video) => video.type !== "other"); // Strict filtering
   return { videos, nextPageToken: response.data.nextPageToken };
 }
 

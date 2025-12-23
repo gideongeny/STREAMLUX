@@ -76,117 +76,51 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
     return config;
   };
 
-  // Use the filtered data from useTMDBCollectionQuery, with fallback to explore functions
+  // Use the data passed from props if available (interleaved hybrid items)
   useEffect(() => {
+    if (data && data.length > 0) {
+      const itemsPage: ItemsPage = {
+        page: 1,
+        results: data,
+        total_pages: 1,
+        total_results: data.length,
+      };
+      setPages([itemsPage]);
+      setHasMore(false); // Prop-based data is currently non-paginated hybrid
+      return;
+    }
+
     const loadData = async () => {
-      // First try to use the filtered data from useTMDBCollectionQuery
-      if (!isLoading && !error && data && data.length > 0) {
-        // Convert the filtered data array to ItemsPage format
-        const filteredByType = data.filter((item) => item.media_type === currentTab || item.youtubeId);
-        if (filteredByType.length > 0) {
-          const result: ItemsPage = {
-            page: 1,
-            results: filteredByType,
-            total_pages: 1,
-            total_results: filteredByType.length,
-          };
+      // Fallback: If no data prop, fetch from explore functions
+      // (This handles the case where we just want TMDB explore without hybrid)
+      try {
+        setPages([]);
+        setCurrentPage(1);
+        setHasMore(true);
+        const config = buildConfig();
+
+        let result = currentTab === "movie"
+          ? await getExploreMovie(1, config)
+          : await getExploreTV(1, config);
+
+        if (result && result.results && result.results.length > 0) {
           setPages([result]);
-          setHasMore(false);
-          return;
-        }
-      }
-
-      // Fallback: If no data or error, use explore functions
-      if (!isLoading) {
-        try {
+          setHasMore(result.page < result.total_pages);
+        } else {
           setPages([]);
-          setCurrentPage(1);
-          setHasMore(true);
-          const config = buildConfig();
-
-          // Try with config first
-          let result = currentTab === "movie"
-            ? await getExploreMovie(1, config)
-            : await getExploreTV(1, config);
-
-          // If no results, try popular content immediately (explore.ts should handle this, but double-check)
-          if (!result || !result.results || result.results.length === 0) {
-            console.log("No results from explore, trying popular content directly");
-            result = currentTab === "movie"
-              ? await getExploreMovie(1, {}) // Empty config = popular
-              : await getExploreTV(1, {});
-          }
-
-          if (result && result.results && result.results.length > 0) {
-            setPages([result]);
-            setHasMore(result.page < result.total_pages);
-          } else {
-            // Last resort: Try TMDB popular directly
-            try {
-              const popularResponse = await axios.get(
-                currentTab === "movie" ? "/movie/popular" : "/tv/popular",
-                { params: { page: 1 }, timeout: 5000 }
-              ).catch(() => ({ data: { results: [] } }));
-
-              const popularItems = (popularResponse.data?.results || []).slice(0, 20).map((item: any) => ({
-                ...item,
-                media_type: currentTab,
-              })).filter((item: Item) => item.poster_path);
-
-              if (popularItems.length > 0) {
-                setPages([{
-                  page: 1,
-                  total_pages: 1,
-                  results: popularItems,
-                  total_results: popularItems.length,
-                }]);
-                setHasMore(false);
-              } else {
-                setPages([]);
-                setHasMore(false);
-              }
-            } catch (err) {
-              console.error("Final fallback failed:", err);
-              setPages([]);
-              setHasMore(false);
-            }
-          }
-        } catch (err) {
-          console.error("Error loading explore data:", err);
-          // Try final fallback even on error
-          try {
-            const popularResponse = await axios.get(
-              currentTab === "movie" ? "/movie/popular" : "/tv/popular",
-              { params: { page: 1 }, timeout: 5000 }
-            ).catch(() => ({ data: { results: [] } }));
-
-            const popularItems = (popularResponse.data?.results || []).slice(0, 20).map((item: any) => ({
-              ...item,
-              media_type: currentTab,
-            })).filter((item: Item) => item.poster_path);
-
-            if (popularItems.length > 0) {
-              setPages([{
-                page: 1,
-                total_pages: 1,
-                results: popularItems,
-                total_results: popularItems.length,
-              }]);
-              setHasMore(false);
-            } else {
-              setPages([]);
-              setHasMore(false);
-            }
-          } catch (fallbackErr) {
-            setPages([]);
-            setHasMore(false);
-          }
+          setHasMore(false);
         }
+      } catch (err) {
+        console.error("Error loading explore data:", err);
+        setPages([]);
+        setHasMore(false);
       }
     };
 
-    loadData();
-  }, [currentTab, data, isLoading, error, searchParams.toString()]);
+    if (!isLoading) {
+      loadData();
+    }
+  }, [currentTab, data, isLoading, searchParams.toString()]);
 
   const fetchNext = async () => {
     if (isLoadingMore || !hasMore) return;
