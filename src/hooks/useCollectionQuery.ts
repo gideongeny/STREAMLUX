@@ -51,19 +51,19 @@ export const useTMDBCollectionQuery = (
         if (region) {
           switch (region) {
             case "africa": {
-              targetCountries = ["NG", "KE", "TZ", "UG", "ET", "RW", "ZM", "GH", "ZA", "EG"];
+              targetCountries = ["NG", "KE", "TZ", "UG", "ET", "RW", "ZM", "GH", "ZA", "EG", "MA", "SN"];
               break;
             }
             case "asia": {
-              targetCountries = ["KR", "JP", "CN", "IN"];
+              targetCountries = ["KR", "JP", "CN", "IN", "TH", "VN", "ID", "PH", "TW", "HK", "MY", "SG"];
               break;
             }
             case "latin": {
-              targetCountries = ["MX", "BR", "AR", "CO"];
+              targetCountries = ["MX", "BR", "AR", "CO", "CL", "PE", "VE", "EC", "GT", "CU"];
               break;
             }
             case "middleeast": {
-              targetCountries = ["TR", "EG", "SA", "AE"];
+              targetCountries = ["TR", "EG", "SA", "AE", "IR", "LB", "QA", "KW", "JO"];
               break;
             }
             case "nollywood":
@@ -79,7 +79,7 @@ export const useTMDBCollectionQuery = (
               targetCountries = ["JP"];
               break;
             case "china":
-              targetCountries = ["CN"];
+              targetCountries = ["CN", "HK", "TW"];
               break;
             case "philippines":
               targetCountries = ["PH"];

@@ -288,7 +288,7 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews }) => {
                             {/* TABBED CONTENT */}
                             <div className="flex-grow min-h-[600px] md:border-r border-white/5 md:px-16 px-6 md:py-12 pt-40">
                                 <div className="flex gap-10 text-gray-400 text-lg justify-center mb-12 border-b border-white/5">
-                                    {["overall", "creator", "reviews"].map((tab) => (
+                                    {["overall", "episodes", "creator", "reviews"].filter(tab => tab !== "episodes" || video.type === "tv").map((tab) => (
                                         <button
                                             key={tab}
                                             onClick={() => setCurrentTab(tab)}
@@ -337,6 +337,57 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews }) => {
                                                 </div>
                                             </div>
                                         </>
+                                    )}
+
+                                    {currentTab === "episodes" && video.type === "tv" && (
+                                        <div className="animate-fade-in">
+                                            <div className="flex items-center gap-4 mb-8">
+                                                <select className="bg-white/10 text-white border border-white/20 rounded-md px-4 py-2 font-bold focus:outline-none focus:border-primary">
+                                                    <option>Season 1</option>
+                                                </select>
+                                                <span className="text-gray-400 text-sm">{similar?.length || 0} Episodes</span>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 gap-4">
+                                                {similar?.map((item, index) => (
+                                                    <Link
+                                                        key={item.id}
+                                                        to={`/watch/yt/${item.id}`} // Assuming this route scheme based on context
+                                                        className="flex gap-4 p-4 hover:bg-white/5 rounded-xl transition-all group border border-transparent hover:border-white/10"
+                                                    >
+                                                        <div className="shrink-0 w-[160px] aspect-video relative rounded-lg overflow-hidden">
+                                                            <LazyLoadImage
+                                                                src={item.thumbnail}
+                                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                            />
+                                                            <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-all" />
+                                                            <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/80 rounded text-[10px] font-bold">
+                                                                {item.duration ? `${Math.floor(item.duration / 60)}:${(item.duration % 60).toString().padStart(2, '0')}` : 'Full'}
+                                                            </div>
+                                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <BsFillPlayFill size={32} className="text-white drop-shadow-lg" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex-grow flex flex-col justify-center">
+                                                            <h4 className="text-white font-bold text-lg mb-1 group-hover:text-primary transition-colors line-clamp-1">
+                                                                {index + 1}. {item.title}
+                                                            </h4>
+                                                            <p className="text-gray-400 text-sm line-clamp-2 mb-2">
+                                                                {item.description || "No description available for this episode."}
+                                                            </p>
+                                                            <p className="text-xs text-gray-500">
+                                                                Released: {item.publishedAt ? new Date(item.publishedAt).toLocaleDateString() : 'N/A'}
+                                                            </p>
+                                                        </div>
+                                                    </Link>
+                                                ))}
+                                                {(!similar || similar.length === 0) && (
+                                                    <div className="text-center py-10 opacity-50">
+                                                        <p>No episodes found for this season.</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     )}
 
                                     {currentTab === "creator" && (
