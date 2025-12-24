@@ -67,7 +67,9 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
                 combined.push({ ...tmdbVideos[i], sourceType: 'tmdb' });
             }
             // Interleave YouTube (Variety)
-            combined.push({ ...ytVideos[i], sourceType: 'youtube', poster_path: ytVideos[i].thumbnail });
+            if (ytVideos && ytVideos[i]) {
+                combined.push({ ...ytVideos[i], sourceType: 'youtube', poster_path: ytVideos[i].thumbnail });
+            }
         }
         return combined;
     }, [ytVideos, tmdbVideos]);

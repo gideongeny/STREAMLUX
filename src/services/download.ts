@@ -74,11 +74,8 @@ export class DownloadService {
 
     if (mediaType === "movie") {
       return [
-        // Prioritize reliable sources that are less likely to be down
-        `https://vidsrc.me/embed/${imdb}`,
-        `https://fsapi.xyz/movie/${imdb}`,
+        // Original VidSrc is usually most reliable
         `${EMBED_ALTERNATIVES.VIDSRC}/${id}`,
-        // New video sources - added after VIDSRC
         `https://vidsrc.me/embed/${imdb}`,
         `https://fsapi.xyz/movie/${imdb}`,
         `https://curtstream.com/movies/imdb/${imdb}`,
@@ -190,9 +187,11 @@ export class DownloadService {
       ];
     } else {
       return [
+        // Prioritize reliable sources
         `${EMBED_ALTERNATIVES.VIDSRC}/${id}/${seasonId}-${episodeId}`,
-        // New video sources - added after VIDSRC
+        `https://vidsrc.me/embed/${imdb}/${seasonId}-${episodeId}`,
         `https://fsapi.xyz/tv-imdb/${imdb}-${seasonId}-${episodeId}`,
+        // New video sources - added after VIDSRC
         `https://moviewp.com/se.php?video_id=${tmdbId}&tmdb=1&s=${seasonId}&e=${episodeId}`,
         `https://v2.apimdb.net/e/tmdb/tv/${tmdbId}/${seasonId}/${episodeId}/`,
         `https://databasegdriveplayer.co/player.php?type=series&tmdb=${tmdbId}&season=${seasonId}&episode=${episodeId}`,
