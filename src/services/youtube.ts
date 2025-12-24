@@ -38,6 +38,7 @@ const BASE_URL = "https://www.googleapis.com/youtube/v3";
 
 const youtube = axios.create({
   baseURL: BASE_URL,
+  timeout: 5000, // 5 second timeout to prevent infinite loading
 });
 
 const STUDIOS = ["ABS-CBN Entertainment", "StarTimes", "GMA Network", "FilmRise", "Viu"];

@@ -97,7 +97,9 @@ export const useTMDBCollectionQuery = (
           ...(genres.length > 0 && { with_genres: genres.join(",") }),
           ...(region && targetCountries.length > 0 && {
             with_origin_country: targetCountries.join("|"),
-            region: region
+            // Only pass 'region' param if it's a valid ISO-3166-1 2-letter code
+            // Prevents API errors when passing "africa", "asia" etc.
+            ...(region.length === 2 && { region: region })
           }),
           ...(voteAverageGte !== "0" && { "vote_average.gte": voteAverageGte }),
           ...(withOriginalLanguage && { with_original_language: withOriginalLanguage }),

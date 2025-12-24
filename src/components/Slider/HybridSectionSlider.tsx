@@ -57,9 +57,13 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
         tmdbRegion || "" // Always fetch for parallelization
     );
 
-    const isLoading = (ytLoading || tmdbLoading) && (!ytVideos?.length && !tmdbVideos?.length);
     const hasYtVideos = ytVideos && ytVideos.length > 0;
     const hasTmdbVideos = tmdbVideos && tmdbVideos.length > 0;
+
+    // Optimized Loading: Show content as soon as ANY source is ready.
+    // If we have TMDB videos, we don't need to wait for YouTube (and vice-versa).
+    // Only show loading if BOTH are loading, or if one is loading and the other has no data.
+    const isLoading = (ytLoading && tmdbLoading) || (ytLoading && !hasTmdbVideos) || (tmdbLoading && !hasYtVideos);
 
     // 2. Interleave Results (Moviebox feel - Unified & Forced Parity)
     const combinedData = useMemo(() => {
