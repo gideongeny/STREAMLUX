@@ -1,5 +1,5 @@
 import { FC, useState, useEffect } from "react";
-import { AiOutlineHistory, AiOutlineHome, AiOutlineDownload, AiFillStar, AiFillHeart, AiOutlineArrowLeft } from "react-icons/ai";
+import { AiOutlineHistory, AiOutlineHome, AiOutlineDownload, AiFillStar, AiFillHeart, AiOutlineArrowLeft, AiOutlineClose } from "react-icons/ai";
 import { BsFillPlayFill, BsShareFill, BsThreeDots } from "react-icons/bs";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
@@ -155,6 +155,13 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews }) => {
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                         allowFullScreen
                                     />
+                                    <button
+                                        onClick={() => setIsPlaying(false)}
+                                        className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-red-600 text-white p-2 rounded-full backdrop-blur-md transition-all group"
+                                        title="Close Player"
+                                    >
+                                        <AiOutlineClose size={24} className="group-hover:rotate-90 transition-transform" />
+                                    </button>
                                 </div >
                             )}
 
