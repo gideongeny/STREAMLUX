@@ -128,6 +128,13 @@ export const EMBED_ALTERNATIVES = {
   STREAMWISH: "https://streamwish.com",
   FILEMOON: "https://filemoon.com",
   DOODSTREAM: "https://doodstream.com",
+  // Top-tier providers for Moviebox-style scraping
+  VIDSRC_PRO: "https://vidsrc.pro/embed",
+  VIDSRC_XYZ: "https://vidsrc.xyz/embed",
+  EMBED_SU: "https://embed.su/embed",
+  AUTOEMBED: "https://autoembed.to",
+  SMASHY: "https://smashy.stream",
+  VIREMBED: "https://virembed.pro",
   // Regional-specific working sources
   ZEE5: "https://zee5.com", // Indian content
   HOTSTAR: "https://hotstar.com", // Indian content

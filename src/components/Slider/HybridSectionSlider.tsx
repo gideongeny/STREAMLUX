@@ -52,15 +52,17 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
         tmdbRegion || "" // Always fetch for parallelization
     );
 
-    const isLoading = ytLoading && tmdbLoading; // Only show loading if both are loading
+    const isLoading = ytLoading || tmdbLoading; // Wait for both to start populating a rich list
     const hasYtVideos = ytVideos && ytVideos.length > 0;
     const hasTmdbVideos = tmdbVideos && tmdbVideos.length > 0;
 
-    // 2. Interleave Results (Moviebox feel)
+    // 2. Interleave Results (Moviebox feel - Unified & Forced Parity)
     const combinedData: any[] = [];
-    const maxLen = Math.max(ytVideos?.length || 0, tmdbVideos?.length || 0);
+    // Limit to 20 items for a snappy slider
+    const maxLen = Math.min(20, Math.max(ytVideos?.length || 0, tmdbVideos?.length || 0));
 
     for (let i = 0; i < maxLen; i++) {
+        // Interleave TMDB and YouTube for true variety
         if (tmdbVideos && tmdbVideos[i]) combinedData.push({ ...tmdbVideos[i], sourceType: 'tmdb' });
         if (ytVideos && ytVideos[i]) combinedData.push({ ...ytVideos[i], sourceType: 'youtube' });
     }

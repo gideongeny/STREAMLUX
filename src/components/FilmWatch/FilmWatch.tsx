@@ -16,6 +16,7 @@ import {
 import { EMBED_ALTERNATIVES } from "../../shared/constants";
 import { useAppSelector } from "../../store/hooks";
 import { downloadService } from "../../services/download";
+import { resolverService, ResolvedSource } from "../../services/resolver";
 import ReadMore from "../Common/ReadMore";
 import RightbarFilms from "../Common/RightbarFilms";
 import SearchBox from "../Common/SearchBox";
@@ -51,220 +52,29 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const [videoError, setVideoError] = useState(false);
   const [isLoadingVideo, setIsLoadingVideo] = useState(true);
   const [downloadInfo, setDownloadInfo] = useState<any>(null);
+  const [resolvedSources, setResolvedSources] = useState<ResolvedSource[]>([]);
+  const [isResolving, setIsResolving] = useState(true);
 
-  // Generate all available video sources
-  const getVideoSources = () => {
-    // Get IMDB ID for movies, use TMDB ID as fallback for TV shows
-    const imdbId = media_type === "movie"
-      ? (detail as DetailMovie)?.imdb_id || detail?.id?.toString()
-      : detail?.id?.toString();
-    const tmdbId = detail?.id?.toString() || "";
+  // Fetch resolved sources
+  useEffect(() => {
+    const fetchSources = async () => {
+      if (!detail) return;
+      setIsResolving(true);
+      const results = await resolverService.resolveSources(
+        media_type,
+        detail.id,
+        seasonId,
+        episodeId,
+        media_type === "movie" ? (detail as DetailMovie).imdb_id : undefined
+      );
+      setResolvedSources(results);
+      setIsResolving(false);
+      setCurrentSourceIndex(0);
+    };
+    fetchSources();
+  }, [detail?.id, seasonId, episodeId, media_type]);
 
-    if (media_type === "movie") {
-      return [
-        `${EMBED_ALTERNATIVES.VIDSRC}/${detail?.id}`,
-        `https://vidsrc.me/embed/${imdbId}`,
-        `https://v2.apimdb.net/e/movie/${tmdbId}`,
-        `https://vidsrc.pro/embed/movie/${tmdbId}`,
-        `https://vidsrc.in/embed/movie/${tmdbId}`,
-        `https://autoembed.to/movie/tmdb/${tmdbId}`,
-        `https://smashy.stream/movie/${tmdbId}`,
-        `https://fsapi.xyz/movie/${imdbId}`,
-        `https://curtstream.com/movies/imdb/${imdbId}`,
-        `https://moviewp.com/se.php?video_id=${imdbId}`,
-        // African and non-Western content - Updated sources
-        `${EMBED_ALTERNATIVES.AFRIKAN}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.NOLLYWOOD}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.BOLLYWOOD}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.ASIAN}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.LATINO}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.ARABIC}/movie/${detail?.id}`,
-        // New African content sources
-        `${EMBED_ALTERNATIVES.AFRIKANFLIX}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.NOLLYWOODPLUS}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.AFRICANMOVIES}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.KENYANFLIX}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.NIGERIANFLIX}/movie/${detail?.id}`,
-        // Regional African streaming services
-        `${EMBED_ALTERNATIVES.SHOWMAX}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.IROKO}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.BONGO}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.KWESE}/movie/${detail?.id}`,
-        // Major streaming platforms
-        `${EMBED_ALTERNATIVES.NETFLIX}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.AMAZON}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.DISNEY}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.HBO}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.HULU}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.APPLE}/movie/${detail?.id}`,
-        // Video platforms
-        `${EMBED_ALTERNATIVES.YOUTUBE}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.VIMEO}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.DAILYMOTION}/movie/${detail?.id}`,
-        // FZMovies CMS sources - using proper embed formats
-        `${EMBED_ALTERNATIVES.FZMOVIES_WATCH}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_EMBED}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_PLAYER}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_ALT1}/embed/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_ALT2}/watch/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_ALT3}/movie/${detail?.id}`,
-        // New video sources - using proper embed formats
-        `${EMBED_ALTERNATIVES.KISSKH_EMBED}/drama/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.KISSKH}/drama/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.UGC_ANIME_EMBED}/anime/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.UGC_ANIME}/anime/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.AILOK_EMBED}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.AILOK}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.SZ_GOOGOTV_EMBED}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.SZ_GOOGOTV}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_ALT2}/player/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_ALT3}/watch/movie/${detail?.id}`,
-        // Additional working sources for African content
-        `${EMBED_ALTERNATIVES.NOLLYWOOD_TV}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.AFRICAN_MOVIES_ONLINE}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.NOLLYWOOD_MOVIES}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.AFRIKAN_MOVIES}/movie/${detail?.id}`,
-        // Additional working sources for Asian content
-        `${EMBED_ALTERNATIVES.DRAMACOOL}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.KISSASIAN}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.ASIANSERIES}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.MYASIANTV}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.VIKI}/movie/${detail?.id}`,
-        // Additional working sources for Latin American content
-        `${EMBED_ALTERNATIVES.CUEVANA}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.PELISPLUS}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.REPELIS}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.LATINOMOVIES}/movie/${detail?.id}`,
-        // Additional working sources for Middle Eastern content
-        `${EMBED_ALTERNATIVES.SHAHID}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.OSN}/movie/${detail?.id}`,
-        // Universal working sources
-        `${EMBED_ALTERNATIVES.SUPEREMBED}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.EMBEDMOVIE}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.STREAMTAPE}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.MIXDROP}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.UPCLOUD}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.EMBEDSB}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.STREAMWISH}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.FILEMOON}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.DOODSTREAM}/movie/${detail?.id}`,
-        // Regional-specific sources
-        `${EMBED_ALTERNATIVES.ZEE5}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.HOTSTAR}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.VIU}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.IWANTTFC}/movie/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.ABS_CBN}/movie/${detail?.id}`,
-      ];
-    } else {
-      return [
-        `${EMBED_ALTERNATIVES.VIDSRC}/${detail?.id}/${seasonId}-${episodeId}`,
-        // New video sources - added after VIDSRC
-        `https://fsapi.xyz/tv-imdb/${imdbId}-${seasonId}-${episodeId}`,
-        `https://moviewp.com/se.php?video_id=${tmdbId}&tmdb=1&s=${seasonId}&e=${episodeId}`,
-        `https://v2.apimdb.net/e/tmdb/tv/${tmdbId}/${seasonId}/${episodeId}/`,
-        `https://databasegdriveplayer.co/player.php?type=series&tmdb=${tmdbId}&season=${seasonId}&episode=${episodeId}`,
-        `https://curtstream.com/series/tmdb/${tmdbId}/${seasonId}/${episodeId}/`,
-        `https://getsuperembed.link/?video_id=${imdbId}&season=${seasonId}&episode=${episodeId}`,
-        `https://123movies.com/tv/${imdbId}/${seasonId}/${episodeId}`,
-        `https://fmovies.to/tv/${imdbId}/${seasonId}/${episodeId}`,
-        `https://yesmovies.to/tv/${imdbId}/${seasonId}/${episodeId}`,
-        `https://gomovies.sx/tv/${imdbId}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.EMBEDTO}/tv?id=${detail?.id}&s=${seasonId}&e=${episodeId}`,
-        `${EMBED_ALTERNATIVES.TWOEMBED}/series?tmdb=${detail?.id}&sea=${seasonId}&epi=${episodeId}`,
-        `${EMBED_ALTERNATIVES.VIDEMBED}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.MOVIEBOX}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.WATCHMOVIES}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.STREAMSB}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.VIDSTREAM}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // African and non-Western content - Updated sources
-        `${EMBED_ALTERNATIVES.AFRIKAN}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.NOLLYWOOD}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.BOLLYWOOD}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.ASIAN}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.LATINO}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.ARABIC}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // New African content sources
-        `${EMBED_ALTERNATIVES.AFRIKANFLIX}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.NOLLYWOODPLUS}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.AFRICANMOVIES}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.KENYANFLIX}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.NIGERIANFLIX}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // Regional African streaming services
-        `${EMBED_ALTERNATIVES.SHOWMAX}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.IROKO}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.BONGO}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.KWESE}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // Major streaming platforms
-        `${EMBED_ALTERNATIVES.NETFLIX}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.AMAZON}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.DISNEY}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.HBO}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.HULU}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.APPLE}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // Video platforms
-        `${EMBED_ALTERNATIVES.YOUTUBE}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.VIMEO}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.DAILYMOTION}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // FZMovies CMS sources - using proper embed formats
-        `${EMBED_ALTERNATIVES.FZMOVIES_WATCH}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_EMBED}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_PLAYER}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_ALT1}/embed/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_ALT2}/watch/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_ALT3}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // New video sources - using proper embed formats
-        `${EMBED_ALTERNATIVES.KISSKH_EMBED}/drama/${detail?.id}/episode/${episodeId}`,
-        `${EMBED_ALTERNATIVES.KISSKH}/drama/${detail?.id}/episode/${episodeId}`,
-        `${EMBED_ALTERNATIVES.UGC_ANIME_EMBED}/anime/${detail?.id}/episode/${episodeId}`,
-        `${EMBED_ALTERNATIVES.UGC_ANIME}/anime/${detail?.id}/episode/${episodeId}`,
-        `${EMBED_ALTERNATIVES.AILOK_EMBED}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.AILOK}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.SZ_GOOGOTV_EMBED}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.SZ_GOOGOTV}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_ALT2}/player/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.FZMOVIES_ALT3}/watch/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // Additional working sources for African content
-        `${EMBED_ALTERNATIVES.NOLLYWOOD_TV}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.AFRICAN_MOVIES_ONLINE}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.NOLLYWOOD_MOVIES}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.AFRIKAN_MOVIES}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // Additional working sources for Asian content
-        `${EMBED_ALTERNATIVES.DRAMACOOL}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.KISSASIAN}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.ASIANSERIES}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.MYASIANTV}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.VIKI}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // Additional working sources for Latin American content
-        `${EMBED_ALTERNATIVES.CUEVANA}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.PELISPLUS}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.REPELIS}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.LATINOMOVIES}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // Additional working sources for Middle Eastern content
-        `${EMBED_ALTERNATIVES.SHAHID}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.OSN}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // Universal working sources
-        `${EMBED_ALTERNATIVES.SUPEREMBED}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.EMBEDMOVIE}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.STREAMTAPE}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.MIXDROP}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.UPCLOUD}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.EMBEDSB}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.STREAMWISH}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.FILEMOON}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.DOODSTREAM}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        // Regional-specific sources
-        `${EMBED_ALTERNATIVES.ZEE5}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.HOTSTAR}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.VIU}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.IWANTTFC}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `${EMBED_ALTERNATIVES.ABS_CBN}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-      ];
-    }
-  };
-
-  const videoSources = getVideoSources();
+  const videoSources = resolvedSources.map(s => s.url);
   const currentSource = videoSources[currentSourceIndex];
 
   // Helper function to get readable source names
@@ -559,40 +369,59 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
             )}
             {detail && (
               <>
-                {/* Manual source selector */}
-                <div className="absolute top-4 right-4 z-10 flex gap-2">
-                  <select
-                    value={currentSourceIndex}
-                    onChange={(e) => {
-                      setCurrentSourceIndex(Number(e.target.value));
-                      setVideoError(false);
-                      setIsLoadingVideo(true);
-                    }}
-                    className="bg-black/80 text-white text-xs px-3 py-2 rounded border border-gray-600 hover:border-gray-400 transition-colors"
-                  >
-                    {videoSources.map((source, index) => (
-                      <option key={index} value={index}>
-                        {getSourceDisplayName(source)} - Source {index + 1}
-                      </option>
-                    ))}
-                  </select>
+                {/* Modern Source Selector */}
+                <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 scale-90 md:scale-100 origin-top-right">
+                  <div className="bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-2xl min-w-[220px]">
+                    <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-2 px-2">Select Server</p>
+                    <div className="grid gap-1 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                      {isResolving ? (
+                        <div className="flex flex-col gap-2 p-2">
+                          <Skeleton className="h-10 w-full rounded-md" />
+                          <Skeleton className="h-10 w-full rounded-md" />
+                        </div>
+                      ) : (
+                        resolvedSources.map((source, index) => (
+                          <button
+                            key={index}
+                            onClick={() => {
+                              setCurrentSourceIndex(index);
+                              setVideoError(false);
+                              setIsLoadingVideo(true);
+                            }}
+                            className={`flex items-center justify-between p-2 rounded-lg transition-all text-left ${currentSourceIndex === index
+                                ? 'bg-primary/20 border border-primary/50 text-white'
+                                : 'hover:bg-white/5 text-gray-400 border border-transparent'
+                              }`}
+                          >
+                            <div className="flex flex-col">
+                              <span className={`text-xs font-bold ${currentSourceIndex === index ? 'text-primary' : ''}`}>
+                                {source.name}
+                              </span>
+                              <div className="flex gap-2 items-center mt-0.5">
+                                <span className="text-[9px] bg-dark-lighten px-1 rounded text-gray-400">{source.quality}</span>
+                                <span className={`text-[9px] ${source.speed === 'fast' ? 'text-green-500' : 'text-yellow-500'
+                                  }`}>● {source.speed}</span>
+                              </div>
+                            </div>
+                            {currentSourceIndex === index && (
+                              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
 
-                  {/* Download Button */}
-                  {downloadInfo && (
-                    <button
-                      onClick={() => {
-                        // Scroll to download section
-                        const downloadSection = document.getElementById('download-section');
-                        if (downloadSection) {
-                          downloadSection.scrollIntoView({ behavior: 'smooth' });
-                        }
-                      }}
-                      className="bg-black/80 border border-primary text-primary hover:bg-primary hover:text-white text-xs px-3 py-2 rounded transition-colors flex items-center gap-1"
-                    >
-                      <AiOutlineDownload size={14} />
-                      Download
-                    </button>
-                  )}
+                    {/* Download Section Integration */}
+                    {downloadInfo && (
+                      <button
+                        onClick={() => document.getElementById('download-section')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="w-full mt-2 bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all border border-primary/20"
+                      >
+                        <AiOutlineDownload size={14} />
+                        DOWNLOAD (RESOLVING...)
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <iframe
@@ -604,39 +433,22 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   onError={handleVideoError}
                   onLoad={handleVideoLoad}
                 ></iframe>
-                {/* Enhanced video status and fallback controls */}
-                <div className="absolute top-4 left-4 bg-black/80 text-white px-4 py-3 rounded-lg text-sm max-w-md">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-medium">Video Source {currentSourceIndex + 1}/{videoSources.length}</p>
-                    {videoError && (
-                      <button
-                        onClick={resetToFirstSource}
-                        className="text-primary hover:text-blue-300 text-xs underline"
-                      >
-                        Reset
-                      </button>
-                    )}
+
+                {/* Resolving Status Overlay */}
+                {isResolving && (
+                  <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                    <h2 className="text-xl font-bold text-white mb-2">Resolving Sources...</h2>
+                    <p className="text-gray-400 text-sm animate-pulse italic">Scanning high-quality direct links for you</p>
                   </div>
-                  <p className="text-xs mb-2 break-all">
-                    {currentSource}
-                  </p>
-                  {isLoadingVideo && (
-                    <div className="flex items-center gap-2 text-yellow-400">
-                      <div className="w-3 h-3 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-xs">Loading...</span>
-                    </div>
-                  )}
-                  {videoError && currentSourceIndex < videoSources.length - 1 && (
-                    <div className="flex items-center gap-2 text-orange-400">
-                      <span className="text-xs">Source failed, trying next...</span>
-                    </div>
-                  )}
-                  {videoError && currentSourceIndex === videoSources.length - 1 && (
-                    <div className="text-red-400 text-xs">
-                      All sources failed. Try refreshing or check your ad blocker.
-                    </div>
-                  )}
-                </div>
+                )}
+
+                {/* Toast-style status for next source */}
+                {videoError && currentSourceIndex < videoSources.length - 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-orange-500/90 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg animate-bounce">
+                    Server error. Auto-connecting to {resolvedSources[currentSourceIndex + 1]?.name}...
+                  </div>
+                )}
               </>
             )}
           </div>
