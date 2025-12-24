@@ -13,7 +13,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
     <div className="space-y-8 mt-8">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-3">
-          🌍 World Cinema <span className="text-xs bg-primary px-2 py-1 rounded">PREMIUM SELECTION</span>
+          🌍 World Cinema
         </h2>
         <p className="text-gray-400 text-lg">
           Discover hand-picked movies and TV shows from around the world

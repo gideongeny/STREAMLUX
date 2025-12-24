@@ -20,16 +20,12 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
     category,
     type = "movie"
 }) => {
-    // 1. Attempt YouTube load
+    // 1. Parallelize fetches
     const {
         videos: ytVideos,
         loading: ytLoading,
         error: ytError
     } = useYouTubeVideos({ region, category, type });
-
-    // 2. Load TMDB as fallback (always prepare it if YouTube is sparse or failing)
-    // We only trigger loading TMDB if YouTube returns few/no results or an error
-    const shouldFetchTMDB = !ytLoading && (ytError || !ytVideos || ytVideos.length < 3);
 
     // Map category to TMDB genre IDs
     const categoryGenreMap: Record<string, number[]> = {
@@ -53,15 +49,24 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
         tmdbGenres,
         "",
         "",
-        shouldFetchTMDB ? (tmdbRegion || "") : "" // Triggers fetch only if needed
+        tmdbRegion || "" // Always fetch for parallelization
     );
 
-    const isLoading = ytLoading || (shouldFetchTMDB && tmdbLoading);
+    const isLoading = ytLoading && tmdbLoading; // Only show loading if both are loading
     const hasYtVideos = ytVideos && ytVideos.length > 0;
     const hasTmdbVideos = tmdbVideos && tmdbVideos.length > 0;
 
+    // 2. Interleave Results (Moviebox feel)
+    const combinedData: any[] = [];
+    const maxLen = Math.max(ytVideos?.length || 0, tmdbVideos?.length || 0);
+
+    for (let i = 0; i < maxLen; i++) {
+        if (tmdbVideos && tmdbVideos[i]) combinedData.push({ ...tmdbVideos[i], sourceType: 'tmdb' });
+        if (ytVideos && ytVideos[i]) combinedData.push({ ...ytVideos[i], sourceType: 'youtube' });
+    }
+
     // If both failed or are empty, hide the section
-    if (!isLoading && !hasYtVideos && !hasTmdbVideos) {
+    if (!isLoading && combinedData.length === 0) {
         return null;
     }
 
@@ -69,13 +74,8 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
         <div className="mb-8">
             {/* Title section */}
             <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <h3 className="text-xl font-bold text-white mb-2">
                     {title}
-                    {hasYtVideos && !ytError ? (
-                        <span className="bg-red-600 text-[10px] px-2 py-0.5 rounded text-white font-bold uppercase tracking-wider">Free on YouTube</span>
-                    ) : (
-                        <span className="bg-primary text-[10px] px-2 py-0.5 rounded text-white font-bold uppercase tracking-wider">Global Choice</span>
-                    )}
                 </h3>
             </div>
 
@@ -86,35 +86,33 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
                     navigation
                     slidesPerView="auto"
                     slidesPerGroupAuto
-                    spaceBetween={30}
+                    spaceBetween={20}
                     className="md:!w-[calc(100vw_-_260px_-_310px_-_2px_-_4vw_-_10px)] !w-[calc(100vw-8vw-2px)] tw-section-slider !py-2"
                 >
                     {isLoading ? (
                         <>
                             {[...Array(6)].map((_, index) => (
-                                <SwiperSlide key={index} className="!w-[220px]">
+                                <SwiperSlide key={index} className="!w-[160px] md:!w-[200px]">
                                     <div className="animate-pulse">
-                                        <Skeleton className="!w-[220px] aspect-video rounded-md" />
+                                        <Skeleton className="!w-[160px] md:!w-[200px] aspect-[2/3] rounded-md" />
                                         <Skeleton className="h-4 w-3/4 mt-2 mx-auto" />
                                     </div>
                                 </SwiperSlide>
                             ))}
                         </>
-                    ) : hasYtVideos ? (
-                        ytVideos.map((video) => (
-                            <SwiperSlide key={video.id} className="!w-[220px]">
-                                <YouTubeFilmItem video={video} />
-                            </SwiperSlide>
-                        ))
                     ) : (
-                        tmdbVideos.map((item) => (
-                            <SwiperSlide key={item.id} className="!w-[160px] md:!w-[200px]">
-                                <FilmItem item={item} />
+                        combinedData.map((item, idx) => (
+                            <SwiperSlide key={item.id + idx} className="!w-[160px] md:!w-[200px]">
+                                {item.sourceType === 'youtube' ? (
+                                    <YouTubeFilmItem video={item} />
+                                ) : (
+                                    <FilmItem item={item} />
+                                )}
                             </SwiperSlide>
                         ))
                     )}
 
-                    {!isLoading && (hasYtVideos || hasTmdbVideos) && (
+                    {!isLoading && combinedData.length > 0 && (
                         <>
                             <div className="absolute top-[2%] left-0 right-0 h-[83%] z-10 pointer-events-none tw-black-backdrop-2" />
                             <div className="absolute top-0 left-0 w-[4%] h-full z-10"></div>

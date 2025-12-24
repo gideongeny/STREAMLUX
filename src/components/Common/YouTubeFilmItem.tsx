@@ -13,7 +13,7 @@ const YouTubeFilmItem: FunctionComponent<YouTubeFilmItemProps> = ({ video }) => 
             to={`/youtube/${video.id}`}
             className="shadow-sm bg-dark-darken pb-2 rounded-md overflow-hidden hover:scale-105 hover:brightness-110 transition duration-300 relative group cursor-pointer block"
         >
-            <div className="relative aspect-video">
+            <div className="relative aspect-[2/3]">
                 <LazyLoadImage
                     alt={video.title}
                     src={video.thumbnail}
@@ -27,6 +27,9 @@ const YouTubeFilmItem: FunctionComponent<YouTubeFilmItemProps> = ({ video }) => 
                         </svg>
                     </div>
                 </div>
+                <div className="bg-primary/80 px-2 py-0.5 rounded-full absolute top-[5%] left-[8%] z-20 flex items-center gap-1 text-white text-[10px]">
+                    HD
+                </div>
                 {video.type && (
                     <div className="absolute top-2 right-2 bg-black/70 text-[10px] font-bold px-1.5 py-0.5 rounded text-primary uppercase">
                         {video.type}
@@ -36,7 +39,7 @@ const YouTubeFilmItem: FunctionComponent<YouTubeFilmItemProps> = ({ video }) => 
             <p className="whitespace-nowrap overflow-hidden text-ellipsis text-sm text-gray-300 mt-2 text-center px-2 group-hover:text-white transition duration-300">
                 {video.title}
             </p>
-            <p className="text-[10px] text-gray-500 text-center px-2">
+            <p className="text-[10px] text-gray-400 text-center px-2">
                 {video.channelTitle}
             </p>
         </Link>

@@ -17,7 +17,23 @@ export interface YouTubeVideo {
   tags?: string[];
 }
 
-const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY || "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc";
+const API_KEYS = [
+  process.env.REACT_APP_YOUTUBE_API_KEY,
+  "AIzaSyDbTHAbBxPWdvKWjbWG_xcd8-09t3w-CCI",
+  "AIzaSyD-a127DhdfAMABKkKwMOxfBZSG18RjAUU",
+  "AIzaSyDa8q95gdMLye6qr3s2u8Kj-0AOnyZFlKM",
+  "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc"
+].filter(Boolean) as string[];
+
+let currentKeyIndex = 0;
+
+const getApiKey = () => API_KEYS[currentKeyIndex];
+
+const rotateApiKey = () => {
+  currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+  console.log(`Rotating to YouTube API Key index: ${currentKeyIndex}`);
+};
+
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 
 const youtube = axios.create({
@@ -36,7 +52,7 @@ export async function fetchVideosDetail(ids: string[]): Promise<any[]> {
       params: {
         part: "snippet,contentDetails,statistics",
         id: ids.join(","),
-        key: API_KEY,
+        key: getApiKey(),
       },
     });
     return response.data.items;
@@ -77,7 +93,7 @@ export async function fetchYouTubeVideos(
         q: optimizedQuery,
         type: "video",
         pageToken: pageToken,
-        key: API_KEY,
+        key: getApiKey(),
       },
     });
 
@@ -103,10 +119,17 @@ export async function fetchYouTubeVideos(
     return { videos, nextPageToken: searchResponse.data.nextPageToken };
   } catch (error: any) {
     const errorMsg = error.response?.data?.error?.message || error.message;
+    const isQuotaError = errorMsg?.toLowerCase().includes("quota") || error.response?.status === 403;
+
+    if (isQuotaError && API_KEYS.length > 1) {
+      rotateApiKey();
+      // Retry once with the new key
+      return fetchYouTubeVideos(query, pageToken);
+    }
+
     console.error("YouTube API Error:", errorMsg);
 
-    // Check if it's a quota issue
-    if (errorMsg?.toLowerCase().includes("quota") || error.response?.status === 403) {
+    if (isQuotaError) {
       return { videos: [], nextPageToken: undefined, error: "QUOTA_EXCEEDED" };
     }
 
@@ -148,7 +171,7 @@ export async function getRelatedVideos(videoId: string): Promise<YouTubeVideo[]>
         maxResults: 6,
         relatedToVideoId: videoId,
         type: "video",
-        key: API_KEY,
+        key: getApiKey(),
       },
     });
 
@@ -195,7 +218,7 @@ export async function getYouTubeComments(videoId: string): Promise<any[]> {
         videoId: videoId,
         maxResults: 10,
         order: "relevance",
-        key: API_KEY,
+        key: getApiKey(),
       },
     });
 
