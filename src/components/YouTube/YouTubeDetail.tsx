@@ -1,5 +1,5 @@
 import { FC, useState, useEffect } from "react";
-import { AiFillStar, AiFillHeart } from "react-icons/ai";
+import { AiOutlineHistory, AiOutlineHome, AiOutlineDownload, AiFillStar, AiFillHeart } from "react-icons/ai";
 import { BsFillPlayFill, BsShareFill, BsThreeDots } from "react-icons/bs";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
@@ -126,7 +126,7 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews }) => {
                 <div className="flex-grow">
                     {/* HERO SECTION */}
                     <div className="relative w-full overflow-hidden">
-                        <div className={`relative transition-all duration-700 bg-black ${isPlaying ? 'h-[60vh] md:h-[85vh]' : 'h-[400px] md:h-[500px]'}`}>
+                        <div className={`relative transition - all duration - 700 bg - black ${isPlaying ? 'h-[60vh] md:h-[85vh]' : 'h-[400px] md:h-[500px]'} `}>
                             {!isPlaying ? (
                                 <div
                                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
@@ -143,111 +143,124 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews }) => {
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                         allowFullScreen
                                     />
-                                </div>
+                                </div >
                             )}
 
-                            {!isPlaying && (
-                                <div className="absolute inset-0 flex flex-col justify-end px-6 md:px-16 pb-12">
-                                    <div className="flex flex-col md:flex-row gap-8 items-end">
-                                        {!isMobile && (
-                                            <div className="shrink-0 w-[200px] shadow-2xl rounded-lg overflow-hidden translate-y-20 border-4 border-white/10">
-                                                <LazyLoadImage
-                                                    src={video.thumbnail}
-                                                    className="w-full h-full object-cover"
-                                                    alt={video.title}
-                                                />
-                                            </div>
-                                        )}
-
-                                        <div className="flex-grow">
-                                            <div className="flex flex-wrap gap-2 mb-4">
-                                                <span className="px-3 py-1 bg-primary/20 border border-primary/50 text-primary text-xs font-bold rounded-full uppercase tracking-widest">
-                                                    YouTube Premium
-                                                </span>
-                                                <span className="px-3 py-1 bg-white/10 border border-white/20 text-white text-xs font-bold rounded-full">
-                                                    4K UHD
-                                                </span>
-                                            </div>
-                                            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-tight max-w-[850px] drop-shadow-lg">
-                                                {video.title}
-                                            </h1>
-
-                                            {video.tags && (
-                                                <ul className="flex gap-3 flex-wrap mb-7">
-                                                    {video.tags.slice(0, 3).map((tag) => (
-                                                        <li key={tag}>
-                                                            <div className="px-4 py-1.5 rounded-full uppercase text-[10px] font-bold border border-white/30 text-white backdrop-blur-md">
-                                                                {tag}
-                                                            </div>
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                            {
+                                !isPlaying && (
+                                    <div className="absolute inset-0 flex flex-col justify-end px-6 md:px-16 pb-12">
+                                        <div className="flex flex-col md:flex-row gap-8 items-end">
+                                            {!isMobile && (
+                                                <div className="shrink-0 w-[200px] shadow-2xl rounded-lg overflow-hidden translate-y-20 border-4 border-white/10">
+                                                    <LazyLoadImage
+                                                        src={video.thumbnail}
+                                                        className="w-full h-full object-cover"
+                                                        alt={video.title}
+                                                    />
+                                                </div>
                                             )}
 
-                                            <div className="flex flex-wrap gap-4 items-center">
-                                                <button
-                                                    onClick={() => setIsPlaying(true)}
-                                                    className="flex items-center gap-4 px-10 py-4 bg-primary hover:bg-primary-dark text-white rounded-full font-bold transition-all transform hover:scale-105 shadow-xl shadow-primary/20"
-                                                >
-                                                    <BsFillPlayFill size={30} />
-                                                    WATCH NOW
-                                                </button>
+                                            <div className="flex-grow">
+                                                <div className="flex flex-wrap gap-2 mb-4">
+                                                    <span className="px-3 py-1 bg-primary/20 border border-primary/50 text-primary text-xs font-bold rounded-full uppercase tracking-widest">
+                                                        YouTube Premium
+                                                    </span>
+                                                    <span className="px-3 py-1 bg-white/10 border border-white/20 text-white text-xs font-bold rounded-full">
+                                                        4K UHD
+                                                    </span>
+                                                </div>
+                                                <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-tight max-w-[850px] drop-shadow-lg">
+                                                    {video.title}
+                                                </h1>
 
-                                                <div className="flex gap-3">
+                                                {video.tags && (
+                                                    <ul className="flex gap-3 flex-wrap mb-7">
+                                                        {video.tags.slice(0, 3).map((tag) => (
+                                                            <li key={tag}>
+                                                                <div className="px-4 py-1.5 rounded-full uppercase text-[10px] font-bold border border-white/30 text-white backdrop-blur-md">
+                                                                    {tag}
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+
+                                                <div className="flex flex-wrap gap-4 items-center">
                                                     <button
-                                                        onClick={bookmarkedHandler}
-                                                        className={`tw-flex-center h-12 w-12 rounded-full border-2 transition-all ${isBookmarked ? 'bg-primary border-primary text-white' : 'bg-white/10 border-white/30 text-white hover:border-primary hover:text-primary'}`}
+                                                        onClick={() => setIsPlaying(true)}
+                                                        className="flex items-center gap-4 px-10 py-4 bg-primary hover:bg-primary-dark text-white rounded-full font-bold transition-all transform hover:scale-105 shadow-xl shadow-primary/20"
                                                     >
-                                                        <AiFillHeart size={22} />
+                                                        <BsFillPlayFill size={30} />
+                                                        WATCH NOW
                                                     </button>
-                                                    <button className="tw-flex-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all">
-                                                        <BsShareFill size={18} />
-                                                    </button>
-                                                    <button className="tw-flex-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all">
-                                                        <BsThreeDots size={18} />
-                                                    </button>
+
+                                                    <div className="flex gap-3">
+                                                        <button
+                                                            onClick={bookmarkedHandler}
+                                                            className={`tw-flex-center h-12 w-12 rounded-full border-2 transition-all ${isBookmarked ? 'bg-primary border-primary text-white' : 'bg-white/10 border-white/30 text-white hover:border-primary hover:text-primary'}`}
+                                                        >
+                                                            <AiFillHeart size={22} />
+                                                        </button>
+                                                        <button className="tw-flex-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all">
+                                                            <BsShareFill size={18} />
+                                                        </button>
+                                                        <a
+                                                            href={`https://ssyoutube.com/watch?v=${video.id}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="tw-flex-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-primary hover:border-primary transition-all text-white flex items-center justify-center"
+                                                            title="Download Video"
+                                                        >
+                                                            <AiOutlineDownload size={22} />
+                                                        </a>
+                                                        <button className="tw-flex-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all">
+                                                            <BsThreeDots size={18} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
+                                )
+                            }
+                        </div >
 
                         {/* DETAIL TABS SECTION */}
-                        <div className="flex flex-col md:flex-row mt-32 md:mt-0">
+                        < div className="flex flex-col md:flex-row mt-32 md:mt-0" >
                             {/* RATING & DURATION COLUMN */}
-                            {!isMobile && (
-                                <div className="shrink-0 md:max-w-[150px] w-full flex items-center md:flex-col justify-center flex-row gap-20 mt-20 md:border-r border-white/5 pt-16">
-                                    <div className="flex flex-col gap-6 items-center">
-                                        <p className="text-gray-500 font-bold text-xs uppercase tracking-[0.2em]">RATING</p>
-                                        <div className="w-16">
-                                            <CircularProgressbar
-                                                value={rating}
-                                                maxValue={10}
-                                                text={`${rating}`}
-                                                styles={buildStyles({
-                                                    textSize: "25px",
-                                                    pathColor: `rgba(81, 121, 255, ${rating / 10})`,
-                                                    textColor: "#fff",
-                                                    trailColor: "transparent",
-                                                    backgroundColor: "#5179ff",
-                                                })}
-                                            />
+                            {
+                                !isMobile && (
+                                    <div className="shrink-0 md:max-w-[150px] w-full flex items-center md:flex-col justify-center flex-row gap-20 mt-20 md:border-r border-white/5 pt-16">
+                                        <div className="flex flex-col gap-6 items-center">
+                                            <p className="text-gray-500 font-bold text-xs uppercase tracking-[0.2em]">RATING</p>
+                                            <div className="w-16">
+                                                <CircularProgressbar
+                                                    value={rating}
+                                                    maxValue={10}
+                                                    text={`${rating}`}
+                                                    styles={buildStyles({
+                                                        textSize: "25px",
+                                                        pathColor: `rgba(81, 121, 255, ${rating / 10})`,
+                                                        textColor: "#fff",
+                                                        trailColor: "transparent",
+                                                        backgroundColor: "#5179ff",
+                                                    })}
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div className="flex flex-col gap-3 items-center">
-                                        <p className="text-gray-500 font-bold text-xs uppercase tracking-[0.2em]">RUNTIME</p>
-                                        <div className="flex gap-1 items-baseline text-white/90">
-                                            <p className="text-2xl font-bold">
-                                                {video.duration ? Math.floor(video.duration / 60) : "40+"}
-                                            </p>
-                                            <span className="text-xs font-bold uppercase opacity-60">min</span>
+                                        <div className="flex flex-col gap-3 items-center">
+                                            <p className="text-gray-500 font-bold text-xs uppercase tracking-[0.2em]">RUNTIME</p>
+                                            <div className="flex gap-1 items-baseline text-white/90">
+                                                <p className="text-2xl font-bold">
+                                                    {video.duration ? Math.floor(video.duration / 60) : "40+"}
+                                                </p>
+                                                <span className="text-xs font-bold uppercase opacity-60">min</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )
+                            }
 
                             {/* TABBED CONTENT */}
                             <div className="flex-grow min-h-[600px] md:border-r border-white/5 md:px-16 px-6 md:py-12 pt-40">
@@ -341,14 +354,14 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews }) => {
                                     className="md:mt-24 mt-12 pt-6 md:pt-0"
                                 />
                             </div>
-                        </div>
-                    </div>
+                        </div >
+                    </div >
 
                     <div className="px-6 md:px-16 mt-20">
                         <Footer />
                     </div>
-                </div>
-            </div>
+                </div >
+            </div >
         </>
     );
 };

@@ -370,69 +370,83 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
             {detail && (
               <>
                 {/* Modern Source Selector */}
-                <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 scale-90 md:scale-100 origin-top-right">
-                  <div className="bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-2xl min-w-[220px]">
-                    <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-2 px-2">Select Server</p>
-                    <div className="grid gap-1 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-                      {isResolving ? (
-                        <div className="flex flex-col gap-2 p-2">
-                          <Skeleton className="h-10 w-full rounded-md" />
-                          <Skeleton className="h-10 w-full rounded-md" />
-                        </div>
-                      ) : (
-                        resolvedSources.map((source, index) => (
-                          <button
-                            key={index}
-                            onClick={() => {
-                              setCurrentSourceIndex(index);
-                              setVideoError(false);
-                              setIsLoadingVideo(true);
-                            }}
-                            className={`flex items-center justify-between p-2 rounded-lg transition-all text-left ${currentSourceIndex === index
-                              ? 'bg-primary/20 border border-primary/50 text-white'
-                              : 'hover:bg-white/5 text-gray-400 border border-transparent'
-                              }`}
-                          >
-                            <div className="flex flex-col">
-                              <span className={`text-xs font-bold ${currentSourceIndex === index ? 'text-primary' : ''}`}>
-                                {source.name}
-                              </span>
-                              <div className="flex gap-2 items-center mt-0.5">
-                                <span className="text-[9px] bg-dark-lighten px-1 rounded text-gray-400">{source.quality}</span>
-                                <span className={`text-[9px] ${source.speed === 'fast' ? 'text-green-500' : 'text-yellow-500'
-                                  }`}>● {source.speed}</span>
+                <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end origin-top-right">
+                  <button
+                    onClick={() => {
+                      const nextState = !isSelectorOpen;
+                      setIsSelectorOpen(nextState);
+                    }}
+                    className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs font-bold text-white hover:bg-primary/80 transition flex items-center gap-2"
+                  >
+                    <span>SERVER: {resolvedSources[currentSourceIndex]?.name || 'Loading...'}</span>
+                    <span className={`transition-transform duration-300 ${isSelectorOpen ? 'rotate-180' : ''}`}>▼</span>
+                  </button>
+
+                  {isSelectorOpen && (
+                    <div className="bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-2xl min-w-[220px] animate-in fade-in slide-in-from-top-2 duration-200">
+                      <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-2 px-2">Select Server</p>
+                      <div className="grid gap-1 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                        {isResolving ? (
+                          <div className="flex flex-col gap-2 p-2">
+                            <Skeleton className="h-10 w-full rounded-md" />
+                            <Skeleton className="h-10 w-full rounded-md" />
+                          </div>
+                        ) : (
+                          resolvedSources.map((source, index) => (
+                            <button
+                              key={index}
+                              onClick={() => {
+                                setCurrentSourceIndex(index);
+                                setVideoError(false);
+                                setIsLoadingVideo(true);
+                                setIsSelectorOpen(false); // Auto-close on selection
+                              }}
+                              className={`flex items-center justify-between p-2 rounded-lg transition-all text-left ${currentSourceIndex === index
+                                ? 'bg-primary/20 border border-primary/50 text-white'
+                                : 'hover:bg-white/5 text-gray-400 border border-transparent'
+                                }`}
+                            >
+                              <div className="flex flex-col">
+                                <span className={`text-xs font-bold ${currentSourceIndex === index ? 'text-primary' : ''}`}>
+                                  {source.name}
+                                </span>
+                                <div className="flex gap-2 items-center mt-0.5">
+                                  <span className="text-[9px] bg-dark-lighten px-1 rounded text-gray-400">{source.quality}</span>
+                                  <span className={`text-[9px] ${source.speed === 'fast' ? 'text-green-500' : 'text-yellow-500'
+                                    }`}>● {source.speed}</span>
+                                </div>
                               </div>
-                            </div>
-                            {currentSourceIndex === index && (
-                              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                            )}
-                          </button>
-                        ))
+                              {currentSourceIndex === index && (
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                              )}
+                            </button>
+                          ))
+                        )}
+                      </div>
+
+                      {/* Download Section Integration */}
+                      {downloadInfo && (
+                        <button
+                          onClick={() => {
+                            const downloadSection = document.getElementById('download-section');
+                            if (downloadSection) {
+                              downloadSection.scrollIntoView({ behavior: 'smooth' });
+                            }
+                            // Trigger automated download
+                            downloadService.downloadMovie(downloadInfo, (progress) => {
+                              setDownloadInfo((prev: any) => ({ ...prev, currentProgress: progress }));
+                            });
+                          }}
+                          className="w-full mt-2 bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all border border-primary/20"
+                        >
+                          <AiOutlineDownload size={14} className={downloadInfo.currentProgress?.status === 'downloading' ? 'animate-bounce' : ''} />
+                          {downloadInfo.currentProgress
+                            ? downloadInfo.currentProgress.message.toUpperCase()
+                            : "ONE-CLICK DOWNLOAD"}
+                        </button>
                       )}
                     </div>
-
-                    {/* Download Section Integration */}
-                    {downloadInfo && (
-                      <button
-                        onClick={() => {
-                          const downloadSection = document.getElementById('download-section');
-                          if (downloadSection) {
-                            downloadSection.scrollIntoView({ behavior: 'smooth' });
-                          }
-                          // Trigger automated download
-                          downloadService.downloadMovie(downloadInfo, (progress) => {
-                            setDownloadInfo((prev: any) => ({ ...prev, currentProgress: progress }));
-                          });
-                        }}
-                        className="w-full mt-2 bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all border border-primary/20"
-                      >
-                        <AiOutlineDownload size={14} className={downloadInfo.currentProgress?.status === 'downloading' ? 'animate-bounce' : ''} />
-                        {downloadInfo.currentProgress
-                          ? downloadInfo.currentProgress.message.toUpperCase()
-                          : "ONE-CLICK DOWNLOAD"}
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
 
                 <iframe

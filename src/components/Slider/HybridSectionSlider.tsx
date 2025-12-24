@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { Navigation } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useYouTubeVideos } from "../../hooks/useYouTube";
@@ -19,7 +19,7 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
     region,
     category,
     type = "movie"
-}) => {
+}: HybridSectionSliderProps) => {
     // 1. Parallelize fetches
     const {
         videos: ytVideos,
@@ -52,23 +52,30 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
         tmdbRegion || "" // Always fetch for parallelization
     );
 
-    const isLoading = ytLoading || tmdbLoading; // Wait for both to start populating a rich list
+    const isLoading = (ytLoading || tmdbLoading) && (!ytVideos?.length && !tmdbVideos?.length);
     const hasYtVideos = ytVideos && ytVideos.length > 0;
     const hasTmdbVideos = tmdbVideos && tmdbVideos.length > 0;
 
     // 2. Interleave Results (Moviebox feel - Unified & Forced Parity)
-    const combinedData: any[] = [];
-    // Limit to 20 items for a snappy slider
-    const maxLen = Math.min(20, Math.max(ytVideos?.length || 0, tmdbVideos?.length || 0));
+    const combinedData = useMemo(() => {
+        const combined: any[] = [];
+        const maxLen = Math.max(ytVideos?.length || 0, tmdbVideos?.length || 0);
 
-    for (let i = 0; i < maxLen; i++) {
-        // Interleave TMDB and YouTube for true variety
-        if (tmdbVideos && tmdbVideos[i]) combinedData.push({ ...tmdbVideos[i], sourceType: 'tmdb' });
-        if (ytVideos && ytVideos[i]) combinedData.push({ ...ytVideos[i], sourceType: 'youtube' });
-    }
+        for (let i = 0; i < maxLen; i++) {
+            // Prioritize TMDB (High Quality)
+            if (tmdbVideos && tmdbVideos[i]) {
+                combined.push({ ...tmdbVideos[i], sourceType: 'tmdb' });
+            }
+            // Interleave YouTube (Variety)
+            if (ytVideos && ytVideos[i]) {
+                combined.push({ ...ytVideos[i], sourceType: 'youtube', poster_path: ytVideos[i].snippet.thumbnails.high.url });
+            }
+        }
+        return combined;
+    }, [ytVideos, tmdbVideos]);
 
-    // If both failed or are empty, hide the section
-    if (!isLoading && combinedData.length === 0) {
+    // If fully loaded and no data, hide section
+    if (!ytLoading && !tmdbLoading && combinedData.length === 0) {
         return null;
     }
 
@@ -94,7 +101,7 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
                     {isLoading ? (
                         <>
                             {[...Array(6)].map((_, index) => (
-                                <SwiperSlide key={index} className="!w-[160px] md:!w-[200px]">
+                                <SwiperSlide key={`skeleton-${index}`} className="!w-[160px] md:!w-[200px]">
                                     <div className="animate-pulse">
                                         <Skeleton className="!w-[160px] md:!w-[200px] aspect-[2/3] rounded-md" />
                                         <Skeleton className="h-4 w-3/4 mt-2 mx-auto" />
@@ -104,7 +111,7 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
                         </>
                     ) : (
                         combinedData.map((item, idx) => (
-                            <SwiperSlide key={item.id + idx} className="!w-[160px] md:!w-[200px]">
+                            <SwiperSlide key={`${item.sourceType}-${item.id}-${idx}`} className="!w-[160px] md:!w-[200px]">
                                 {item.sourceType === 'youtube' ? (
                                     <YouTubeFilmItem video={item} />
                                 ) : (

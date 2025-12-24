@@ -178,13 +178,12 @@ export const useTMDBCollectionQuery = (
           });
         }
 
-        // Filter by region (client-side) - STRICT FILTERING
+        // Filter by region (client-side) - RELAXED
+        // We already use 'with_origin_country' in the API call, so we trust the API results.
+        // Strict client-side filtering often removes valid movies that lack the 'origin_country' field in list responses.
         if (targetCountries.length > 0) {
-          filteredResults = filteredResults.filter((item) => {
-            const countries = item.origin_country || [];
-            // Only include if at least one country matches
-            return countries.some((c: string) => targetCountries.includes(c));
-          });
+          // Optional: You could check item.original_language as a secondary heuristic if needed
+          // But for now, we trust the API to return the correct region content.
         }
 
         // Sort results
