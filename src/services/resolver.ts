@@ -36,6 +36,16 @@ export class ResolverService {
 
         const sources: ResolvedSource[] = [
             {
+                name: "Server VidSrc (Original)",
+                url: mediaType === "movie"
+                    ? `${EMBED_ALTERNATIVES.VIDSRC_ME}/movie/${tmdbId}`
+                    : `${EMBED_ALTERNATIVES.VIDSRC_ME}/tv/${tmdbId}/${season}/${episode}`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed"
+            },
+            {
                 name: "Server VidSrc (Pro)",
                 url: mediaType === "movie"
                     ? `${EMBED_ALTERNATIVES.VIDSRC_PRO}/movie/${tmdbId}`
