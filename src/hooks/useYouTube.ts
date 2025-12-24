@@ -28,16 +28,9 @@ export function useYouTubeVideos(options: UseYouTubeOptions) {
                     setLoading(false);
                     return;
                 }
-                const result = await fetchByRegion(query, pageToken);
+                const result = await fetchByRegion(query, pageToken, type);
                 if (!cancelled) {
-                    // Filter videos by type if specified
-                    const filteredVideos = type
-                        ? result.videos.filter(v =>
-                            type === "movie" ? v.type !== "tv" : v.type === "tv"
-                        )
-                        : result.videos;
-
-                    setVideos(filteredVideos);
+                    setVideos(result.videos);
                     setNextPageToken(result.nextPageToken);
                     if (result.error) {
                         setError(result.error);

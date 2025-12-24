@@ -34,7 +34,7 @@ export const getSearchResult: (
 ) => Promise<ItemsPage> = async (typeSearch, query, page) => {
   // If explicitly searching youtube
   if (typeSearch === "youtube") {
-    const ytResults = await fetchYouTubeVideos(query);
+    const ytResults = await fetchYouTubeVideos(query, undefined, "movie"); // Default to movie for general youtube search
     const results: Item[] = ytResults.videos.map((video: YouTubeVideo) => ({
       id: video.id as any,
       title: video.title,
@@ -72,7 +72,7 @@ export const getSearchResult: (
       typeSearch === "multi" ? "all" : typeSearch as "movie" | "tv"
     ),
     // Search YouTube as well (only for first page of multi/movie/tv)
-    page === 1 ? fetchYouTubeVideos(query) : Promise.resolve({ videos: [] }),
+    page === 1 ? fetchYouTubeVideos(query, undefined, typeSearch === "multi" ? "movie" : (typeSearch as "movie" | "tv" | "multi")) : Promise.resolve({ videos: [] }),
   ]);
 
   // FALLBACK: If YouTube results are sparse or missing, fetch an extra page of TMDB content to "cover" the gap

@@ -79,13 +79,25 @@ function parseDuration(duration: string): number {
  */
 export async function fetchYouTubeVideos(
   query: string,
-  pageToken?: string
+  pageToken?: string,
+  type: "movie" | "tv" | "multi" | "all" = "movie"
 ): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string; error?: string }> {
   // Combine keywords for a single efficient search call to save quota
   // Heuristic: Search for both "Movie" and "Official" in one go
   // If the query is just a region or genre, append specifics. If it's a specific search, respect it.
   const isSpecificSearch = query.includes("ABS-CBN") || query.includes("StarTimes") || query.includes("GMA");
-  const suffix = isSpecificSearch ? "" : " full movie official";
+
+  let suffix = "";
+  if (!isSpecificSearch) {
+    if (type === 'tv') {
+      suffix = " full episode series";
+    } else if (type === 'movie') {
+      suffix = " full movie official";
+    } else {
+      suffix = " full movie official";
+    }
+  }
+
   const optimizedQuery = `${query}${suffix}`;
 
   try {
@@ -119,7 +131,14 @@ export async function fetchYouTubeVideos(
       }))
       .filter((video: any) => video.type !== "other" && !isLowQuality(video.title));
 
-    return { videos, nextPageToken: searchResponse.data.nextPageToken };
+    // strict post-filtering
+    const finalVideos = type === 'tv'
+      ? videos.filter(v => v.type === 'tv')
+      : type === 'movie'
+        ? videos.filter(v => v.type === 'movie')
+        : videos;
+
+    return { videos: finalVideos, nextPageToken: searchResponse.data.nextPageToken };
   } catch (error: any) {
     const errorMsg = error.response?.data?.error?.message || error.message;
     const isQuotaError = errorMsg?.toLowerCase().includes("quota") || error.response?.status === 403;
@@ -127,7 +146,7 @@ export async function fetchYouTubeVideos(
     if (isQuotaError && API_KEYS.length > 1) {
       rotateApiKey();
       // Retry once with the new key
-      return fetchYouTubeVideos(query, pageToken);
+      return fetchYouTubeVideos(query, pageToken, type);
     }
 
     console.error("YouTube API Error:", errorMsg);
@@ -253,8 +272,8 @@ export async function getYouTubeComments(videoId: string): Promise<any[]> {
   }
 }
 
-export const fetchByRegion = (region: string, pageToken?: string) =>
-  fetchYouTubeVideos(region, pageToken);
+export const fetchByRegion = (region: string, pageToken?: string, type: "movie" | "tv" | "multi" | "all" = "movie") =>
+  fetchYouTubeVideos(region, pageToken, type);
 
-export const fetchByCategory = (category: string, pageToken?: string) =>
-  fetchYouTubeVideos(category, pageToken);
+export const fetchByCategory = (category: string, pageToken?: string, type: "movie" | "tv" | "multi" | "all" = "movie") =>
+  fetchYouTubeVideos(category, pageToken, type);
