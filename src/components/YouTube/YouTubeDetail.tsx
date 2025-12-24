@@ -1,9 +1,9 @@
 import { FC, useState, useEffect } from "react";
-import { AiOutlineHistory, AiOutlineHome, AiOutlineDownload, AiFillStar, AiFillHeart } from "react-icons/ai";
+import { AiOutlineHistory, AiOutlineHome, AiOutlineDownload, AiFillStar, AiFillHeart, AiOutlineArrowLeft } from "react-icons/ai";
 import { BsFillPlayFill, BsShareFill, BsThreeDots } from "react-icons/bs";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import { toast, ToastContainer } from "react-toastify";
 import { doc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
@@ -34,6 +34,7 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [currentTab, setCurrentTab] = useState("overall");
+    const navigate = useNavigate();
 
     const rating = calculateRating(video.viewCount, video.likeCount);
 
@@ -102,19 +103,30 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews }) => {
             <Title value={`${video.title} | StreamLux`} />
             <ToastContainer />
 
-            <div className="flex md:hidden justify-between items-center px-5 my-3">
+            {/* Mobile Header */}
+            <div className="flex md:hidden justify-between items-center px-5 my-3 relative z-50">
+                <button onClick={() => navigate(-1)} className="text-white">
+                    <AiOutlineArrowLeft size={24} />
+                </button>
                 <Link to="/" className="flex gap-2 items-center">
-                    <img src="/logo.svg" alt="StreamLux Logo" className="h-10 w-10" />
-                    <p className="text-xl text-white font-medium tracking-wider uppercase">
-                        Stream<span className="text-primary">Lux</span>
-                    </p>
+                    <img src="/logo.svg" alt="StreamLux Logo" className="h-8 w-8" />
                 </Link>
                 <button onClick={() => setIsSidebarActive((prev) => !prev)}>
                     <GiHamburgerMenu size={25} />
                 </button>
             </div>
 
-            <div className="flex flex-col md:flex-row bg-dark min-h-screen text-white">
+            <div className="flex flex-col md:flex-row bg-dark min-h-screen text-white relative">
+                {/* Desktop Back Button */}
+                {!isMobile && (
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="absolute top-6 left-20 z-50 bg-black/50 hover:bg-primary p-3 rounded-full backdrop-blur-md transition-all group"
+                        title="Go Back"
+                    >
+                        <AiOutlineArrowLeft size={24} className="text-white group-hover:scale-110 transition-transform" />
+                    </button>
+                )}
                 {!isMobile && <SidebarMini />}
                 {isMobile && (
                     <Sidebar
@@ -197,24 +209,28 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews }) => {
                                                     <div className="flex gap-3">
                                                         <button
                                                             onClick={bookmarkedHandler}
-                                                            className={`tw-flex-center h-12 w-12 rounded-full border-2 transition-all ${isBookmarked ? 'bg-primary border-primary text-white' : 'bg-white/10 border-white/30 text-white hover:border-primary hover:text-primary'}`}
+                                                            className={`flex items-center justify-center h-12 w-12 rounded-full border-2 transition-all ${isBookmarked ? 'bg-primary border-primary text-white' : 'bg-white/10 border-white/30 text-white hover:border-primary hover:text-primary'}`}
+                                                            title={isBookmarked ? "Remove from Watchlist" : "Add to Watchlist"}
                                                         >
                                                             <AiFillHeart size={22} />
                                                         </button>
-                                                        <button className="tw-flex-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all">
-                                                            <BsShareFill size={18} />
-                                                        </button>
+
+                                                        {/* Download Button - Styled to be visible */}
                                                         <a
                                                             href={`https://ssyoutube.com/watch?v=${video.id}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="tw-flex-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-primary hover:border-primary transition-all text-white flex items-center justify-center"
+                                                            className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-primary hover:border-primary transition-all text-white"
                                                             title="Download Video"
                                                         >
                                                             <AiOutlineDownload size={22} />
                                                         </a>
-                                                        <button className="tw-flex-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all">
-                                                            <BsThreeDots size={18} />
+
+                                                        <button
+                                                            className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all"
+                                                            title="Share"
+                                                        >
+                                                            <BsShareFill size={18} />
                                                         </button>
                                                     </div>
                                                 </div>
