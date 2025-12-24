@@ -70,6 +70,12 @@ Official website: [https://streamlux.vercel.app/](https://streamlux.vercel.app/)
 - **Cross-Platform Compatibility**: Optimized for iPhone, Android, and desktop browsers with polyfills for older devices
 - **Google Search Optimized**: Website is indexed and discoverable via Google Search
 - **Android App Available**: Download the StreamLux Android APK directly from our website, similar to MovieBox. See [BUILD_APK.md](./BUILD_APK.md) and [DISTRIBUTE_APK.md](./DISTRIBUTE_APK.md) for distribution instructions
+- **Latest Updates (v2.1)**:
+  - **Force TMDB World Cinema**: Enhanced "World Cinema" sections now strictly use TMDB data with accurate region codes for reliable content discovery.
+  - **YouTube TV Seasons Layout**: New "Episodes" tab for YouTube TV shows, mimicking the season/episode structure of major streaming platforms.
+  - **Android TV Compatibility**: Fixed "infinite loading" issues on Android TV devices via IntersectionObserver polyfills.
+  - **Performance Boost**: Optimized World Cinema sliders with non-blocking loading (hybrid TMDB/YouTube fetching) for instant content display.
+  - **Strict Content Separation**: Improved filtering to ensure movies and TV shows never appear in the wrong categories.
 
 ## 📱 Android App
 
