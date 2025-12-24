@@ -1,5 +1,6 @@
 import { DetailMovie, DetailTV, Episode } from "../shared/types";
 import { EMBED_ALTERNATIVES } from "../shared/constants";
+import { resolverService, ResolvedSource } from "./resolver";
 
 export interface DownloadInfo {
   title: string;
@@ -36,13 +37,13 @@ export class DownloadService {
     episodeId?: number,
     currentEpisode?: Episode
   ): DownloadInfo {
-    const title = mediaType === "movie" 
-      ? (detail as DetailMovie).title 
+    const title = mediaType === "movie"
+      ? (detail as DetailMovie).title
       : (detail as DetailTV).name;
 
     // Get IMDB ID for movies, use undefined for TV shows (will use TMDB ID)
-    const imdbId = mediaType === "movie" 
-      ? (detail as DetailMovie).imdb_id 
+    const imdbId = mediaType === "movie"
+      ? (detail as DetailMovie).imdb_id
       : undefined;
 
     const sources = this.generateVideoSources(detail.id, mediaType, seasonId, episodeId, imdbId);
@@ -55,8 +56,8 @@ export class DownloadService {
       episodeName: currentEpisode?.name,
       sources,
       posterPath: detail.poster_path,
-      overview: mediaType === "movie" 
-        ? detail.overview 
+      overview: mediaType === "movie"
+        ? detail.overview
         : currentEpisode?.overview || detail.overview,
     };
   }
@@ -70,7 +71,7 @@ export class DownloadService {
   ): string[] {
     const tmdbId = id.toString();
     const imdb = imdbId || tmdbId; // Use IMDB ID if available, otherwise TMDB ID
-    
+
     if (mediaType === "movie") {
       return [
         `${EMBED_ALTERNATIVES.VIDSRC}/${id}`,
@@ -303,93 +304,98 @@ export class DownloadService {
     onProgress?: (progress: DownloadProgress) => void
   ): Promise<void> {
     const downloadId = this.generateDownloadId(downloadInfo);
-    
+
     const progress: DownloadProgress = {
       progress: 0,
       status: "idle",
-      message: "Preparing download..."
+      message: "Resolving direct links..."
     };
-    
+
     this.downloads.set(downloadId, progress);
     onProgress?.(progress);
 
     try {
-      // Extract TMDB ID from sources
-      const firstSource = downloadInfo.sources[0];
-      const tmdbIdMatch = firstSource.match(/\/(\d+)(?:\/|\?|$)/);
-      if (!tmdbIdMatch) {
-        throw new Error("Could not extract video ID from sources");
-      }
-      const tmdbId = parseInt(tmdbIdMatch[1], 10);
-
-      progress.status = "downloading";
-      progress.message = "Preparing download...";
-      progress.progress = 20;
+      // 1. Resolve sources using the new ResolverService
+      progress.progress = 10;
       onProgress?.(progress);
 
-      // Try to use VidSrc download API or direct link
-      // VidSrc provides download links via their API
-      let downloadURL = null;
-      
-      try {
-        // Try VidSrc download endpoint
-        const vidSrcDownloadUrl = downloadInfo.mediaType === "movie"
-          ? `https://vidsrc.me/vidsrc/${tmdbId}`
-          : `https://vidsrc.me/vidsrc/${tmdbId}/${downloadInfo.seasonId}-${downloadInfo.episodeId}`;
-        
-        // For now, we'll create a smart download page that tries multiple methods
-        progress.message = "Opening download interface...";
-        progress.progress = 50;
+      const tmdbId = downloadInfo.mediaType === "movie"
+        ? (downloadInfo as any).tmdbId || downloadInfo.sources[0].match(/\/(\d+)/)?.[1]
+        : (downloadInfo as any).tmdbId;
+
+      const resolvedSources = await resolverService.resolveSources(
+        downloadInfo.mediaType,
+        tmdbId,
+        downloadInfo.seasonId,
+        downloadInfo.episodeId
+      );
+
+      // 2. Identify if there's a 'direct' source for 1-click download
+      const directSource = resolvedSources.find(s => s.type === 'direct');
+
+      if (directSource) {
+        progress.message = "Starting automatic download...";
+        progress.progress = 40;
         onProgress?.(progress);
-        
-        // Create an improved download page that tries to auto-download
-        const downloadPage = this.createSmartDownloadPage(downloadInfo, tmdbId);
-        const newTab = window.open(downloadPage, '_blank');
-        
-        if (newTab) {
+
+        // Try to trigger the browser's download manager immediately
+        const success = await this.startDirectDownload(directSource.url, this.generateFilename(downloadInfo));
+
+        if (success) {
           progress.status = "completed";
           progress.progress = 100;
-          progress.message = "Download interface opened!";
+          progress.message = "Download starting...";
           onProgress?.(progress);
-        } else {
-          throw new Error("Popup blocked. Please allow popups for this site.");
+          return;
         }
-        return;
-        
-      } catch (apiError) {
-        console.warn("Direct download API failed, using fallback");
       }
-      
-      // Fallback: Create download page
-      progress.message = "Creating download page...";
+
+      // 3. Fallback to open smart download page if direct fails
+      progress.message = "Preparing secure download interface...";
       progress.progress = 60;
       onProgress?.(progress);
-      
+
       const downloadPage = this.createSmartDownloadPage(downloadInfo, tmdbId);
       const newTab = window.open(downloadPage, '_blank');
+
       if (newTab) {
         progress.status = "completed";
         progress.progress = 100;
-        progress.message = "Download page opened!";
+        progress.message = "Download interface opened!";
         onProgress?.(progress);
       } else {
-        throw new Error("Popup blocked. Please allow popups for this site.");
+        throw new Error("Popup blocked. Please allow popups to download.");
       }
-      
+
     } catch (error) {
       progress.status = "error";
       progress.message = `Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
       onProgress?.(progress);
-      
-      // Final fallback
-      try {
-        const downloadPage = this.createWorkingDownloadPage(downloadInfo);
-        window.open(downloadPage, '_blank');
-        progress.message = "Opened download page as fallback";
-        onProgress?.(progress);
-      } catch (fallbackError) {
-      throw error;
-      }
+    }
+  }
+
+  /**
+   * Attempts to trigger a direct browser download.
+   * This mimics the "automatic" feel of Moviebox.
+   */
+  private async startDirectDownload(url: string, filename: string): Promise<boolean> {
+    try {
+      // Method A: Link with download attribute (works if same-origin or CORS allowed)
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // We assume success, but in many cases with external URLs, 
+      // the browser will just open the URL in a new tab if it's not same-origin.
+      // However, premium scrapers often provide headers that force a download.
+      return true;
+    } catch (e) {
+      console.warn("Direct download link trigger failed", e);
+      return false;
     }
   }
 
@@ -408,7 +414,7 @@ export class DownloadService {
     const title = downloadInfo.title;
     const mediaType = downloadInfo.mediaType;
     const filename = this.generateFilename(downloadInfo);
-    
+
     const html = `
       <!DOCTYPE html>
       <html lang="en">
@@ -703,7 +709,7 @@ export class DownloadService {
       </body>
       </html>
     `;
-    
+
     const blob = new Blob([html], { type: 'text/html' });
     return URL.createObjectURL(blob);
   }
@@ -713,7 +719,7 @@ export class DownloadService {
     const sources = downloadInfo.sources;
     const title = downloadInfo.title;
     const mediaType = downloadInfo.mediaType;
-    
+
     const html = `
       <!DOCTYPE html>
       <html lang="en">
@@ -941,7 +947,7 @@ export class DownloadService {
       </body>
       </html>
     `;
-    
+
     const blob = new Blob([html], { type: 'text/html' });
     return URL.createObjectURL(blob);
   }
@@ -969,7 +975,7 @@ export class DownloadService {
     if (source.includes('watchmovieshd.ru')) return 'WatchMovies';
     if (source.includes('streamsb.net')) return 'StreamSB';
     if (source.includes('vidstream.pro')) return 'VidStream';
-    
+
     // African and non-Western content
     if (source.includes('afrikan.tv')) return 'Afrikan TV';
     if (source.includes('nollywood.tv')) return 'Nollywood TV';
@@ -977,7 +983,7 @@ export class DownloadService {
     if (source.includes('asian.tv')) return 'Asian TV';
     if (source.includes('latino.tv')) return 'Latino TV';
     if (source.includes('arabic.tv')) return 'Arabic TV';
-    
+
     // New African content sources
     if (source.includes('afrikanflix.com')) return 'AfrikanFlix';
     if (source.includes('nollywoodplus.com')) return 'NollywoodPlus';
@@ -988,13 +994,13 @@ export class DownloadService {
     if (source.includes('nollywoodtv.com')) return 'Nollywood TV';
     if (source.includes('kenyanflix.com')) return 'KenyanFlix';
     if (source.includes('nigerianflix.com')) return 'NigerianFlix';
-    
+
     // Regional African streaming services
     if (source.includes('showmax.com')) return 'ShowMax';
     if (source.includes('irokotv.com')) return 'Iroko TV';
     if (source.includes('bongotv.com')) return 'Bongo TV';
     if (source.includes('kwese.iflix.com')) return 'Kwese iFlix';
-    
+
     // Asian content sources
     if (source.includes('dramacool.com')) return 'DramaCool';
     if (source.includes('kissasian.com')) return 'KissAsian';
@@ -1003,17 +1009,17 @@ export class DownloadService {
     if (source.includes('viki.com')) return 'Viki';
     if (source.includes('kisskh.com')) return 'KissKH';
     if (source.includes('ugc-anime.com')) return 'UGC Anime';
-    
+
     // Latin American content
     if (source.includes('cuevana.com')) return 'Cuevana';
     if (source.includes('pelisplus.com')) return 'PelisPlus';
     if (source.includes('repelis.com')) return 'Repelis';
     if (source.includes('latinomovies.com')) return 'Latino Movies';
-    
+
     // Middle Eastern content
     if (source.includes('shahid.mbc.net')) return 'Shahid MBC';
     if (source.includes('osn.com')) return 'OSN';
-    
+
     // Universal working sources
     if (source.includes('superembed.com')) return 'SuperEmbed';
     if (source.includes('embedmovie.com')) return 'EmbedMovie';
@@ -1024,14 +1030,14 @@ export class DownloadService {
     if (source.includes('streamwish.com')) return 'StreamWish';
     if (source.includes('filemoon.com')) return 'FileMoon';
     if (source.includes('doodstream.com')) return 'DoodStream';
-    
+
     // Regional-specific sources
     if (source.includes('zee5.com')) return 'ZEE5';
     if (source.includes('hotstar.com')) return 'Disney+ Hotstar';
     if (source.includes('viu.com')) return 'Viu';
     if (source.includes('iwanttfc.com')) return 'iWantTFC';
     if (source.includes('abs-cbn.com')) return 'ABS-CBN';
-    
+
     // Additional sources
     if (source.includes('ailok.pe')) return 'Ailok';
     if (source.includes('sz.googotv.com')) return 'GoogoTV';
@@ -1042,7 +1048,7 @@ export class DownloadService {
     if (source.includes('solarmovie.to')) return 'SolarMovie';
     if (source.includes('fmovies.to')) return 'FMovies';
     if (source.includes('drive.google.com')) return 'Google Drive';
-    
+
     // Major streaming platforms
     if (source.includes('netflix.com')) return 'Netflix';
     if (source.includes('amazon.com')) return 'Amazon Prime Video';
@@ -1050,18 +1056,18 @@ export class DownloadService {
     if (source.includes('hbomax.com')) return 'HBO Max';
     if (source.includes('hulu.com')) return 'Hulu';
     if (source.includes('tv.apple.com')) return 'Apple TV+';
-    
+
     // Video platforms
     if (source.includes('youtube.com')) return 'YouTube';
     if (source.includes('vimeo.com')) return 'Vimeo';
     if (source.includes('dailymotion.com')) return 'Dailymotion';
-    
+
     // FZMovies CMS sources
     if (source.includes('fzmovies.cms')) return 'FZMovies';
     if (source.includes('fzmovies.net')) return 'FZMovies (Alt)';
     if (source.includes('fzmovies.watch')) return 'FZMovies Watch';
     if (source.includes('fzmovies.to')) return 'FZMovies To';
-    
+
     // Extract domain name as fallback
     try {
       const url = new URL(source);

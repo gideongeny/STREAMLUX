@@ -389,8 +389,8 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                               setIsLoadingVideo(true);
                             }}
                             className={`flex items-center justify-between p-2 rounded-lg transition-all text-left ${currentSourceIndex === index
-                                ? 'bg-primary/20 border border-primary/50 text-white'
-                                : 'hover:bg-white/5 text-gray-400 border border-transparent'
+                              ? 'bg-primary/20 border border-primary/50 text-white'
+                              : 'hover:bg-white/5 text-gray-400 border border-transparent'
                               }`}
                           >
                             <div className="flex flex-col">
@@ -414,11 +414,22 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     {/* Download Section Integration */}
                     {downloadInfo && (
                       <button
-                        onClick={() => document.getElementById('download-section')?.scrollIntoView({ behavior: 'smooth' })}
+                        onClick={() => {
+                          const downloadSection = document.getElementById('download-section');
+                          if (downloadSection) {
+                            downloadSection.scrollIntoView({ behavior: 'smooth' });
+                          }
+                          // Trigger automated download
+                          downloadService.downloadMovie(downloadInfo, (progress) => {
+                            setDownloadInfo((prev: any) => ({ ...prev, currentProgress: progress }));
+                          });
+                        }}
                         className="w-full mt-2 bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-all border border-primary/20"
                       >
-                        <AiOutlineDownload size={14} />
-                        DOWNLOAD (RESOLVING...)
+                        <AiOutlineDownload size={14} className={downloadInfo.currentProgress?.status === 'downloading' ? 'animate-bounce' : ''} />
+                        {downloadInfo.currentProgress
+                          ? downloadInfo.currentProgress.message.toUpperCase()
+                          : "ONE-CLICK DOWNLOAD"}
                       </button>
                     )}
                   </div>

@@ -6,6 +6,7 @@ export interface ResolvedSource {
     quality: string;
     speed: "fast" | "medium" | "slow";
     status: "active" | "slow" | "down";
+    type: "embed" | "direct";
 }
 
 export class ResolverService {
@@ -41,7 +42,18 @@ export class ResolverService {
                     : `${EMBED_ALTERNATIVES.VIDSRC_PRO}/tv/${tmdbId}/${season}/${episode}`,
                 quality: "1080p",
                 speed: "fast",
-                status: "active"
+                status: "active",
+                type: "embed"
+            },
+            {
+                name: "Direct Download (Alpha)",
+                url: mediaType === "movie"
+                    ? `https://vidsrc.pro/vidsrc.php?id=${tmdbId}`
+                    : `https://vidsrc.pro/vidsrc.php?id=${tmdbId}&s=${season}&e=${episode}`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "direct"
             },
             {
                 name: "Server Embed.su",
@@ -50,7 +62,8 @@ export class ResolverService {
                     : `${EMBED_ALTERNATIVES.EMBED_SU}/tv/${tmdbId}/${season}/${episode}`,
                 quality: "1080p",
                 speed: "fast",
-                status: "active"
+                status: "active",
+                type: "embed"
             },
             {
                 name: "Server Smashy",
@@ -59,7 +72,8 @@ export class ResolverService {
                     : `${EMBED_ALTERNATIVES.SMASHY}/tv/${tmdbId}/${season}/${episode}`,
                 quality: "720p",
                 speed: "medium",
-                status: "active"
+                status: "active",
+                type: "embed"
             },
             {
                 name: "Server VidSrc.xyz",
@@ -68,7 +82,8 @@ export class ResolverService {
                     : `${EMBED_ALTERNATIVES.VIDSRC_XYZ}/tv/${tmdbId}/${season}/${episode}`,
                 quality: "1080p",
                 speed: "fast",
-                status: "active"
+                status: "active",
+                type: "embed"
             },
             {
                 name: "Server AutoEmbed",
@@ -77,7 +92,8 @@ export class ResolverService {
                     : `${EMBED_ALTERNATIVES.AUTOEMBED}/tv/tmdb/${tmdbId}/${season}/${episode}`,
                 quality: "720p",
                 speed: "medium",
-                status: "active"
+                status: "active",
+                type: "embed"
             }
         ];
 
