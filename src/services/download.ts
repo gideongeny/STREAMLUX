@@ -74,6 +74,9 @@ export class DownloadService {
 
     if (mediaType === "movie") {
       return [
+        // Prioritize reliable sources that are less likely to be down
+        `https://vidsrc.me/embed/${imdb}`,
+        `https://fsapi.xyz/movie/${imdb}`,
         `${EMBED_ALTERNATIVES.VIDSRC}/${id}`,
         // New video sources - added after VIDSRC
         `https://vidsrc.me/embed/${imdb}`,

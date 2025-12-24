@@ -83,7 +83,10 @@ export async function fetchYouTubeVideos(
 ): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string; error?: string }> {
   // Combine keywords for a single efficient search call to save quota
   // Heuristic: Search for both "Movie" and "Official" in one go
-  const optimizedQuery = `${query} full movie official | full episode official | ABS-CBN StarTimes GMA`;
+  // If the query is just a region or genre, append specifics. If it's a specific search, respect it.
+  const isSpecificSearch = query.includes("ABS-CBN") || query.includes("StarTimes") || query.includes("GMA");
+  const suffix = isSpecificSearch ? "" : " full movie official";
+  const optimizedQuery = `${query}${suffix}`;
 
   try {
     const searchResponse = await youtube.get("/search", {
@@ -114,7 +117,7 @@ export async function fetchYouTubeVideos(
         type: classifyVideo(item.snippet.title, item.snippet.description),
         duration: parseDuration(item.contentDetails.duration),
       }))
-      .filter((video: any) => video.type !== "other");
+      .filter((video: any) => video.type !== "other" && !isLowQuality(video.title));
 
     return { videos, nextPageToken: searchResponse.data.nextPageToken };
   } catch (error: any) {
@@ -136,6 +139,17 @@ export async function fetchYouTubeVideos(
     return { videos: [], nextPageToken: undefined, error: errorMsg };
   }
 }
+
+// Helper to detect potential vlogs/low quality content
+const isLowQuality = (title: string) => {
+  const lower = title.toLowerCase();
+  return lower.includes("vlog") ||
+    lower.includes("reaction") ||
+    lower.includes("review") ||
+    lower.includes("gameplay") ||
+    lower.includes("tutorial") ||
+    lower.includes("unboxing");
+};
 
 /**
  * Get a single video's full details for the Detail page.

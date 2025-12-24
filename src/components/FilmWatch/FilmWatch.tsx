@@ -54,7 +54,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const [downloadInfo, setDownloadInfo] = useState<any>(null);
   const [resolvedSources, setResolvedSources] = useState<ResolvedSource[]>([]);
   const [isResolving, setIsResolving] = useState(true);
-  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false); // Keep closed initially to avoid clutter, will add effect to open if empty
 
   // Fetch resolved sources
   useEffect(() => {

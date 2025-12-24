@@ -17,8 +17,9 @@ const YouTubeFilmItem: FunctionComponent<YouTubeFilmItemProps> = ({ video }) => 
                 <LazyLoadImage
                     alt={video.title}
                     src={video.thumbnail}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover absolute top-0 left-0"
                     effect="blur"
+                    style={{ height: '100%' }}
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white">
