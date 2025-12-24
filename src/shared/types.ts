@@ -283,7 +283,7 @@ export interface getWatchReturnedType {
 }
 
 export interface ConfigType {
-  [key: string]: string | number;
+  [key: string]: string | number | boolean;
 }
 
 export interface ItemsPage {

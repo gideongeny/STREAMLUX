@@ -103,6 +103,9 @@ export const useTMDBCollectionQuery = (
           }),
           ...(voteAverageGte !== "0" && { "vote_average.gte": voteAverageGte }),
           ...(withOriginalLanguage && { with_original_language: withOriginalLanguage }),
+          // CRITICAL: Skip external sources (FZMovies) for World Cinema to prevent network congestion
+          // We only want TMDB data here to ensure fast loading and avoid 200+ pending requests
+          skipExternalSources: true,
         };
 
         // Use enhanced explore functions that fetch from all sources
