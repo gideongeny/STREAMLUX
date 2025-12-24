@@ -54,6 +54,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const [downloadInfo, setDownloadInfo] = useState<any>(null);
   const [resolvedSources, setResolvedSources] = useState<ResolvedSource[]>([]);
   const [isResolving, setIsResolving] = useState(true);
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
 
   // Fetch resolved sources
   useEffect(() => {
