@@ -50,25 +50,57 @@ const Explore = () => {
   });
 
   useEffect(() => {
-    // Update filters when URL params change
-    const region = searchParams.get("region");
-    const type = searchParams.get("type") as "movie" | "tv" | null;
+    // Parse all params from URL
+    const region = searchParams.get("region") || "";
+    const type = (searchParams.get("type") as "movie" | "tv") || null;
+    const genreParam = searchParams.get("genre");
+    const genres = genreParam ? genreParam.split(",").map(Number) : [];
+    const year = searchParams.get("year") || "";
+    const runtime = searchParams.get("runtime") || "";
+    const sortBy = searchParams.get("sort_by") || "popularity.desc";
+    const voteAverageGte = searchParams.get("vote_average.gte") || "0";
+    const withOriginalLanguage = searchParams.get("with_original_language") || "";
+    const status = searchParams.get("status") || "";
 
-    if (region) {
-      setFilters(prev => ({ ...prev, region }));
-    }
-
-    // Update currentTab from URL or localStorage
+    // update currentTab
     if (type && (type === "movie" || type === "tv")) {
       setCurrentTab(type);
       localStorage.setItem("currentTab", type);
     } else {
-      // Read from localStorage if not in URL
       const savedTab = localStorage.getItem("currentTab") as "movie" | "tv" | null;
       if (savedTab && (savedTab === "movie" || savedTab === "tv")) {
         setCurrentTab(savedTab);
       }
     }
+
+    // Batch update filters if they changed (simple comparison)
+    setFilters(prev => {
+      // Only update if something changed to prevent infinite loops if we were using complex effects
+      if (
+        prev.region === region &&
+        prev.year === year &&
+        prev.runtime === runtime &&
+        prev.sortBy === sortBy &&
+        prev.voteAverageGte === voteAverageGte &&
+        prev.withOriginalLanguage === withOriginalLanguage &&
+        prev.status === status &&
+        JSON.stringify(prev.genres) === JSON.stringify(genres)
+      ) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        region,
+        genres,
+        year,
+        runtime,
+        sortBy,
+        voteAverageGte,
+        withOriginalLanguage,
+        status
+      };
+    });
   }, [searchParams]);
 
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {

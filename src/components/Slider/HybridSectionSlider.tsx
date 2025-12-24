@@ -7,6 +7,16 @@ import YouTubeFilmItem from "../Common/YouTubeFilmItem";
 import FilmItem from "../Common/FilmItem";
 import Skeleton from "../Common/Skeleton";
 
+// Static constant to prevent reference changes
+const EMPTY_ARRAY: number[] = [];
+const CATEGORY_GENRE_MAP: Record<string, number[]> = {
+    "action": [28],
+    "horror": [27],
+    "documentary": [99],
+    "drama": [18],
+    "global": [], // Popular
+};
+
 interface HybridSectionSliderProps {
     title: string;
     region?: string;
@@ -27,18 +37,13 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
         error: ytError
     } = useYouTubeVideos({ region, category, type });
 
-    // Map category to TMDB genre IDs
-    const categoryGenreMap: Record<string, number[]> = {
-        "action": [28],
-        "horror": [27],
-        "documentary": [99],
-        "drama": [18],
-        "global": [], // Popular
-    };
-
     // Map region to TMDB specific codes if needed
     const tmdbRegion = region === "kr" ? "korea" : region === "in" ? "bollywood" : region;
-    const tmdbGenres = category ? (categoryGenreMap[category.toLowerCase()] || []) : [];
+
+    // Memoize genres to prevent infinite loop in useTMDBCollectionQuery
+    const tmdbGenres = useMemo(() =>
+        category ? (CATEGORY_GENRE_MAP[category.toLowerCase()] || EMPTY_ARRAY) : EMPTY_ARRAY
+        , [category]);
 
     const {
         data: tmdbVideos,
