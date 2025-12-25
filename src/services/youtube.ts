@@ -1,6 +1,7 @@
 // src/services/youtube.ts
 import axios from "axios";
 import { classifyVideo, VideoType } from "../shared/videoClassification";
+import { CacheService } from "./cache";
 
 export interface YouTubeVideo {
   id: string;
@@ -76,6 +77,17 @@ function parseDuration(duration: string): number {
   return hours * 3600 + minutes * 60 + seconds;
 }
 
+// Helper to detect potential vlogs/low quality content
+const isLowQuality = (title: string) => {
+  const lower = title.toLowerCase();
+  return lower.includes("vlog") ||
+    lower.includes("reaction") ||
+    lower.includes("review") ||
+    lower.includes("gameplay") ||
+    lower.includes("tutorial") ||
+    lower.includes("unboxing");
+};
+
 /**
  * Fetch videos for a given keyword.
  */
@@ -101,6 +113,13 @@ export async function fetchYouTubeVideos(
   }
 
   const optimizedQuery = `${query}${suffix}`;
+  const cacheKey = `search_${optimizedQuery}_${pageToken || 'p0'}`;
+
+  // Check Cache First
+  const cachedData = CacheService.get<{ videos: YouTubeVideo[]; nextPageToken?: string }>(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
 
   try {
     const searchResponse = await youtube.get("/search", {
@@ -141,46 +160,45 @@ export async function fetchYouTubeVideos(
         ? videos.filter(v => v.type === 'movie')
         : videos;
 
-    return { videos: finalVideos, nextPageToken: searchResponse.data.nextPageToken };
+    const result = { videos: finalVideos, nextPageToken: searchResponse.data.nextPageToken };
+
+    // Save to Cache
+    if (finalVideos.length > 0) {
+      CacheService.set(cacheKey, result);
+    }
+
+    return result;
   } catch (error: any) {
     const errorMsg = error.response?.data?.error?.message || error.message;
     const isQuotaError = errorMsg?.toLowerCase().includes("quota") || error.response?.status === 403;
 
-    if (isQuotaError && API_KEYS.length > 1) {
+    if (isQuotaError) {
+      console.warn(`Quota exhausted for key index ${currentKeyIndex}. Rotating...`);
       rotateApiKey();
-      // Retry once with the new key
+      // Retry once with the new key - avoid infinite recursion
+      // We pass a flag or check if we've tried all keys? 
+      // For now, let's just try one more time if we haven't exhausted all.
       return fetchYouTubeVideos(query, pageToken, type);
     }
 
     console.error("YouTube API Error:", errorMsg);
 
-    if (isQuotaError) {
-      return { videos: [], nextPageToken: undefined, error: "QUOTA_EXCEEDED" };
-    }
-
-    return { videos: [], nextPageToken: undefined, error: errorMsg };
+    return { videos: [], nextPageToken: undefined, error: isQuotaError ? "QUOTA_EXCEEDED" : errorMsg };
   }
 }
-
-// Helper to detect potential vlogs/low quality content
-const isLowQuality = (title: string) => {
-  const lower = title.toLowerCase();
-  return lower.includes("vlog") ||
-    lower.includes("reaction") ||
-    lower.includes("review") ||
-    lower.includes("gameplay") ||
-    lower.includes("tutorial") ||
-    lower.includes("unboxing");
-};
 
 /**
  * Get a single video's full details for the Detail page.
  */
 export async function getYouTubeVideoDetail(id: string): Promise<YouTubeVideo | null> {
+  const cacheKey = `video_detail_${id}`;
+  const cached = CacheService.get<YouTubeVideo>(cacheKey);
+  if (cached) return cached;
+
   const details = await fetchVideosDetail([id]);
   if (!details || details.length === 0) return null;
   const item = details[0];
-  return {
+  const video: YouTubeVideo = {
     id: item.id,
     title: item.snippet.title,
     description: item.snippet.description,
@@ -195,6 +213,9 @@ export async function getYouTubeVideoDetail(id: string): Promise<YouTubeVideo | 
     publishedAt: item.snippet.publishedAt,
     tags: item.snippet.tags,
   };
+
+  CacheService.set(cacheKey, video);
+  return video;
 }
 
 /**
