@@ -25,9 +25,10 @@ interface YouTubeDetailProps {
     video: YouTubeVideo;
     similar?: YouTubeVideo[];
     reviews?: Reviews[];
+    episodes?: YouTubeVideo[];
 }
 
-const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews }) => {
+const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews, episodes }) => {
     const { isMobile } = useCurrentViewportView();
     const currentUser = useAppSelector((state) => state.auth.user);
     const [isSidebarActive, setIsSidebarActive] = useState(false);
@@ -345,11 +346,11 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews }) => {
                                                 <select className="bg-white/10 text-white border border-white/20 rounded-md px-4 py-2 font-bold focus:outline-none focus:border-primary">
                                                     <option>Season 1</option>
                                                 </select>
-                                                <span className="text-gray-400 text-sm">{similar?.length || 0} Episodes</span>
+                                                <span className="text-gray-400 text-sm">{episodes?.length || 0} Episodes</span>
                                             </div>
 
                                             <div className="grid grid-cols-1 gap-4">
-                                                {similar?.map((item, index) => (
+                                                {episodes?.map((item, index) => (
                                                     <Link
                                                         key={item.id}
                                                         to={`/watch/yt/${item.id}`} // Assuming this route scheme based on context
@@ -381,7 +382,7 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews }) => {
                                                         </div>
                                                     </Link>
                                                 ))}
-                                                {(!similar || similar.length === 0) && (
+                                                {(!episodes || episodes.length === 0) && (
                                                     <div className="text-center py-10 opacity-50">
                                                         <p>No episodes found for this season.</p>
                                                     </div>

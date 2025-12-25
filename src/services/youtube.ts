@@ -8,6 +8,7 @@ export interface YouTubeVideo {
   description: string;
   thumbnail: string;
   channelTitle: string;
+  channelId: string;
   type: VideoType;
   duration?: number;
   viewCount?: string;
@@ -127,6 +128,7 @@ export async function fetchYouTubeVideos(
         description: item.snippet.description,
         thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
         channelTitle: item.snippet.channelTitle,
+        channelId: item.snippet.channelId,
         type: classifyVideo(item.snippet.title, item.snippet.description),
         duration: parseDuration(item.contentDetails.duration),
       }))
@@ -184,6 +186,7 @@ export async function getYouTubeVideoDetail(id: string): Promise<YouTubeVideo | 
     description: item.snippet.description,
     thumbnail: item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
     channelTitle: item.snippet.channelTitle,
+    channelId: item.snippet.channelId,
     type: classifyVideo(item.snippet.title, item.snippet.description),
     duration: parseDuration(item.contentDetails.duration),
     viewCount: item.statistics.viewCount,
@@ -218,11 +221,58 @@ export async function getRelatedVideos(videoId: string): Promise<YouTubeVideo[]>
       description: item.snippet.description,
       thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
       channelTitle: item.snippet.channelTitle,
+      channelId: item.snippet.channelId,
       type: classifyVideo(item.snippet.title, item.snippet.description),
       duration: parseDuration(item.contentDetails.duration),
     }));
   } catch (error) {
     console.error("Error fetching related videos:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetch episodes for a series (same channel, similar title).
+ */
+export async function getYouTubeSeriesEpisodes(title: string, channelId?: string): Promise<YouTubeVideo[]> {
+  // Clean title: remove "Episode 1", "Ep 1", date parts, etc. to get series base name
+  // This is a heuristic.
+  const baseTitle = title
+    .replace(/\b(Ep|Episode|Part)\s*\d+/gi, "")
+    .replace(/\s*-\s*$/, "")
+    .trim();
+
+  const query = `${baseTitle} full episode`;
+
+  try {
+    const response = await youtube.get("/search", {
+      params: {
+        part: "snippet",
+        maxResults: 50, // Fetch more for full season
+        q: query,
+        type: "video",
+        ...(channelId && { channelId: channelId }), // Restrict to same channel if provided
+        key: getApiKey(),
+      },
+    });
+
+    if (!response.data.items || response.data.items.length === 0) return [];
+
+    const ids = response.data.items.map((item: any) => item.id.videoId);
+    const details = await fetchVideosDetail(ids);
+
+    return details.map((item: any) => ({
+      id: item.id,
+      title: item.snippet.title,
+      description: item.snippet.description,
+      thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+      channelTitle: item.snippet.channelTitle,
+      channelId: item.snippet.channelId,
+      type: classifyVideo(item.snippet.title, item.snippet.description),
+      duration: parseDuration(item.contentDetails.duration),
+    }));
+  } catch (error) {
+    console.error("Error fetching series episodes:", error);
     return [];
   }
 }
