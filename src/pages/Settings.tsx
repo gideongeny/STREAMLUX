@@ -96,7 +96,7 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                                             ref={keyInputRef}
                                             type="text"
                                             defaultValue={apiKey}
-                                            placeholder="AIzaSy..."
+                                            placeholder="Leave empty to use shared system quota (AIzaSy...)"
                                             className="flex-grow bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors font-mono text-sm"
                                         />
                                         <button
