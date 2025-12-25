@@ -5,6 +5,10 @@
 /* Optimized Google Fonts loading - using font-display: swap to prevent render blocking */
 @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap");
 
+:root {
+  --color-primary: #ff6b35;
+}
+
 html {
   @apply bg-dark;
   -webkit-text-size-adjust: 100%;

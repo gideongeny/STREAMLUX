@@ -62,6 +62,14 @@ function App() {
 
   const [isSignedIn, setIsSignedIn] = useState<boolean>(() => getInitialSignedIn());
 
+  // Load saved theme color on mount
+  useEffect(() => {
+    const savedColor = localStorage.getItem("theme_primary_color");
+    if (savedColor) {
+      document.documentElement.style.setProperty("--color-primary", savedColor);
+    }
+  }, []);
+
   // Sync to localStorage when isSignedIn changes
   useEffect(() => {
     try {

@@ -224,26 +224,26 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   };
 
   // Auto-advance disabled for Manual Mode
-  /* 
   useEffect(() => {
-    if (videoError && currentSourceIndex < videoSources.length - 1) {
+    const isAutoPlayEnabled = localStorage.getItem("autoplay_enabled") === "true";
+
+    if (isAutoPlayEnabled && videoError && currentSourceIndex < videoSources.length - 1) {
       const timer = setTimeout(() => {
         setCurrentSourceIndex(prev => prev + 1);
         setVideoError(false);
         setIsLoadingVideo(true);
-      }, 1500); 
+      }, 1500);
 
       return () => clearTimeout(timer);
     }
   }, [videoError, currentSourceIndex, videoSources.length]);
-  */
 
   // Loading timeout disabled for Manual Mode
-  /*
   useEffect(() => {
+    const isAutoPlayEnabled = localStorage.getItem("autoplay_enabled") === "true";
     let timeoutId: NodeJS.Timeout;
 
-    if (isLoadingVideo && !videoError) {
+    if (isAutoPlayEnabled && isLoadingVideo && !videoError) {
       timeoutId = setTimeout(() => {
         console.log(`Source ${currentSourceIndex + 1} timed out, trying next...`);
         handleVideoError();
@@ -254,7 +254,6 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [isLoadingVideo, videoError, currentSourceIndex]);
-  */
 
   // Reset source when detail changes
   useEffect(() => {

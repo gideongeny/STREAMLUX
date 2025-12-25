@@ -4,14 +4,23 @@ import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
-import Footer from "../components/Footer/Footer";
 import { validateYouTubeKey } from "../services/youtube";
 
 interface SettingsProps { }
 
+const THEME_COLORS = [
+    { name: "Orange", value: "#ff6b35" },
+    { name: "Blue", value: "#3b82f6" },
+    { name: "Purple", value: "#8b5cf6" },
+    { name: "Red", value: "#ef4444" },
+    { name: "Green", value: "#10b981" },
+    { name: "Cyan", value: "#06b6d4" },
+];
+
 const Settings: FunctionComponent<SettingsProps> = () => {
     const [isSidebarActive, setIsSidebarActive] = useState(false);
     const [apiKey, setApiKey] = useState("");
+    const [isValidating, setIsValidating] = useState(false);
     const keyInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -21,12 +30,6 @@ const Settings: FunctionComponent<SettingsProps> = () => {
             setApiKey(savedKey);
         }
     }, []);
-
-    import { validateYouTubeKey } from "../services/youtube";
-
-    // ... inside component
-
-    const [isValidating, setIsValidating] = useState(false);
 
     const handleSaveKey = async () => {
         const newKey = keyInputRef.current?.value.trim();
@@ -49,6 +52,12 @@ const Settings: FunctionComponent<SettingsProps> = () => {
         } else {
             toast.error("Invalid API Key. Please check and try again.", { position: "top-right" });
         }
+    };
+
+    const handleThemeChange = (color: string) => {
+        document.documentElement.style.setProperty("--color-primary", color);
+        localStorage.setItem("theme_primary_color", color);
+        toast.success("Theme updated!", { position: "top-right", autoClose: 1000 });
     };
 
     return (
@@ -92,15 +101,22 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                             <p className="text-gray-400 text-sm mb-6 leading-relaxed">
                                 Experience unlimited searching and streaming by using your own free YouTube API Key.
                                 This provides you with 10,000 requests per day (vs shared quota).
-                                <a
-                                    href="https://developers.google.com/youtube/v3/getting-started"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-primary hover:underline ml-1"
-                                >
-                                    Get a key here
-                                </a>.
                             </p>
+
+                            {/* Help Section */}
+                            <div className="bg-white/5 rounded-lg p-4 mb-6 border border-white/5">
+                                <h3 className="text-white font-medium mb-2 flex items-center gap-2">
+                                    <span className="bg-primary/20 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">?</span>
+                                    How to get a key (Free)
+                                </h3>
+                                <div className="text-gray-400 text-sm space-y-2 pl-8">
+                                    <p>1. Go to the <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer" className="text-primary hover:underline">Google Cloud Console</a>.</p>
+                                    <p>2. Create a new project (name it "StreamLux").</p>
+                                    <p>3. Search for <strong>"YouTube Data API v3"</strong> and click Enable.</p>
+                                    <p>4. Go to <strong>Credentials</strong> → <strong>Create Credentials</strong> → <strong>API Key</strong>.</p>
+                                    <p>5. Copy the key (starts with 'AIza...') and paste it below.</p>
+                                </div>
+                            </div>
 
                             <div className="space-y-4">
                                 <div>
@@ -137,10 +153,86 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                             </div>
                         </div>
 
-                        {/* Other Settings Placeholders - Scalability for more settings */}
-                        <div className="bg-dark p-6 rounded-xl border border-white/5 opacity-50 select-none cursor-not-allowed">
-                            <h2 className="text-xl text-white font-bold mb-4">Playback Preferences</h2>
-                            <p className="text-gray-400 text-sm">Coming soon...</p>
+                        {/* Theme Section */}
+                        <div className="bg-dark p-6 rounded-xl border border-white/5 shadow-lg mb-8">
+                            <h2 className="text-xl text-white font-bold mb-4">Appearance</h2>
+                            <p className="text-gray-400 text-sm mb-4">Customize the accent color of the application.</p>
+
+                            <div className="flex flex-wrap gap-4">
+                                {THEME_COLORS.map((color) => (
+                                    <button
+                                        key={color.name}
+                                        onClick={() => handleThemeChange(color.value)}
+                                        className="w-10 h-10 rounded-full cursor-pointer transition-transform hover:scale-110 border-2 border-transparent hover:border-white focus:outline-none focus:border-white"
+                                        style={{ backgroundColor: color.value }}
+                                        title={color.name}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Other Settings Placeholders */}
+                        {/* Playback Preferences */}
+                        <div className="bg-dark p-6 rounded-xl border border-white/5 shadow-lg mb-8">
+                            <h2 className="text-xl text-white font-bold mb-4">Playback & Data</h2>
+                            <p className="text-gray-400 text-sm mb-4">Manage your viewing experience and data.</p>
+
+                            <div className="space-y-6">
+                                {/* Auto-Play Toggle */}
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-white font-medium">Auto-Play Selected Source</p>
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            Automatically try to play the first available server.
+                                            <br />
+                                            <span className="text-orange-500/80">Experimental feature.</span>
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            const newState = !(localStorage.getItem("autoplay_enabled") === "true");
+                                            localStorage.setItem("autoplay_enabled", String(newState));
+                                            toast.info(`Auto-Play ${newState ? "Enabled" : "Disabled"}`, { position: "bottom-right", autoClose: 1000 });
+                                            // Force re-render if needed, or simple toast is enough as it reads from localStorage
+                                            setApiKey(apiKey); // dummy update to trigger render if we used state
+                                        }}
+                                        className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${localStorage.getItem("autoplay_enabled") === "true" ? "bg-primary" : "bg-gray-700"}`}
+                                    >
+                                        <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${localStorage.getItem("autoplay_enabled") === "true" ? "translate-x-6" : ""}`} />
+                                    </button>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="h-px bg-white/5" />
+
+                                {/* Clear Cache */}
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-white font-medium">Clear App Cache</p>
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            Fixes loading issues by clearing locally stored data (searches, history).
+                                            <br />
+                                            Safe to use; does not delete your account.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            const keysToRemove = [];
+                                            for (let i = 0; i < localStorage.length; i++) {
+                                                const key = localStorage.key(i);
+                                                if (key && (key.startsWith("search_") || key.startsWith("video_detail_") || key.startsWith("cache_"))) {
+                                                    keysToRemove.push(key);
+                                                }
+                                            }
+                                            keysToRemove.forEach(key => localStorage.removeItem(key));
+                                            toast.success(`Cleared ${keysToRemove.length} cached items!`, { position: "top-right" });
+                                        }}
+                                        className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-lg transition-colors border border-white/10"
+                                    >
+                                        Clear Cache
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
