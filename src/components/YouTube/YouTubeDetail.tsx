@@ -353,7 +353,7 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews, episod
                                                 {episodes?.map((item, index) => (
                                                     <Link
                                                         key={item.id}
-                                                        to={`/watch/yt/${item.id}`} // Assuming this route scheme based on context
+                                                        to={`/youtube/${item.id}`} // Corrected route to match App.tsx
                                                         className="flex gap-4 p-4 hover:bg-white/5 rounded-xl transition-all group border border-transparent hover:border-white/10"
                                                     >
                                                         <div className="shrink-0 w-[160px] aspect-video relative rounded-lg overflow-hidden">

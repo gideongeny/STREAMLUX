@@ -52,7 +52,7 @@ export async function fetchVideosDetail(ids: string[]): Promise<any[]> {
   try {
     const response = await youtube.get("/videos", {
       params: {
-        part: "snippet,contentDetails,statistics",
+        part: "snippet,contentDetails,statistics,status",
         id: ids.join(","),
         key: getApiKey(),
       },
@@ -235,11 +235,13 @@ export async function getRelatedVideos(videoId: string): Promise<YouTubeVideo[]>
  * Fetch episodes for a series (same channel, similar title).
  */
 export async function getYouTubeSeriesEpisodes(title: string, channelId?: string): Promise<YouTubeVideo[]> {
-  // Clean title: remove "Episode 1", "Ep 1", date parts, etc. to get series base name
-  // This is a heuristic.
+  // Clean title: remove "Episode 1", "Season 1", "S1", date parts, etc. to get series base name
   const baseTitle = title
-    .replace(/\b(Ep|Episode|Part)\s*\d+/gi, "")
-    .replace(/\s*-\s*$/, "")
+    .replace(/\b(Ep|Episode|Part|Season|S)\s*\d+/gi, "")
+    .replace(/\|\s*/g, " ")
+    .replace(/\s*-\s*/g, " ")
+    .replace(/\b(Full Episode|Official)\b/gi, "")
+    .replace(/\s+/g, " ")
     .trim();
 
   const query = `${baseTitle} full episode`;
@@ -261,16 +263,29 @@ export async function getYouTubeSeriesEpisodes(title: string, channelId?: string
     const ids = response.data.items.map((item: any) => item.id.videoId);
     const details = await fetchVideosDetail(ids);
 
-    return details.map((item: any) => ({
-      id: item.id,
-      title: item.snippet.title,
-      description: item.snippet.description,
-      thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
-      channelTitle: item.snippet.channelTitle,
-      channelId: item.snippet.channelId,
-      type: classifyVideo(item.snippet.title, item.snippet.description),
-      duration: parseDuration(item.contentDetails.duration),
-    }));
+    return details
+      .filter((item: any) => {
+        // 1. Strict Title Match: Must contain the base title (case-insensitive)
+        const itemTitle = item.snippet.title.toLowerCase();
+        // Only use words longer than 2 chars to avoid matching "in", "at", "the"
+        const requiredTerms = baseTitle.toLowerCase().split(' ').filter(word => word.length > 2);
+        const matchesTitle = requiredTerms.every(term => itemTitle.includes(term));
+
+        // 2. Playability Check: Must be embeddable
+        const isEmbeddable = item.status?.embeddable === true;
+
+        return matchesTitle && isEmbeddable;
+      })
+      .map((item: any) => ({
+        id: item.id,
+        title: item.snippet.title,
+        description: item.snippet.description,
+        thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+        channelTitle: item.snippet.channelTitle,
+        channelId: item.snippet.channelId,
+        type: classifyVideo(item.snippet.title, item.snippet.description),
+        duration: parseDuration(item.contentDetails.duration),
+      }));
   } catch (error) {
     console.error("Error fetching series episodes:", error);
     return [];
