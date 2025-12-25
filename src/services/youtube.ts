@@ -31,20 +31,51 @@ let currentKeyIndex = 0;
 
 const getApiKey = () => {
   const userKey = typeof window !== 'undefined' ? localStorage.getItem("user_youtube_api_key") : null;
-  if (userKey) return userKey;
+  // Check if this specific user key has failed recently (in memory)
+  if (userKey && !failedUserKeys.has(userKey)) return userKey;
   return API_KEYS[currentKeyIndex];
 };
 
+// Track failed user keys in memory for the current session
+const failedUserKeys = new Set<string>();
+
 const rotateApiKey = () => {
-  // Only rotate if we are using the pool keys
   const userKey = typeof window !== 'undefined' ? localStorage.getItem("user_youtube_api_key") : null;
-  if (!userKey) {
-    currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
-    console.log(`Rotating to YouTube API Key index: ${currentKeyIndex}`);
-  } else {
-    console.warn("User key failed. You might want to switch back to default pool manually or handle invalid user key.");
+
+  // If we were using a user key and it failed
+  if (userKey && !failedUserKeys.has(userKey)) {
+    console.warn("User provided key failed. Falling back to default pool for this session.");
+    failedUserKeys.add(userKey);
+    // Don't rotate index yet, just let the next call pick up the default key
+    return;
   }
+
+  // Otherwise rotate the default pool
+  currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+  console.log(`Rotating to YouTube API Key index: ${currentKeyIndex}`);
 };
+
+/**
+ * Validate a YouTube API key by making a minimal request.
+ */
+export async function validateYouTubeKey(key: string): Promise<boolean> {
+  try {
+    // Search for something generic and static with maxResults 1 to minimize cost
+    await axios.get(`${BASE_URL}/search`, {
+      params: {
+        part: "snippet",
+        q: "test",
+        maxResults: 1,
+        type: "video",
+        key: key,
+      },
+    });
+    return true;
+  } catch (error) {
+    console.error("API Key Validation Failed:", error);
+    return false;
+  }
+}
 
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 

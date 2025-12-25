@@ -5,6 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
 import Footer from "../components/Footer/Footer";
+import { validateYouTubeKey } from "../services/youtube";
 
 interface SettingsProps { }
 
@@ -21,8 +22,15 @@ const Settings: FunctionComponent<SettingsProps> = () => {
         }
     }, []);
 
-    const handleSaveKey = () => {
+    import { validateYouTubeKey } from "../services/youtube";
+
+    // ... inside component
+
+    const [isValidating, setIsValidating] = useState(false);
+
+    const handleSaveKey = async () => {
         const newKey = keyInputRef.current?.value.trim();
+
         if (!newKey) {
             localStorage.removeItem("user_youtube_api_key");
             setApiKey("");
@@ -30,9 +38,17 @@ const Settings: FunctionComponent<SettingsProps> = () => {
             return;
         }
 
-        localStorage.setItem("user_youtube_api_key", newKey);
-        setApiKey(newKey);
-        toast.success("API Key saved! You now have custom quota.", { position: "top-right" });
+        setIsValidating(true);
+        const isValid = await validateYouTubeKey(newKey);
+        setIsValidating(false);
+
+        if (isValid) {
+            localStorage.setItem("user_youtube_api_key", newKey);
+            setApiKey(newKey);
+            toast.success("API Key verified and saved! Custom quota active.", { position: "top-right" });
+        } else {
+            toast.error("Invalid API Key. Please check and try again.", { position: "top-right" });
+        }
     };
 
     return (
@@ -101,9 +117,10 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                                         />
                                         <button
                                             onClick={handleSaveKey}
-                                            className="px-6 py-2 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg transition-colors shadow-lg shadow-primary/20"
+                                            disabled={isValidating}
+                                            className={`px-6 py-2 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg transition-colors shadow-lg shadow-primary/20 ${isValidating ? 'opacity-70 cursor-wait' : ''}`}
                                         >
-                                            Save
+                                            {isValidating ? 'Checking...' : 'Save'}
                                         </button>
                                     </div>
                                 </div>
