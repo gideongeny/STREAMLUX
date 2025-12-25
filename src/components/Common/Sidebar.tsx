@@ -6,6 +6,7 @@ import { BsBookmarkHeart } from "react-icons/bs";
 import { HiOutlineLogin, HiOutlineLogout } from "react-icons/hi";
 import { MdOutlineExplore, MdSportsSoccer } from "react-icons/md";
 import { FaDownload } from "react-icons/fa";
+import { IoSettingsOutline } from "react-icons/io5";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -196,6 +197,16 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           >
             <FaDownload size={25} />
             <p>Download App</p>
+          </Link>
+
+          <Link
+            to="/settings"
+            className={`flex gap-6 items-center  ${location.pathname === "/settings" &&
+              "!text-primary border-r-4 border-primary font-medium"
+              } hover:text-white transition duration-300`}
+          >
+            <IoSettingsOutline size={25} />
+            <p>Settings</p>
           </Link>
 
           <button

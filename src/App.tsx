@@ -25,6 +25,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import UserAgreement from "./pages/UserAgreement";
 import Disclaimer from "./pages/Disclaimer";
 import Download from "./pages/Download";
+import Settings from "./pages/Settings";
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
@@ -243,6 +244,7 @@ function App() {
         <Route path="user-agreement" element={<UserAgreement />} />
         <Route path="disclaimer" element={<Disclaimer />} />
         <Route path="download" element={<Download />} />
+        <Route path="settings" element={<Settings />} />
         <Route
           path="bookmarked"
           element={

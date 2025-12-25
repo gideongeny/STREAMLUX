@@ -29,11 +29,21 @@ const API_KEYS = [
 
 let currentKeyIndex = 0;
 
-const getApiKey = () => API_KEYS[currentKeyIndex];
+const getApiKey = () => {
+  const userKey = typeof window !== 'undefined' ? localStorage.getItem("user_youtube_api_key") : null;
+  if (userKey) return userKey;
+  return API_KEYS[currentKeyIndex];
+};
 
 const rotateApiKey = () => {
-  currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
-  console.log(`Rotating to YouTube API Key index: ${currentKeyIndex}`);
+  // Only rotate if we are using the pool keys
+  const userKey = typeof window !== 'undefined' ? localStorage.getItem("user_youtube_api_key") : null;
+  if (!userKey) {
+    currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+    console.log(`Rotating to YouTube API Key index: ${currentKeyIndex}`);
+  } else {
+    console.warn("User key failed. You might want to switch back to default pool manually or handle invalid user key.");
+  }
 };
 
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
