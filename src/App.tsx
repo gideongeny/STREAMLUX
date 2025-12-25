@@ -1,7 +1,7 @@
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigationType } from "react-router-dom";
 import { Analytics } from '@vercel/analytics/react';
 
 import Protected from "./components/Common/Protected";
@@ -209,12 +209,16 @@ function App() {
     };
   }, [dispatch]);
 
+  const navType = useNavigationType();
+
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }, [location.pathname, location.search]);
+    if (navType !== "POP") {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  }, [location.pathname, location.search, navType]);
 
   return (
     <>
