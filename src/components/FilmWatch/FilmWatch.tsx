@@ -205,21 +205,10 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   };
 
   const handleVideoError = () => {
-    console.log(`Video source ${currentSourceIndex + 1} failed, trying next...`);
+    console.log(`Video source ${currentSourceIndex + 1} failed.`);
     setVideoError(true);
-
-    // Try next source if available
-    if (currentSourceIndex < videoSources.length - 1) {
-      setTimeout(() => {
-        setCurrentSourceIndex(currentSourceIndex + 1);
-        setVideoError(false);
-        setIsLoadingVideo(true);
-      }, 1000);
-    } else {
-      // All sources failed
-      setVideoError(true);
-      setIsLoadingVideo(false);
-    }
+    setIsLoadingVideo(false);
+    // Manual mode only: Do not auto-advance
   };
 
   const handleVideoLoad = () => {
@@ -234,20 +223,23 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     setIsLoadingVideo(true);
   };
 
-  // Auto-advance to next source if current one fails
+  // Auto-advance disabled for Manual Mode
+  /* 
   useEffect(() => {
     if (videoError && currentSourceIndex < videoSources.length - 1) {
       const timer = setTimeout(() => {
         setCurrentSourceIndex(prev => prev + 1);
         setVideoError(false);
         setIsLoadingVideo(true);
-      }, 1500); // Slightly faster failover
+      }, 1500); 
 
       return () => clearTimeout(timer);
     }
   }, [videoError, currentSourceIndex, videoSources.length]);
+  */
 
-  // Loading timeout: If source doesn't load in 6 seconds, assume it's stuck and try next
+  // Loading timeout disabled for Manual Mode
+  /*
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 
@@ -262,6 +254,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [isLoadingVideo, videoError, currentSourceIndex]);
+  */
 
   // Reset source when detail changes
   useEffect(() => {
@@ -469,10 +462,16 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   </div>
                 )}
 
-                {/* Toast-style status for next source */}
-                {videoError && currentSourceIndex < videoSources.length - 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-orange-500/90 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg animate-bounce">
-                    Server error. Auto-connecting to {resolvedSources[currentSourceIndex + 1]?.name}...
+                {/* Manual Error Message */}
+                {videoError && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-red-500/90 text-white px-6 py-3 rounded-full text-xs font-bold shadow-lg flex flex-col items-center gap-1">
+                    <span>⚠️ Video failed to load.</span>
+                    <button
+                      onClick={() => setIsSelectorOpen(true)}
+                      className="underline hover:text-gray-200"
+                    >
+                      Click here to select another server
+                    </button>
                   </div>
                 )}
               </>
