@@ -40,7 +40,7 @@ const SidebarMini: FunctionComponent = () => {
         <Link to="/">
           <img
             alt="StreamLux Logo"
-            src="/logo.svg"
+            src="/logo.png"
             className="w-10 h-10"
           />
         </Link>

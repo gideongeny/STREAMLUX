@@ -14,6 +14,7 @@ import DiverseContent from "../components/Home/DiverseContent";
 import LiveSports from "../components/Home/LiveSports";
 import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
 import ErrorBoundary from "../components/Common/ErrorBoundary";
+import AdBanner from "../components/Common/AdBanner";
 import { useHomeData } from "../hooks/useHomeData";
 import { useAppSelector } from "../store/hooks";
 
@@ -21,7 +22,7 @@ const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
 
   const [isSidebarActive, setIsSidebarActive] = useState(false);
-  
+
 
   ///////////////////////////////////////////////////////////////////////////////////
   // WAY 1: MANUALLY SET UP LOCAL STORAGE
@@ -58,9 +59,9 @@ const Home: FC = () => {
     }
     return "tv";
   };
-  
+
   const [currentTab, setCurrentTab] = useState<"movie" | "tv" | "sports">(() => getInitialTab());
-  
+
   // Sync to localStorage when currentTab changes
   useEffect(() => {
     try {
@@ -69,7 +70,7 @@ const Home: FC = () => {
       console.warn("Error saving currentTab to localStorage:", error);
     }
   }, [currentTab]);
-  
+
   const handleTabChange = (tab: "movie" | "tv" | "sports") => {
     if (tab === "sports") {
       window.open("https://sportslive.run/live?utm_source=MB_Website&sportType=football", "_blank");
@@ -109,7 +110,7 @@ const Home: FC = () => {
       <div className="flex md:hidden justify-between items-center px-5 my-5">
         <Link to="/" className="flex gap-2 items-center">
           <img
-            src="/logo.svg"
+            src="/logo.png"
             alt="StreamLux Logo"
             className="h-10 w-10"
           />
@@ -205,6 +206,10 @@ const Home: FC = () => {
         </div>
       </div>
 
+      <div className="px-4 md:px-8">
+        <AdBanner />
+      </div>
+
       <Footer />
     </>
   );
@@ -233,9 +238,8 @@ const FilmTypeButton: FC<FilmTypeButtonProps> = ({
       onClick={() => {
         onSetCurrentTab(buttonType);
       }}
-      className={`relative transition duration-300 hover:text-white ${
-        isActive ? "text-white font-medium" : ""
-      }`}
+      className={`relative transition duration-300 hover:text-white ${isActive ? "text-white font-medium" : ""
+        }`}
     >
       {getButtonText()}
       {isActive && (
