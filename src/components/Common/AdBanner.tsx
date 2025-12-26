@@ -44,16 +44,28 @@ const AdBanner: FC<AdBannerProps> = ({ className = "" }) => {
             href="https://otieu.com/4/10378373"
             target="_blank"
             rel="noopener noreferrer"
-            className={`w-full flex justify-center my-6 ${className}`}
+            className={`w-full flex justify-center my-4 ${className}`}
         >
             <div
                 ref={bannerRef}
-                className="w-full max-w-[728px] min-h-[90px] bg-[#222] border border-[#333] rounded-lg overflow-hidden relative group cursor-pointer"
+                className="w-full max-w-[728px] h-[90px] bg-[#222] border border-[#333] rounded overflow-hidden relative group cursor-pointer hover:opacity-90 transition-opacity"
             >
-                {/* Visual Placeholder for the Banner */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 group-hover:bg-[#2a2a2a] transition-colors">
-                    <span className="font-semibold text-gray-400">StreamLux Sponsor</span>
-                    <span className="text-xs mt-1 text-primary">Click to support us</span>
+                {/* AD Badge (MovieBox Style) */}
+                <div className="absolute top-0 left-0 bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 z-10">
+                    AD
+                </div>
+
+                {/* Visual Content */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-800 group-hover:bg-zinc-700 transition-colors">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                            <span className="text-primary text-xl font-bold">🚀</span>
+                        </div>
+                        <div className="flex flex-col text-left">
+                            <span className="font-bold text-white text-lg leading-tight">StreamLux Premium</span>
+                            <span className="text-xs text-gray-400">Support us & Enjoy High-Speed Streaming</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </a>

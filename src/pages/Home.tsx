@@ -183,6 +183,20 @@ const Home: FC = () => {
             />
           )}
 
+          {currentTab === "tv" && (
+            <MainHomeFilm
+              data={dataTV}
+              dataDetail={detailQueryTV.data}
+              isLoadingBanner={detailQueryTV.isLoading}
+              isLoadingSection={isLoadingTV}
+            />
+          )}
+
+          {/* Ad Banner (MovieBox Style) */}
+          <div className="px-4 md:px-8 mb-6 mt-4">
+            <AdBanner />
+          </div>
+
           {/* Live Sports Ticker (MovieBox.ph style) - Wrapped in ErrorBoundary */}
           <ErrorBoundary fallback={null}>
             <LiveSportsTicker />
@@ -206,9 +220,7 @@ const Home: FC = () => {
         </div>
       </div>
 
-      <div className="px-4 md:px-8">
-        <AdBanner />
-      </div>
+
 
       <Footer />
     </>
