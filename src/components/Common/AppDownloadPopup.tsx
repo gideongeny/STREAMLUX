@@ -9,13 +9,13 @@ const AppDownloadPopup: FC = () => {
         // Check if user has already dismissed the popup
         const hasDismissed = localStorage.getItem("app_popup_dismissed");
 
-        // Show popup after 10 seconds if not dismissed
-        if (!hasDismissed) {
-            const timer = setTimeout(() => {
-                setIsVisible(true);
-            }, 10000);
-            return () => clearTimeout(timer);
-        }
+        // Show popup after 3 seconds (Fast for testing)
+        // if (!hasDismissed) {
+        const timer = setTimeout(() => {
+            setIsVisible(true);
+        }, 3000);
+        return () => clearTimeout(timer);
+        // }
     }, []);
 
     const handleDismiss = () => {
