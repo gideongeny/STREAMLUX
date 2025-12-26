@@ -10,13 +10,18 @@ const MovieWatch: FC = () => {
   const { id } = useParams();
   const { data, error } = useQuery<getWatchReturnedType, Error>(
     ["watchMovie", id],
-    () => getWatchMovie(Number(id as string))
+    () => getWatchMovie(Number(id as string)),
+    { refetchOnWindowFocus: false }
   );
 
   // if (error) return <div>ERROR: {error.message}</div>;
   if (error) return <Error />;
 
-  // if (!data) return <div>Loading...</div>;
+  if (!data) return (
+    <div className="flex justify-center items-center h-screen bg-dark text-white">
+      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
 
   return <FilmWatch {...data} media_type="movie" />;
 };

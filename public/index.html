@@ -1,67 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="shortcut icon" href="/icon.png" type="image/x-icon" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <meta name="theme-color" content="#1a1a1a" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <title>StreamLux | Free Movies, TV Shows & Live Sports Streaming</title>
 
-    <meta
-      name="title"
-      content="StreamLux | Free Movies, TV Shows & Live Sports Streaming"
-    />
-    <meta
-      name="description"
-      content="StreamLux - Watch free movies, TV shows, and live sports in HD. Discover world cinema, Nollywood, Bollywood, K-drama, and more. Live football, EPL, Champions League streaming."
-    />
-    <meta property="og:type" content="website" />
-    <meta
-      property="og:title"
-      content="StreamLux | Free Movies, TV Shows & Live Sports Streaming"
-    />
-    <meta
-      property="og:description"
-      content="Watch free movies, TV shows, and live sports in HD. Discover world cinema from Africa, Asia, Latin America and more."
-    />
-    <meta property="og:image" content="/preview.png" />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="shortcut icon" href="/icon.png" type="image/x-icon" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>StreamLux | Free Movies, TV Shows & Live Sports Streaming</title>
 
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta
-      property="twitter:title"
-      content="StreamLux | Free Movies, TV Shows & Live Sports Streaming"
-    />
-    <meta
-      property="twitter:description"
-      content="Watch free movies, TV shows, and live sports in HD. Discover world cinema from around the globe."
-    />
-    <meta property="twitter:image" content="/preview.png" />
-    
-    <meta name="google-site-verification" content="AFMGedjZF5SYH7keB9CQ3xm0aVP4cU6mljkExb2r00c" />
-    
-    <!-- Preconnect to Google services for faster loading -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-    
-    <!-- Vercel Web Analytics -->
-    <script>
-      (function() {
-        var script = document.createElement('script');
-        script.src = 'https://va.vercel-scripts.com/v1/script.js';
-        script.defer = true;
-        script.onload = function() {
-          window.va = window.va || function() { (window.va.q = window.va.q || []).push(arguments); };
-        };
-        document.head.appendChild(script);
-      })();
-    </script>
-    <!-- 
+  <meta name="title" content="StreamLux | Free Movies, TV Shows & Live Sports Streaming" />
+  <meta name="description"
+    content="StreamLux - Watch free movies, TV shows, and live sports in HD. Discover world cinema, Nollywood, Bollywood, K-drama, and more. Live football, EPL, Champions League streaming." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="StreamLux | Free Movies, TV Shows & Live Sports Streaming" />
+  <meta property="og:description"
+    content="Watch free movies, TV shows, and live sports in HD. Discover world cinema from Africa, Asia, Latin America and more." />
+  <meta property="og:image" content="/preview.png" />
+
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:title" content="StreamLux | Free Movies, TV Shows & Live Sports Streaming" />
+  <meta property="twitter:description"
+    content="Watch free movies, TV shows, and live sports in HD. Discover world cinema from around the globe." />
+  <meta property="twitter:image" content="/preview.png" />
+
+  <meta name="google-site-verification" content="AFMGedjZF5SYH7keB9CQ3xm0aVP4cU6mljkExb2r00c" />
+
+  <!-- Preconnect to Google services for faster loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+
+  <!-- Vercel Web Analytics -->
+  <script>
+    (function () {
+      var script = document.createElement('script');
+      script.src = 'https://va.vercel-scripts.com/v1/script.js';
+      script.defer = true;
+      script.onload = function () {
+        window.va = window.va || function () { (window.va.q = window.va.q || []).push(arguments); };
+      };
+      document.head.appendChild(script);
+    })();
+  </script>
+  <!-- 
       ===================================================================
       MONETIZATION (POPUNDER ADS)
       Paste your PopAds or PropellerAds "Direct Link" or "Popunder" script here.
@@ -70,27 +57,35 @@
       Example:
       <script type="text/javascript" src="//pl12345.com/script.js"></script>
     -->
-  </head>
-  <body>
-    <noscript>
-      <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #0f172a; color: #fff; text-align: center; padding: 20px;">
-        <div>
-          <h1>JavaScript Required</h1>
-          <p>You need to enable JavaScript to run this app.</p>
-        </div>
-      </div>
-    </noscript>
-    <div id="root">
-      <!-- Loading fallback while React loads -->
-      <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #0f172a; color: #fff; flex-direction: column; gap: 20px;">
-        <div style="width: 50px; height: 50px; border: 4px solid #334155; border-top-color: #ef4444; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-        <p>Loading StreamLux...</p>
-        <style>
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        </style>
+</head>
+
+<body>
+  <noscript>
+    <div
+      style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #0f172a; color: #fff; text-align: center; padding: 20px;">
+      <div>
+        <h1>JavaScript Required</h1>
+        <p>You need to enable JavaScript to run this app.</p>
       </div>
     </div>
-  </body>
+  </noscript>
+  <div id="root">
+    <!-- Loading fallback while React loads -->
+    <div
+      style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #0f172a; color: #fff; flex-direction: column; gap: 20px;">
+      <div
+        style="width: 50px; height: 50px; border: 4px solid #334155; border-top-color: #ef4444; border-radius: 50%; animation: spin 1s linear infinite;">
+      </div>
+      <p>Loading StreamLux...</p>
+      <style>
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      </style>
+    </div>
+  </div>
+</body>
+
 </html>
