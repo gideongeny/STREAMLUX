@@ -55,18 +55,12 @@ const AdBanner: FC<AdBannerProps> = ({ className = "" }) => {
                     AD
                 </div>
 
-                {/* Visual Content */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-800 group-hover:bg-zinc-700 transition-colors">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                            <span className="text-primary text-xl font-bold">🚀</span>
-                        </div>
-                        <div className="flex flex-col text-left">
-                            <span className="font-bold text-white text-lg leading-tight">StreamLux Premium</span>
-                            <span className="text-xs text-gray-400">Support us & Enjoy High-Speed Streaming</span>
-                        </div>
-                    </div>
-                </div>
+                {/* Visual Content - Real Image */}
+                <img
+                    src="/ad_banner.png"
+                    alt="StreamLux Premium"
+                    className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                />
             </div>
         </a>
     );
