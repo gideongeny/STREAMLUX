@@ -149,7 +149,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           </Link>
 
           <a
-            href="https://www.buymeacoffee.com/"
+            href="https://buymeacoffee.com/gideongeny"
             target="_blank"
             rel="noopener noreferrer"
             className="flex gap-6 items-center text-yellow-500 hover:text-yellow-400 transition duration-300"

@@ -73,9 +73,11 @@ Official website: [https://streamlux.vercel.app/](https://streamlux.vercel.app/)
 - **Latest Updates (v2.1)**:
   - **Force TMDB World Cinema**: Enhanced "World Cinema" sections now strictly use TMDB data with accurate region codes for reliable content discovery.
   - **YouTube TV Seasons Layout**: New "Episodes" tab for YouTube TV shows, mimicking the season/episode structure of major streaming platforms.
-  - **Android TV Compatibility**: Fixed "infinite loading" issues on Android TV devices via IntersectionObserver polyfills.
-  - **Performance Boost**: Optimized World Cinema sliders with non-blocking loading (hybrid TMDB/YouTube fetching) for instant content display.
+  - **Android TV Compatibility**: Fixed "infinite loading" issues on Android TV devices via IntersectionObserver polyfills and optimized querying.
+  - **Performance Boost**: Optimized World Cinema sliders with non-blocking loading (hybrid TMDB/YouTube fetching).
   - **Strict Content Separation**: Improved filtering to ensure movies and TV shows never appear in the wrong categories.
+  - **Monetization & Ads**: Integrated Service Worker support for ad networks (Monetag/PropellerAds) and custom banner placements.
+  - **Enhanced Branding**: New logo and identity for StreamLux throughout the application.
 
 ## 📱 Android App
 
