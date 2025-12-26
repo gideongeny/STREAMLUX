@@ -40,13 +40,23 @@ const AdBanner: FC<AdBannerProps> = ({ className = "" }) => {
     }, []);
 
     return (
-        <div className={`w-full flex justify-center my-6 ${className}`}>
+        <a
+            href="https://otieu.com/4/10378373"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`w-full flex justify-center my-6 ${className}`}
+        >
             <div
                 ref={bannerRef}
-                className="w-full max-w-[728px] min-h-[90px] bg-[#222] border border-[#333] rounded-lg overflow-hidden"
+                className="w-full max-w-[728px] min-h-[90px] bg-[#222] border border-[#333] rounded-lg overflow-hidden relative group cursor-pointer"
             >
+                {/* Visual Placeholder for the Banner */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 group-hover:bg-[#2a2a2a] transition-colors">
+                    <span className="font-semibold text-gray-400">StreamLux Sponsor</span>
+                    <span className="text-xs mt-1 text-primary">Click to support us</span>
+                </div>
             </div>
-        </div>
+        </a>
     );
 };
 
