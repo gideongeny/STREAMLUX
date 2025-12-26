@@ -221,6 +221,17 @@ This project is deployed on Vercel. The build process uses:
 - **Desktop Browsers**: Works on all modern browsers (Chrome, Firefox, Safari, Edge)
 - **Polyfills**: Includes polyfills for older browser compatibility
 
+## Support Us
+
+If you enjoy StreamLux, please consider supporting the project!
+
+- **Buy Me a Coffee**: [https://buymeacoffee.com/gideongeny](https://buymeacoffee.com/gideongeny)
+- **Click the Sponsor Banner**: Visiting the sponsor link on the home page helps keep the servers running.
+
+## 📱 Mobile App Helper
+
+To support the project, we may display a friendly popup encouraging users to download the **StreamLux Android App**. The app offers a smoother, ad-free experience compared to the web version. Users can easily dismiss this message to continue using the website if they prefer.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

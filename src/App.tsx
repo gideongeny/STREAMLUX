@@ -26,8 +26,10 @@ import UserAgreement from "./pages/UserAgreement";
 import Disclaimer from "./pages/Disclaimer";
 import Download from "./pages/Download";
 import Settings from "./pages/Settings";
+import { ToastContainer } from "react-toastify";
+import AppDownloadPopup from "./components/Common/AppDownloadPopup";
 import { auth, db } from "./shared/firebase";
-import { useAppDispatch } from "./store/hooks";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
 
 function App() {
@@ -279,8 +281,22 @@ function App() {
         />
         <Route path="*" element={<Error />} />
       </Routes>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss={false}
+        draggable
+        pauseOnHover
+      />
+      <AppDownloadPopup />
+      {/* <Footer /> */}
     </>
   );
 }
+
 
 export default App;
