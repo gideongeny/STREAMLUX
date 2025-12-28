@@ -321,6 +321,29 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     });
   }, [currentUser, detail, media_type]);
 
+  const { saveProgress } = useWatchProgress();
+
+  useEffect(() => {
+    if (!detail) return;
+
+    // Save progress when component mounts/updates
+    const saveWatchProgress = () => {
+      saveProgress({
+        mediaId: detail.id,
+        mediaType: media_type,
+        title: (detail as DetailMovie).title || (detail as DetailTV).name,
+        posterPath: detail.poster_path,
+        currentTime: 0,
+        duration: (detail as DetailMovie).runtime || (detail as DetailTV).episode_run_time?.[0] || 0,
+        progress: 0, // In future: calculate % from duration
+        timestamp: Date.now(),
+        seasonNumber: seasonId,
+        episodeNumber: episodeId,
+      });
+    };
+    saveWatchProgress();
+  }, [detail, media_type, seasonId, episodeId]);
+
   return (
     <>
       {detail && (
