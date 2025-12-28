@@ -6,9 +6,14 @@ const LANGUAGES = [
     { code: "en", label: "English", flag: "🇺🇸" },
     { code: "es", label: "Español", flag: "🇪🇸" },
     { code: "fr", label: "Français", flag: "🇫🇷" },
-    { code: "sw", label: "Kiswahili", flag: "🇹🇿" },
+    { code: "id", label: "Indonesian", flag: "🇮🇩" },
+    { code: "pt", label: "Portuguese", flag: "🇵🇹" },
+    { code: "tl", label: "Filipino", flag: "🇵🇭" },
+    { code: "ur", label: "Urdu", flag: "🇵🇰" },
     { code: "ar", label: "العربية", flag: "🇸🇦" },
     { code: "hi", label: "हिन्दी", flag: "🇮🇳" },
+    { code: "sw", label: "Kiswahili", flag: "🇹🇿" },
+    { code: "zh", label: "中文", flag: "🇨🇳" },
 ];
 
 interface LanguageSelectorProps {
@@ -39,8 +44,8 @@ const LanguageSelector: FC<LanguageSelectorProps> = ({ className = "" }) => {
                         key={lang.code}
                         onClick={() => handleLanguageChange(lang.code)}
                         className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-3 transition-colors ${i18n.language === lang.code
-                                ? "bg-primary text-white"
-                                : "text-gray-300 hover:bg-white/10"
+                            ? "bg-primary text-white"
+                            : "text-gray-300 hover:bg-white/10"
                             }`}
                     >
                         <span className="text-lg">{lang.flag}</span>

@@ -16,6 +16,11 @@ const FilterByLanguage: FunctionComponent = () => {
         { label: "Hindi", value: "hi" },
         { label: "Arabic", value: "ar" },
         { label: "Swahili", value: "sw" },
+        { label: "Indonesian", value: "id" },
+        { label: "Portuguese", value: "pt" },
+        { label: "Filipino", value: "tl" },
+        { label: "Urdu", value: "ur" },
+        { label: "Chinese", value: "zh" },
         { label: "Turkish", value: "tr" },
     ];
 
