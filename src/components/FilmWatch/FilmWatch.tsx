@@ -29,6 +29,7 @@ import Footer from "../Footer/Footer";
 import Comment from "./Comment/Comment";
 import SeasonSelection from "./SeasonSelection";
 import DownloadOptions from "../Common/DownloadOptions";
+import PlayerControls from "./PlayerControls";
 
 interface FilmWatchProps {
   media_type: "movie" | "tv";
@@ -343,6 +344,14 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     };
     saveWatchProgress();
   }, [detail, media_type, seasonId, episodeId]);
+
+  const handleSpeedChange = (speed: number) => {
+    // Attempt to send message to iframe (some players might support it)
+    const iframe = document.querySelector('iframe');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({ event: 'command', func: 'setPlaybackRate', args: [speed] }, '*');
+    }
+  };
 
   return (
     <>
