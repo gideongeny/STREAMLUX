@@ -1,15 +1,17 @@
 import { FC, useState, useEffect } from 'react';
-import { MdSpeed, MdSettings, MdShare } from 'react-icons/md';
+import { MdSpeed, MdShare, MdForward10, MdReplay10, MdOpenInNew, MdSkipNext } from 'react-icons/md';
 import ShareModal from './ShareModal';
 
 interface PlayerControlsProps {
     onSpeedChange: (speed: number) => void;
+    onSeek?: (seconds: number) => void; // +ve for forward, -ve for backward
+    onPopOut?: () => void;
     className?: string;
 }
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-const PlayerControls: FC<PlayerControlsProps> = ({ onSpeedChange, className = '' }) => {
+const PlayerControls: FC<PlayerControlsProps> = ({ onSpeedChange, onSeek, onPopOut, className = '' }) => {
     const [currentSpeed, setCurrentSpeed] = useState(1);
     const [isOpen, setIsOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
@@ -35,6 +37,38 @@ const PlayerControls: FC<PlayerControlsProps> = ({ onSpeedChange, className = ''
 
     return (
         <div className={`flex items-center gap-2 ${className}`}>
+            {/* Seek Controls (Best Effort) */}
+            {onSeek && (
+                <>
+                    <button
+                        onClick={() => onSeek(-10)}
+                        className="p-1.5 bg-dark-lighten rounded-lg hover:bg-dark-lighten/80 transition-colors text-white"
+                        title="Rewind 10s"
+                    >
+                        <MdReplay10 className="text-xl" />
+                    </button>
+                    <button
+                        onClick={() => onSeek(85)}
+                        className="flex items-center gap-1 px-2 py-1.5 bg-dark-lighten rounded-lg hover:bg-dark-lighten/80 transition-colors text-white text-xs font-bold uppercase"
+                        title="Skip Intro (+85s)"
+                    >
+                        <MdSkipNext className="text-lg" />
+                        <span>Intro</span>
+                    </button>
+                </>
+            )}
+
+            {/* Pop-out Player */}
+            {onPopOut && (
+                <button
+                    onClick={onPopOut}
+                    className="p-1.5 bg-dark-lighten rounded-lg hover:bg-dark-lighten/80 transition-colors text-white"
+                    title="Pop-out Player"
+                >
+                    <MdOpenInNew className="text-lg" />
+                </button>
+            )}
+
             <button
                 onClick={() => setIsShareOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-dark-lighten rounded-lg hover:bg-dark-lighten/80 transition-colors text-sm font-medium text-white"

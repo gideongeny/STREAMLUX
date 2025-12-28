@@ -13,6 +13,8 @@ import { toast, ToastContainer } from "react-toastify";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import { auth } from "../../shared/firebase";
 import { useAppSelector } from "../../store/hooks";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "./LanguageSelector";
 
 interface SidebarProps {
   isSidebarActive: boolean;
@@ -25,6 +27,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { isMobile } = useCurrentViewportView();
+  const { t } = useTranslation();
 
   const signOutHandler = () => {
     if (!auth) {
@@ -105,7 +108,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           className={`text-white text-lg font-medium ${isSidebarActive ? "-mt-2 md:-mt-6" : "mt-8 md:mt-12"
             }`}
         >
-          MENU
+          {t('MENU')}
         </div>
         <div className="mt-4 md:mt-8 ml-2 md:ml-4 flex flex-col gap-4 md:gap-6">
           <Link
@@ -115,7 +118,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               } hover:text-white transition duration-300`}
           >
             <AiOutlineHome size={25} />
-            <p>Home</p>
+            <p>{t('Home')}</p>
           </Link>
 
           <a
@@ -125,7 +128,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             className="flex gap-6 items-center hover:text-white transition duration-300"
           >
             <MdSportsSoccer size={25} />
-            <p>Sports</p>
+            <p>{t('Sports')}</p>
           </a>
 
           <Link
@@ -135,7 +138,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               } hover:text-white transition duration-300`}
           >
             <MdOutlineExplore size={25} />
-            <p>Explore</p>
+            <p>{t('Explore')}</p>
           </Link>
 
           <Link
@@ -145,7 +148,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               } hover:text-white transition duration-300`}
           >
             <BiSearch size={25} />
-            <p>Search</p>
+            <p>{t('Search')}</p>
           </Link>
 
           <a
@@ -160,11 +163,11 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               <path d="M20 3H4v10c0 5.52 4.48 10 10 10s10-4.48 10-10V5c0-1.1-.9-2-2-2zM4 5h16v8c0 4.41-3.59 8-8 8s-8-3.59-8-8V5z"></path>
             </svg>
             {/* Note: In a real app we'd use a real icon import, but SVG is safer here to avoid missing lib errors */}
-            <p>Support Us</p>
+            <p>{t('Support Us')}</p>
           </a>
         </div>
 
-        <div className="text-white text-lg font-medium mt-12">PERSONAL</div>
+        <div className="text-white text-lg font-medium mt-12">{t('PERSONAL')}</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
           {!currentUser && (
             <div className="mb-4 p-3 bg-primary/10 border border-primary/30 rounded-lg">
@@ -186,7 +189,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             title={!currentUser ? "Sign in to access bookmarks" : ""}
           >
             <BsBookmarkHeart size={25} />
-            <p>Bookmarked</p>
+            <p>{t('Bookmarked')}</p>
           </button>
 
           <button
@@ -198,7 +201,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             title={!currentUser ? "Sign in to access history" : ""}
           >
             <AiOutlineHistory size={25} />
-            <p>History</p>
+            <p>{t('History')}</p>
           </button>
 
           <button
@@ -210,11 +213,11 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             title={!currentUser ? "Sign in to access downloads" : ""}
           >
             <FaDownload size={25} />
-            <p>My Downloads</p>
+            <p>{t('My Downloads')}</p>
           </button>
         </div>
 
-        <div className="text-white text-lg font-medium mt-12">GENERAL</div>
+        <div className="text-white text-lg font-medium mt-12">{t('GENERAL')}</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
           <Link
             to="/download"
@@ -233,7 +236,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               } hover:text-white transition duration-300`}
           >
             <IoSettingsOutline size={25} />
-            <p>Settings</p>
+            <p>{t('Settings')}</p>
           </Link>
 
           <button
@@ -245,8 +248,13 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             title={!currentUser ? "Sign in to access profile" : ""}
           >
             <BiUserCircle size={25} />
-            <p>Profile</p>
+            <p>{t('Profile')}</p>
           </button>
+
+          <div className="mt-4">
+            <p className="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wider">{t('Language')}</p>
+            <LanguageSelector />
+          </div>
 
           {!currentUser && (
             <Link
@@ -264,7 +272,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               className="flex gap-5 items-center"
             >
               <HiOutlineLogout size={30} />
-              <p>Logout</p>
+              <p>{t('Logout')}</p>
             </button>
           )}
         </div>

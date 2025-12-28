@@ -36,7 +36,7 @@ export class ResolverService {
 
         const sources: ResolvedSource[] = [
             {
-                name: "Server VidSrc (Original)",
+                name: "VidSrc Me",
                 url: mediaType === "movie"
                     ? `${EMBED_ALTERNATIVES.VIDSRC_ME}/movie/${tmdbId}`
                     : `${EMBED_ALTERNATIVES.VIDSRC_ME}/tv/${tmdbId}/${season}/${episode}`,
@@ -46,7 +46,7 @@ export class ResolverService {
                 type: "embed"
             },
             {
-                name: "Server VidSrc (Pro)",
+                name: "VidSrc Pro",
                 url: mediaType === "movie"
                     ? `${EMBED_ALTERNATIVES.VIDSRC_PRO}/movie/${tmdbId}`
                     : `${EMBED_ALTERNATIVES.VIDSRC_PRO}/tv/${tmdbId}/${season}/${episode}`,
@@ -56,17 +56,7 @@ export class ResolverService {
                 type: "embed"
             },
             {
-                name: "Direct Download (Alpha)",
-                url: mediaType === "movie"
-                    ? `https://vidsrc.pro/vidsrc.php?id=${tmdbId}`
-                    : `https://vidsrc.pro/vidsrc.php?id=${tmdbId}&s=${season}&e=${episode}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "direct"
-            },
-            {
-                name: "Server Embed.su",
+                name: "Embed.su",
                 url: mediaType === "movie"
                     ? `${EMBED_ALTERNATIVES.EMBED_SU}/movie/${tmdbId}`
                     : `${EMBED_ALTERNATIVES.EMBED_SU}/tv/${tmdbId}/${season}/${episode}`,
@@ -76,7 +66,7 @@ export class ResolverService {
                 type: "embed"
             },
             {
-                name: "Server Smashy",
+                name: "Smashy",
                 url: mediaType === "movie"
                     ? `${EMBED_ALTERNATIVES.SMASHY}/movie/${tmdbId}`
                     : `${EMBED_ALTERNATIVES.SMASHY}/tv/${tmdbId}/${season}/${episode}`,
@@ -86,7 +76,7 @@ export class ResolverService {
                 type: "embed"
             },
             {
-                name: "Server VidSrc.xyz",
+                name: "VidSrc XYZ",
                 url: mediaType === "movie"
                     ? `${EMBED_ALTERNATIVES.VIDSRC_XYZ}/movie/${tmdbId}`
                     : `${EMBED_ALTERNATIVES.VIDSRC_XYZ}/tv/${tmdbId}/${season}/${episode}`,
@@ -96,11 +86,75 @@ export class ResolverService {
                 type: "embed"
             },
             {
-                name: "Server AutoEmbed",
+                name: "AutoEmbed",
                 url: mediaType === "movie"
                     ? `${EMBED_ALTERNATIVES.AUTOEMBED}/movie/tmdb/${tmdbId}`
                     : `${EMBED_ALTERNATIVES.AUTOEMBED}/tv/tmdb/${tmdbId}/${season}/${episode}`,
                 quality: "720p",
+                speed: "medium",
+                status: "active",
+                type: "embed"
+            },
+            {
+                name: "2Embed",
+                url: mediaType === "movie"
+                    ? `${EMBED_ALTERNATIVES.TWOEMBED}/movie?tmdb=${tmdbId}`
+                    : `${EMBED_ALTERNATIVES.TWOEMBED}/tv?tmdb=${tmdbId}&s=${season}&e=${episode}`,
+                quality: "HD",
+                speed: "medium",
+                status: "active",
+                type: "embed"
+            },
+            {
+                name: "SuperEmbed",
+                url: mediaType === "movie"
+                    ? `${EMBED_ALTERNATIVES.SUPEREMBED}/movie/tmdb/${tmdbId}`
+                    : `${EMBED_ALTERNATIVES.SUPEREMBED}/tv/tmdb/${tmdbId}/${season}/${episode}`,
+                quality: "HD",
+                speed: "slow",
+                status: "active",
+                type: "embed"
+            },
+            {
+                name: "Nollywood TV (African)",
+                url: `${EMBED_ALTERNATIVES.NOLLYWOOD_TV}/embed/${tmdbId}`,
+                quality: "720p",
+                speed: "medium",
+                status: "active",
+                type: "embed"
+            },
+            {
+                name: "DramaCool (Asian)",
+                url: `${EMBED_ALTERNATIVES.DRAMACOOL}/embed/${tmdbId}`,
+                quality: "HD",
+                speed: "medium",
+                status: "active",
+                type: "embed"
+            },
+            {
+                name: "KissAsian (Asian)",
+                url: `${EMBED_ALTERNATIVES.KISSASIAN}/embed/${tmdbId}`,
+                quality: "HD",
+                speed: "medium",
+                status: "active",
+                type: "embed"
+            },
+            {
+                name: "123Movies",
+                url: mediaType === "movie"
+                    ? `${EMBED_ALTERNATIVES.ONETWOTHREEMOVIES}/movie/${tmdbId}`
+                    : `${EMBED_ALTERNATIVES.ONETWOTHREEMOVIES}/tv/${tmdbId}/${season}/${episode}`,
+                quality: "SD",
+                speed: "slow",
+                status: "active",
+                type: "embed"
+            },
+            {
+                name: "Fmovies",
+                url: mediaType === "movie"
+                    ? `${EMBED_ALTERNATIVES.FMOVIES}/movie/${tmdbId}`
+                    : `${EMBED_ALTERNATIVES.FMOVIES}/tv/${tmdbId}/${season}/${episode}`,
+                quality: "HD",
                 speed: "medium",
                 status: "active",
                 type: "embed"

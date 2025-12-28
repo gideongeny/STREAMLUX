@@ -3,6 +3,7 @@ import { FunctionComponent, useEffect, useState, useRef } from "react";
 import { AiFillStar, AiTwotoneCalendar, AiOutlineDownload } from "react-icons/ai";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { GiHamburgerMenu } from "react-icons/gi";
+import { MdSkipNext } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import { useWatchProgress } from "../../hooks/useWatchProgress";
@@ -212,7 +213,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     console.log(`Video source ${currentSourceIndex + 1} failed.`);
     setVideoError(true);
     setIsLoadingVideo(false);
-    // Manual mode only: Do not auto-advance
+    // Auto-advance handled by useEffect
   };
 
   const handleVideoLoad = () => {
@@ -227,31 +228,30 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     setIsLoadingVideo(true);
   };
 
-  // Auto-advance disabled for Manual Mode
+  // Auto-advance Logic (Always Active for MovieBox-like experience)
   useEffect(() => {
-    const isAutoPlayEnabled = localStorage.getItem("autoplay_enabled") === "true";
-
-    if (isAutoPlayEnabled && videoError && currentSourceIndex < videoSources.length - 1) {
+    // If an error occurs, automatically try the next source after a brief delay
+    if (videoError && currentSourceIndex < videoSources.length - 1) {
+      console.log(`Source ${currentSourceIndex + 1} failed. Auto-switching to next source...`);
       const timer = setTimeout(() => {
         setCurrentSourceIndex(prev => prev + 1);
         setVideoError(false);
         setIsLoadingVideo(true);
-      }, 1500);
+      }, 500); // 0.5s delay for smooth transition
 
       return () => clearTimeout(timer);
     }
   }, [videoError, currentSourceIndex, videoSources.length]);
 
-  // Loading timeout disabled for Manual Mode
+  // Loading Timeout (Aggressive)
   useEffect(() => {
-    const isAutoPlayEnabled = localStorage.getItem("autoplay_enabled") === "true";
     let timeoutId: NodeJS.Timeout;
 
-    if (isAutoPlayEnabled && isLoadingVideo && !videoError) {
+    if (isLoadingVideo && !videoError) {
       timeoutId = setTimeout(() => {
-        console.log(`Source ${currentSourceIndex + 1} timed out, trying next...`);
+        console.log(`Source ${currentSourceIndex + 1} timed out (4s), trying next...`);
         handleVideoError();
-      }, 6000); // 6 second timeout for slow sources
+      }, 4000); // Reduced to 4 seconds for faster cycling
     }
 
     return () => {
@@ -473,7 +473,22 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                       currentQuality={preferredQuality}
                       onQualityChange={handleQualityChange}
                     />
-                    <PlayerControls onSpeedChange={handleSpeedChange} />
+                    <PlayerControls
+                      onSpeedChange={handleSpeedChange}
+                      onSeek={(seconds) => {
+                        const iframe = document.querySelector('iframe');
+                        if (iframe && iframe.contentWindow) {
+                          // Try multiple common seek commands
+                          iframe.contentWindow.postMessage({ event: 'command', func: 'seekTo', args: [seconds, true] }, '*'); // YouTube/Standard
+                          iframe.contentWindow.postMessage({ type: 'seek', time: seconds }, '*'); // Some custom
+                        }
+                      }}
+                      onPopOut={() => {
+                        if (currentSource) {
+                          window.open(currentSource, 'StreamLuxPopOut', 'width=800,height=500,resizable=yes');
+                        }
+                      }}
+                    />
                     <button
                       onClick={() => {
                         const nextState = !isSelectorOpen;
@@ -485,6 +500,39 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                       <span className={`transition-transform duration-300 ${isSelectorOpen ? 'rotate-180' : ''}`}>▼</span>
                     </button>
                   </div>
+
+                  {/* Next Episode Button Overlay */}
+                  {media_type === 'tv' && seasonId && episodeId && detailSeasons && (
+                    (() => {
+                      // Simple Next Episode Logic
+                      // 1. Check if next episode exists in current season
+                      const currentSeason = detailSeasons.find(s => s.season_number === seasonId);
+                      let nextEpLink = null;
+
+                      if (currentSeason && episodeId < currentSeason.episodes.length) {
+                        nextEpLink = `/watch/tv/${detail.id}?season=${seasonId}&episode=${episodeId + 1}`;
+                      } else {
+                        // 2. Check first episode of next season
+                        const nextSeason = detailSeasons.find(s => s.season_number === seasonId + 1);
+                        if (nextSeason) {
+                          nextEpLink = `/watch/tv/${detail.id}?season=${seasonId + 1}&episode=1`;
+                        }
+                      }
+
+                      if (nextEpLink) {
+                        return (
+                          <Link
+                            to={nextEpLink}
+                            className="absolute bottom-20 right-4 z-40 bg-white/10 hover:bg-primary backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 group transition-all transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 duration-500 delay-1000 shadow-xl"
+                          >
+                            <span>Next Episode</span>
+                            <MdSkipNext className="text-xl group-hover:translate-x-1 transition-transform" />
+                          </Link>
+                        );
+                      }
+                      return null;
+                    })()
+                  )}
 
                   {isSelectorOpen && (
                     <div className="bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-2xl min-w-[220px] animate-in fade-in slide-in-from-top-2 duration-200">

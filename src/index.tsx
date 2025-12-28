@@ -2,7 +2,9 @@
 import "./utils/polyfills";
 
 // Initialize Capacitor for mobile app
+// Initialize Capacitor for mobile app
 import { initCapacitor } from "./utils/capacitor";
+import "./i18n"; // Import I18n config
 
 import "./index.css";
 import "swiper/css";
