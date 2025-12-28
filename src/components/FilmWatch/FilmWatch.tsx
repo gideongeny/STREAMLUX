@@ -397,16 +397,20 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
               <>
                 {/* Modern Source Selector */}
                 <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end origin-top-right">
-                  <button
-                    onClick={() => {
-                      const nextState = !isSelectorOpen;
-                      setIsSelectorOpen(nextState);
-                    }}
-                    className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs font-bold text-white hover:bg-primary/80 transition flex items-center gap-2"
-                  >
-                    <span>SERVER: {resolvedSources[currentSourceIndex]?.name || 'Loading...'}</span>
-                    <span className={`transition-transform duration-300 ${isSelectorOpen ? 'rotate-180' : ''}`}>▼</span>
-                  </button>
+
+                  <div className="flex gap-2 items-center">
+                    <PlayerControls onSpeedChange={handleSpeedChange} />
+                    <button
+                      onClick={() => {
+                        const nextState = !isSelectorOpen;
+                        setIsSelectorOpen(nextState);
+                      }}
+                      className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs font-bold text-white hover:bg-primary/80 transition flex items-center gap-2"
+                    >
+                      <span>SERVER: {resolvedSources[currentSourceIndex]?.name || 'Loading...'}</span>
+                      <span className={`transition-transform duration-300 ${isSelectorOpen ? 'rotate-180' : ''}`}>▼</span>
+                    </button>
+                  </div>
 
                   {isSelectorOpen && (
                     <div className="bg-black/90 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-2xl min-w-[220px] animate-in fade-in slide-in-from-top-2 duration-200">
