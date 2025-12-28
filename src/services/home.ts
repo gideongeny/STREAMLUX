@@ -13,6 +13,11 @@ import { getAllAPIContent, getAllAPIContentByGenre } from "./movieAPIs";
 
 // MOVIE TAB
 ///////////////////////////////////////////////////////////////
+export const getTop10Trending = async (): Promise<Item[]> => {
+  const response = await axios.get("/trending/all/week");
+  return response.data.results.slice(0, 10);
+};
+
 export const getHomeMovies = async (): Promise<HomeFilms> => {
   const endpoints: { [key: string]: string } = {
     Trending: "/trending/movie/day",

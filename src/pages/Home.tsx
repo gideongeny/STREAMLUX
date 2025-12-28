@@ -19,6 +19,9 @@ import { useAppSelector } from "../store/hooks";
 
 import ContinueWatching from "../components/Home/ContinueWatching";
 import { useWatchProgress } from "../hooks/useWatchProgress";
+import Top10Slider from "../components/Home/Top10Slider";
+import { useQuery } from "@tanstack/react-query";
+import { getTop10Trending } from "../services/home";
 
 // Lazy load for performance (Android TV optimization)
 const AdBanner = lazy(() => import("../components/Common/AdBanner"));
@@ -26,6 +29,8 @@ const AdBanner = lazy(() => import("../components/Common/AdBanner"));
 const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
   const { watchHistory, clearProgress } = useWatchProgress();
+
+  const { data: top10Data } = useQuery(["top10"], getTop10Trending);
 
   const [isSidebarActive, setIsSidebarActive] = useState(false);
 
@@ -200,6 +205,10 @@ const Home: FC = () => {
           <div className="px-4 md:px-8">
             <ContinueWatching watchHistory={watchHistory} onClearProgress={clearProgress} />
           </div>
+
+
+          {/* Top 10 Section */}
+          <Top10Slider films={top10Data || []} />
 
           {/* Live Sports Ticker (MovieBox.ph style) - Wrapped in ErrorBoundary */}
           <ErrorBoundary fallback={null}>
