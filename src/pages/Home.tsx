@@ -185,15 +185,6 @@ const Home: FC = () => {
             />
           )}
 
-          {currentTab === "tv" && (
-            <MainHomeFilm
-              data={dataTV}
-              dataDetail={detailQueryTV.data}
-              isLoadingBanner={detailQueryTV.isLoading}
-              isLoadingSection={isLoadingTV}
-            />
-          )}
-
           {/* Ad Banner (MovieBox Style) - Lazy loaded for Android TV performance */}
           <Suspense fallback={<div className="h-[90px]" />}>
             <div className="px-4 md:px-8 mb-6 mt-4">
