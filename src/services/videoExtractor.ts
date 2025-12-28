@@ -40,7 +40,7 @@ export class VideoExtractorService {
       }
 
       // Try to get direct URL from VidSrc's API endpoint
-      const apiUrl = mediaType === "movie" 
+      const apiUrl = mediaType === "movie"
         ? `https://vidsrc.pro/vidsrc.php?id=${tmdbId}`
         : `https://vidsrc.pro/vidsrc.php?id=${tmdbId}&s=${seasonId}&e=${episodeId}`;
 
@@ -48,7 +48,6 @@ export class VideoExtractorService {
         const response = await axios.get(apiUrl, {
           headers: {
             Accept: "application/json",
-            Referer: "https://vidsrc.me/",
           },
           timeout: 10000,
         });

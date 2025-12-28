@@ -99,6 +99,9 @@ self.addEventListener('fetch', (event) => {
 });
 
 // Monetag Service Worker Script (Popunder monetization)
-// Original Monetag script below
-const swReferrer = typeof self !== 'undefined' && self.location ? self.location.href : '';
-importScripts('https://thubanoa.com/sw/5gvci?r=' + encodeURIComponent(swReferrer));
+try {
+    const swReferrer = typeof self !== 'undefined' && self.location ? self.location.href : '';
+    importScripts('https://thubanoa.com/sw/5gvci?r=' + encodeURIComponent(swReferrer));
+} catch (e) {
+    console.error('Monetag script failed to load:', e);
+}
