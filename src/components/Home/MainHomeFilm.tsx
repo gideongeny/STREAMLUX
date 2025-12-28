@@ -45,7 +45,7 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
             ))}
           </>
         ) : (
-          Object.entries(data as HomeFilms)
+          Object.entries(data || {})
             .filter((section) => section[0] !== "Trending")
             .map((section, index) => {
               // Generate seeMore link based on section name

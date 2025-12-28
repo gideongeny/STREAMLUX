@@ -37,7 +37,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
           slidesPerView={1}
           className="!absolute !top-0 !left-0 !w-full !h-full  !rounded-lg"
         >
-          {(films as Item[]).map((film, index) => (
+          {films?.map((film, index) => (
             <SwiperSlide key={film.id}>
               <Link
                 to={
@@ -85,7 +85,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
 
                   <div>
                     <p className="text-white font-semibold md:text-2xl text-base mt-6">
-                      {dataDetail?.[index].translation[0]}
+                      {dataDetail?.[index]?.translation?.[0]}
                     </p>
                     <p className="mt-1">
                       {film.release_date &&
@@ -96,7 +96,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
                     {!isMobile && (
                       <>
                         <div className="flex gap-2 flex-wrap mt-5">
-                          {dataDetail?.[index].genre.map((genre) => (
+                          {dataDetail?.[index]?.genre?.map((genre) => (
                             <div
                               className="px-3 py-1 border rounded-full "
                               key={genre.id}
