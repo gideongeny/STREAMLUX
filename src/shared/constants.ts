@@ -84,6 +84,28 @@ export const EMBED_ALTERNATIVES = {
   FZMOVIES_PLAYER: "https://fzmovies.cms/player",
   FZMOVIES_WATCH: "https://fzmovies.cms/watch",
   // Additional FZMovies alternative endpoints
+  FZ MOVIES_ALT1: "https://fzmovies.net",
+  FZMOVIES_ALT2: "https://fzmovies.watch",
+  FZMOVIES_ALT3: "https://fzmovies.to",
+
+  // ========== MOVIEBOX-SPECIFIC SOURCES ==========
+  // Premium sources used by MovieBox for high-quality streams
+  CRAZYMAPLESTUDIOS: "https://v-mps.crazymaplestudios.com",
+  CRAZYMAPLESTUDIOS_EMBED: "https://v-mps.crazymaplestudios.com/embed",
+  NINJAROCKS: "https://9jarocks.net",
+  NINJAROCKS_EMBED: "https://9jarocks.net/embed",
+  NINJAROCKS_PLAYER: "https://9jarocks.net/player",
+
+  // MovieBox additional premium sources
+  MOVIEBOX_VIDSRC: "https://vidsrc.xyz/embed",
+  MOVIEBOX_EMBED_SU: "https://embed.su",
+  MOVIEBOX_AUTOEMBED: "https://autoembed.cc",
+  MOVIEBOX_SMASHYSTREAM: "https://player.smashy.stream",
+  MOVIEBOX_MULTIEMBED: "https://multiembed.mov",
+  FZMOVIES_EMBED: "https://fzmovies.cms/embed",
+  FZMOVIES_PLAYER: "https://fzmovies.cms/player",
+  FZMOVIES_WATCH: "https://fzmovies.cms/watch",
+  // Additional FZMovies alternative endpoints
   FZMOVIES_ALT1: "https://fzmovies.net",
   FZMOVIES_ALT2: "https://fzmovies.watch",
   FZMOVIES_ALT3: "https://fzmovies.to",
