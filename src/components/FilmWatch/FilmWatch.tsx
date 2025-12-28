@@ -1,10 +1,11 @@
 import { arrayUnion, doc, getDoc, updateDoc } from "firebase/firestore";
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent, useEffect, useState, useRef } from "react";
 import { AiFillStar, AiTwotoneCalendar, AiOutlineDownload } from "react-icons/ai";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { Link } from "react-router-dom";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
+import { useWatchProgress } from "../../hooks/useWatchProgress";
 import { db } from "../../shared/firebase";
 import {
   DetailMovie,

@@ -17,11 +17,15 @@ import ErrorBoundary from "../components/Common/ErrorBoundary";
 import { useHomeData } from "../hooks/useHomeData";
 import { useAppSelector } from "../store/hooks";
 
+import ContinueWatching from "../components/Home/ContinueWatching";
+import { useWatchProgress } from "../hooks/useWatchProgress";
+
 // Lazy load for performance (Android TV optimization)
 const AdBanner = lazy(() => import("../components/Common/AdBanner"));
 
 const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
+  const { watchHistory, clearProgress } = useWatchProgress();
 
   const [isSidebarActive, setIsSidebarActive] = useState(false);
 
@@ -191,6 +195,11 @@ const Home: FC = () => {
               <AdBanner />
             </div>
           </Suspense>
+
+          {/* Continue Watching Section */}
+          <div className="px-4 md:px-8">
+            <ContinueWatching watchHistory={watchHistory} onClearProgress={clearProgress} />
+          </div>
 
           {/* Live Sports Ticker (MovieBox.ph style) - Wrapped in ErrorBoundary */}
           <ErrorBoundary fallback={null}>
