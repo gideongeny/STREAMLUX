@@ -112,7 +112,9 @@ function initializeApp() {
         <BrowserRouter>
           <QueryClientProvider client={queryClient}>
             <Provider store={store}>
-              <App />
+              <PlayerProvider>
+                <App />
+              </PlayerProvider>
             </Provider>
           </QueryClientProvider>
         </BrowserRouter>
