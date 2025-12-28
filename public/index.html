@@ -50,27 +50,11 @@
   </script>
   <!-- 
       ===================================================================
-      MONETIZATION (POPUNDER ADS)
-      Paste your PopAds or PropellerAds "Direct Link" or "Popunder" script here.
-      It will load invisibly and open ads when users click anywhere.
+      MONETIZATION (NON-INTRUSIVE ADS ONLY)
+      We use banner ads and service worker for monetization.
+      Popunder/popup scripts removed to maintain user experience.
       ===================================================================
-      Example:
-      <script type="text/javascript" src="//pl12345.com/script.js"></script>
     -->
-  <!-- PopAds Standard Adcode -->
-  <script type="text/javascript" data-cfasync="false">
-    /*<![CDATA[/* */
-    (function () { var j = window, f = "f32e3c17e4383867b08d89c345c6a1a2", u = [["siteId", 5264003], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], c = ["d3d3LmNkbjRhZHMuY29tL25PRHVQQi9KSC9kdmV4Lm1pbi5qcw==", "ZDNnNW92Zm5nanc5YncuY2xvdWRmcm9udC5uZXQvZ3dlYl9zb2NrZXQubWluLmpz"], o = -1, v, l, n = function () { clearTimeout(l); o++; if (c[o] && !(1792840267000 < (new Date).getTime() && 1 < o)) { v = j.document.createElement("script"); v.type = "text/javascript"; v.async = !0; var h = j.document.getElementsByTagName("script")[0]; v.src = "https://" + atob(c[o]); v.crossOrigin = "anonymous"; v.onerror = n; v.onload = function () { clearTimeout(l); j[f.slice(0, 16) + f.slice(0, 16)] || n() }; l = setTimeout(n, 5E3); h.parentNode.insertBefore(v, h) } }; if (!j[f]) { try { Object.freeze(j[f] = u) } catch (e) { } n() } })();
-    /*]]>/* */
-  </script>
-
-  <!-- PopAds Anti-Adblock Adcode -->
-  <script type="text/javascript" data-cfasync="false">
-    /*<![CDATA[/* */
-    (function () { var o = window, z = "f32e3c17e4383867b08d89c345c6a1a2", q = [["siteId", 4834555], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], t = ["d3d3LmNkbjRhZHMuY29tL3RubUdtUS9jVC9jdmV4Lm1pbi5qcw==", "ZDNnNW92Zm5nanc5YncuY2xvdWRmcm9udC5uZXQveHdlYl9zb2NrZXQubWluLmpz", "d3d3Lm13dnd0dGZ3YXVzemViLmNvbS9qWW8venhsL2N2ZXgubWluLmpz", "d3d3LndicG50aXFzbXNyLmNvbS9zd2ViX3NvY2tldC5taW4uanM="], x = -1, f, c, i = function () { clearTimeout(c); x++; if (t[x] && !(1792840267000 < (new Date).getTime() && 1 < x)) { f = o.document.createElement("script"); f.type = "text/javascript"; f.async = !0; var h = o.document.getElementsByTagName("script")[0]; f.src = "https://" + atob(t[x]); f.crossOrigin = "anonymous"; f.onerror = i; f.onload = function () { clearTimeout(c); o[z.slice(0, 16) + z.slice(0, 16)] || i() }; c = setTimeout(i, 5E3); h.parentNode.insertBefore(f, h) } }; if (!o[z]) { try { Object.freeze(o[z] = q) } catch (e) { } i() } })();
-    /*]]>/* */
-  </script>
-
   <!-- Register Service Worker (Monetization) -->
   <script>
     if ('serviceWorker' in navigator) {
