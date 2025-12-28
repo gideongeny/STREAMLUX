@@ -114,11 +114,11 @@ export const getMovieBannerInfo = async (
   );
 
   const translations: string[][] = translationRes.map((item: any) =>
-    item.data.translations
-      .filter((translation: any) =>
+    item?.data?.translations
+      ?.filter((translation: any) =>
         ["en", "sw", "fr", "es", "pt", "de", "it", "ru", "ja", "ko", "zh", "ar", "hi"].includes(translation.iso_639_1)
       )
-      .reduce((acc: any, element: any) => {
+      ?.reduce((acc: any, element: any) => {
         if (element.iso_639_1 === "en") {
           return [element, ...acc];
         } else if (element.iso_639_1 === "sw") {
@@ -126,13 +126,13 @@ export const getMovieBannerInfo = async (
         }
         return [...acc, element];
       }, [] as any)
-      .map((translation: any) => translation.data.title)
+      ?.map((translation: any) => translation.data.title) || []
   );
 
   // translations will look like: [["Doctor Strange", "Daktari Strange", "Doctor Strange", "Dr. Strange"],["Spider Man Far From Home", "Spider Man Mbali na Nyumbani", "Spider-Man Lejos de Casa"],...]
 
   const genres: { name: string; id: number }[][] = detailRes.map((item: any) =>
-    item.data.genres.filter((_: any, index: number) => index < 3)
+    item?.data?.genres?.filter((_: any, index: number) => index < 3) || []
   );
 
   // genres will look like: [[{name: "action", id: 14}, {name: "wild", id: 19}, {name: "love", ket: 23}],[{name: "fantasy", id: 22}, {name: "science", id: 99}],...]
@@ -248,11 +248,11 @@ export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
   );
 
   const translations = translationRes.map((item: any) =>
-    item.data.translations
-      .filter((translation: any) =>
+    item?.data?.translations
+      ?.filter((translation: any) =>
         ["en", "sw", "fr", "es", "pt", "de", "it", "ru", "ja", "ko", "zh", "ar", "hi"].includes(translation.iso_639_1)
       )
-      .reduce((acc: any, element: any) => {
+      ?.reduce((acc: any, element: any) => {
         if (element.iso_639_1 === "en") {
           return [element, ...acc];
         } else if (element.iso_639_1 === "sw") {
@@ -260,11 +260,11 @@ export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
         }
         return [...acc, element];
       }, [] as any)
-      .map((translation: any) => translation.data.name)
+      ?.map((translation: any) => translation.data.name) || []
   );
 
   const genres = detailRes.map((item: any) =>
-    item.data.genres.filter((_: any, index: number) => index < 3)
+    item?.data?.genres?.filter((_: any, index: number) => index < 3) || []
   );
 
   return genres.map((genre, index) => ({

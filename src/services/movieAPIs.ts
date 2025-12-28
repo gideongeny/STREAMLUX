@@ -39,12 +39,12 @@ export const getTMDBContent = async (
 ): Promise<Item[]> => {
   try {
     const allItems: Item[] = [];
-    
+
     // Fetch multiple pages in parallel
     const fetchPromises = [];
     for (let page = 1; page <= pages; page++) {
       let endpoint = "";
-      
+
       if (category === "trending") {
         endpoint = `/trending/${type}/day?page=${page}`;
       } else if (category === "popular") {
@@ -58,7 +58,7 @@ export const getTMDBContent = async (
       } else if (category === "on_the_air" && type === "tv") {
         endpoint = `/tv/on_the_air?page=${page}`;
       }
-      
+
       if (endpoint) {
         fetchPromises.push(
           axios.get(`${API_URL}${endpoint}`, {
@@ -68,21 +68,21 @@ export const getTMDBContent = async (
         );
       }
     }
-    
+
     const responses = await Promise.all(fetchPromises);
     responses.forEach((response) => {
-      const items = (response.data.results || []).map((item: any) => ({
+      const items = (response?.data?.results || []).map((item: any) => ({
         ...item,
         media_type: type,
       }));
       allItems.push(...items);
     });
-    
+
     // Remove duplicates
     const unique = allItems.filter((item: Item, index: number, self: Item[]) =>
       index === self.findIndex((i: Item) => i.id === item.id)
     );
-    
+
     return unique;
   } catch (error) {
     console.error(`Error fetching TMDB ${type} ${category}:`, error);
@@ -100,8 +100,8 @@ export const getOMDBContent = async (
       console.warn("OMDB API key not set. Get free key from http://www.omdbapi.com/apikey.aspx");
       return [];
     }
-    
-    const response = await axios.get("http://www.omdbapi.com/", {
+
+    const response = await axios.get("https://www.omdbapi.com/", {
       params: {
         apikey: OMDB_API_KEY,
         s: searchQuery,
@@ -110,12 +110,12 @@ export const getOMDBContent = async (
       },
       timeout: 10000,
     });
-    
-    if (response.data.Response === "True" && response.data.Search) {
+
+    if (response?.data?.Response === "True" && response?.data?.Search) {
       const items = response.data.Search.map((item: any) => convertToItem(item, type));
       return items.filter((item: Item) => item.poster_path);
     }
-    
+
     return [];
   } catch (error) {
     console.warn("OMDB API error:", error);
@@ -127,14 +127,14 @@ export const getOMDBContent = async (
 export const getOMDBPopular = async (type: "movie" | "tv" = "movie"): Promise<Item[]> => {
   try {
     if (!OMDB_API_KEY) return [];
-    
+
     // Search for popular titles
-    const searchTerms = type === "movie" 
+    const searchTerms = type === "movie"
       ? ["action", "comedy", "drama", "thriller", "horror", "sci-fi", "romance"]
       : ["drama", "comedy", "action", "thriller", "mystery"];
-    
+
     const allItems: Item[] = [];
-    
+
     for (const term of searchTerms.slice(0, 3)) { // Limit to avoid rate limits
       try {
         const items = await getOMDBContent(term, type);
@@ -145,7 +145,7 @@ export const getOMDBPopular = async (type: "movie" | "tv" = "movie"): Promise<It
         continue;
       }
     }
-    
+
     // Remove duplicates
     return allItems.filter((item: Item, index: number, self: Item[]) =>
       index === self.findIndex((i: Item) => i.id === item.id || i.title === item.title)
@@ -166,19 +166,19 @@ export const getIMDBContent = async (
     if (!OMDB_API_KEY) {
       return [];
     }
-    
+
     // If search query provided, search for it
     if (searchQuery) {
       return await getOMDBContent(searchQuery, type);
     }
-    
+
     // Otherwise, get popular content by searching common terms
-    const searchTerms = type === "movie" 
+    const searchTerms = type === "movie"
       ? ["action", "comedy", "drama", "thriller", "horror", "sci-fi", "romance", "adventure", "fantasy"]
       : ["drama", "comedy", "action", "thriller", "mystery", "crime"];
-    
+
     const allItems: Item[] = [];
-    
+
     // Search multiple terms to get diverse content
     for (const term of searchTerms.slice(0, 5)) {
       try {
@@ -190,13 +190,13 @@ export const getIMDBContent = async (
         continue;
       }
     }
-    
+
     // Remove duplicates by title and year
     return allItems.filter((item: Item, index: number, self: Item[]) =>
-      index === self.findIndex((i: Item) => 
-        i.id === item.id || 
-        (i.title?.toLowerCase() === item.title?.toLowerCase() && 
-         i.release_date === item.release_date)
+      index === self.findIndex((i: Item) =>
+        i.id === item.id ||
+        (i.title?.toLowerCase() === item.title?.toLowerCase() &&
+          i.release_date === item.release_date)
       )
     );
   } catch (error) {
@@ -220,7 +220,7 @@ export const getTMDBByGenre = async (
 ): Promise<Item[]> => {
   try {
     const allItems: Item[] = [];
-    
+
     const fetchPromises = [];
     for (let page = 1; page <= pages; page++) {
       fetchPromises.push(
@@ -235,16 +235,16 @@ export const getTMDBByGenre = async (
         })
       );
     }
-    
+
     const responses = await Promise.all(fetchPromises);
     responses.forEach((response) => {
-      const items = (response.data.results || []).map((item: any) => ({
+      const items = (response?.data?.results || []).map((item: any) => ({
         ...item,
         media_type: type,
       }));
       allItems.push(...items);
     });
-    
+
     // Remove duplicates
     return allItems.filter((item: Item, index: number, self: Item[]) =>
       index === self.findIndex((i: Item) => i.id === item.id)
@@ -264,7 +264,7 @@ export const getAllAPIContent = async (
     // Use the new fallback chain: IMDB -> Letterboxd -> Rotten Tomatoes -> TMDB
     const { getContentWithFallback } = await import("./additionalAPIs");
     const fallbackContent = await getContentWithFallback(type, category);
-    
+
     // Also fetch from basic TMDB and OMDB in parallel for additional variety
     const [tmdbContent, omdbContent] = await Promise.allSettled([
       getTMDBContent(type, category, 2),
@@ -273,23 +273,23 @@ export const getAllAPIContent = async (
         new Promise<Item[]>((resolve) => setTimeout(() => resolve([]), 2000)),
       ]),
     ]);
-    
+
     // Merge all sources
     const allContent: Item[] = [...fallbackContent];
-    
+
     if (tmdbContent.status === "fulfilled") {
       allContent.push(...tmdbContent.value);
     }
     if (omdbContent.status === "fulfilled") {
       allContent.push(...omdbContent.value);
     }
-    
+
     // Deduplicate
     return allContent.filter((item: Item, index: number, self: Item[]) =>
-      index === self.findIndex((i: Item) => 
-        i.id === item.id || 
-        (i.title?.toLowerCase() === item.title?.toLowerCase() && 
-         i.release_date === item.release_date)
+      index === self.findIndex((i: Item) =>
+        i.id === item.id ||
+        (i.title?.toLowerCase() === item.title?.toLowerCase() &&
+          i.release_date === item.release_date)
       )
     );
   } catch (error) {
@@ -321,12 +321,12 @@ export const getAllAPIContentByGenre = async (
         new Promise<Item[]>((resolve) => setTimeout(() => resolve([]), 2000)), // 2s timeout
       ]),
     ]);
-    
+
     // Merge and deduplicate
     const allContent = [...tmdbContent, ...omdbContent, ...imdbContent];
     return allContent.filter((item: Item, index: number, self: Item[]) =>
-      index === self.findIndex((i: Item) => 
-        i.id === item.id || 
+      index === self.findIndex((i: Item) =>
+        i.id === item.id ||
         (i.title?.toLowerCase() === item.title?.toLowerCase())
       )
     );

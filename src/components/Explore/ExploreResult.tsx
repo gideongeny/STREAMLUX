@@ -100,7 +100,7 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
 
         if (result && result.results && result.results.length > 0) {
           setPages([result]);
-          setHasMore(result.page < result.total_pages);
+          setHasMore((result?.page || 1) < (result?.total_pages || 1));
         } else {
           setPages([]);
           setHasMore(false);
@@ -128,7 +128,7 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
         : await getExploreTV(nextPage, config);
       setPages(prev => [...prev, result]);
       setCurrentPage(nextPage);
-      setHasMore(result.page < result.total_pages);
+      setHasMore((result?.page || 0) < (result?.total_pages || 0));
     } catch (err) {
       console.error("Error loading more:", err);
     } finally {

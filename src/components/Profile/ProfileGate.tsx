@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from "react";
 import { UserProfile } from "../../shared/types";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setCurrentProfile } from "../../store/slice/authSlice";
-import { createProfile, getProfiles, PROFILE_AVATARS } from "../../services/user";
+import { createProfile, getProfiles, deleteProfile, PROFILE_AVATARS } from "../../services/user";
 import { useNavigate } from "react-router-dom";
 import { AiOutlinePlus } from "react-icons/ai";
 import Skeleton from "../Common/Skeleton";
@@ -17,6 +17,7 @@ const ProfileGate: FC = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [newProfileName, setNewProfileName] = useState("");
     const [isKid, setIsKid] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
 
 
     useEffect(() => {
@@ -42,10 +43,21 @@ const ProfileGate: FC = () => {
     }, [currentUser]);
 
     const handleSelectProfile = (profile: UserProfile) => {
+        if (isEditing) return; // Don't navigate when editing
         dispatch(setCurrentProfile(profile));
         // Persist choice (optional)
         localStorage.setItem("current_profile_id", profile.id);
         navigate("/");
+    };
+
+    const handleDeleteProfile = async (e: React.MouseEvent, profileId: string) => {
+        e.stopPropagation();
+        if (!currentUser || profiles.length <= 1) return; // Prevent deleting last profile
+
+        const success = await deleteProfile(currentUser.uid, profileId);
+        if (success) {
+            setProfiles(profiles.filter(p => p.id !== profileId));
+        }
     };
 
     const handleCreateProfile = async (e: React.FormEvent) => {
@@ -138,7 +150,7 @@ const ProfileGate: FC = () => {
                 {profiles.map(profile => (
                     <div
                         key={profile.id}
-                        className="group flex flex-col items-center gap-3 cursor-pointer w-[100px] md:w-[150px]"
+                        className={`group flex flex-col items-center gap-3 cursor-pointer w-[100px] md:w-[150px] ${isEditing ? 'opacity-80' : ''}`}
                         onClick={() => handleSelectProfile(profile)}
                     >
                         <div className="w-full aspect-square rounded-md overflow-hidden border-2 border-transparent group-hover:border-white transition relative">
@@ -146,6 +158,17 @@ const ProfileGate: FC = () => {
                             {/* Kid Badge */}
                             {profile.isKid && (
                                 <div className="absolute top-1 right-1 bg-primary text-white text-[9px] px-1 rounded font-bold">KIDS</div>
+                            )}
+                            {/* Delete Button (Visible in Editing mode) */}
+                            {isEditing && profiles.length > 1 && (
+                                <div
+                                    className="absolute inset-0 flex items-center justify-center bg-black/50"
+                                    onClick={(e) => handleDeleteProfile(e, profile.id)}
+                                >
+                                    <div className="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center text-white text-3xl hover:bg-white hover:text-black transition">
+                                        ×
+                                    </div>
+                                </div>
                             )}
                         </div>
                         <span className="text-gray-400 group-hover:text-white text-lg md:text-xl truncate max-w-full">{profile.name}</span>
@@ -166,8 +189,14 @@ const ProfileGate: FC = () => {
                 )}
             </div>
 
-            <button className="mt-20 border border-gray-500 text-gray-500 px-8 py-2 uppercase tracking-widest text-lg hover:border-white hover:text-white transition">
-                Manage Profiles
+            <button
+                onClick={() => setIsEditing(!isEditing)}
+                className={`mt-20 border px-8 py-2 uppercase tracking-widest text-lg transition ${isEditing
+                    ? "bg-white text-black border-white hover:bg-transparent hover:text-white"
+                    : "border-gray-500 text-gray-500 hover:border-white hover:text-white"
+                    }`}
+            >
+                {isEditing ? "Done" : "Manage Profiles"}
             </button>
         </div>
     );

@@ -72,15 +72,15 @@ export const deleteProfile = async (userId: string, profileId: string) => {
     }
 };
 
-// Default avatars from Netflix/Generic style
+// Default avatars from Netflix/Generic style (Using verified ImgBB kittens as placeholders)
 export const PROFILE_AVATARS = [
-    "/avatars/avatar1.png",
-    "/avatars/avatar2.png",
-    "/avatars/avatar3.png",
-    "/avatars/avatar4.png",
-    "/avatars/avatar5.png",
-    "/avatars/avatar6.png",
-    "/avatars/avatar7.png",
-    "/avatars/avatar8.png",
-    "/avatars/kids.png", // For kid profile
+    "https://i.ibb.co/zrXfKsJ/catface-7.jpg",
+    "https://i.ibb.co/v4bVf9B/catface-6.jpg",
+    "https://i.ibb.co/L9Y0YjG/catface-5.jpg",
+    "https://i.ibb.co/N2L8H7X/catface-4.jpg",
+    "https://i.ibb.co/mS7J9jP/catface-3.jpg",
+    "https://i.ibb.co/fH1W17P/catface-2.jpg",
+    "https://i.ibb.co/L8y6qR7/catface-1.jpg",
+    "https://i.ibb.co/Vv6V6z2/catface-8.jpg",
+    "https://i.ibb.co/L8y6qR7/catface-1.jpg", // Kids avatar
 ];
