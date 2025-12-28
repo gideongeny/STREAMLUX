@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, lazy, Suspense } from "react";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
@@ -14,7 +14,7 @@ import DiverseContent from "../components/Home/DiverseContent";
 import LiveSports from "../components/Home/LiveSports";
 import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
 import ErrorBoundary from "../components/Common/ErrorBoundary";
-import AdBanner from "../components/Common/AdBanner";
+const AdBanner = lazy(() => import("../components/Common/AdBanner")); // Lazy load for performance
 import { useHomeData } from "../hooks/useHomeData";
 import { useAppSelector } from "../store/hooks";
 
@@ -192,10 +192,12 @@ const Home: FC = () => {
             />
           )}
 
-          {/* Ad Banner (MovieBox Style) */}
-          <div className="px-4 md:px-8 mb-6 mt-4">
-            <AdBanner />
-          </div>
+          {/* Ad Banner (MovieBox Style) - Lazy loaded for Android TV performance */}
+          <Suspense fallback={<div className="h-[90px]" />}>
+            <div className="px-4 md:px-8 mb-6 mt-4">
+              <AdBanner />
+            </div>
+          </Suspense>
 
           {/* Live Sports Ticker (MovieBox.ph style) - Wrapped in ErrorBoundary */}
           <ErrorBoundary fallback={null}>
