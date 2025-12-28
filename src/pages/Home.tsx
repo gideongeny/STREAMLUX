@@ -175,7 +175,7 @@ const Home: FC = () => {
         />
 
         <div
-          className="flex-grow md:pt-7 pt-0 pb-7 border-x md:px-[2vw] px-[4vw] border-gray-darken min-h-screen bg-dark relative z-0"
+          className="flex-grow md:pt-7 pt-0 pb-7 border-x md:px-[2vw] px-[4vw] border-gray-darken min-h-screen bg-dark relative z-0 min-w-0"
         >
           <div className="flex justify-between md:items-end items-center">
             <div className="inline-flex gap-[40px] pb-[14px] border-b border-gray-darken relative">
@@ -219,8 +219,8 @@ const Home: FC = () => {
                 <MainHomeFilm
                   data={filteredDataMovie}
                   dataDetail={detailQueryMovie.data}
-                  isLoadingBanner={detailQueryMovie.isLoading || (filteredDataMovie && (!filteredDataMovie.Trending || filteredDataMovie.Trending.length === 0))}
-                  isLoadingSection={isLoadingMovie || (filteredDataMovie && Object.values(filteredDataMovie).every(section => !Array.isArray(section) || section.length === 0))}
+                  isLoadingBanner={detailQueryMovie.isLoading || !filteredDataMovie || (filteredDataMovie && (!filteredDataMovie.Trending || filteredDataMovie.Trending.length === 0))}
+                  isLoadingSection={isLoadingMovie || !filteredDataMovie || (filteredDataMovie && Object.values(filteredDataMovie).every(section => !Array.isArray(section) || section.length === 0))}
                 />
               )}
             </ErrorBoundary>
@@ -233,8 +233,8 @@ const Home: FC = () => {
                 <MainHomeFilm
                   data={filteredDataTV}
                   dataDetail={detailQueryTV.data}
-                  isLoadingBanner={detailQueryTV.isLoading || (filteredDataTV && (!filteredDataTV.Trending || filteredDataTV.Trending.length === 0))}
-                  isLoadingSection={isLoadingTV || (filteredDataTV && Object.values(filteredDataTV).every(section => !Array.isArray(section) || section.length === 0))}
+                  isLoadingBanner={detailQueryTV.isLoading || !filteredDataTV || (filteredDataTV && (!filteredDataTV.Trending || filteredDataTV.Trending.length === 0))}
+                  isLoadingSection={isLoadingTV || !filteredDataTV || (filteredDataTV && Object.values(filteredDataTV).every(section => !Array.isArray(section) || section.length === 0))}
                 />
               )}
             </ErrorBoundary>

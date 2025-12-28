@@ -71,7 +71,7 @@ const SectionSlider: FC<SectionSliderProps> = ({
           spaceBetween={30}
           loop
           // Dynamic width calculation based on viewport and sidebars
-          className="xl:!w-[calc(100vw_-_260px_-_310px_-_2px_-_4vw_-_10px)] lg:!w-[calc(100vw_-_260px_-_20px_-_2px_-_4vw_-_10px)] md:!w-[calc(100vw_-_260px_-_2px_-_4vw_-_10px)] !w-[calc(100vw-8vw-2px)] tw-section-slider !py-2"
+          className="w-full tw-section-slider !py-2"
         >
           {displayFilms?.map((film) => (
             <SwiperSlide key={film.id} className="!w-[175px]">
