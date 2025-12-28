@@ -14,9 +14,11 @@ import DiverseContent from "../components/Home/DiverseContent";
 import LiveSports from "../components/Home/LiveSports";
 import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
 import ErrorBoundary from "../components/Common/ErrorBoundary";
-const AdBanner = lazy(() => import("../components/Common/AdBanner")); // Lazy load for performance
 import { useHomeData } from "../hooks/useHomeData";
 import { useAppSelector } from "../store/hooks";
+
+// Lazy load for performance (Android TV optimization)
+const AdBanner = lazy(() => import("../components/Common/AdBanner"));
 
 const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
