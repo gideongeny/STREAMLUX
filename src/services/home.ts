@@ -28,16 +28,29 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
   };
 
   // Priority 1: Fetch TMDB first (fast and reliable)
-  const tmdbResponses = await Promise.all(
+  const tmdbResponses = await Promise.allSettled(
     Object.entries(endpoints).map(async (endpoint) => {
       try {
-        return await axios.get(endpoint[1]);
-      } catch (e) {
+        const response = await axios.get(endpoint[1]);
+        // Validate response has data
+        if (!response?.data?.results || !Array.isArray(response.data.results)) {
+          console.warn(`Invalid response for ${endpoint[0]}:`, response);
+          return { data: { results: [] } };
+        }
+        return response;
+      } catch (e: any) {
         console.error(`Error fetching ${endpoint[0]}:`, e);
+        // Only return empty if it's a network/quota error, not a validation error
+        if (e.response?.status === 429 || e.code === 'NETWORK_ERROR' || e.message?.includes('Network')) {
+          return { data: { results: [] } };
+        }
+        // For other errors, still return empty but log it
         return { data: { results: [] } };
       }
     })
-  );
+  ).then(results => results.map(result => 
+    result.status === 'fulfilled' ? result.value : { data: { results: [] } }
+  ));
 
   // Priority 2: Load additional sources in background (with timeout to prevent blocking)
   const additionalSourcesPromise = Promise.allSettled([
@@ -83,7 +96,7 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
 
   const data = tmdbResponses.reduce((final, current, index) => {
     const key = Object.entries(endpoints)[index][0];
-    const tmdbItems = current.data.results.map((item: Item) => ({
+    const tmdbItems = (current.data?.results || []).map((item: Item) => ({
       ...item,
       media_type: "movie" as const,
     }));
@@ -105,6 +118,12 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
 
     return final;
   }, {} as HomeFilms);
+
+  // Validate that we have at least some data - if all sections are empty, throw an error
+  const hasData = Object.values(data).some(section => Array.isArray(section) && section.length > 0);
+  if (!hasData) {
+    throw new Error("Failed to fetch movie data from all sources. Please check your internet connection and try again.");
+  }
 
   return data;
 };
@@ -180,16 +199,29 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
   };
 
   // Priority 1: Fetch TMDB first (fast and reliable)
-  const tmdbResponses = await Promise.all(
+  const tmdbResponses = await Promise.allSettled(
     Object.entries(endpoints).map(async (endpoint) => {
       try {
-        return await axios.get(endpoint[1]);
-      } catch (e) {
+        const response = await axios.get(endpoint[1]);
+        // Validate response has data
+        if (!response?.data?.results || !Array.isArray(response.data.results)) {
+          console.warn(`Invalid response for TV ${endpoint[0]}:`, response);
+          return { data: { results: [] } };
+        }
+        return response;
+      } catch (e: any) {
         console.error(`Error fetching TV ${endpoint[0]}:`, e);
+        // Only return empty if it's a network/quota error, not a validation error
+        if (e.response?.status === 429 || e.code === 'NETWORK_ERROR' || e.message?.includes('Network')) {
+          return { data: { results: [] } };
+        }
+        // For other errors, still return empty but log it
         return { data: { results: [] } };
       }
     })
-  );
+  ).then(results => results.map(result => 
+    result.status === 'fulfilled' ? result.value : { data: { results: [] } }
+  ));
 
   // Priority 2: Load additional sources in background (with timeout to prevent blocking)
   const additionalSourcesPromise = Promise.allSettled([
@@ -240,7 +272,7 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
 
   const data = tmdbResponses.reduce((final, current, index) => {
     const key = Object.entries(endpoints)[index][0];
-    const tmdbItems = current.data.results.map((item: Item) => ({
+    const tmdbItems = (current.data?.results || []).map((item: Item) => ({
       ...item,
       media_type: "tv" as const,
     }));
@@ -262,6 +294,12 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
 
     return final;
   }, {} as HomeFilms);
+
+  // Validate that we have at least some data - if all sections are empty, throw an error
+  const hasData = Object.values(data).some(section => Array.isArray(section) && section.length > 0);
+  if (!hasData) {
+    throw new Error("Failed to fetch TV data from all sources. Please check your internet connection and try again.");
+  }
 
   return data;
 };

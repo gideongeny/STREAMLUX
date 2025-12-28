@@ -21,7 +21,7 @@ export const useHomeData = (type: "movies" | "tvs") => {
         ? getMovieBannerInfo(data?.Trending as Item[])
         : getTVBannerInfo(data?.Trending as Item[]),
     {
-      enabled: !!data?.Trending,
+      enabled: !!(data?.Trending && Array.isArray(data.Trending) && data.Trending.length > 0),
       refetchOnWindowFocus: false,
     }
   );

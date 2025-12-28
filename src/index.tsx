@@ -28,6 +28,10 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      refetchOnMount: false, // Don't refetch when component remounts
+      refetchOnReconnect: false, // Don't refetch on reconnect
+      staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+      cacheTime: 10 * 60 * 1000, // Keep unused data in cache for 10 minutes
     },
   },
 });

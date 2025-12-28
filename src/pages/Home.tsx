@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, lazy, Suspense } from "react";
+import { FC, useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
@@ -122,16 +122,28 @@ const Home: FC = () => {
     detailQuery: detailQueryTV,
   } = useHomeData("tvs");
 
-  // Apply filters to grouped data
-  const filteredDataMovie = dataMovie ? Object.keys(dataMovie).reduce((acc, key) => {
-    acc[key] = filterContent(dataMovie[key]);
-    return acc;
-  }, {} as any) : undefined;
+  // Apply filters to grouped data - use useMemo to prevent unnecessary recalculations
+  const filteredDataMovie = useMemo(() => {
+    if (!dataMovie) return undefined;
+    const filtered = Object.keys(dataMovie).reduce((acc, key) => {
+      acc[key] = filterContent(dataMovie[key]);
+      return acc;
+    }, {} as any);
+    // If all sections are empty after filtering, return original data to prevent empty state
+    const hasAnyData = Object.values(filtered).some(section => Array.isArray(section) && section.length > 0);
+    return hasAnyData ? filtered : dataMovie;
+  }, [dataMovie, currentProfile?.isKid]);
 
-  const filteredDataTV = dataTV ? Object.keys(dataTV).reduce((acc, key) => {
-    acc[key] = filterContent(dataTV[key]);
-    return acc;
-  }, {} as any) : undefined;
+  const filteredDataTV = useMemo(() => {
+    if (!dataTV) return undefined;
+    const filtered = Object.keys(dataTV).reduce((acc, key) => {
+      acc[key] = filterContent(dataTV[key]);
+      return acc;
+    }, {} as any);
+    // If all sections are empty after filtering, return original data to prevent empty state
+    const hasAnyData = Object.values(filtered).some(section => Array.isArray(section) && section.length > 0);
+    return hasAnyData ? filtered : dataTV;
+  }, [dataTV, currentProfile?.isKid]);
 
   // Error handling moved to inside the JSX to keep the sidebar visible
 
@@ -207,8 +219,8 @@ const Home: FC = () => {
                 <MainHomeFilm
                   data={filteredDataMovie}
                   dataDetail={detailQueryMovie.data}
-                  isLoadingBanner={detailQueryMovie.isLoading}
-                  isLoadingSection={isLoadingMovie}
+                  isLoadingBanner={detailQueryMovie.isLoading || (filteredDataMovie && (!filteredDataMovie.Trending || filteredDataMovie.Trending.length === 0))}
+                  isLoadingSection={isLoadingMovie || (filteredDataMovie && Object.values(filteredDataMovie).every(section => !Array.isArray(section) || section.length === 0))}
                 />
               )}
             </ErrorBoundary>
@@ -221,8 +233,8 @@ const Home: FC = () => {
                 <MainHomeFilm
                   data={filteredDataTV}
                   dataDetail={detailQueryTV.data}
-                  isLoadingBanner={detailQueryTV.isLoading}
-                  isLoadingSection={isLoadingTV}
+                  isLoadingBanner={detailQueryTV.isLoading || (filteredDataTV && (!filteredDataTV.Trending || filteredDataTV.Trending.length === 0))}
+                  isLoadingSection={isLoadingTV || (filteredDataTV && Object.values(filteredDataTV).every(section => !Array.isArray(section) || section.length === 0))}
                 />
               )}
             </ErrorBoundary>
