@@ -84,7 +84,7 @@ export const EMBED_ALTERNATIVES = {
   FZMOVIES_PLAYER: "https://fzmovies.cms/player",
   FZMOVIES_WATCH: "https://fzmovies.cms/watch",
   // Additional FZMovies alternative endpoints
-  FZ MOVIES_ALT1: "https://fzmovies.net",
+  FZMOVIES_ALT1: "https://fzmovies.net",
   FZMOVIES_ALT2: "https://fzmovies.watch",
   FZMOVIES_ALT3: "https://fzmovies.to",
 
@@ -102,13 +102,6 @@ export const EMBED_ALTERNATIVES = {
   MOVIEBOX_AUTOEMBED: "https://autoembed.cc",
   MOVIEBOX_SMASHYSTREAM: "https://player.smashy.stream",
   MOVIEBOX_MULTIEMBED: "https://multiembed.mov",
-  FZMOVIES_EMBED: "https://fzmovies.cms/embed",
-  FZMOVIES_PLAYER: "https://fzmovies.cms/player",
-  FZMOVIES_WATCH: "https://fzmovies.cms/watch",
-  // Additional FZMovies alternative endpoints
-  FZMOVIES_ALT1: "https://fzmovies.net",
-  FZMOVIES_ALT2: "https://fzmovies.watch",
-  FZMOVIES_ALT3: "https://fzmovies.to",
   // New video sources - using proper embed formats
   YOUTUBE_EMBED: "https://www.youtube.com/embed",
   KISSKH: "https://kisskh.com",
