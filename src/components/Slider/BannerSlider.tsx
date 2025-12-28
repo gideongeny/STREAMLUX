@@ -24,9 +24,12 @@ const BannerSlider: FC<BannerSliderProps> = ({
   const { isMobile } = useCurrentViewportView();
   const [activeIndex, setActiveIndex] = useState(0);
 
+  // Show skeleton if loading OR if films is empty/undefined
+  const shouldShowSkeleton = isLoadingBanner || !films || films.length === 0;
+
   return (
     <div className="mt-6 relative h-0 md:pb-[45%] pb-[55%] tw-banner-slider bg-dark-lighten rounded-lg overflow-hidden">
-      {isLoadingBanner ? (
+      {shouldShowSkeleton ? (
         <Skeleton className="absolute top-0 left-0 w-full h-full !rounded-lg" />
       ) : (
         <Swiper

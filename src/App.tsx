@@ -145,12 +145,15 @@ function App() {
                 doc(db, "users", user.uid),
                 (docSnapshot) => {
                   try {
+                    const lastName = docSnapshot.data()?.lastName;
+                    const firstName = docSnapshot.data()?.firstName;
+                    const fullName = (lastName || firstName)
+                      ? `${lastName || ""} ${firstName || ""}`.trim()
+                      : "";
                     dispatch(
                       setCurrentUser({
                         displayName:
-                          (docSnapshot.data()?.lastName || docSnapshot.data()?.firstName)
-                            ? `${docSnapshot.data()?.lastName || ""} ${docSnapshot.data()?.firstName || ""}`.trim()
-                            : user.displayName || user.email?.split("@")[0] || "User",
+                          fullName || user.displayName || user.email?.split("@")[0] || "User",
                         email: user.email || "",
                         emailVerified: user.emailVerified,
                         photoURL: docSnapshot.data()?.photoUrl || "",
@@ -170,12 +173,15 @@ function App() {
                 doc(db, "users", user.uid),
                 (docSnapshot) => {
                   try {
+                    const lastName = docSnapshot.data()?.lastName;
+                    const firstName = docSnapshot.data()?.firstName;
+                    const fullName = (lastName || firstName)
+                      ? `${lastName || ""} ${firstName || ""}`.trim()
+                      : "";
                     dispatch(
                       setCurrentUser({
                         displayName:
-                          (docSnapshot.data()?.lastName || docSnapshot.data()?.firstName)
-                            ? `${docSnapshot.data()?.lastName || ""} ${docSnapshot.data()?.firstName || ""}`.trim()
-                            : user.displayName || user.email?.split("@")[0] || "User",
+                          fullName || user.displayName || user.email?.split("@")[0] || "User",
                         email: user.email || "",
                         emailVerified: user.emailVerified,
                         photoURL: docSnapshot.data()?.photoUrl || "",
@@ -224,7 +230,7 @@ function App() {
                 try {
                   dispatch(
                     setCurrentUser({
-                      displayName: user.displayName || "",
+                      displayName: user.displayName || user.email?.split("@")[0] || "User",
                       photoURL: user.photoURL || "",
                       email: user.email || "",
                       emailVerified: user.emailVerified,

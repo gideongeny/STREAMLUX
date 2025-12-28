@@ -85,7 +85,7 @@ const Home: FC = () => {
     } catch (error) {
       console.warn("Error reading currentTab from localStorage:", error);
     }
-    return "tv";
+    return "movie";
   };
 
   const [currentTab, setCurrentTab] = useState<"movie" | "tv" | "sports">(() => getInitialTab());
@@ -184,7 +184,7 @@ const Home: FC = () => {
               />
             </div>
             <div className="flex gap-6 items-center">
-              <p>{currentUser?.displayName || "Anonymous"}</p>
+              <p>{(currentUser?.displayName?.trim() && currentUser.displayName.trim() !== "undefined undefined") ? currentUser.displayName.trim() : "Anonymous"}</p>
               <LazyLoadImage
                 src={
                   currentUser

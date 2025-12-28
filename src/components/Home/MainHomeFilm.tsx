@@ -18,12 +18,15 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
   isLoadingBanner,
   isLoadingSection,
 }) => {
+  // Show loading if banner details are loading OR if main data is still loading (no films yet)
+  const isBannerLoading = isLoadingBanner || isLoadingSection || !data?.Trending || data.Trending.length === 0;
+
   return (
     <>
       <BannerSlider
         films={data?.Trending}
         dataDetail={dataDetail}
-        isLoadingBanner={isLoadingBanner}
+        isLoadingBanner={isBannerLoading}
       />
 
       <div className="mt-8">
