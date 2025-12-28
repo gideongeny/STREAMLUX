@@ -22,15 +22,31 @@ import { useWatchProgress } from "../hooks/useWatchProgress";
 import Top10Slider from "../components/Home/Top10Slider";
 import { useQuery } from "@tanstack/react-query";
 import { getTop10Trending } from "../services/home";
+import BecauseYouWatched from "../components/Home/BecauseYouWatched";
+import NewReleases from "../components/Home/NewReleases";
 
 // Lazy load for performance (Android TV optimization)
 const AdBanner = lazy(() => import("../components/Common/AdBanner"));
 
 const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
+  const currentProfile = useAppSelector((state) => state.auth.currentProfile);
   const { watchHistory, clearProgress } = useWatchProgress();
 
-  const { data: top10Data } = useQuery(["top10"], getTop10Trending);
+  // Kid Mode Filter Logic
+  const filterContent = (items: any[]) => {
+    if (!currentProfile?.isKid) return items;
+    // Allow Animation (16) and Family (10751)
+    return items.filter(item =>
+      item.genre_ids?.includes(16) ||
+      item.genre_ids?.includes(10751) ||
+      item.genres?.some((g: any) => g.id === 16 || g.id === 10751)
+    );
+  };
+
+  const { data: top10Data } = useQuery(["top10"], getTop10Trending, {
+    select: (data) => filterContent(data)
+  });
 
   const [isSidebarActive, setIsSidebarActive] = useState(false);
 
@@ -104,6 +120,17 @@ const Home: FC = () => {
     error: errorTV,
     detailQuery: detailQueryTV,
   } = useHomeData("tvs");
+
+  // Apply filters to grouped data
+  const filteredDataMovie = dataMovie ? Object.keys(dataMovie).reduce((acc, key) => {
+    acc[key] = filterContent(dataMovie[key]);
+    return acc;
+  }, {} as any) : undefined;
+
+  const filteredDataTV = dataTV ? Object.keys(dataTV).reduce((acc, key) => {
+    acc[key] = filterContent(dataTV[key]);
+    return acc;
+  }, {} as any) : undefined;
 
   if (isErrorMovie) return <p>ERROR: {(errorMovie as Error).message}</p>;
 
@@ -179,7 +206,7 @@ const Home: FC = () => {
 
           {currentTab === "movie" && (
             <MainHomeFilm
-              data={dataMovie}
+              data={filteredDataMovie}
               dataDetail={detailQueryMovie.data}
               isLoadingBanner={detailQueryMovie.isLoading}
               isLoadingSection={isLoadingMovie}
@@ -187,7 +214,7 @@ const Home: FC = () => {
           )}
           {currentTab === "tv" && (
             <MainHomeFilm
-              data={dataTV}
+              data={filteredDataTV}
               dataDetail={detailQueryTV.data}
               isLoadingBanner={detailQueryTV.isLoading}
               isLoadingSection={isLoadingTV}
@@ -210,13 +237,20 @@ const Home: FC = () => {
           {/* Top 10 Section */}
           <Top10Slider films={top10Data || []} />
 
+          {/* Because You Watched Section */}
+          <BecauseYouWatched />
+
+          <NewReleases />
+
           {/* Live Sports Ticker (MovieBox.ph style) - Wrapped in ErrorBoundary */}
-          <ErrorBoundary fallback={null}>
-            <LiveSportsTicker />
-          </ErrorBoundary>
+          {!currentProfile?.isKid && (
+            <ErrorBoundary fallback={null}>
+              <LiveSportsTicker />
+            </ErrorBoundary>
+          )}
 
           {/* Live & Upcoming Sports Section (MovieBox-style) - Already has ErrorBoundary */}
-          <LiveSports />
+          {!currentProfile?.isKid && <LiveSports />}
 
           {/* Discover World navigation (moved from sidebar) */}
           <DiverseNavigation />

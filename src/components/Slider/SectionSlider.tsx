@@ -5,6 +5,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Item } from "../../shared/types";
 import FilmItem from "../Common/FilmItem";
 import Skeleton from "../Common/Skeleton";
+import SkeletonCard from "../Common/SkeletonCard";
+import SkeletonSlider from "../Common/SkeletonSlider";
 
 interface SectionSliderProps {
   films: Item[] | undefined;
@@ -15,10 +17,10 @@ interface SectionSliderProps {
   seeMoreParams?: Record<string, string | number>;
 }
 
-const SectionSlider: FC<SectionSliderProps> = ({ 
-  films, 
-  title, 
-  limitNumber, 
+const SectionSlider: FC<SectionSliderProps> = ({
+  films,
+  title,
+  limitNumber,
   isLoading = false,
   seeMoreLink,
   seeMoreParams
@@ -58,7 +60,7 @@ const SectionSlider: FC<SectionSliderProps> = ({
           )}
         </div>
       )}
-      
+
       {/* Slider */}
       <div className="relative">
         <Swiper
@@ -76,16 +78,16 @@ const SectionSlider: FC<SectionSliderProps> = ({
               <FilmItem item={film} />
             </SwiperSlide>
           )) || (
-            <>
-              {new Array(Math.ceil(window.innerWidth / 200))
-                .fill("")
-                .map((_, index) => (
-                  <SwiperSlide key={index} className="!w-[175px]">
-                    <Skeleton className="!w-[175px] !h-[280px] shadow-sm" />
-                  </SwiperSlide>
-                ))}
-            </>
-          )}
+              <>
+                {new Array(Math.ceil(window.innerWidth / 200))
+                  .fill("")
+                  .map((_, index) => (
+                    <SwiperSlide key={index} className="!w-[175px]">
+                      <SkeletonCard />
+                    </SwiperSlide>
+                  ))}
+              </>
+            )}
 
           {displayFilms !== undefined && (
             <>

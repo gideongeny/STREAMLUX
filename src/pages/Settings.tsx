@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
+import NotificationRequest from "../components/Common/NotificationRequest";
 import { validateYouTubeKey } from "../services/youtube";
 
 interface SettingsProps { }
@@ -233,6 +234,19 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Notifications Section */}
+                    <div className="bg-dark p-6 rounded-xl border border-white/5 shadow-lg mb-8">
+                        <h2 className="text-xl text-white font-bold mb-4">Notifications</h2>
+                        <p className="text-gray-400 text-sm mb-4">Stay updated with new episodes and movies.</p>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-white font-medium">Push Notifications</p>
+                                <p className="text-gray-500 text-xs mt-1">Receive alerts for new content releases.</p>
+                            </div>
+                            <NotificationRequest />
                         </div>
                     </div>
                 </div>

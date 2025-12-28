@@ -229,6 +229,14 @@ export interface DetailSeason {
   season_number: number;
 }
 
+export interface UserProfile {
+  id: string;
+  name: string;
+  avatar: string;
+  isKid: boolean;
+  language: string;
+}
+
 export interface User {
   displayName: string | null;
   email: string | null;

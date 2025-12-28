@@ -1,7 +1,7 @@
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { Route, Routes, useLocation, useNavigationType } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigationType, useNavigate } from "react-router-dom";
 import { Analytics } from '@vercel/analytics/react';
 
 import Protected from "./components/Common/Protected";
@@ -17,6 +17,7 @@ import MovieWatch from "./pages/Movie/MovieWatch";
 import SportsHome from "./pages/Sports/SportsHome";
 import SportsWatch from "./pages/Sports/SportsWatch";
 import Profile from "./pages/Profile";
+import ProfileGate from "./components/Profile/ProfileGate";
 import Search from "./pages/Search";
 import TVInfo from "./pages/TV/TVInfo";
 import TVWatch from "./pages/TV/TVWatch";
@@ -25,16 +26,21 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import UserAgreement from "./pages/UserAgreement";
 import Disclaimer from "./pages/Disclaimer";
 import Download from "./pages/Download";
+import Downloads from "./pages/Downloads";
 import Settings from "./pages/Settings";
 import { ToastContainer } from "react-toastify";
 import AppDownloadPopup from "./components/Common/AppDownloadPopup";
+import MiniPlayer from "./components/FilmWatch/MiniPlayer";
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
-import { setCurrentUser } from "./store/slice/authSlice";
+import { setCurrentUser, setCurrentProfile } from "./store/slice/authSlice";
+import { getProfiles } from "./services/user";
 
 function App() {
   const location = useLocation();
   const dispatch = useAppDispatch();
+  const currentProfile = useAppSelector((state) => state.auth.currentProfile);
+  const navigate = useNavigate();
 
   // Custom localStorage hook that handles JSON parsing errors gracefully
   const getInitialSignedIn = (): boolean => {
@@ -80,6 +86,38 @@ function App() {
       console.warn("Error saving isSignedIn to localStorage:", error);
     }
   }, [isSignedIn]);
+
+  const downloads = useAppSelector((state) => state.download.downloads);
+  // Persist downloads to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("downloads", JSON.stringify(downloads));
+    } catch (error) {
+      console.warn("Error saving downloads to localStorage:", error);
+    }
+  }, [downloads]);
+
+  // Profile Persistence & Redirect
+  useEffect(() => {
+    if (isSignedIn && !currentProfile) {
+      // Try to restore from localStorage
+      const savedProfileId = localStorage.getItem("current_profile_id");
+      if (savedProfileId && auth.currentUser) {
+        getProfiles(auth.currentUser.uid).then(profiles => {
+          const found = profiles.find(p => p.id === savedProfileId);
+          if (found) {
+            dispatch(setCurrentProfile(found));
+          } else {
+            // Invalid ID, force selection
+            if (location.pathname !== "/profiles") navigate("/profiles");
+          }
+        });
+      } else {
+        // No saved profile, force selection
+        if (location.pathname !== "/profiles") navigate("/profiles");
+      }
+    }
+  }, [isSignedIn, currentProfile, location.pathname, dispatch, navigate]);
 
   useEffect(() => {
     let unSubDoc: (() => void) | undefined;
@@ -254,6 +292,7 @@ function App() {
         <Route path="user-agreement" element={<UserAgreement />} />
         <Route path="disclaimer" element={<Disclaimer />} />
         <Route path="download" element={<Download />} />
+        <Route path="downloads" element={<Downloads />} />
         <Route path="settings" element={<Settings />} />
         <Route
           path="bookmarked"
@@ -268,6 +307,14 @@ function App() {
           element={
             <Protected isSignedIn={isSignedIn}>
               <History />
+            </Protected>
+          }
+        />
+        <Route
+          path="profiles"
+          element={
+            <Protected isSignedIn={isSignedIn}>
+              <ProfileGate />
             </Protected>
           }
         />
@@ -293,6 +340,7 @@ function App() {
         pauseOnHover
       />
       <AppDownloadPopup />
+      <MiniPlayer />
       {/* <Footer /> */}
     </>
   );

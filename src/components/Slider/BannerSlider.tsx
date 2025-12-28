@@ -1,4 +1,5 @@
-import { FC } from "react";
+import { FC, useState } from "react";
+import HeroTrailer from "../Home/HeroTrailer";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper";
 import { BannerInfo, Item } from "../../shared/types";
@@ -21,6 +22,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
   isLoadingBanner,
 }) => {
   const { isMobile } = useCurrentViewportView();
+  const [activeIndex, setActiveIndex] = useState(0);
 
   return (
     <div className="mt-6 relative h-0 md:pb-[45%] pb-[55%] tw-banner-slider bg-dark-lighten rounded-lg overflow-hidden">
@@ -30,7 +32,8 @@ const BannerSlider: FC<BannerSliderProps> = ({
         <Swiper
           modules={[Navigation, Autoplay]}
           navigation
-          autoplay={{ delay: 5000, disableOnInteraction: false }}
+          autoplay={{ delay: 8000, disableOnInteraction: false }} // 8s for trailer
+          onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
           slidesPerView={1}
           className="!absolute !top-0 !left-0 !w-full !h-full  !rounded-lg"
         >
@@ -57,6 +60,14 @@ const BannerSlider: FC<BannerSliderProps> = ({
                 />
 
                 <div className="absolute top-0 left-0 w-full h-full rounded-lg pointer-events-none tw-black-backdrop group-hover:bg-[#00000026] transition duration-700"></div>
+
+                {!isMobile && (
+                  <HeroTrailer
+                    mediaId={film.id}
+                    mediaType={film.media_type as "movie" | "tv"}
+                    isActive={index === activeIndex}
+                  />
+                )}
 
                 <div className="hidden md:flex absolute top-[5%] right-[3%] bg-primary px-3 py-1 rounded-full text-white  items-center gap-1">
                   <span>{film.vote_average.toFixed(1)}</span>

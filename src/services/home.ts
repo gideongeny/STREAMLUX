@@ -275,6 +275,73 @@ export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
 
 // GENERAL
 ///////////////////////////////////////////////////////////////
+// Recommendations based on specific item
+export const getRecommendations = async (
+  mediaType: "movie" | "tv",
+  mediaId: number
+): Promise<Item[]> => {
+  try {
+    const res = await axios.get(`/${mediaType}/${mediaId}/recommendations`);
+    const items = res.data.results as Item[];
+    return items
+      .map((item) => ({ ...item, media_type: mediaType }))
+      .filter((item) => item.poster_path);
+  } catch (error) {
+    console.error("Error fetching recommendations:", error);
+    return [];
+  }
+};
+
+// New Releases (Last 30 Days)
+export const getNewReleases = async (mediaType: "movie" | "tv"): Promise<Item[]> => {
+  try {
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 45); // Extended to 45 days for better variety
+
+    const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+    const res = await axios.get(`/discover/${mediaType}`, {
+      params: {
+        [mediaType === "movie" ? "primary_release_date.gte" : "first_air_date.gte"]: formatDate(thirtyDaysAgo),
+        [mediaType === "movie" ? "primary_release_date.lte" : "first_air_date.lte"]: formatDate(today),
+        sort_by: "popularity.desc",
+        page: 1,
+        "vote_count.gte": 50, // Filter out low quality entries
+      },
+    });
+
+    const items = res.data.results as Item[];
+    return items
+      .map((item) => ({ ...item, media_type: mediaType }))
+      .filter((item) => item.poster_path);
+  } catch (error) {
+    console.error("Error fetching new releases:", error);
+    return [];
+  }
+};
+
+// Video Trailer
+export const getVideo = async (
+  mediaType: "movie" | "tv",
+  mediaId: number
+): Promise<string | null> => {
+  try {
+    const res = await axios.get(`/${mediaType}/${mediaId}/videos`);
+    const results = res.data.results;
+    // Find Trailer from YouTube
+    const trailer = results.find(
+      (vid: any) =>
+        vid.site === "YouTube" &&
+        (vid.type === "Trailer" || vid.type === "Teaser")
+    );
+    return trailer ? trailer.key : null;
+  } catch (error) {
+    console.error("Error fetching video:", error);
+    return null;
+  }
+};
+
 export const getTrendingNow = async (): Promise<Item[]> => {
   // Optimized: Only use TMDB for fast loading, load others in background
   try {

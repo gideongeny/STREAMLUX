@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { AiOutlineDownload, AiOutlineLink, AiOutlineInfoCircle } from 'react-icons/ai';
 import { toast } from 'react-toastify';
 import { downloadService, DownloadInfo, DownloadProgress } from '../../services/download';
+import { useAppDispatch } from '../../store/hooks';
+import { addDownload, updateDownloadProgress } from '../../store/slice/downloadSlice';
 
 interface DownloadOptionsProps {
   downloadInfo: DownloadInfo;
@@ -16,6 +18,8 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
   const [progress, setProgress] = useState<DownloadProgress | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  const dispatch = useAppDispatch();
+
   const handleDirectDownload = async () => {
     if (isDownloading) return;
 
@@ -26,10 +30,35 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
       message: 'Preparing direct download...'
     });
 
+    const downloadId = Date.now(); // Simple simulation ID
+    dispatch(addDownload({
+      id: downloadInfo.seasonId ? Number(`${downloadInfo.seasonId}${downloadInfo.episodeId}`) : Date.now(),
+      poster_path: downloadInfo.posterPath || '',
+      title: downloadInfo.title,
+      media_type: downloadInfo.mediaType,
+      vote_average: 0,
+      downloadDate: Date.now(),
+      progress: 0,
+      status: "downloading",
+      size: "Unknown",
+      overview: downloadInfo.overview || '',
+      genre_ids: [],
+      original_language: 'en',
+      backdrop_path: downloadInfo.posterPath || '',
+      popularity: 0,
+      vote_count: 0
+    }));
+
     try {
       await downloadService.downloadMovie(downloadInfo, (progressUpdate) => {
         setProgress(progressUpdate);
-        
+
+        // Update Redux state
+        dispatch(updateDownloadProgress({
+          id: downloadInfo.seasonId ? Number(`${downloadInfo.seasonId}${downloadInfo.episodeId}`) : downloadId,
+          progress: progressUpdate.progress
+        }));
+
         if (progressUpdate.status === 'completed') {
           if (progressUpdate.message.includes('page')) {
             toast.info('Direct download not available. Download page opened!');
@@ -65,7 +94,7 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
       // Use the new download service method
       await downloadService.downloadMovie(downloadInfo, (progressUpdate) => {
         setProgress(progressUpdate);
-        
+
         if (progressUpdate.status === 'completed') {
           toast.success('Video viewer opened successfully!');
         } else if (progressUpdate.status === 'error') {
@@ -95,7 +124,7 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
       // Use the new download service method
       await downloadService.downloadMovie(downloadInfo, (progressUpdate) => {
         setProgress(progressUpdate);
-        
+
         if (progressUpdate.status === 'completed') {
           toast.success('Download page created successfully!');
         } else if (progressUpdate.status === 'error') {
@@ -128,8 +157,8 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
           className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-3 rounded-md font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <AiOutlineDownload size={18} />
-          {isDownloading 
-            ? (progress?.message || 'Downloading...') 
+          {isDownloading
+            ? (progress?.message || 'Downloading...')
             : `Download ${downloadInfo.mediaType === 'tv' ? 'Episode' : 'Movie'} (Direct to Device)`}
         </button>
 
@@ -180,14 +209,14 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
             <span className="text-sm font-medium text-white">Progress</span>
             <span className="text-sm text-primary">{Math.round(progress.progress)}%</span>
           </div>
-          
+
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-            <div 
+            <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress.progress}%` }}
             ></div>
           </div>
-          
+
           <p className="text-xs text-gray-300">{progress.message}</p>
         </div>
       )}

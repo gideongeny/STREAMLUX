@@ -84,7 +84,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
       <div
         className={`shrink-0 md:max-w-[260px] w-[70vw] pl-4 md:pl-8 top-0 pt-6 md:pt-10  
         md:sticky md:translate-x-0 md:bg-transparent md:shadow-none md:self-start md:max-h-screen md:overflow-y-auto
-      -translate-x-full fixed h-screen shadow-md transition duration-300 bg-dark-lighten z-50 ${isSidebarActive && "translate-x-0"
+      -translate-x-full fixed h-screen shadow-md transition duration-300 bg-dark-lighten/95 backdrop-blur-xl border-r border-white/5 z-50 ${isSidebarActive && "translate-x-0"
           }`}
       >
         {!isMobile && (
@@ -199,6 +199,18 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           >
             <AiOutlineHistory size={25} />
             <p>History</p>
+          </button>
+
+          <button
+            onClick={() => personalPageHandler("/downloads")}
+            className={`flex gap-6 items-center  ${location.pathname === "/downloads" &&
+              "!text-primary border-r-4 border-primary font-medium"
+              } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
+            disabled={!currentUser}
+            title={!currentUser ? "Sign in to access downloads" : ""}
+          >
+            <FaDownload size={25} />
+            <p>My Downloads</p>
           </button>
         </div>
 

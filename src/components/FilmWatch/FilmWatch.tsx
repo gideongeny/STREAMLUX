@@ -6,6 +6,7 @@ import { GiHamburgerMenu } from "react-icons/gi";
 import { Link } from "react-router-dom";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import { useWatchProgress } from "../../hooks/useWatchProgress";
+import { usePlayer } from "../../context/PlayerContext";
 import { db } from "../../shared/firebase";
 import {
   DetailMovie,
@@ -30,6 +31,7 @@ import Comment from "./Comment/Comment";
 import SeasonSelection from "./SeasonSelection";
 import DownloadOptions from "../Common/DownloadOptions";
 import PlayerControls from "./PlayerControls";
+import QualitySelector from "./QualitySelector";
 
 interface FilmWatchProps {
   media_type: "movie" | "tv";
@@ -343,7 +345,75 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
       });
     };
     saveWatchProgress();
+    saveWatchProgress();
   }, [detail, media_type, seasonId, episodeId]);
+
+  /* Mini Player Logic */
+  const { setMiniPlayerData } = usePlayer();
+  const detailRef = useRef(detail);
+  const currentSourceRef = useRef<string>("");
+
+  useEffect(() => {
+    detailRef.current = detail;
+  }, [detail]);
+
+  useEffect(() => {
+    currentSourceRef.current = currentSource || "";
+  }, [currentSource]);
+
+  useEffect(() => {
+    // Clear mini player when entering full player
+    setMiniPlayerData(null);
+
+    return () => {
+      // Set mini player when leaving (unmounting)
+      if (detailRef.current && currentSourceRef.current) {
+        setMiniPlayerData({
+          mediaId: detailRef.current.id,
+          mediaType: media_type,
+          seasonId,
+          episodeId,
+          sourceUrl: currentSourceRef.current,
+          currentTime: 0,
+          title: (detailRef.current as DetailMovie).title || (detailRef.current as DetailTV).name,
+          posterPath: detailRef.current.poster_path,
+        });
+      }
+    };
+  }, [media_type, seasonId, episodeId]);
+
+  /* Quality Selector Logic */
+  const [preferredQuality, setPreferredQuality] = useState(
+    localStorage.getItem("streamlux_quality_preference") || "Auto"
+  );
+
+  const handleQualityChange = (quality: string) => {
+    setPreferredQuality(quality);
+    localStorage.setItem("streamlux_quality_preference", quality);
+
+    if (quality !== "Auto" && resolvedSources.length > 0) {
+      const bestMatchIndex = resolvedSources.findIndex((s) => s.quality === quality);
+      if (bestMatchIndex !== -1) {
+        setCurrentSourceIndex(bestMatchIndex);
+        setVideoError(false);
+        setIsLoadingVideo(true);
+        console.log(`Auto-switched to ${quality} source: ${resolvedSources[bestMatchIndex].name}`);
+      }
+    }
+  };
+
+  // Auto-select preferred quality when sources load
+  useEffect(() => {
+    if (resolvedSources.length > 0 && preferredQuality !== "Auto") {
+      const bestMatchIndex = resolvedSources.findIndex((s) => s.quality === preferredQuality);
+      // Only switch if we are currently at 0 (default) to avoid overriding manual selection during re-renders?
+      // For now, let's just do it on load.
+      // We can check if isLoadingVideo is true (which is reset on invalidation).
+      if (bestMatchIndex !== -1 && currentSourceIndex === 0) {
+        setCurrentSourceIndex(bestMatchIndex);
+      }
+    }
+  }, [resolvedSources, preferredQuality]);
 
   const handleSpeedChange = (speed: number) => {
     // Attempt to send message to iframe (some players might support it)
@@ -399,6 +469,10 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end origin-top-right">
 
                   <div className="flex gap-2 items-center">
+                    <QualitySelector
+                      currentQuality={preferredQuality}
+                      onQualityChange={handleQualityChange}
+                    />
                     <PlayerControls onSpeedChange={handleSpeedChange} />
                     <button
                       onClick={() => {
