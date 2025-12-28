@@ -29,7 +29,14 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
 
   // Priority 1: Fetch TMDB first (fast and reliable)
   const tmdbResponses = await Promise.all(
-    Object.entries(endpoints).map((endpoint) => axios.get(endpoint[1]))
+    Object.entries(endpoints).map(async (endpoint) => {
+      try {
+        return await axios.get(endpoint[1]);
+      } catch (e) {
+        console.error(`Error fetching ${endpoint[0]}:`, e);
+        return { data: { results: [] } };
+      }
+    })
   );
 
   // Priority 2: Load additional sources in background (with timeout to prevent blocking)
@@ -106,11 +113,25 @@ export const getMovieBannerInfo = async (
   movies: Item[]
 ): Promise<BannerInfo[]> => {
   const detailRes = await Promise.all(
-    movies.map((movie) => axios.get(`/movie/${movie.id}`))
+    movies.map(async (movie) => {
+      try {
+        return await axios.get(`/movie/${movie.id}`);
+      } catch (e) {
+        console.error(`Error fetching movie details for ${movie.id}:`, e);
+        return { data: { genres: [] } };
+      }
+    })
   );
 
   const translationRes = await Promise.all(
-    movies.map((movie) => axios.get(`/movie/${movie.id}/translations`))
+    movies.map(async (movie) => {
+      try {
+        return await axios.get(`/movie/${movie.id}/translations`);
+      } catch (e) {
+        console.error(`Error fetching movie translations for ${movie.id}:`, e);
+        return { data: { translations: [] } };
+      }
+    })
   );
 
   const translations: string[][] = translationRes.map((item: any) =>
@@ -160,7 +181,14 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
 
   // Priority 1: Fetch TMDB first (fast and reliable)
   const tmdbResponses = await Promise.all(
-    Object.entries(endpoints).map((endpoint) => axios.get(endpoint[1]))
+    Object.entries(endpoints).map(async (endpoint) => {
+      try {
+        return await axios.get(endpoint[1]);
+      } catch (e) {
+        console.error(`Error fetching TV ${endpoint[0]}:`, e);
+        return { data: { results: [] } };
+      }
+    })
   );
 
   // Priority 2: Load additional sources in background (with timeout to prevent blocking)
@@ -240,11 +268,25 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
 
 export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
   const detailRes = await Promise.all(
-    tvs.map((tv) => axios.get(`/tv/${tv.id}`))
+    tvs.map(async (tv) => {
+      try {
+        return await axios.get(`/tv/${tv.id}`);
+      } catch (e) {
+        console.error(`Error fetching TV details for ${tv.id}:`, e);
+        return { data: { genres: [] } };
+      }
+    })
   );
 
   const translationRes = await Promise.all(
-    tvs.map((tv) => axios.get(`/tv/${tv.id}/translations`))
+    tvs.map(async (tv) => {
+      try {
+        return await axios.get(`/tv/${tv.id}/translations`);
+      } catch (e) {
+        console.error(`Error fetching TV translations for ${tv.id}:`, e);
+        return { data: { translations: [] } };
+      }
+    })
   );
 
   const translations = translationRes.map((item: any) =>

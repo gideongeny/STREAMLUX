@@ -61,17 +61,15 @@ body,
 }
 
 .tw-black-backdrop {
-  background: linear-gradient(to left, transparent, rgba(0, 0, 0, 0.85) 65%);
+  background: linear-gradient(to left, transparent, rgba(0, 0, 0, 0.7) 65%);
 }
 
 .tw-black-backdrop-2 {
-  background: linear-gradient(
-    90deg,
-    rgba(0, 0, 0, 0.6) 0%,
-    rgba(179, 179, 193, 0) 7%,
-    rgba(107, 107, 115, 0) 93%,
-    rgba(0, 0, 0, 0.6) 100%
-  );
+  background: linear-gradient(90deg,
+      rgba(0, 0, 0, 0.6) 0%,
+      rgba(179, 179, 193, 0) 7%,
+      rgba(107, 107, 115, 0) 93%,
+      rgba(0, 0, 0, 0.6) 100%);
 }
 
 .tw-black-backdrop-3 {
@@ -128,7 +126,7 @@ body,
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  @apply bg-dark;
 }
 
 ::-webkit-scrollbar-button {
@@ -136,7 +134,7 @@ body,
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-[#121212] rounded-full hover:bg-[#0e0d0d] transition duration-300;
+  @apply bg-gray-600 rounded-full hover:bg-gray-500 transition duration-300;
 }
 
 select:focus {

@@ -35,12 +35,13 @@ const Home: FC = () => {
 
   // Kid Mode Filter Logic
   const filterContent = (items: any[]) => {
+    if (!items) return [];
     if (!currentProfile?.isKid) return items;
     // Allow Animation (16) and Family (10751)
     return items.filter(item =>
-      item.genre_ids?.includes(16) ||
-      item.genre_ids?.includes(10751) ||
-      item.genres?.some((g: any) => g.id === 16 || g.id === 10751)
+      item?.genre_ids?.includes(16) ||
+      item?.genre_ids?.includes(10751) ||
+      item?.genres?.some((g: any) => g.id === 16 || g.id === 10751)
     );
   };
 
@@ -132,14 +133,8 @@ const Home: FC = () => {
     return acc;
   }, {} as any) : undefined;
 
-  if (isErrorMovie) return <p>ERROR: {(errorMovie as Error).message}</p>;
+  // Error handling moved to inside the JSX to keep the sidebar visible
 
-  if (detailQueryMovie.isError)
-    return <p>ERROR: {detailQueryMovie.error.message}</p>;
-
-  if (isErrorTV) return <p>ERROR: {(errorTV as Error).message}</p>;
-
-  if (detailQueryTV.isError) return <p>ERROR: {detailQueryTV.error.message}</p>;
 
   return (
     <>
@@ -205,20 +200,32 @@ const Home: FC = () => {
           </div>
 
           {currentTab === "movie" && (
-            <MainHomeFilm
-              data={filteredDataMovie}
-              dataDetail={detailQueryMovie.data}
-              isLoadingBanner={detailQueryMovie.isLoading}
-              isLoadingSection={isLoadingMovie}
-            />
+            <ErrorBoundary fallback={<div className="text-red-500 p-10 text-center">Failed to load movie section.</div>}>
+              {isErrorMovie ? (
+                <div className="text-red-500 p-10 text-center">Failed to load movies. Please check your connection.</div>
+              ) : (
+                <MainHomeFilm
+                  data={filteredDataMovie}
+                  dataDetail={detailQueryMovie.data}
+                  isLoadingBanner={detailQueryMovie.isLoading}
+                  isLoadingSection={isLoadingMovie}
+                />
+              )}
+            </ErrorBoundary>
           )}
           {currentTab === "tv" && (
-            <MainHomeFilm
-              data={filteredDataTV}
-              dataDetail={detailQueryTV.data}
-              isLoadingBanner={detailQueryTV.isLoading}
-              isLoadingSection={isLoadingTV}
-            />
+            <ErrorBoundary fallback={<div className="text-red-500 p-10 text-center">Failed to load TV section.</div>}>
+              {isErrorTV ? (
+                <div className="text-red-500 p-10 text-center">Failed to load TV shows. Please check your connection.</div>
+              ) : (
+                <MainHomeFilm
+                  data={filteredDataTV}
+                  dataDetail={detailQueryTV.data}
+                  isLoadingBanner={detailQueryTV.isLoading}
+                  isLoadingSection={isLoadingTV}
+                />
+              )}
+            </ErrorBoundary>
           )}
 
           {/* Ad Banner (MovieBox Style) - Lazy loaded for Android TV performance */}
@@ -256,14 +263,17 @@ const Home: FC = () => {
           <DiverseNavigation />
 
           {/* Discover World content */}
-          <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />
+          <ErrorBoundary fallback={<div className="p-10 text-center text-gray-500">Some content could not be loaded.</div>}>
+            <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />
+          </ErrorBoundary>
         </div>
 
         <div className="shrink-0 max-w-[310px] w-full hidden lg:block px-6 top-0 sticky ">
-          <SearchBox />
-          <RecommendGenres currentTab={currentTab} />
-          <TrendingNow />
-          {/* DiverseNavigation removed from sidebar */}
+          <ErrorBoundary fallback={null}>
+            <SearchBox />
+            <RecommendGenres currentTab={currentTab} />
+            <TrendingNow />
+          </ErrorBoundary>
         </div>
       </div>
 

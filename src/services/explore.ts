@@ -91,25 +91,17 @@ export const getExploreMovie: (
     ] : []),
   ];
 
-  const [tmdbData, popularData, trendingData, fzMovies, apiContent, sourceContent, imdbContent, regionalContent] = await Promise.all(fetchPromises);
+  const results = await Promise.all(fetchPromises);
+  const tmdbData = results[0] as { data?: ItemsPage };
+  const popularData = results[1] as { data?: ItemsPage };
+  const fzMovies = (originCountry && !config.skipExternalSources ? results[2] : []) as Item[];
+  const regionalContent = (originCountry && !config.skipExternalSources ? results[3] : []) as Item[];
 
-  // Combine all TMDB results (discover, popular, trending)
-  // Type assertion to handle the union type from Promise.all
-  const tmdbDataTyped = tmdbData as { data?: ItemsPage };
-  const popularDataTyped = popularData as { data?: ItemsPage };
-  const trendingDataTyped = trendingData as { data?: ItemsPage };
-
-  // Type assertions for array results from Promise.all
-  const fzMoviesTyped = fzMovies as Item[];
-  const apiContentTyped = apiContent as Item[];
-  const sourceContentTyped = sourceContent as Item[];
-  const imdbContentTyped = imdbContent as Item[];
-  const regionalContentTyped = regionalContent as Item[];
+  // Combine all TMDB results (discover, popular)
 
   const allTmdbResults = [
-    ...(tmdbDataTyped.data?.results ?? []),
-    ...(popularDataTyped.data?.results ?? []),
-    ...(trendingDataTyped.data?.results ?? []),
+    ...(tmdbData.data?.results ?? []),
+    ...(popularData.data?.results ?? []),
   ];
 
   const tmdbItems = allTmdbResults
@@ -133,33 +125,8 @@ export const getExploreMovie: (
       media_type: "movie" as const,
     }));
 
-  // Filter API content by genre and origin_country if specified
-  let filteredApiContent = apiContentTyped;
-  if (genreId) {
-    filteredApiContent = filteredApiContent.filter((item: Item) =>
-      item.genre_ids && item.genre_ids.includes(genreId)
-    );
-  }
-  if (originCountry) {
-    const filterCountries = typeof originCountry === 'string' ? originCountry.split('|') : [originCountry];
-    filteredApiContent = filteredApiContent.filter((item: Item) => {
-      const countries = item.origin_country || [];
-      return countries.some((c: string) => filterCountries.includes(c));
-    });
-  }
-
-  // Filter source content by origin_country if specified
-  let filteredSourceContent = sourceContentTyped;
-  if (originCountry) {
-    const filterCountries = typeof originCountry === 'string' ? originCountry.split('|') : [originCountry];
-    filteredSourceContent = filteredSourceContent.filter((item: Item) => {
-      const countries = item.origin_country || [];
-      return countries.some((c: string) => filterCountries.includes(c));
-    });
-  }
-
-  // Merge with FZMovies, API content, source content, IMDB content, and regional content
-  const combined = [...tmdbItems, ...fzMoviesTyped, ...filteredApiContent, ...filteredSourceContent, ...imdbContentTyped, ...regionalContentTyped];
+  // Merge with FZMovies and regional content
+  const combined = [...tmdbItems, ...(fzMovies || []), ...(regionalContent || [])];
   const seen = new Set<number>();
   const adjustedItems = combined.filter((item) => {
     if (seen.has(item.id)) return false;
@@ -208,8 +175,8 @@ export const getExploreMovie: (
   }
 
   return {
-    page: tmdbDataTyped.data?.page ?? page,
-    total_pages: tmdbDataTyped.data?.total_pages ?? 1,
+    page: tmdbData.data?.page ?? page,
+    total_pages: tmdbData.data?.total_pages ?? 1,
     results: adjustedItems,
     total_results: adjustedItems.length, // Update total to reflect merged results
   };
@@ -259,25 +226,18 @@ export const getExploreTV: (
     ] : []),
   ];
 
-  const [tmdbData, popularData, trendingData, fzTV, apiContent, sourceContent, imdbContent, regionalContent] = await Promise.all(fetchPromises);
+  const results = await Promise.all(fetchPromises);
+  const tmdbData = results[0] as { data?: ItemsPage };
+  const popularData = results[1] as { data?: ItemsPage };
+  const fzTV = (originCountry && !config.skipExternalSources ? results[2] : []) as Item[];
+  const regionalContent = (originCountry && !config.skipExternalSources ? results[3] : []) as Item[];
 
   // Combine all TMDB results (discover, popular, trending)
   // Type assertion to handle the union type from Promise.all
-  const tmdbDataTyped = tmdbData as { data?: ItemsPage };
-  const popularDataTyped = popularData as { data?: ItemsPage };
-  const trendingDataTyped = trendingData as { data?: ItemsPage };
-
-  // Type assertions for array results from Promise.all
-  const fzTVTyped = fzTV as Item[];
-  const apiContentTyped = apiContent as Item[];
-  const sourceContentTyped = sourceContent as Item[];
-  const imdbContentTyped = imdbContent as Item[];
-  const regionalContentTyped = regionalContent as Item[];
 
   const allTmdbResults = [
-    ...(tmdbDataTyped.data?.results ?? []),
-    ...(popularDataTyped.data?.results ?? []),
-    ...(trendingDataTyped.data?.results ?? []),
+    ...(tmdbData.data?.results ?? []),
+    ...(popularData.data?.results ?? []),
   ];
 
   const tmdbItems = allTmdbResults
@@ -306,33 +266,8 @@ export const getExploreTV: (
       media_type: "tv" as const,
     }));
 
-  // Filter API content by genre and origin_country if specified
-  let filteredApiContent = apiContentTyped;
-  if (genreId) {
-    filteredApiContent = filteredApiContent.filter((item: Item) =>
-      item.genre_ids && item.genre_ids.includes(genreId)
-    );
-  }
-  if (originCountry) {
-    const filterCountries = typeof originCountry === 'string' ? originCountry.split('|') : [originCountry];
-    filteredApiContent = filteredApiContent.filter((item: Item) => {
-      const countries = item.origin_country || [];
-      return countries.some((c: string) => filterCountries.includes(c));
-    });
-  }
-
-  // Filter source content by origin_country if specified
-  let filteredSourceContent = sourceContentTyped;
-  if (originCountry) {
-    const filterCountries = typeof originCountry === 'string' ? originCountry.split('|') : [originCountry];
-    filteredSourceContent = filteredSourceContent.filter((item: Item) => {
-      const countries = item.origin_country || [];
-      return countries.some((c: string) => filterCountries.includes(c));
-    });
-  }
-
-  // Merge with FZMovies, API content, source content, and regional content
-  const combined = [...tmdbItems, ...fzTVTyped, ...filteredApiContent, ...filteredSourceContent, ...regionalContentTyped];
+  // Merge with FZMovies and regional content
+  const combined = [...tmdbItems, ...(fzTV || []), ...(regionalContent || [])];
   const seen = new Set<number>();
   const adjustedItems = combined.filter((item) => {
     if (seen.has(item.id)) return false;
@@ -381,8 +316,8 @@ export const getExploreTV: (
   }
 
   return {
-    page: tmdbDataTyped.data?.page ?? page,
-    total_pages: tmdbDataTyped.data?.total_pages ?? 1,
+    page: tmdbData.data?.page ?? page,
+    total_pages: tmdbData.data?.total_pages ?? 1,
     results: adjustedItems,
     total_results: adjustedItems.length, // Update total to reflect merged results
   };

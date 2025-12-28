@@ -59,8 +59,6 @@ const BannerSlider: FC<BannerSliderProps> = ({
                   }}
                 />
 
-                <div className="absolute top-0 left-0 w-full h-full rounded-lg pointer-events-none tw-black-backdrop group-hover:bg-[#00000026] transition duration-700"></div>
-
                 {!isMobile && (
                   <HeroTrailer
                     mediaId={film.id}
@@ -69,16 +67,10 @@ const BannerSlider: FC<BannerSliderProps> = ({
                   />
                 )}
 
-                <div className="hidden md:flex absolute top-[5%] right-[3%] bg-primary px-3 py-1 rounded-full text-white  items-center gap-1">
-                  <span>{film.vote_average.toFixed(1)}</span>
-                  <AiFillStar size={15} />
-                </div>
+                {/* Overlays (Backdrop and Metadata) - Must be after Trailer to take precedence */}
+                <div className="absolute top-0 left-0 w-full h-full rounded-lg pointer-events-none tw-black-backdrop group-hover:bg-[#00000026] transition duration-700 z-[5]"></div>
 
-                <div className="tw-absolute-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-[#c353b4] tw-flex-center z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-700">
-                  <BsFillPlayFill size={35} className="text-white" />
-                </div>
-
-                <div className="absolute top-1/2 -translate-y-1/2 left-[5%] md:max-w-md max-w-[200px]">
+                <div className="absolute top-1/2 -translate-y-1/2 left-[5%] md:max-w-md max-w-[200px] z-10">
                   <h2 className="md:text-5xl text-xl  text-primary font-black tracking-wide md:tw-multiline-ellipsis-2 tw-multiline-ellipsis-3">
                     {film.title || film.name}
                   </h2>
@@ -111,6 +103,15 @@ const BannerSlider: FC<BannerSliderProps> = ({
                       </>
                     )}
                   </div>
+                </div>
+
+                <div className="hidden md:flex absolute top-[5%] right-[3%] bg-primary px-3 py-1 rounded-full text-white  items-center gap-1 z-10">
+                  <span>{film.vote_average.toFixed(1)}</span>
+                  <AiFillStar size={15} />
+                </div>
+
+                <div className="tw-absolute-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-[#c353b4] tw-flex-center z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-700">
+                  <BsFillPlayFill size={35} className="text-white" />
                 </div>
               </Link>
             </SwiperSlide>

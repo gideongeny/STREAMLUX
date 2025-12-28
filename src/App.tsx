@@ -148,7 +148,9 @@ function App() {
                     dispatch(
                       setCurrentUser({
                         displayName:
-                          docSnapshot.data()?.lastName + " " + docSnapshot.data()?.firstName || "",
+                          (docSnapshot.data()?.lastName || docSnapshot.data()?.firstName)
+                            ? `${docSnapshot.data()?.lastName || ""} ${docSnapshot.data()?.firstName || ""}`.trim()
+                            : user.displayName || user.email?.split("@")[0] || "User",
                         email: user.email || "",
                         emailVerified: user.emailVerified,
                         photoURL: docSnapshot.data()?.photoUrl || "",
@@ -171,7 +173,9 @@ function App() {
                     dispatch(
                       setCurrentUser({
                         displayName:
-                          docSnapshot.data()?.lastName + " " + docSnapshot.data()?.firstName || "",
+                          (docSnapshot.data()?.lastName || docSnapshot.data()?.firstName)
+                            ? `${docSnapshot.data()?.lastName || ""} ${docSnapshot.data()?.firstName || ""}`.trim()
+                            : user.displayName || user.email?.split("@")[0] || "User",
                         email: user.email || "",
                         emailVerified: user.emailVerified,
                         photoURL: docSnapshot.data()?.photoUrl || "",
@@ -194,7 +198,9 @@ function App() {
                     dispatch(
                       setCurrentUser({
                         displayName:
-                          docSnapshot.data()?.lastName + " " + docSnapshot.data()?.firstName || "",
+                          (docSnapshot.data()?.lastName || docSnapshot.data()?.firstName)
+                            ? `${docSnapshot.data()?.lastName || ""} ${docSnapshot.data()?.firstName || ""}`.trim()
+                            : user.displayName || user.email?.split("@")[0] || "User",
                         photoURL: docSnapshot.data()?.photoUrl || "",
                         email: user.email || "",
                         emailVerified: user.emailVerified,

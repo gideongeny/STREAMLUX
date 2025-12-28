@@ -4,16 +4,13 @@
 const CACHE_NAME = 'streamlux-v1';
 const RUNTIME_CACHE = 'streamlux-runtime';
 
-// Assets to cache for offline use
+// Assets to cache for offline use - only cache files we are certain exist
 const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/manifest.json',
     '/icon.png',
     '/logo.png',
-    '/ad_banner.png',
-    '/static/css/main.css',
-    '/static/js/main.js',
 ];
 
 // Install event - cache static assets
