@@ -30,23 +30,28 @@
 
   <meta name="google-site-verification" content="AFMGedjZF5SYH7keB9CQ3xm0aVP4cU6mljkExb2r00c" />
 
-  <!-- Preconnect to Google services for faster loading -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://api.themoviedb.org" />
+  <link rel="preconnect" href="https://image.tmdb.org" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-  <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
 
   <!-- Vercel Web Analytics -->
   <script>
-    (function () {
+    window.VA_LOADED = false;
+    function loadVercelAnalytics() {
+      if (window.VA_LOADED) return;
       var script = document.createElement('script');
       script.src = 'https://va.vercel-scripts.com/v1/script.js';
       script.defer = true;
       script.onload = function () {
         window.va = window.va || function () { (window.va.q = window.va.q || []).push(arguments); };
+        window.VA_LOADED = true;
       };
       document.head.appendChild(script);
-    })();
+    }
+    window.addEventListener('load', function () {
+      setTimeout(loadVercelAnalytics, 3000);
+    });
   </script>
   <!-- 
       ===================================================================
@@ -56,18 +61,16 @@
       ===================================================================
     -->
 
-  <!-- PopAds Standard Adcode (Site ID: 5264003) -->
   <script type="text/javascript" data-cfasync="false">
-    /*<![CDATA[/* */
-    (function () { var j = window, f = "f32e3c17e4383867b08d89c345c6a1a2", u = [["siteId", 5264003], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], c = ["d3d3LmNkbjRhZHMuY29tL25PRHVQQi9KSC9kdmV4Lm1pbi5qcw==", "ZDNnNW92Zm5nanc5YncuY2xvdWRmcm9udC5uZXQvZ3dlYl9zb2NrZXQubWluLmpz"], o = -1, v, l, n = function () { clearTimeout(l); o++; if (c[o] && !(1792840267000 < (new Date).getTime() && 1 < o)) { v = j.document.createElement("script"); v.type = "text/javascript"; v.async = !0; var h = j.document.getElementsByTagName("script")[0]; v.src = "https://" + atob(c[o]); v.crossOrigin = "anonymous"; v.onerror = n; v.onload = function () { clearTimeout(l); j[f.slice(0, 16) + f.slice(0, 16)] || n() }; l = setTimeout(n, 5E3); h.parentNode.insertBefore(v, h) } }; if (!j[f]) { try { Object.freeze(j[f] = u) } catch (e) { } n() } })();
-    /*]]>/* */
-  </script>
-
-  <!-- PopAds Anti-Adblock Adcode (Site ID: 4834555) -->
-  <script type="text/javascript" data-cfasync="false">
-    /*<![CDATA[/* */
-    (function () { var o = window, z = "f32e3c17e4383867b08d89c345c6a1a2", q = [["siteId", 4834555], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], t = ["d3d3LmNkbjRhZHMuY29tL3RubUdtUS9jVC9jdmV4Lm1pbi5qcw==", "ZDNnNW92Zm5nanc5YncuY2xvdWRmcm9udC5uZXQveHdlYl9zb2NrZXQubWluLmpz", "d3d3Lm13dnd0dGZ3YXVzemViLmNvbS9qWW8venhsL2N2ZXgubWluLmpz", "d3d3LndicG50aXFzbXNyLmNvbS9zd2ViX3NvY2tldC5taW4uanM="], x = -1, f, c, i = function () { clearTimeout(c); x++; if (t[x] && !(1792840267000 < (new Date).getTime() && 1 < x)) { f = o.document.createElement("script"); f.type = "text/javascript"; f.async = !0; var h = o.document.getElementsByTagName("script")[0]; f.src = "https://" + atob(t[x]); f.crossOrigin = "anonymous"; f.onerror = i; f.onload = function () { clearTimeout(c); o[z.slice(0, 16) + z.slice(0, 16)] || i() }; c = setTimeout(i, 5E3); h.parentNode.insertBefore(f, h) } }; if (!o[z]) { try { Object.freeze(o[z] = q) } catch (e) { } i() } })();
-    /*]]>/* */
+    function loadPopAds() {
+      /*<![CDATA[/* */
+      (function () { var j = window, f = "f32e3c17e4383867b08d89c345c6a1a2", u = [["siteId", 5264003], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], c = ["d3d3LmNkbjRhZHMuY29tL25PRHVQQi9KSC9kdmV4Lm1pbi5qcw==", "ZDNnNW92Zm5nanc5YncuY2xvdWRmcm9udC5uZXQvZ3dlYl9zb2NrZXQubWluLmpz"], o = -1, v, l, n = function () { clearTimeout(l); o++; if (c[o] && !(1792840267000 < (new Date).getTime() && 1 < o)) { v = j.document.createElement("script"); v.type = "text/javascript"; v.async = !0; var h = j.document.getElementsByTagName("script")[0]; v.src = "https://" + atob(c[o]); v.crossOrigin = "anonymous"; v.onerror = n; v.onload = function () { clearTimeout(l); j[f.slice(0, 16) + f.slice(0, 16)] || n() }; l = setTimeout(n, 5E3); h.parentNode.insertBefore(v, h) } }; if (!j[f]) { try { Object.freeze(j[f] = u) } catch (e) { } n() } })();
+      (function () { var o = window, z = "f32e3c17e4383867b08d89c345c6a1a2", q = [["siteId", 4834555], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], t = ["d3d3LmNkbjRhZHMuY29tL3RubUdtUS9jVC9jdmV4Lm1pbi5qcw==", "ZDNnNW92Zm5nanc5YncuY2xvdWRmcm9udC5uZXQveHdlYl9zb2NrZXQubWluLmpz", "d3d3Lm13dnd0dGZ3YXVzemViLmNvbS9qWW8venhsL2N2ZXgubWluLmpz", "d3d3LndicG50aXFzbXNyLmNvbS9zd2ViX3NvY2tldC5taW4uanM="], x = -1, f, c, i = function () { clearTimeout(c); x++; if (t[x] && !(1792840267000 < (new Date).getTime() && 1 < x)) { f = o.document.createElement("script"); f.type = "text/javascript"; f.async = !0; var h = o.document.getElementsByTagName("script")[0]; f.src = "https://" + atob(t[x]); f.crossOrigin = "anonymous"; f.onerror = i; f.onload = function () { clearTimeout(c); o[z.slice(0, 16) + z.slice(0, 16)] || i() }; c = setTimeout(i, 5E3); h.parentNode.insertBefore(f, h) } }; if (!o[z]) { try { Object.freeze(o[z] = q) } catch (e) { } i() } })();
+      /*]]>/* */
+    }
+    window.addEventListener('load', function () {
+      setTimeout(loadPopAds, 5000);
+    });
   </script>
 
   <!-- Register Service Worker (Monetag) -->
@@ -96,21 +99,137 @@
     </div>
   </noscript>
   <div id="root">
-    <!-- Loading fallback while React loads -->
-    <div
-      style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #0f172a; color: #fff; flex-direction: column; gap: 20px;">
-      <div
-        style="width: 50px; height: 50px; border: 4px solid #334155; border-top-color: #ef4444; border-radius: 50%; animation: spin 1s linear infinite;">
+    <div class="skeleton-shell">
+      <div class="skeleton-sidebar"></div>
+      <div class="skeleton-main">
+        <div class="skeleton-header">
+          <div class="skeleton-tabs">
+            <div class="skeleton-tab"></div>
+            <div class="skeleton-tab"></div>
+            <div class="skeleton-tab"></div>
+          </div>
+          <div class="skeleton-avatar"></div>
+        </div>
+        <div class="skeleton-banner"></div>
+        <div class="skeleton-row-title"></div>
+        <div class="skeleton-row">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
       </div>
-      <p>Loading StreamLux...</p>
-      <style>
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      </style>
     </div>
+
+    <style>
+      body {
+        margin: 0;
+        background: #0b0b0b;
+        font-family: sans-serif;
+      }
+
+      .skeleton-shell {
+        display: flex;
+        min-height: 100vh;
+        background: #0b0b0b;
+        overflow: hidden;
+      }
+
+      .skeleton-sidebar {
+        width: 260px;
+        background: #121212;
+        border-right: 1px solid #1f1f1f;
+        display: none;
+      }
+
+      @media (min-width: 768px) {
+        .skeleton-sidebar {
+          display: block;
+        }
+      }
+
+      .skeleton-main {
+        flex: 1;
+        padding: 20px;
+      }
+
+      .skeleton-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+      }
+
+      .skeleton-tabs {
+        display: flex;
+        gap: 20px;
+      }
+
+      .skeleton-tab {
+        width: 80px;
+        height: 20px;
+        background: #1f1f1f;
+        border-radius: 4px;
+      }
+
+      .skeleton-avatar {
+        width: 32px;
+        height: 32px;
+        background: #1f1f1f;
+        border-radius: 50%;
+      }
+
+      .skeleton-banner {
+        width: 100%;
+        aspect-ratio: 16/7;
+        background: linear-gradient(90deg, #121212 25%, #1a1a1a 50%, #121212 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 12px;
+        margin-bottom: 40px;
+      }
+
+      .skeleton-row-title {
+        width: 150px;
+        height: 24px;
+        background: #1f1f1f;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      .skeleton-row {
+        display: flex;
+        gap: 15px;
+      }
+
+      .skeleton-card {
+        flex: 1;
+        aspect-ratio: 2/3;
+        background: #121212;
+        border-radius: 8px;
+      }
+
+      @keyframes shimmer {
+        0% {
+          background-position: -200% 0;
+        }
+
+        100% {
+          background-position: 200% 0;
+        }
+      }
+
+      .loading-text {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #666;
+        font-size: 14px;
+        letter-spacing: 1px;
+      }
+    </style>
+    <div class="loading-text">STREAMLUX PREMIUM</div>
   </div>
 </body>
 

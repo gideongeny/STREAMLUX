@@ -81,6 +81,21 @@ function App() {
     }
   }, []);
 
+  // Quick-restore profile from localStorage to avoid flashes
+  useEffect(() => {
+    const savedProfile = localStorage.getItem("current_profile");
+    if (savedProfile) {
+      try {
+        const parsed = JSON.parse(savedProfile);
+        if (parsed && !currentProfile) {
+          dispatch(setCurrentProfile(parsed));
+        }
+      } catch (e) {
+        localStorage.removeItem("current_profile");
+      }
+    }
+  }, [dispatch, currentProfile]);
+
   // Sync to localStorage when isSignedIn changes
   useEffect(() => {
     try {
@@ -100,29 +115,25 @@ function App() {
     }
   }, [downloads]);
 
-  // Profile Persistence & Redirect
+  // Profile Persistence & Redirect - Optimized to be less intrusive
   useEffect(() => {
     if (isSignedIn && !currentProfile) {
-      // Try to restore from localStorage
       const savedProfileId = localStorage.getItem("current_profile_id");
       if (savedProfileId && auth.currentUser) {
+        // Fetch profiles in background, but don't block the UI
         getProfiles(auth.currentUser.uid).then(profiles => {
           const found = profiles.find(p => p.id === savedProfileId);
           if (found) {
             dispatch(setCurrentProfile(found));
-          } else {
-            // Invalid ID or no saved profile, force selection ONLY if not on Home page
-            // This ensures users land on Home directly when booting up
-            if (location.pathname !== "/profiles" && location.pathname !== "/") {
-              navigate("/profiles");
-            }
+          } else if (location.pathname !== "/" && location.pathname !== "/profiles") {
+            // Only redirect to profiles if on a protected page and look-up fails
+            navigate("/profiles");
+          }
+        }).catch(() => {
+          if (location.pathname !== "/" && location.pathname !== "/profiles") {
+            navigate("/profiles");
           }
         });
-      } else {
-        // No saved profile, force selection ONLY if not on Home page
-        if (location.pathname !== "/profiles" && location.pathname !== "/") {
-          navigate("/profiles");
-        }
       }
     }
   }, [isSignedIn, currentProfile, location.pathname, dispatch, navigate]);
@@ -130,8 +141,6 @@ function App() {
   useEffect(() => {
     let unSubDoc: (() => void) | undefined;
 
-    // This listener automatically restores the user session when the app loads
-    // Firebase Auth persistence ensures the user stays logged in across app restarts
     const unSubAuth: () => void = onAuthStateChanged(
       auth,
       (user) => {
@@ -139,6 +148,9 @@ function App() {
           if (!user) {
             dispatch(setCurrentUser(null));
             setIsSignedIn(false);
+            // Clear profile on logout
+            localStorage.removeItem("current_profile");
+            localStorage.removeItem("current_profile_id");
             return;
           }
 

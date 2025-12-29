@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState, useEffect } from "react";
 import { BannerInfo, HomeFilms, Item } from "../../shared/types";
 import Skeleton from "../Common/Skeleton";
 import BannerSlider from "../Slider/BannerSlider";
@@ -20,7 +20,18 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
   isLoadingBanner,
   isLoadingSection,
 }) => {
-  // Show loading if banner details are loading OR if main data is still loading (no films yet)
+  const [sectionsLimit, setSectionsLimit] = useState(2);
+
+  // Progressively show more sections to improve initial paint and interaction
+  useEffect(() => {
+    if (!isLoadingSection && data) {
+      const timer = setTimeout(() => {
+        setSectionsLimit(prev => prev + 3);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoadingSection, data, sectionsLimit]);
+
   // Show loading if banner details are loading
   const isBannerLoading = isLoadingBanner || (!bannerData && isLoadingSection);
 
@@ -53,6 +64,7 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
         ) : (data && Object.keys(data).length > 0) ? (
           Object.entries(data)
             .filter((section) => section[0] !== "Trending" && section[1] && section[1].length > 0)
+            .slice(0, sectionsLimit) // Apply the limit
             .map((section, index) => {
               // Generate seeMore link based on section name
               const sectionName = section[0].toLowerCase();

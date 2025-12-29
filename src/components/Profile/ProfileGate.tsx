@@ -54,8 +54,9 @@ const ProfileGate: FC = () => {
     const handleSelectProfile = (profile: UserProfile) => {
         if (isEditing) return; // Don't navigate when editing
         dispatch(setCurrentProfile(profile));
-        // Persist choice (optional)
+        // Persist choice for faster restoration in App.tsx
         localStorage.setItem("current_profile_id", profile.id);
+        localStorage.setItem("current_profile", JSON.stringify(profile));
         navigate("/");
     };
 

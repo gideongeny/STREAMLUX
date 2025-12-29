@@ -53,6 +53,15 @@ const Home: FC = () => {
   });
 
   const [isSidebarActive, setIsSidebarActive] = useState(false);
+  const [showLowerSections, setShowLowerSections] = useState(false);
+
+  useEffect(() => {
+    // Delay non-critical components to speed up initial mount and interaction
+    const timer = setTimeout(() => {
+      setShowLowerSections(true);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
 
   ///////////////////////////////////////////////////////////////////////////////////
@@ -267,7 +276,7 @@ const Home: FC = () => {
 
 
           {/* Top 10 Section */}
-          <Top10Slider films={top10Data || []} />
+          {showLowerSections && <Top10Slider films={top10Data || []} />}
 
           {/* Upcoming Calendar Section (MovieBox Style) */}
           <div className="px-4 md:px-8">
@@ -275,33 +284,33 @@ const Home: FC = () => {
           </div>
 
           {/* Vertical Shorts Section (Discovery Mode) */}
-          {!currentProfile?.isKid && (
+          {!currentProfile?.isKid && showLowerSections && (
             <div className="px-4 md:px-8">
               <VerticalShorts />
             </div>
           )}
 
           {/* Because You Watched Section */}
-          <BecauseYouWatched />
+          {showLowerSections && <BecauseYouWatched />}
 
-          <NewReleases />
+          {showLowerSections && <NewReleases />}
 
           {/* Live Sports Ticker (MovieBox.ph style) - Wrapped in ErrorBoundary */}
-          {!currentProfile?.isKid && (
+          {!currentProfile?.isKid && showLowerSections && (
             <ErrorBoundary fallback={null}>
               <LiveSportsTicker />
             </ErrorBoundary>
           )}
 
           {/* Live & Upcoming Sports Section (MovieBox-style) - Already has ErrorBoundary */}
-          {!currentProfile?.isKid && <LiveSports />}
+          {!currentProfile?.isKid && showLowerSections && <LiveSports />}
 
           {/* Discover World navigation (moved from sidebar) */}
           <DiverseNavigation currentTab={currentTab as "movie" | "tv" | "sports"} />
 
           {/* Discover World content */}
           <ErrorBoundary fallback={<div className="p-10 text-center text-gray-500">Some content could not be loaded.</div>}>
-            <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />
+            {showLowerSections && <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />}
           </ErrorBoundary>
         </div>
 
