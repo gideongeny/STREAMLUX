@@ -171,9 +171,9 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "ss-pl",
     name: "SuperSport Premier League",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_pl.png", // placeholder
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_pl.png",
     category: "Football",
-    country: "South Africa",
+    country: "Africa",
     streamUrl: "https://sportslive.run/channels/supersport-premier-league"
   },
   {
@@ -181,8 +181,40 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
     name: "SuperSport La Liga",
     logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_laliga.png",
     category: "Football",
-    country: "South Africa",
+    country: "Africa",
     streamUrl: "https://sportslive.run/channels/supersport-la-liga"
+  },
+  {
+    id: "ss-footy",
+    name: "SuperSport Football",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_footy.png",
+    category: "Football",
+    country: "Africa",
+    streamUrl: "https://sportslive.run/channels/supersport-football"
+  },
+  {
+    id: "ss-grand",
+    name: "SuperSport Grandstand",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_grandstand.png",
+    category: "General",
+    country: "Africa",
+    streamUrl: "https://sportslive.run/channels/supersport-grandstand"
+  },
+  {
+    id: "ss-act",
+    name: "SuperSport Action",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_action.png",
+    category: "General",
+    country: "Africa",
+    streamUrl: "https://sportslive.run/channels/supersport-action"
+  },
+  {
+    id: "ss-var1",
+    name: "SuperSport Variety 1",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_var1.png",
+    category: "General",
+    country: "Africa",
+    streamUrl: "https://sportslive.run/channels/supersport-variety-1"
   },
   {
     id: "sky-main",
@@ -193,44 +225,68 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
     streamUrl: "https://sportslive.run/channels/sky-sports-main-event"
   },
   {
+    id: "sky-pl",
+    name: "Sky Sports Premier League",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/sky_pl.png",
+    category: "Football",
+    country: "UK",
+    streamUrl: "https://sportslive.run/channels/sky-sports-premier-league"
+  },
+  {
+    id: "sky-f1",
+    name: "Sky Sports F1",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/sky_f1.png",
+    category: "Motorsport",
+    country: "UK",
+    streamUrl: "https://sportslive.run/channels/sky-sports-f1"
+  },
+  {
+    id: "tnt-1",
+    name: "TNT Sports 1",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/tnt_1.png",
+    category: "General",
+    country: "UK",
+    streamUrl: "https://sportslive.run/channels/tnt-sports-1"
+  },
+  {
+    id: "tnt-2",
+    name: "TNT Sports 2",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/tnt_2.png",
+    category: "General",
+    country: "UK",
+    streamUrl: "https://sportslive.run/channels/tnt-sports-2"
+  },
+  {
     id: "bein-1",
     name: "beIN Sports 1",
     logo: "https://v-mps.crazymaplestudios.com/images/channels/bein_1.png",
     category: "General",
-    country: "Qatar",
+    country: "Global",
     streamUrl: "https://sportslive.run/channels/bein-sports-1"
   },
   {
-    id: "espn",
+    id: "bein-2",
+    name: "beIN Sports 2",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/bein_2.png",
+    category: "General",
+    country: "Global",
+    streamUrl: "https://sportslive.run/channels/bein-sports-2"
+  },
+  {
+    id: "espn-1",
     name: "ESPN",
     logo: "https://v-mps.crazymaplestudios.com/images/channels/espn.png",
     category: "General",
-    country: "USA",
+    country: "Global",
     streamUrl: "https://sportslive.run/channels/espn"
   },
   {
-    id: "ss-grandstand",
-    name: "SuperSport Grandstand",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_grandstand.png",
+    id: "espn-2",
+    name: "ESPN 2",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/espn2.png",
     category: "General",
-    country: "South Africa",
-    streamUrl: "https://sportslive.run/channels/supersport-grandstand"
-  },
-  {
-    id: "canal-sport",
-    name: "Canal+ Sport 1",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/canal_sport.png",
-    category: "Football",
-    country: "France",
-    streamUrl: "https://sportslive.run/channels/canal-sport-1"
-  },
-  {
-    id: "fox-1",
-    name: "Fox Sports 1",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/fox_1.png",
-    category: "General",
-    country: "USA",
-    streamUrl: "https://sportslive.run/channels/fox-sports-1"
+    country: "Global",
+    streamUrl: "https://sportslive.run/channels/espn-2"
   }
 ];
 

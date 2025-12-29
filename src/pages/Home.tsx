@@ -26,6 +26,7 @@ import BecauseYouWatched from "../components/Home/BecauseYouWatched";
 import NewReleases from "../components/Home/NewReleases";
 import UpcomingCalendar from "../components/Home/UpcomingCalendar";
 import VerticalShorts from "../components/Home/VerticalShorts";
+import LiveSportsAlert from "../components/Sports/LiveSportsAlert";
 
 // Lazy load for performance (Android TV optimization)
 const AdBanner = lazy(() => import("../components/Common/AdBanner"));
@@ -316,6 +317,7 @@ const Home: FC = () => {
 
 
       <Footer />
+      <LiveSportsAlert />
     </>
   );
 };
