@@ -19,11 +19,13 @@ const ProfileGate: FC = () => {
     const [isKid, setIsKid] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
+    const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
+    const loadProfiles = async () => {
         if (!currentUser) return;
-
-        const loadProfiles = async () => {
+        setLoading(true);
+        setError(null);
+        try {
             const data = await getProfiles(currentUser.uid);
             if (data.length === 0) {
                 // Auto create Main profile if none exist (First time migration)
@@ -37,8 +39,15 @@ const ProfileGate: FC = () => {
             } else {
                 setProfiles(data);
             }
+        } catch (err: any) {
+            console.error("Failed to load profiles:", err);
+            setError("Failed to load profiles. Please check your connection and try again.");
+        } finally {
             setLoading(false);
-        };
+        }
+    };
+
+    useEffect(() => {
         loadProfiles();
     }, [currentUser]);
 
@@ -78,6 +87,21 @@ const ProfileGate: FC = () => {
             setIsKid(false);
         }
     };
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#141414] text-center px-4">
+                <h1 className="text-3xl text-white mb-4">Something went wrong</h1>
+                <p className="text-gray-400 mb-8 max-w-md">{error}</p>
+                <button
+                    onClick={loadProfiles}
+                    className="bg-white text-black font-bold px-8 py-3 rounded hover:bg-primary hover:text-white transition shadow-lg"
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    }
 
     if (loading) {
         return (

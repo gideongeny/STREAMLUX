@@ -61,6 +61,15 @@ export const signInWithProvider = async (provider: any, type: string) => {
     });
   } catch (error: any) {
     console.error("Sign in error:", error);
+
+    if (error.code === "auth/popup-blocked") {
+      toast.error("Sign-in popup was blocked! Please allow popups in your browser settings to sign in with Google/Facebook.", {
+        position: "top-right",
+        autoClose: 6000,
+      });
+      return;
+    }
+
     const errorMessage = convertErrorCodeToMessage(error.code) || error.message || "Failed to sign in. Please try again.";
     toast.error(errorMessage, {
       position: "top-right",
