@@ -60,6 +60,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const [resolvedSources, setResolvedSources] = useState<ResolvedSource[]>([]);
   const [isResolving, setIsResolving] = useState(true);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false); // Keep closed initially to avoid clutter, will add effect to open if empty
+  const [isManualSelection, setIsManualSelection] = useState(false);
 
   // Fetch resolved sources
   useEffect(() => {
@@ -228,10 +229,10 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     setIsLoadingVideo(true);
   };
 
-  // Auto-advance Logic (Always Active for MovieBox-like experience)
+  // Auto-advance Logic (Always Active unless manually selected)
   useEffect(() => {
     // If an error occurs, automatically try the next source after a brief delay
-    if (videoError && currentSourceIndex < videoSources.length - 1) {
+    if (videoError && currentSourceIndex < videoSources.length - 1 && !isManualSelection) {
       console.log(`Source ${currentSourceIndex + 1} failed. Auto-switching to next source...`);
       const timer = setTimeout(() => {
         setCurrentSourceIndex(prev => prev + 1);
@@ -247,11 +248,11 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 
-    if (isLoadingVideo && !videoError) {
+    if (isLoadingVideo && !videoError && !isManualSelection) {
       timeoutId = setTimeout(() => {
-        console.log(`Source ${currentSourceIndex + 1} timed out (4s), trying next...`);
+        console.log(`Source ${currentSourceIndex + 1} timed out (20s), trying next...`);
         handleVideoError();
-      }, 4000); // Reduced to 4 seconds for faster cycling
+      }, 20000); // 20 seconds as requested
     }
 
     return () => {
@@ -264,6 +265,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     setCurrentSourceIndex(0);
     setVideoError(false);
     setIsLoadingVideo(true);
+    setIsManualSelection(false);
   }, [detail?.id, seasonId, episodeId]);
 
   // Generate download info when detail changes
@@ -552,6 +554,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                                 setVideoError(false);
                                 setIsLoadingVideo(true);
                                 setIsSelectorOpen(false); // Auto-close on selection
+                                setIsManualSelection(true); // Disable auto-switch on manual selection
                               }}
                               className={`flex items-center justify-between p-2 rounded-lg transition-all text-left ${currentSourceIndex === index
                                 ? 'bg-primary/20 border border-primary/50 text-white'

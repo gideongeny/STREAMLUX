@@ -24,6 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getTop10Trending } from "../services/home";
 import BecauseYouWatched from "../components/Home/BecauseYouWatched";
 import NewReleases from "../components/Home/NewReleases";
+import UpcomingCalendar from "../components/Home/UpcomingCalendar";
 
 // Lazy load for performance (Android TV optimization)
 const AdBanner = lazy(() => import("../components/Common/AdBanner"));
@@ -255,6 +256,11 @@ const Home: FC = () => {
 
           {/* Top 10 Section */}
           <Top10Slider films={top10Data || []} />
+
+          {/* Upcoming Calendar Section (MovieBox Style) */}
+          <div className="px-4 md:px-8">
+            <UpcomingCalendar />
+          </div>
 
           {/* Because You Watched Section */}
           <BecauseYouWatched />

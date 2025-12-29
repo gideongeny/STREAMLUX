@@ -1,11 +1,11 @@
 import { signOut } from "firebase/auth";
 import { FC, useState } from "react";
-import { AiOutlineHistory, AiOutlineHome } from "react-icons/ai";
+import { AiOutlineHistory, AiOutlineHome, AiOutlineEye, AiOutlineQrcode } from "react-icons/ai";
 import { BiSearch, BiUserCircle } from "react-icons/bi";
-import { BsBookmarkHeart } from "react-icons/bs";
-import { HiOutlineLogin, HiOutlineLogout } from "react-icons/hi";
-import { MdOutlineExplore, MdSportsSoccer, MdOutlineMenuBook } from "react-icons/md";
-import { FaDownload } from "react-icons/fa";
+import { BsBookmarkHeart, BsTwitterX, BsFacebook, BsWhatsapp, BsTelegram, BsGlobe } from "react-icons/bs";
+import { HiOutlineLogin, HiOutlineLogout, HiOutlineDeviceMobile } from "react-icons/hi";
+import { MdOutlineExplore, MdSportsSoccer, MdOutlineMenuBook, MdOutlineAnimation } from "react-icons/md";
+import { FaDownload, FaTiktok } from "react-icons/fa";
 import { IoSettingsOutline } from "react-icons/io5";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -141,6 +141,26 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             <p>{t('Explore')}</p>
           </Link>
 
+          <Link
+            to="/explore?genre=16"
+            className={`flex gap-6 items-center  ${location.search.includes("genre=16") &&
+              "!text-primary border-r-4 border-primary font-medium"
+              } hover:text-white transition duration-300`}
+          >
+            <MdOutlineAnimation size={25} />
+            <p>Animation</p>
+          </Link>
+
+          <Link
+            to="/explore?sort_by=popularity.desc"
+            className={`flex gap-6 items-center  ${location.search.includes("sort_by=popularity.desc") &&
+              "!text-primary border-r-4 border-primary font-medium"
+              } hover:text-white transition duration-300`}
+          >
+            <AiOutlineEye size={25} />
+            <p>Most Watched</p>
+          </Link>
+
           <a
             href="https://novelhub.org"
             target="_blank"
@@ -224,7 +244,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300`}
           >
-            <FaDownload size={25} />
+            <HiOutlineDeviceMobile size={25} />
             <p>Download App</p>
           </Link>
 
@@ -270,6 +290,36 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               <p>{t('Logout')}</p>
             </button>
           )}
+        </div>
+
+        {/* Social Links & Contact (MovieBox Style) */}
+        <div className="mt-12 mb-8 ml-4">
+          <div className="flex gap-4 mb-4">
+            <a href="https://x.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><BsTwitterX size={20} /></a>
+            <a href="https://tiktok.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><FaTiktok size={20} /></a>
+            <a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><BsFacebook size={20} /></a>
+            <a href="https://whatsapp.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><BsWhatsapp size={20} /></a>
+            <a href="https://telegram.org" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><BsTelegram size={20} /></a>
+          </div>
+          <p className="text-xs text-gray-500 mb-1">Always Find Us 🔗</p>
+          <a href="mailto:moviebox.ng@mbox.ng" className="text-xs text-gray-400 hover:text-white transition">moviebox.ng@mbox.ng</a>
+        </div>
+
+        {/* Download App Section (MovieBox Style) */}
+        <div className="mb-10 mx-4 p-4 bg-primary/10 rounded-xl border border-primary/20 flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2 text-primary font-bold">
+            <HiOutlineDeviceMobile size={24} />
+            <span className="text-sm">Download App</span>
+          </div>
+          <div className="bg-white p-2 rounded-lg">
+            <AiOutlineQrcode size={80} className="text-black" />
+          </div>
+          <button
+            onClick={() => navigate("/download")}
+            className="w-full py-2 bg-primary text-black font-bold rounded-lg text-sm hover:bg-primary-dark transition"
+          >
+            Get the App
+          </button>
         </div>
       </div>
 

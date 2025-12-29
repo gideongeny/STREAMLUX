@@ -56,7 +56,7 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item, onClick }) => {
             {/* Play Button */}
             {!isUnreleased && (
               <Link
-                to={item.media_type === 'movie' ? `/watch/movie/${item.id}` : `/watch/tv/${item.id}`}
+                to={item.media_type === 'movie' ? `/movie/${item.id}/watch` : `/tv/${item.id}/watch`}
                 onClick={(e) => e.stopPropagation()}
                 className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-blue-600 hover:scale-110 transition-all shadow-lg"
                 title="Watch Now"
