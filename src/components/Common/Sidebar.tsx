@@ -173,7 +173,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           </Link>
 
           <a
-            href="https://novelhubapp.com/?utm_source=MB_Website"
+            href="https://novelhubapp.com/?utm_source=StreamLux"
             target="_blank"
             rel="noopener noreferrer"
             className="flex gap-6 items-center hover:text-white transition duration-300"
@@ -311,17 +311,17 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           )}
         </div>
 
-        {/* Social Links & Contact (MovieBox Style) */}
+        {/* Social Links & Contact */}
         <div className="mt-12 mb-8 ml-4">
           <div className="flex gap-4 mb-4">
-            <a href="https://x.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><BsTwitterX size={20} /></a>
-            <a href="https://tiktok.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><FaTiktok size={20} /></a>
-            <a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><BsFacebook size={20} /></a>
+            <a href="https://x.com/streamlux" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><BsTwitterX size={20} /></a>
+            <a href="https://tiktok.com/@streamlux" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><FaTiktok size={20} /></a>
+            <a href="https://facebook.com/streamlux" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><BsFacebook size={20} /></a>
             <a href="https://whatsapp.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><BsWhatsapp size={20} /></a>
             <a href="https://telegram.org" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-white transition"><BsTelegram size={20} /></a>
           </div>
           <p className="text-xs text-gray-500 mb-1">Always Find Us 🔗</p>
-          <a href="mailto:moviebox.ng@mbox.ng" className="text-xs text-gray-400 hover:text-white transition">moviebox.ng@mbox.ng</a>
+          <a href="mailto:support@streamlux.com" className="text-xs text-gray-400 hover:text-white transition">support@streamlux.com</a>
         </div>
 
         {/* Download App Section (MovieBox Style) */}

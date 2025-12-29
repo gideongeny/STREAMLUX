@@ -64,34 +64,15 @@ const Home: FC = () => {
   }, []);
 
 
-  ///////////////////////////////////////////////////////////////////////////////////
-  // WAY 1: MANUALLY SET UP LOCAL STORAGE
-
-  // const [currentTab, setCurrentTab] = useState(
-  //   localStorage.getItem("currentTab") || "tv"
-  // );
-  // useEffect(() => {
-  //   localStorage.setItem("currentTab", currentTab);
-  // }, [currentTab]);
-
-  ///////////////////////////////////////////////////////////////////////////////////
-  // WAY 2: USE useLocalStorage from @uidotdev/usehooks
-  // Wrap in try-catch to handle invalid JSON in localStorage
   const getInitialTab = () => {
     try {
       const stored = localStorage.getItem("currentTab");
       if (stored) {
-        // Try to parse as JSON first
         try {
           const parsed = JSON.parse(stored);
-          if (parsed === "movie" || parsed === "tv" || parsed === "sports") {
-            return parsed;
-          }
+          if (parsed === "movie" || parsed === "tv" || parsed === "sports") return parsed;
         } catch {
-          // If not JSON, check if it's a plain string
-          if (stored === "movie" || stored === "tv" || stored === "sports") {
-            return stored;
-          }
+          if (stored === "movie" || stored === "tv" || stored === "sports") return stored as any;
         }
       }
     } catch (error) {
