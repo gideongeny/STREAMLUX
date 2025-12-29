@@ -115,7 +115,7 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                     isSidebarActive={isSidebarActive}
                 />
 
-                <div className="flex-grow pt-10 md:pl-10 px-6 bg-dark-lighten min-h-screen">
+                <div className="flex-grow pt-10 md:pl-10 px-6 bg-dark-lighten min-h-screen min-w-0">
                     <div className="pb-4 border-b border-white/10 mb-8">
                         <h1 className="text-[35px] text-white font-semibold uppercase">
                             App Settings
