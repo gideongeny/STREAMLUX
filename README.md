@@ -38,9 +38,17 @@ Official website: [https://streamlux.vercel.app/](https://streamlux.vercel.app/)
 - **Profile page**: allowing to change profile photo, name, email, password, verify, delete account after reauthentication
 - **Comment system**: Allowing to give reactions, see who reacts to a comment (sorted and filter out the 3 most popular reactions), reply to a comment, edit, delete, hide, sort by latest/popular and load more comment
 
-### New Features (StreamLux)
-- **Live Sports Streaming**: Direct integration with SportsLive.run for live sports streaming (Note: Sports API temporarily disabled to ensure website stability)
-- **World Cinema Discovery**: Explore movies and TV shows from Africa, Asia, Latin America, Middle East, and more with beautiful category images
+### New Features (StreamLux Ultimate)
+- **Advanced Sports Dashboard**: Fully integrated internal sports hub.
+  - **Live Scores & Real-time Tickers**: Re-enabled sports API backend for live football, basketball, and more.
+  - **Integrated Channels**: Access to live broadcasts from **SuperSport**, **Sky Sports**, **beIN Sports**, **ESPN**, **Fox Sports**, and **Canal+**.
+  - **Internal Navigation**: No more external redirects; browse, select, and watch games within the StreamLux app.
+  - **Dynamic Stream Links**: Intelligent discovery of match sources for live events.
+- **Daily TV Release Calendar**: A beautiful, weekly grid for tracking all new TV show releases, ensuring you never miss an episode.
+- **Content Request System**: A dedicated hub for users to request specific movies, TV shows, or sports events directly via the app.
+- **Vertical Short Dramas**: Discover high-intensity, vertical short dramas (TikTok-style) directly on the home page.
+- **Social Discussion Layer**: Integrated comment and discussion system on all watch pages for a collaborative viewing experience.
+- **World Cinema Discovery**: Explore movies and TV shows from Africa, Asia, Latin America, Middle East, and more with beautiful category images.
 - **Enhanced Content Categories**:
   - 🔥 Most Trending Now
   - 👻 Horror Movies
@@ -49,35 +57,15 @@ Official website: [https://streamlux.vercel.app/](https://streamlux.vercel.app/)
   - 🇿🇦 SA Drama, 🇹🇭 Thai Drama, 🇨🇳 C-Drama
   - 🌍 African Cinema & TV Shows (comprehensive collection)
   - 📺 African TV Shows & Series (diverse content from multiple African countries)
-  - 🇰🇪 Kenyan TV Shows, 🇳🇬 Nigerian TV Shows
-  - And many more curated sections
-- **Multiple Streaming Sources**: Access to various embed sources for movies, TV shows, and sports (including SportsLive.run, Streamed.pk, KissKH, Ailok, Googotv, Dramacool, Cuevana, Shahid, and many more regional platforms)
-- **Real-time Sports Updates**: Live scores and upcoming fixtures (Note: Sports API temporarily disabled to prevent website crashes - will be re-enabled once stability issues are resolved)
-- **Enhanced African Content**: Expanded fetching strategies with multiple pages and search terms for maximum content diversity
-- **Responsive Design**: Optimized for mobile, tablet, and desktop
-- **Copyright Page**: Comprehensive legal information and terms of use
-- **Vercel Web Analytics**: Integrated analytics for performance monitoring and user insights
-- **Performance Optimizations**: 
-  - API request caching and rate limiting to prevent quota exceeded errors
-  - Optimized Google services usage (Firebase Analytics, Google Fonts)
-  - Background content loading for faster initial page loads
-  - Reduced Firestore query operations
-- **Enhanced Video Sources**: Comprehensive list of international streaming platforms with proper display names for better user experience
-- **Direct Download Feature**: Download movies and TV shows directly to your device with a single click, similar to MovieBox.ph
-- **Sports Integration**: Direct integration with SportsLive.run for live sports streaming and match details
-- **Footer with Legal Pages**: Comprehensive footer including Contact Us, Privacy Policy, User Agreement, Disclaimer, and Backlinks sections
-- **Error Boundaries**: Robust error handling with React Error Boundaries to prevent app crashes and provide graceful fallbacks
-- **Cross-Platform Compatibility**: Optimized for iPhone, Android, and desktop browsers with polyfills for older devices
-- **Google Search Optimized**: Website is indexed and discoverable via Google Search
-- **Android App Available**: Download the StreamLux Android APK directly from our website, similar to MovieBox. See [BUILD_APK.md](./BUILD_APK.md) and [DISTRIBUTE_APK.md](./DISTRIBUTE_APK.md) for distribution instructions
-- **Latest Updates (v2.1)**:
-  - **Force TMDB World Cinema**: Enhanced "World Cinema" sections now strictly use TMDB data with accurate region codes for reliable content discovery.
-  - **YouTube TV Seasons Layout**: New "Episodes" tab for YouTube TV shows, mimicking the season/episode structure of major streaming platforms.
-  - **Android TV Compatibility**: Fixed "infinite loading" issues on Android TV devices via IntersectionObserver polyfills and optimized querying.
-  - **Performance Boost**: Optimized World Cinema sliders with non-blocking loading (hybrid TMDB/YouTube fetching).
-  - **Strict Content Separation**: Improved filtering to ensure movies and TV shows never appear in the wrong categories.
-  - **Monetization & Ads**: Integrated Service Worker support for ad networks (Monetag/PropellerAds) and custom banner placements.
-  - **Enhanced Branding**: New logo and identity for StreamLux throughout the application.
+  - And many more curated sections.
+- **Direct Download Feature**: Download movies and TV shows directly to your device with a single click, similar to MovieBox.ph.
+- **Android App & Web Sync**: Unified experience across web and Android with seamless Capacitor synchronization.
+- **Latest Updates (v2.5)**:
+  - **Integrated Sports & Channels**: Removed external redirects in the sports section; added a row of 9+ live sports broadcasters.
+  - **TV Release Grid**: Added a weekly calendar view for TV enthusiasts.
+  - **User Feedback Loop**: Implemented the "Request Content" system linked to Firebase.
+  - **UI/UX Polished**: Finalized MovieBox-inspired design elements across the dashboard.
+  - **Stability & Performance**: Fixed critical build issues (date-fns, type safety) and optimized the main app container.
 
 ## 📱 Android App
 
