@@ -175,11 +175,9 @@ const SportsHome: FC = () => {
             </div>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
               {SPORTS_CHANNELS.map((channel) => (
-                <a
+                <Link
                   key={channel.id}
-                  href={channel.streamUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  to={`/sports/channel/${channel.id}/watch`}
                   className="flex-shrink-0 w-36 md:w-44 group"
                 >
                   <div className="aspect-video relative rounded-xl overflow-hidden border border-gray-800 bg-gray-900 group-hover:border-primary/50 transition duration-300 shadow-lg">
@@ -199,7 +197,7 @@ const SportsHome: FC = () => {
                     {channel.name}
                   </h3>
                   <p className="text-[10px] text-gray-500 uppercase tracking-widest">{channel.country}</p>
-                </a>
+                </Link>
               ))}
             </div>
           </div>

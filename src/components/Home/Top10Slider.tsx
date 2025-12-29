@@ -20,36 +20,39 @@ const Top10Slider: FC<Top10SliderProps> = ({ films }) => {
             </h1>
 
             <Swiper
-                spaceBetween={20}
-                slidesPerView={2.2}
+                spaceBetween={12}
+                slidesPerView={1.3}
                 breakpoints={{
+                    400: { slidesPerView: 1.5 },
+                    500: { slidesPerView: 2.2 },
                     640: { slidesPerView: 3.2 },
                     768: { slidesPerView: 3.5 },
                     1024: { slidesPerView: 4.5 },
                     1280: { slidesPerView: 5.5 },
                 }}
-                className="!pb-5 !pl-1 overflow-visible"
+                className="!pb-5 !pl-2 overflow-visible"
             >
                 {films.map((item, index) => {
                     const linkPath = item.media_type === 'tv' ? `/tv/${item.id}` : `/movie/${item.id}`;
                     return (
                         <SwiperSlide key={item.id} className="relative group overflow-visible">
-                            <Link to={linkPath} className="flex items-end relative pl-8">
+                            <Link to={linkPath} className="flex items-end relative pl-10 md:pl-12">
 
                                 {/* Large Ranking Number */}
                                 <div
-                                    className="absolute left-[-15px] bottom-0 text-[100px] md:text-[140px] font-black leading-[0.7] z-0 select-none pointer-events-none"
+                                    className="absolute left-[-5px] md:left-[-15px] bottom-[-5px] md:bottom-[-10px] text-[100px] md:text-[160px] font-black leading-none z-0 select-none pointer-events-none opacity-80"
                                     style={{
-                                        WebkitTextStroke: '2px #555',
+                                        WebkitTextStroke: '2px rgba(255,255,255,0.2)',
                                         color: '#000000',
-                                        fontFamily: 'Impact, sans-serif'
+                                        fontFamily: 'Impact, sans-serif',
+                                        textShadow: '0 0 20px rgba(0,0,0,0.8)'
                                     }}
                                 >
                                     {index + 1}
                                 </div>
 
                                 {/* Poster Card */}
-                                <div className="relative z-10 w-full rounded-lg overflow-hidden aspect-[2/3] shadow-lg transition-transform duration-300 group-hover:scale-105 group-hover:z-20 bg-dark-lighten">
+                                <div className="relative z-10 w-full rounded-xl overflow-hidden aspect-[2/3] shadow-2xl transition-transform duration-300 group-hover:scale-105 group-hover:z-20 border border-white/10 bg-dark-lighten">
                                     <LazyLoadImage
                                         src={`${IMAGE_URL}/w342${item.poster_path}`}
                                         alt={item.title || item.name}
@@ -57,7 +60,7 @@ const Top10Slider: FC<Top10SliderProps> = ({ films }) => {
                                         className="w-full h-full object-cover"
                                     />
                                     {/* Rating Badge */}
-                                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded text-xs font-bold text-primary">
+                                    <div className="absolute top-3 right-3 bg-primary px-1.5 py-0.5 rounded text-[10px] font-black text-black shadow-lg">
                                         {item.vote_average?.toFixed(1)}
                                     </div>
                                 </div>

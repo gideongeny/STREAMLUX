@@ -1,5 +1,6 @@
 import { FC, useMemo, useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { MdSportsSoccer } from "react-icons/md";
 
@@ -8,7 +9,7 @@ import SidebarMini from "../../components/Common/SidebarMini";
 import Title from "../../components/Common/Title";
 import Footer from "../../components/Footer/Footer";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
-import { SPORTS_FIXTURES, SPORTS_LEAGUES, SportsFixtureConfig } from "../../shared/constants";
+import { SPORTS_FIXTURES, SPORTS_LEAGUES, SPORTS_CHANNELS, SportsFixtureConfig } from "../../shared/constants";
 import { getLiveScores, getUpcomingFixturesAPI } from "../../services/sportsAPI";
 
 const SportsWatch: FC = () => {
@@ -18,10 +19,26 @@ const SportsWatch: FC = () => {
   const [dynamicFixture, setDynamicFixture] = useState<SportsFixtureConfig | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Static fixture search
-  const staticFixture = useMemo(() =>
-    SPORTS_FIXTURES.find((item) => item.id === matchId && item.leagueId === leagueId),
-    [matchId, leagueId]);
+  // Static fixture or channel search
+  const staticFixture = useMemo(() => {
+    if (leagueId === "channel") {
+      const channel = SPORTS_CHANNELS.find((item: any) => item.id === matchId);
+      if (channel) {
+        return {
+          id: channel.id,
+          homeTeam: channel.name,
+          awayTeam: channel.category,
+          leagueId: "channel",
+          status: "live",
+          kickoffTime: new Date().toISOString(),
+          kickoffTimeFormatted: "Live Channel",
+          venue: channel.country,
+          streamSources: [channel.streamUrl]
+        } as any;
+      }
+    }
+    return SPORTS_FIXTURES.find((item) => item.id === matchId && item.leagueId === leagueId);
+  }, [matchId, leagueId]);
 
   // If not static, try to find in dynamic API data
   useEffect(() => {
@@ -194,27 +211,38 @@ const SportsWatch: FC = () => {
                 </div>
               </div>
 
-              <div className="mb-6">
-                {sources.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center text-center border border-dashed border-gray-700 rounded-lg px-6 py-10">
-                    <p className="text-white font-semibold mb-2">
-                      No external streams configured yet
-                    </p>
-                    <p className="text-sm text-gray-400 max-w-md">
-                      Ask the administrator to add one or more official partner
-                      links (for example SportsLive, Streamed or a licensed
-                      broadcaster). They will appear here as buttons that open a
-                      new tab.
-                    </p>
-                  </div>
+              <div className="mb-8 overflow-hidden rounded-2xl shadow-2xl border border-white/5 bg-black aspect-video relative group">
+                {sources.length > 0 ? (
+                  <>
+                    <iframe
+                      src={sources[0]}
+                      className="w-full h-full"
+                      allowFullScreen
+                      allow="autoplay; encrypted-media"
+                      title="Sports Stream"
+                    ></iframe>
+                    <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="bg-primary text-black text-[10px] font-black px-3 py-1 rounded shadow-lg">
+                        STREAMING LIVE
+                      </div>
+                    </div>
+                  </>
                 ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-center p-10">
+                    <p className="text-xl font-bold text-gray-400">Stream Not Available Yet</p>
+                    <p className="text-sm text-gray-500 mt-2">Check back closer to kickoff time.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-6">
+                {sources.length > 1 && (
                   <div className="border border-gray-800 rounded-lg p-4 bg-dark-lighten/60">
-                    <p className="text-sm text-gray-300 mb-3">
-                      Choose where to watch. You&apos;ll be redirected to the
-                      partner website in a new tab:
+                    <p className="text-sm text-gray-300 mb-3 flex items-center gap-2">
+                      Alternative Links (Full Experience):
                     </p>
                     <div className="flex flex-wrap gap-3">
-                      {sources.map((source) => (
+                      {sources.slice(1).map((source: string) => (
                         <a
                           key={source}
                           href={source}

@@ -2,6 +2,8 @@
 // Horizontal scrollable cards with team logos, VS, and time/status
 
 import { FC, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { SportsFixtureConfig } from "../../shared/constants";
 import { getLiveScores, getUpcomingFixturesAPI } from "../../services/sportsAPI";
 
@@ -145,15 +147,10 @@ const LiveGamesSlider: FC<LiveGamesSliderProps> = ({ type, title }) => {
       )}
 
       <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {fixtures.map((fixture) => (
-          <a
+        {fixtures.map((fixture: SportsFixtureConfig) => (
+          <Link
             key={fixture.id}
-            href={fixture.matchId
-              ? `https://sportslive.run/matches/${fixture.matchId}?utm_source=StreamLux&sportType=football`
-              : `https://sportslive.run/live?utm_source=StreamLux&sportType=football&home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}`
-            }
-            target="_blank"
-            rel="noopener noreferrer"
+            to={`/sports/${fixture.leagueId}/${fixture.id}/watch`}
             className="flex-shrink-0 w-[280px] rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-primary/30 transition-all group cursor-pointer border border-white/10"
             style={{
               background: 'linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)',
@@ -257,7 +254,7 @@ const LiveGamesSlider: FC<LiveGamesSliderProps> = ({ type, title }) => {
                 {fixture.venue || "Match Details"}
               </span>
             </div>
-          </a>
+          </Link>
         ))}
       </div>
 

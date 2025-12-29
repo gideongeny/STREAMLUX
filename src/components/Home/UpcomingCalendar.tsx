@@ -12,19 +12,39 @@ import { Item } from "../../shared/types";
 
 const UpcomingCalendar: FC = () => {
     const { data, isLoading } = useQuery(["upcoming-calendar"], async () => {
-        const res = await axios.get("/movie/upcoming");
-        return res.data.results as Item[];
+        const [movieRes, tvRes] = await Promise.all([
+            axios.get("/movie/upcoming"),
+            axios.get("/tv/on_the_air") // TMDB doesn't have a direct "upcoming" for TV, so we'll filter airing soon
+        ]);
+
+        const movies = movieRes.data.results.map((m: any) => ({ ...m, media_type: "movie" }));
+        const tv = tvRes.data.results.map((t: any) => ({ ...t, media_type: "tv" }));
+
+        const combined = [...movies, ...tv];
+        const today = new Date();
+
+        // Filter for items with a release/air date in the future
+        return combined.filter((item: any) => {
+            const releaseDate = item.release_date || item.first_air_date;
+            if (!releaseDate) return false;
+            return new Date(releaseDate) >= today;
+        }).sort((a, b) => {
+            const dateA = new Date(a.release_date || a.first_air_date).getTime();
+            const dateB = new Date(b.release_date || b.first_air_date).getTime();
+            return dateA - dateB;
+        }) as Item[];
     });
 
     if (isLoading || !data) return null;
 
     // Function to generate a random "booked" count to mimic MovieBox style
     const getBookedCount = (id: number) => {
-        const base = (id % 1000) * 10 + 500;
+        const base = (id % 1000) * 15 + 1200;
         return base.toLocaleString();
     };
 
     const formatDate = (dateStr: string) => {
+        if (!dateStr) return { month: "TBA", day: "??" };
         const date = new Date(dateStr);
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         return {

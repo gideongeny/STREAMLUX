@@ -171,7 +171,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "ss-pl",
     name: "SuperSport Premier League",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_pl.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/SuperSportPremierLeague.png",
     category: "Football",
     country: "Africa",
     streamUrl: "https://sportslive.run/channels/supersport-premier-league"
@@ -179,7 +179,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "ss-laliga",
     name: "SuperSport La Liga",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_laliga.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/SuperSportLaLiga.png",
     category: "Football",
     country: "Africa",
     streamUrl: "https://sportslive.run/channels/supersport-la-liga"
@@ -187,7 +187,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "ss-footy",
     name: "SuperSport Football",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_footy.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/SuperSportFootball.png",
     category: "Football",
     country: "Africa",
     streamUrl: "https://sportslive.run/channels/supersport-football"
@@ -195,7 +195,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "ss-grand",
     name: "SuperSport Grandstand",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_grandstand.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/SuperSportGrandstand.png",
     category: "General",
     country: "Africa",
     streamUrl: "https://sportslive.run/channels/supersport-grandstand"
@@ -203,7 +203,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "ss-act",
     name: "SuperSport Action",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_action.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/SuperSportAction.png",
     category: "General",
     country: "Africa",
     streamUrl: "https://sportslive.run/channels/supersport-action"
@@ -211,7 +211,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "ss-var1",
     name: "SuperSport Variety 1",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_var1.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/SuperSportVariety1.png",
     category: "General",
     country: "Africa",
     streamUrl: "https://sportslive.run/channels/supersport-variety-1"
@@ -219,7 +219,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "sky-main",
     name: "Sky Sports Main Event",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/sky_sports.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/SkySportsMainEvent.png",
     category: "General",
     country: "UK",
     streamUrl: "https://sportslive.run/channels/sky-sports-main-event"
@@ -227,7 +227,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "sky-pl",
     name: "Sky Sports Premier League",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/sky_pl.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/SkySportsPremierLeague.png",
     category: "Football",
     country: "UK",
     streamUrl: "https://sportslive.run/channels/sky-sports-premier-league"
@@ -235,7 +235,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "sky-f1",
     name: "Sky Sports F1",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/sky_f1.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/SkySportsF1.png",
     category: "Motorsport",
     country: "UK",
     streamUrl: "https://sportslive.run/channels/sky-sports-f1"
@@ -243,7 +243,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "tnt-1",
     name: "TNT Sports 1",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/tnt_1.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/TNTSports1.png",
     category: "General",
     country: "UK",
     streamUrl: "https://sportslive.run/channels/tnt-sports-1"
@@ -251,7 +251,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "tnt-2",
     name: "TNT Sports 2",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/tnt_2.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/TNTSports2.png",
     category: "General",
     country: "UK",
     streamUrl: "https://sportslive.run/channels/tnt-sports-2"
@@ -259,7 +259,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "bein-1",
     name: "beIN Sports 1",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/bein_1.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/beINSports1.png",
     category: "General",
     country: "Global",
     streamUrl: "https://sportslive.run/channels/bein-sports-1"
@@ -267,7 +267,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "bein-2",
     name: "beIN Sports 2",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/bein_2.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/beINSports2.png",
     category: "General",
     country: "Global",
     streamUrl: "https://sportslive.run/channels/bein-sports-2"
@@ -275,7 +275,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "espn-1",
     name: "ESPN",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/espn.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/ESPN.png",
     category: "General",
     country: "Global",
     streamUrl: "https://sportslive.run/channels/espn"
@@ -283,7 +283,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
   {
     id: "espn-2",
     name: "ESPN 2",
-    logo: "https://v-mps.crazymaplestudios.com/images/channels/espn2.png",
+    logo: "https://raw.githubusercontent.com/iptv-org/logos/master/logos/ESPN2.png",
     category: "General",
     country: "Global",
     streamUrl: "https://sportslive.run/channels/espn-2"

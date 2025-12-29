@@ -7,7 +7,7 @@ import {
 } from "firebase/firestore";
 import { FC, useEffect, useState } from "react";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
-import { AiFillHeart } from "react-icons/ai";
+import { AiFillHeart, AiOutlineDownload } from "react-icons/ai";
 import { BsFillPlayFill, BsShareFill, BsThreeDots } from "react-icons/bs";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
@@ -68,28 +68,27 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
     await updateDoc(doc(db, "users", currentUser.uid), {
       bookmarks: !isBookmarked
         ? arrayUnion({
-            poster_path: detail?.poster_path,
-            id: detail?.id,
-            vote_average: detail?.vote_average,
-            media_type: detail?.media_type,
-            ...(detail?.media_type === "movie" && { title: detail?.title }),
-            ...(detail?.media_type === "tv" && { name: detail?.name }),
-          })
+          poster_path: detail?.poster_path,
+          id: detail?.id,
+          vote_average: detail?.vote_average,
+          media_type: detail?.media_type,
+          ...(detail?.media_type === "movie" && { title: detail?.title }),
+          ...(detail?.media_type === "tv" && { name: detail?.name }),
+        })
         : arrayRemove({
-            poster_path: detail?.poster_path,
-            id: detail?.id,
-            vote_average: detail?.vote_average,
-            media_type: detail?.media_type,
-            ...(detail?.media_type === "movie" && { title: detail?.title }),
-            ...(detail?.media_type === "tv" && { name: detail?.name }),
-          }),
+          poster_path: detail?.poster_path,
+          id: detail?.id,
+          vote_average: detail?.vote_average,
+          media_type: detail?.media_type,
+          ...(detail?.media_type === "movie" && { title: detail?.title }),
+          ...(detail?.media_type === "tv" && { name: detail?.name }),
+        }),
     });
 
     toast.success(
-      `${
-        !isBookmarked
-          ? "This film is now bookmarked"
-          : "This film is removed from your bookmarks"
+      `${!isBookmarked
+        ? "This film is now bookmarked"
+        : "This film is removed from your bookmarks"
       }`,
       {
         position: "top-right",
@@ -107,9 +106,8 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
     <>
       {detail && (
         <Title
-          value={`${
-            (detail as DetailMovie).title || (detail as DetailTV).name
-          } | StreamLux`}
+          value={`${(detail as DetailMovie).title || (detail as DetailTV).name
+            } | StreamLux`}
         />
       )}
 
@@ -173,7 +171,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                           <BsFillPlayFill size={18} />
                           <span className="text-sm font-medium">WATCH</span>
                         </Link>
-                        
+
                         {detail && (
                           <DownloadButton
                             downloadInfo={downloadService.generateDownloadInfo(
@@ -198,15 +196,15 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                       </h1>
                     </div>
                     {/* Show release date for unreleased movies */}
-                    {detail.media_type === "movie" && (detail as DetailMovie).release_date && 
-                     new Date((detail as DetailMovie).release_date) > new Date() && (
-                      <div className="md:mt-4 mt-2">
-                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 border border-amber-500/50 rounded-full text-amber-300 text-sm font-semibold">
-                          <span>📅</span>
-                          <span>Releases: {new Date((detail as DetailMovie).release_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                        </span>
-                      </div>
-                    )}
+                    {detail.media_type === "movie" && (detail as DetailMovie).release_date &&
+                      new Date((detail as DetailMovie).release_date) > new Date() && (
+                        <div className="md:mt-4 mt-2">
+                          <span className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 border border-amber-500/50 rounded-full text-amber-300 text-sm font-semibold">
+                            <span>📅</span>
+                            <span>Releases: {new Date((detail as DetailMovie).release_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                          </span>
+                        </div>
+                      )}
                     <ul className="flex gap-3 flex-wrap md:mt-7 mt-3">
                       {detail.genres.slice(0, 3).map((genre) => (
                         <li key={genre.id} className="mb-3">
@@ -231,16 +229,35 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                         <BsFillPlayFill size={25} />
                         <span className="text-lg font-medium">WATCH</span>
                       </Link>
-                      
+
                       {detail && (
-                        <DownloadButton
-                          downloadInfo={downloadService.generateDownloadInfo(
-                            detail,
-                            detail.media_type as "movie" | "tv"
-                          )}
-                          variant="outline"
-                          size="lg"
-                        />
+                        <div className="flex gap-3 items-center">
+                          <DownloadButton
+                            downloadInfo={downloadService.generateDownloadInfo(
+                              detail,
+                              detail.media_type as "movie" | "tv"
+                            )}
+                            variant="outline"
+                            size="lg"
+                          />
+                          <button
+                            onClick={() => {
+                              const info = downloadService.generateDownloadInfo(detail, detail.media_type as "movie" | "tv");
+                              const tmdbId = detail.id;
+                              const title = (detail as DetailMovie).title || (detail as DetailTV).name;
+
+                              // Fallback direct link construction for "Download Regardless"
+                              const fallbackUrl = `https://vidsrc.me/embed/${(detail as DetailMovie).imdb_id || tmdbId}`;
+                              window.open(fallbackUrl, '_blank');
+                              toast.info("Fallback download source opened. You can download from the player options.");
+                            }}
+                            className="px-4 py-3 rounded-full border border-amber-500/50 text-amber-500 hover:bg-amber-500 hover:text-black transition duration-300 text-sm font-bold flex items-center gap-2"
+                            title="Download regardless of quality checks (Fallback Source)"
+                          >
+                            <AiOutlineDownload size={18} />
+                            <span>REALLY DOWNLOAD</span>
+                          </button>
+                        </div>
                       )}
                     </div>
                   )}
@@ -250,15 +267,13 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                 <div className="flex gap-3 absolute top-[5%] right-[3%]">
                   <button
                     onClick={bookmarkedHandler}
-                    className={`tw-flex-center h-12 w-12 rounded-full border-[3px] border-white shadow-lg hover:border-primary transition duration-300 group ${
-                      isBookmarked && "!border-primary"
-                    }`}
+                    className={`tw-flex-center h-12 w-12 rounded-full border-[3px] border-white shadow-lg hover:border-primary transition duration-300 group ${isBookmarked && "!border-primary"
+                      }`}
                   >
                     <AiFillHeart
                       size={20}
-                      className={`text-white group-hover:text-primary transition duration-300 ${
-                        isBookmarked && "!text-primary"
-                      }`}
+                      className={`text-white group-hover:text-primary transition duration-300 ${isBookmarked && "!text-primary"
+                        }`}
                     />
                   </button>
                   {!isMobile && (
@@ -297,9 +312,8 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                           text={`${detail.vote_average.toFixed(1)}`}
                           styles={buildStyles({
                             textSize: "25px",
-                            pathColor: `rgba(81, 121, 255, ${
-                              (detail.vote_average * 10) / 100
-                            })`,
+                            pathColor: `rgba(81, 121, 255, ${(detail.vote_average * 10) / 100
+                              })`,
                             textColor: "#fff",
                             trailColor: "transparent",
                             backgroundColor: "#5179ff",
@@ -409,9 +423,8 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                           text={`${detail.vote_average.toFixed(1)}`}
                           styles={buildStyles({
                             textSize: "25px",
-                            pathColor: `rgba(81, 121, 255, ${
-                              (detail.vote_average * 10) / 100
-                            })`,
+                            pathColor: `rgba(81, 121, 255, ${(detail.vote_average * 10) / 100
+                              })`,
                             textColor: "#fff",
                             trailColor: "transparent",
                             backgroundColor: "#5179ff",

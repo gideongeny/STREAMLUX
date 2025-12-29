@@ -25,6 +25,7 @@ import { getTop10Trending } from "../services/home";
 import BecauseYouWatched from "../components/Home/BecauseYouWatched";
 import NewReleases from "../components/Home/NewReleases";
 import UpcomingCalendar from "../components/Home/UpcomingCalendar";
+import SectionSlider from "../components/Slider/SectionSlider";
 import VerticalShorts from "../components/Home/VerticalShorts";
 import LiveSportsAlert from "../components/Sports/LiveSportsAlert";
 
@@ -259,15 +260,33 @@ const Home: FC = () => {
           {/* Top 10 Section */}
           {showLowerSections && <Top10Slider films={top10Data || []} />}
 
+          {/* Trending Section (Horizontal) */}
+          {showLowerSections && (
+            <div className="mt-12">
+              <TrendingNow isMainFlow={true} />
+            </div>
+          )}
+
+          {/* HOT Section (Horizontal) */}
+          {showLowerSections && dataMovie?.Hot && (
+            <div className="mt-12 px-4 md:px-8">
+              <SectionSlider
+                films={dataMovie.Hot}
+                title="🔥 HOT & Trending"
+                seeMoreParams={{ sort_by: "popularity.desc", page: 2 }}
+              />
+            </div>
+          )}
+
           {/* Upcoming Calendar Section (MovieBox Style) */}
           <div className="px-4 md:px-8">
             <UpcomingCalendar />
           </div>
 
-          {/* Vertical Shorts Section (Discovery Mode) */}
+          {/* Horizontal Shorts Section (Discovery Mode) */}
           {!currentProfile?.isKid && showLowerSections && (
-            <div className="px-4 md:px-8">
-              <VerticalShorts />
+            <div className="px-4 md:px-8 mt-12">
+              <VerticalShorts variant="horizontal" />
             </div>
           )}
 
@@ -299,7 +318,6 @@ const Home: FC = () => {
           <ErrorBoundary fallback={null}>
             <SearchBox />
             <RecommendGenres currentTab={currentTab} />
-            <TrendingNow />
           </ErrorBoundary>
         </div>
       </div>
