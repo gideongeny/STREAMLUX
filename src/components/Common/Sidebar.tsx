@@ -162,7 +162,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           </Link>
 
           <a
-            href="https://novelhub.org"
+            href="https://novelhubapp.com/?utm_source=MB_Website"
             target="_blank"
             rel="noopener noreferrer"
             className="flex gap-6 items-center hover:text-white transition duration-300"

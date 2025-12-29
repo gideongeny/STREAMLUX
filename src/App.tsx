@@ -36,6 +36,7 @@ import { auth, db } from "./shared/firebase";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setCurrentUser, setCurrentProfile } from "./store/slice/authSlice";
 import { getProfiles } from "./services/user";
+import SmartAdPopup from "./components/Common/SmartAdPopup";
 
 function App() {
   const location = useLocation();
@@ -366,6 +367,7 @@ function App() {
       />
       <AppDownloadPopup />
       <MiniPlayer />
+      <SmartAdPopup />
       {/* <Footer /> */}
     </>
   );
