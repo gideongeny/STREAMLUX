@@ -22,13 +22,16 @@ const ProfileGate: FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     const loadProfiles = async () => {
-        if (!currentUser) return;
+        if (!currentUser) {
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         setError(null);
 
-        // Add a 7-second safety timeout to prevent hanging on skeletons
+        // Add a 10-second safety timeout to prevent hanging on skeletons
         const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Request timed out")), 7000)
+            setTimeout(() => reject(new Error("Request timed out")), 10000)
         );
 
         try {
