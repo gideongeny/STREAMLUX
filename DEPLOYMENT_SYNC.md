@@ -14,6 +14,7 @@ To ensure all your Vercel domains (`streamlux.vercel.app`, `moonlight-films-five
 If you want multiple domains to point to the SAME project:
 1. Choose one project as your "Master" (e.g., `moonlight-films-kzf9`).
 2. Go to **Settings** > **Domains**.
+2. Go to **Settings** > **Domains`.
 3. Add your other domains (`streamlux.vercel.app`, etc.) here.
 4. Remove those domains from the other "duplicate" projects in Vercel to avoid conflicts.
 
@@ -23,9 +24,6 @@ If they are already pointing to the same project but look different:
 2. Click the three dots `...` on the latest deployment (the one I just pushed).
 3. Select **Redeploy**.
 4. This will force Vercel to rebuild using the latest code and assets.
-
-## 4. Environment Variables
-Make sure all projects have the same Environment Variables (Firebase Config, API Keys) if they are separate projects.
 
 > [!TIP]
 > The easiest way to keep them consistent is to have **ONE** Vercel project and add **ALL** your domains to it under the Domains settings.

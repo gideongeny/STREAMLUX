@@ -28,34 +28,36 @@ export const signInWithProvider = async (provider: any, type: string) => {
       isStored = false;
     }
 
-    if (isStored) {
-      toast.success("Signed in successfully!", {
-        position: "top-right",
-        autoClose: 2000,
-      });
-      return;
-    }
-
-    let token;
+    let token: string | undefined;
     if (type === "facebook") {
-      // If logined with facebook, I need to store additional info about "token" because I can only get profile picture "photoURL" from FB API when I add "?access_token={someToken}", so I store that "someToken" is my FireStore
       const credential = FacebookAuthProvider.credentialFromResult(result);
-      token = credential?.accessToken;
+      token = credential?.accessToken || undefined;
     }
 
-    await setDoc(doc(db, "users", user.uid), {
+    // Construct user data object
+    const userData: any = {
       firstName: user.displayName?.split(" ")[0] || "",
       lastName: user.displayName?.split(" ").slice(1).join(" ") || "",
       ...(type === "google" && { photoUrl: user.photoURL || "" }),
       ...(type === "facebook" && {
         photoUrl: user.photoURL ? user.photoURL + "?access_token=" + token : "",
       }),
-      bookmarks: [],
-      recentlyWatch: [],
-      ...(type === "facebook" && { token }),
-    });
+    };
 
-    toast.success("Account created and signed in successfully!", {
+    // Only initialize bookmarks and history for NEW users to avoid wiping existing data
+    if (!isStored) {
+      userData.bookmarks = [];
+      userData.recentlyWatch = [];
+    }
+
+    if (type === "facebook" && token) {
+      userData.token = token;
+    }
+
+    // Always use merge: true to avoid deleting other fields (like profiles, history)
+    await setDoc(doc(db, "users", user.uid), userData, { merge: true });
+
+    toast.success(isStored ? "Signed in successfully!" : "Account created and signed in successfully!", {
       position: "top-right",
       autoClose: 2000,
     });

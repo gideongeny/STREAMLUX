@@ -28,7 +28,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
   const shouldShowSkeleton = isLoadingBanner || !films || films.length === 0;
 
   return (
-    <div className="mt-6 relative h-0 md:pb-[45%] pb-[55%] tw-banner-slider bg-dark-lighten rounded-lg overflow-hidden w-full">
+    <div className="mt-6 relative w-full aspect-[4/5] md:aspect-video lg:aspect-[21/9] max-h-[75vh] md:max-h-[500px] lg:max-h-[600px] tw-banner-slider bg-dark-lighten rounded-lg overflow-hidden shadow-2xl">
       {shouldShowSkeleton ? (
         <Skeleton className="absolute top-0 left-0 w-full h-full !rounded-lg" />
       ) : (

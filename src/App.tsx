@@ -115,25 +115,29 @@ function App() {
     }
   }, [downloads]);
 
-  // Profile Persistence & Redirect - Optimized to be less intrusive
+  // Profile Persistence & Redirect
   useEffect(() => {
     if (isSignedIn && !currentProfile) {
+      // Don't redirect if already on a page that doesn't require a profile
+      if (location.pathname === "/profiles" || location.pathname === "/auth" || location.pathname === "/profile" || location.pathname === "/settings") {
+        return;
+      }
+
       const savedProfileId = localStorage.getItem("current_profile_id");
       if (savedProfileId && auth.currentUser) {
-        // Fetch profiles in background, but don't block the UI
         getProfiles(auth.currentUser.uid).then(profiles => {
           const found = profiles.find(p => p.id === savedProfileId);
           if (found) {
             dispatch(setCurrentProfile(found));
-          } else if (location.pathname !== "/" && location.pathname !== "/profiles") {
-            // Only redirect to profiles if on a protected page and look-up fails
+          } else {
             navigate("/profiles");
           }
         }).catch(() => {
-          if (location.pathname !== "/" && location.pathname !== "/profiles") {
-            navigate("/profiles");
-          }
+          navigate("/profiles");
         });
+      } else {
+        // No saved profile ID but signed in - must select a profile
+        navigate("/profiles");
       }
     }
   }, [isSignedIn, currentProfile, location.pathname, dispatch, navigate]);

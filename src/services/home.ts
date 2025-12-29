@@ -38,20 +38,18 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
   const tmdbResponses = await Promise.allSettled(
     Object.entries(endpoints).map(async (endpoint) => {
       try {
-        const response = await axios.get(endpoint[1]);
-        // Validate response has data
+        // Use Promise.race to add a 4s timeout to individual TMDB requests
+        const response = await Promise.race([
+          axios.get(endpoint[1]),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4000))
+        ]) as any;
+
         if (!response?.data?.results || !Array.isArray(response.data.results)) {
-          console.warn(`Invalid response for ${endpoint[0]}:`, response);
           return { data: { results: [] } };
         }
         return response;
       } catch (e: any) {
-        console.error(`Error fetching ${endpoint[0]}:`, e);
-        // Only return empty if it's a network/quota error, not a validation error
-        if (e.response?.status === 429 || e.code === 'NETWORK_ERROR' || e.message?.includes('Network')) {
-          return { data: { results: [] } };
-        }
-        // For other errors, still return empty but log it
+        console.error(`Error fetching TMDB ${endpoint[0]}:`, e);
         return { data: { results: [] } };
       }
     })
@@ -217,20 +215,18 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
   const tmdbResponses = await Promise.allSettled(
     Object.entries(endpoints).map(async (endpoint) => {
       try {
-        const response = await axios.get(endpoint[1]);
-        // Validate response has data
+        // Use Promise.race to add a 4s timeout to individual TMDB requests
+        const response = await Promise.race([
+          axios.get(endpoint[1]),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4000))
+        ]) as any;
+
         if (!response?.data?.results || !Array.isArray(response.data.results)) {
-          console.warn(`Invalid response for TV ${endpoint[0]}:`, response);
           return { data: { results: [] } };
         }
         return response;
       } catch (e: any) {
-        console.error(`Error fetching TV ${endpoint[0]}:`, e);
-        // Only return empty if it's a network/quota error, not a validation error
-        if (e.response?.status === 429 || e.code === 'NETWORK_ERROR' || e.message?.includes('Network')) {
-          return { data: { results: [] } };
-        }
-        // For other errors, still return empty but log it
+        console.error(`Error fetching TMDB TV ${endpoint[0]}:`, e);
         return { data: { results: [] } };
       }
     })
