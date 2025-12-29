@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { BannerInfo, HomeFilms } from "../../shared/types";
+import { BannerInfo, HomeFilms, Item } from "../../shared/types";
 import Skeleton from "../Common/Skeleton";
 import BannerSlider from "../Slider/BannerSlider";
 import SectionSlider from "../Slider/SectionSlider";
@@ -7,6 +7,7 @@ import HybridSectionSlider from "../Slider/HybridSectionSlider";
 
 interface MainHomeFilmsProps {
   data: HomeFilms | undefined;
+  bannerData: Item[] | undefined;
   dataDetail: BannerInfo[] | undefined;
   isLoadingBanner: boolean;
   isLoadingSection: boolean;
@@ -14,18 +15,19 @@ interface MainHomeFilmsProps {
 
 const MainHomeFilms: FC<MainHomeFilmsProps> = ({
   data,
+  bannerData,
   dataDetail,
   isLoadingBanner,
   isLoadingSection,
 }) => {
   // Show loading if banner details are loading OR if main data is still loading (no films yet)
   // Show loading if banner details are loading
-  const isBannerLoading = isLoadingBanner || (isLoadingSection && !data?.Trending);
+  const isBannerLoading = isLoadingBanner || (!bannerData && isLoadingSection);
 
   return (
     <>
       <BannerSlider
-        films={data?.Trending}
+        films={bannerData}
         dataDetail={dataDetail}
         isLoadingBanner={isBannerLoading}
       />

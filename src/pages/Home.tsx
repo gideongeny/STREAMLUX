@@ -48,7 +48,7 @@ const Home: FC = () => {
   }, [currentProfile?.isKid]);
 
   const { data: top10Data } = useQuery(["top10"], getTop10Trending, {
-    select: (data) => filterContent(data)
+    select: (data: any) => filterContent(data as any[])
   });
 
   const [isSidebarActive, setIsSidebarActive] = useState(false);
@@ -114,12 +114,14 @@ const Home: FC = () => {
     isLoading: isLoadingMovie,
     isError: isErrorMovie,
     detailQuery: detailQueryMovie,
+    bannerData: bannerDataMovie,
   } = useHomeData("movies");
   const {
     data: dataTV,
     isLoading: isLoadingTV,
     isError: isErrorTV,
     detailQuery: detailQueryTV,
+    bannerData: bannerDataTV,
   } = useHomeData("tvs");
 
   // Apply filters to grouped data - use useMemo to prevent unnecessary recalculations
@@ -144,6 +146,14 @@ const Home: FC = () => {
     const hasAnyData = Object.values(filtered).some(section => Array.isArray(section) && section.length > 0);
     return hasAnyData ? filtered : dataTV;
   }, [dataTV, filterContent]);
+
+  const filteredBannerMovie = useMemo(() => {
+    return filterContent(bannerDataMovie || []);
+  }, [bannerDataMovie, filterContent]);
+
+  const filteredBannerTV = useMemo(() => {
+    return filterContent(bannerDataTV || []);
+  }, [bannerDataTV, filterContent]);
 
   // Error handling moved to inside the JSX to keep the sidebar visible
 
@@ -218,6 +228,7 @@ const Home: FC = () => {
               ) : (
                 <MainHomeFilm
                   data={filteredDataMovie}
+                  bannerData={filteredBannerMovie}
                   dataDetail={detailQueryMovie.data}
                   isLoadingBanner={detailQueryMovie.isLoading}
                   isLoadingSection={isLoadingMovie}
@@ -232,6 +243,7 @@ const Home: FC = () => {
               ) : (
                 <MainHomeFilm
                   data={filteredDataTV}
+                  bannerData={filteredBannerTV}
                   dataDetail={detailQueryTV.data}
                   isLoadingBanner={detailQueryTV.isLoading}
                   isLoadingSection={isLoadingTV}

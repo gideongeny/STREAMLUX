@@ -12,6 +12,14 @@ import { getAllAPIContent } from "./movieAPIs";
 
 // MOVIE TAB
 ///////////////////////////////////////////////////////////////
+export const getTrendingMovies = async (): Promise<Item[]> => {
+  const response = await axios.get("/trending/movie/day");
+  return (response.data.results || []).map((item: Item) => ({
+    ...item,
+    media_type: "movie" as const,
+  })).filter((item: Item) => item.poster_path);
+};
+
 export const getTop10Trending = async (): Promise<Item[]> => {
   const response = await axios.get("/trending/all/week");
   return response.data.results.slice(0, 10);
@@ -19,7 +27,7 @@ export const getTop10Trending = async (): Promise<Item[]> => {
 
 export const getHomeMovies = async (): Promise<HomeFilms> => {
   const endpoints: { [key: string]: string } = {
-    Trending: "/trending/movie/day",
+    Trending: "/trending/movie/day", // Keep for compatibility but prioritize TMDB
     Popular: "/movie/popular",
     "Top Rated": "/movie/top_rated",
     Hot: "/trending/movie/day?page=2",
@@ -183,6 +191,14 @@ export const getMovieBannerInfo = async (
   })) as BannerInfo[];
 
   // yeah I admit that it's hard to understand my code :)
+};
+
+export const getTrendingTVs = async (): Promise<Item[]> => {
+  const response = await axios.get("/trending/tv/day");
+  return (response.data.results || []).map((item: Item) => ({
+    ...item,
+    media_type: "tv" as const,
+  })).filter((item: Item) => item.poster_path);
 };
 
 // TV TAB
