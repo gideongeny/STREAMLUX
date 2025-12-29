@@ -45,11 +45,17 @@ const AppDownloadPopup: FC = () => {
                     <AiOutlineClose size={20} />
                 </button>
 
-                <div className="flex flex-col items-center text-center mt-2">
-                    <div className="bg-primary/10 p-4 rounded-full mb-4">
-                        <AiOutlineAndroid size={40} className="text-primary" />
-                    </div>
+                {/* Promotional Image */}
+                <div className="relative h-40 -mx-5 -mt-5 mb-4 overflow-hidden">
+                    <img
+                        src="/app_promo.png"
+                        alt="StreamLux App"
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1f2937] via-transparent to-transparent"></div>
+                </div>
 
+                <div className="flex flex-col items-center text-center">
                     <h3 className="text-xl font-bold text-white mb-2">Get the StreamLux App!</h3>
 
                     <p className="text-gray-300 text-sm mb-6 leading-relaxed">
