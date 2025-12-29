@@ -1,5 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { FunctionComponent, useState, useEffect } from "react";
+import { FunctionComponent, useState, useEffect, useCallback } from "react";
 import { Item, ItemsPage } from "../../shared/types";
 import ExploreResultContent from "./ExploreResultContent";
 import { getExploreMovie, getExploreTV } from "../../services/explore";
@@ -26,7 +25,7 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Build config from search params
-  const buildConfig = () => {
+  const buildConfig = useCallback(() => {
     const config: any = {};
     const genre = searchParams.get("genre");
     const sortBy = searchParams.get("sort_by");
@@ -72,7 +71,7 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
       }
     }
     return config;
-  };
+  }, [searchParams]);
 
   useEffect(() => {
     if (data && data.length > 0) {
@@ -115,7 +114,7 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
     if (!isLoading) {
       loadData();
     }
-  }, [currentTab, data, isLoading, searchParams.toString()]);
+  }, [currentTab, data, isLoading, buildConfig]);
 
   const fetchNext = async () => {
     if (isLoadingMore || !hasMore) return;

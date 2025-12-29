@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 
@@ -22,12 +22,7 @@ export const useWatchProgress = () => {
     const auth = getAuth();
     const db = getFirestore();
 
-    // Load watch history from localStorage and Firebase
-    useEffect(() => {
-        loadWatchHistory();
-    }, [auth.currentUser]);
-
-    const loadWatchHistory = async () => {
+    const loadWatchHistory = useCallback(async () => {
         try {
             // Load from localStorage first (instant)
             const localData = localStorage.getItem(STORAGE_KEY);
@@ -55,7 +50,12 @@ export const useWatchProgress = () => {
         } catch (error) {
             console.error('Error loading watch history:', error);
         }
-    };
+    }, [auth.currentUser, db]);
+
+    // Load watch history from localStorage and Firebase
+    useEffect(() => {
+        loadWatchHistory();
+    }, [auth.currentUser, loadWatchHistory]);
 
     const saveProgress = async (progress: WatchProgress) => {
         try {

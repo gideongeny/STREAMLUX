@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { AiOutlineDownload, AiOutlineLink, AiOutlineInfoCircle, AiOutlineClose, AiOutlineCheckCircle } from 'react-icons/ai';
+import React, { useState } from 'react';
+import { AiOutlineDownload, AiOutlineInfoCircle, AiOutlineClose, AiOutlineCheckCircle } from 'react-icons/ai';
 import { toast } from 'react-toastify';
 import { downloadService, DownloadInfo, DownloadProgress } from '../../services/download';
 import { resolverService, ResolvedSource } from '../../services/resolver';

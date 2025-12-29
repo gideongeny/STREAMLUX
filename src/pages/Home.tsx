@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { FC, useState, useEffect, useMemo, lazy, Suspense, useCallback } from "react";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
@@ -25,6 +25,7 @@ import { getTop10Trending } from "../services/home";
 import BecauseYouWatched from "../components/Home/BecauseYouWatched";
 import NewReleases from "../components/Home/NewReleases";
 import UpcomingCalendar from "../components/Home/UpcomingCalendar";
+import VerticalShorts from "../components/Home/VerticalShorts";
 
 // Lazy load for performance (Android TV optimization)
 const AdBanner = lazy(() => import("../components/Common/AdBanner"));
@@ -35,7 +36,7 @@ const Home: FC = () => {
   const { watchHistory, clearProgress } = useWatchProgress();
 
   // Kid Mode Filter Logic
-  const filterContent = (items: any[]) => {
+  const filterContent = useCallback((items: any[]) => {
     if (!items) return [];
     if (!currentProfile?.isKid) return items;
     // Allow Animation (16) and Family (10751)
@@ -44,7 +45,7 @@ const Home: FC = () => {
       item?.genre_ids?.includes(10751) ||
       item?.genres?.some((g: any) => g.id === 16 || g.id === 10751)
     );
-  };
+  }, [currentProfile?.isKid]);
 
   const { data: top10Data } = useQuery(["top10"], getTop10Trending, {
     select: (data) => filterContent(data)
@@ -112,14 +113,12 @@ const Home: FC = () => {
     data: dataMovie,
     isLoading: isLoadingMovie,
     isError: isErrorMovie,
-    error: errorMovie,
     detailQuery: detailQueryMovie,
   } = useHomeData("movies");
   const {
     data: dataTV,
     isLoading: isLoadingTV,
     isError: isErrorTV,
-    error: errorTV,
     detailQuery: detailQueryTV,
   } = useHomeData("tvs");
 
@@ -133,7 +132,7 @@ const Home: FC = () => {
     // If all sections are empty after filtering, return original data to prevent empty state
     const hasAnyData = Object.values(filtered).some(section => Array.isArray(section) && section.length > 0);
     return hasAnyData ? filtered : dataMovie;
-  }, [dataMovie, currentProfile?.isKid]);
+  }, [dataMovie, filterContent]);
 
   const filteredDataTV = useMemo(() => {
     if (!dataTV) return undefined;
@@ -144,7 +143,7 @@ const Home: FC = () => {
     // If all sections are empty after filtering, return original data to prevent empty state
     const hasAnyData = Object.values(filtered).some(section => Array.isArray(section) && section.length > 0);
     return hasAnyData ? filtered : dataTV;
-  }, [dataTV, currentProfile?.isKid]);
+  }, [dataTV, filterContent]);
 
   // Error handling moved to inside the JSX to keep the sidebar visible
 
@@ -261,6 +260,13 @@ const Home: FC = () => {
           <div className="px-4 md:px-8">
             <UpcomingCalendar />
           </div>
+
+          {/* Vertical Shorts Section (Discovery Mode) */}
+          {!currentProfile?.isKid && (
+            <div className="px-4 md:px-8">
+              <VerticalShorts />
+            </div>
+          )}
 
           {/* Because You Watched Section */}
           <BecauseYouWatched />

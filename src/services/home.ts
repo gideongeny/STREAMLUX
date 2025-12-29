@@ -5,11 +5,10 @@ import {
   getFZPopular,
   getFZTopRated,
   getFZLatest,
-  getFZContentByGenre,
   getFZContentByCountry,
 } from "./fzmovies";
 import { getAllSourceContent } from "./contentSources";
-import { getAllAPIContent, getAllAPIContentByGenre } from "./movieAPIs";
+import { getAllAPIContent } from "./movieAPIs";
 
 // MOVIE TAB
 ///////////////////////////////////////////////////////////////
@@ -48,7 +47,7 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
         return { data: { results: [] } };
       }
     })
-  ).then(results => results.map(result => 
+  ).then(results => results.map(result =>
     result.status === 'fulfilled' ? result.value : { data: { results: [] } }
   ));
 
@@ -219,7 +218,7 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
         return { data: { results: [] } };
       }
     })
-  ).then(results => results.map(result => 
+  ).then(results => results.map(result =>
     result.status === 'fulfilled' ? result.value : { data: { results: [] } }
   ));
 

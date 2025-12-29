@@ -2,19 +2,19 @@ import { signOut } from "firebase/auth";
 import { FC, useState } from "react";
 import { AiOutlineHistory, AiOutlineHome, AiOutlineEye, AiOutlineQrcode } from "react-icons/ai";
 import { BiSearch, BiUserCircle } from "react-icons/bi";
-import { BsBookmarkHeart, BsTwitterX, BsFacebook, BsWhatsapp, BsTelegram, BsGlobe } from "react-icons/bs";
+import { BsBookmarkHeart, BsTwitterX, BsFacebook, BsWhatsapp, BsTelegram } from "react-icons/bs";
 import { HiOutlineLogin, HiOutlineLogout, HiOutlineDeviceMobile } from "react-icons/hi";
 import { MdOutlineExplore, MdSportsSoccer, MdOutlineMenuBook, MdOutlineAnimation } from "react-icons/md";
 import { FaDownload, FaTiktok } from "react-icons/fa";
 import { IoSettingsOutline } from "react-icons/io5";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import { auth } from "../../shared/firebase";
 import { useAppSelector } from "../../store/hooks";
 import { useTranslation } from "react-i18next";
-import LanguageSelector from "./LanguageSelector";
+import RequestModal from "./RequestModal";
+import { AiOutlineQuestionCircle, AiOutlineCalendar } from "react-icons/ai";
 
 interface SidebarProps {
   isSidebarActive: boolean;
@@ -28,6 +28,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
   const navigate = useNavigate();
   const { isMobile } = useCurrentViewportView();
   const { t } = useTranslation();
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
   const signOutHandler = () => {
     if (!auth) {
@@ -121,15 +122,15 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             <p>{t('Home')}</p>
           </Link>
 
-          <a
-            href="https://sportslive.run/live?utm_source=MB_Website&sportType=football"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex gap-6 items-center hover:text-white transition duration-300"
+          <Link
+            to="/sports"
+            className={`flex gap-6 items-center  ${location.pathname === "/sports" &&
+              "!text-primary border-r-4 border-primary font-medium"
+              } hover:text-white transition duration-300`}
           >
             <MdSportsSoccer size={25} />
             <p>{t('Sports')}</p>
-          </a>
+          </Link>
 
           <Link
             to="/explore"
@@ -159,6 +160,16 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           >
             <AiOutlineEye size={25} />
             <p>Most Watched</p>
+          </Link>
+
+          <Link
+            to="/calendar"
+            className={`flex gap-6 items-center  ${location.pathname === "/calendar" &&
+              "!text-primary border-r-4 border-primary font-medium"
+              } hover:text-white transition duration-300`}
+          >
+            <AiOutlineCalendar size={25} />
+            <p>TV Calendar</p>
           </Link>
 
           <a
@@ -233,6 +244,14 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           >
             <FaDownload size={25} />
             <p>{t('My Downloads')}</p>
+          </button>
+
+          <button
+            onClick={() => setIsRequestModalOpen(true)}
+            className="flex gap-6 items-center hover:text-white transition duration-300"
+          >
+            <AiOutlineQuestionCircle size={25} className="text-orange-400" />
+            <p>Request Movie</p>
           </button>
         </div>
 
@@ -328,6 +347,10 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
         className={`bg-black/60 z-[5] fixed top-0 left-0 w-full h-full md:opacity-0 transition duration-300 ${isSidebarActive ? "opacity-100 visible" : "opacity-0 invisible"
           }`}
       ></div>
+      <RequestModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+      />
     </>
   );
 };

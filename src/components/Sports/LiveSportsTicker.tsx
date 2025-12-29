@@ -19,28 +19,28 @@ const LiveSportsTicker: FC = () => {
 
     const fetchInitial = async () => {
       if (!isMounted) return;
-      
+
       setIsLoading(true);
       setHasError(false);
-      
+
       try {
         // Add timeout to prevent hanging on iPhone
         const fetchPromise = Promise.all([
           getLiveScores().catch(() => []),
           getUpcomingFixturesAPI().catch(() => []),
         ]);
-        
+
         timeoutId = setTimeout(() => {
           if (isMounted) {
             setIsLoading(false);
             setHasError(true);
           }
         }, 10000); // 10 second timeout
-        
+
         const [live, upcoming] = await fetchPromise;
-        
+
         if (timeoutId) clearTimeout(timeoutId);
-        
+
         if (isMounted) {
           setLiveFixtures(Array.isArray(live) ? live.slice(0, 10) : []);
           setUpcomingFixtures(Array.isArray(upcoming) ? upcoming.slice(0, 10) : []);
@@ -115,14 +115,9 @@ const LiveSportsTicker: FC = () => {
         {/* Scrolling fixtures */}
         <div className="flex items-center gap-8 overflow-hidden">
           {allFixtures.map((fixture, index) => (
-            <a
+            <Link
               key={`${fixture.id}-${index}`}
-              href={fixture.matchId 
-                ? `https://sportslive.run/matches/${fixture.matchId}?utm_source=MB_Website&sportType=football`
-                : `https://sportslive.run/live?utm_source=MB_Website&sportType=football&home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}`
-              }
-              target="_blank"
-              rel="noopener noreferrer"
+              to={`/sports/${fixture.leagueId}/${fixture.id}/watch`}
               className="flex items-center gap-4 shrink-0 hover:bg-gray-800/50 px-4 py-1 rounded transition group"
             >
               {/* League/Competition */}
@@ -196,11 +191,10 @@ const LiveSportsTicker: FC = () => {
 
               {/* Status Badge */}
               <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-semibold whitespace-nowrap ${
-                  fixture.status === "live"
+                className={`text-[10px] px-2 py-0.5 rounded-full font-semibold whitespace-nowrap ${fixture.status === "live"
                     ? "bg-red-600/20 text-red-400 border border-red-500/60"
                     : "bg-amber-500/15 text-amber-300 border border-amber-400/60"
-                }`}
+                  }`}
               >
                 {fixture.status === "live" ? "🔴 LIVE" : "UPCOMING"}
               </span>
@@ -209,7 +203,7 @@ const LiveSportsTicker: FC = () => {
               {index < allFixtures.length - 1 && (
                 <span className="text-gray-600">•</span>
               )}
-            </a>
+            </Link>
           ))}
         </div>
 

@@ -3,12 +3,12 @@ import { IoClose } from "react-icons/io5";
 
 const SmartAdPopup: FC = () => {
     const [isVisible, setIsVisible] = useState(false);
-    const [adData, setAdData] = useState({
+    const adData = {
         title: "StreamLux Premium",
         description: "Experience ad-free streaming, 4K quality, and offline downloads!",
         image: "/premium_promo.png",
         link: "https://otieu.com/4/10378373", // Example high-yielding ad link
-    });
+    };
 
     useEffect(() => {
         // Frequency capping: Max 2 times per session

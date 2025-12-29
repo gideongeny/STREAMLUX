@@ -1,5 +1,5 @@
 import { FC, useState, useEffect } from 'react';
-import { MdSpeed, MdShare, MdForward10, MdReplay10, MdOpenInNew, MdSkipNext } from 'react-icons/md';
+import { MdSpeed, MdShare, MdReplay10, MdOpenInNew, MdSkipNext } from 'react-icons/md';
 import ShareModal from './ShareModal';
 
 interface PlayerControlsProps {

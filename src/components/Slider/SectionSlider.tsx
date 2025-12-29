@@ -4,9 +4,7 @@ import { Navigation } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Item } from "../../shared/types";
 import FilmItem from "../Common/FilmItem";
-import Skeleton from "../Common/Skeleton";
 import SkeletonCard from "../Common/SkeletonCard";
-import SkeletonSlider from "../Common/SkeletonSlider";
 
 interface SectionSliderProps {
   films: Item[] | undefined;

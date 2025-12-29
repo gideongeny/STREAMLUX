@@ -2,50 +2,6 @@ import axios from "../shared/axios";
 
 import { ConfigType, Item, ItemsPage } from "../shared/types";
 import { getFZContentByGenre, getFZContentByCountry } from "./fzmovies";
-import { getAllAPIContentByGenre } from "./movieAPIs";
-import { getAllSourceContent } from "./contentSources";
-import { searchIMDBContentEnhanced } from "./imdb";
-
-// Helper function to generate search queries for regions
-const getSearchQueriesForRegion = (region: string, type: "movie" | "tv"): string[] => {
-  const queries: string[] = [];
-
-  if (region.includes("NG") || region.includes("nollywood")) {
-    queries.push("nollywood", "nigerian", "african");
-  }
-  if (region.includes("KE") || region.includes("kenya")) {
-    queries.push("kenyan", "african");
-  }
-  if (region.includes("ZA") || region.includes("south africa")) {
-    queries.push("south african", "african");
-  }
-  if (region.includes("IN") || region.includes("bollywood")) {
-    queries.push("bollywood", "indian", "hindi");
-  }
-  if (region.includes("KR") || region.includes("korea")) {
-    queries.push("korean", "k-drama", "korean drama");
-  }
-  if (region.includes("JP") || region.includes("japan")) {
-    queries.push("japanese", "anime", "j-drama");
-  }
-  if (region.includes("CN") || region.includes("china")) {
-    queries.push("chinese", "c-drama", "mandarin");
-  }
-  if (region.includes("TH") || region.includes("thailand")) {
-    queries.push("thai", "thai drama", "thailand");
-  }
-  if (region.includes("PH") || region.includes("philippines")) {
-    queries.push("filipino", "philippines", "pinoy");
-  }
-  if (region.includes("MX") || region.includes("mexico")) {
-    queries.push("mexican", "latino", "spanish");
-  }
-  if (region.includes("BR") || region.includes("brazil")) {
-    queries.push("brazilian", "portuguese", "brasil");
-  }
-
-  return queries.length > 0 ? queries : ["popular", "trending"];
-};
 
 export const getExploreMovie: (
   page: number,

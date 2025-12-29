@@ -1,5 +1,5 @@
 import { FunctionComponent } from "react";
-import { AiOutlineHistory, AiOutlineHome } from "react-icons/ai";
+import { AiOutlineHistory, AiOutlineHome, AiOutlineCalendar } from "react-icons/ai";
 import { BiSearch, BiUserCircle } from "react-icons/bi";
 import { BsBookmarkHeart } from "react-icons/bs";
 import { MdOutlineExplore, MdSportsSoccer } from "react-icons/md";
@@ -52,15 +52,14 @@ const SidebarMini: FunctionComponent = () => {
           >
             <AiOutlineHome size={25} />
           </Link>
-          <a
-            href="https://sportslive.run/live?utm_source=MB_Website&sportType=football"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-primary transition duration-300"
+          <Link
+            to="/sports"
+            className={`hover:text-primary transition duration-300 ${location.pathname === "/sports" && "text-primary"
+              }`}
             title="Sports"
           >
             <MdSportsSoccer size={25} />
-          </a>
+          </Link>
           <Link
             to="/explore"
             className={`hover:text-primary transition duration-300 ${location.pathname === "/explore" && "text-primary"
@@ -74,6 +73,14 @@ const SidebarMini: FunctionComponent = () => {
               }`}
           >
             <BiSearch size={25} />
+          </Link>
+          <Link
+            to="/calendar"
+            className={`hover:text-primary transition duration-300 ${location.pathname === "/calendar" && "text-primary"
+              }`}
+            title="TV Calendar"
+          >
+            <AiOutlineCalendar size={25} />
           </Link>
           <button
             onClick={() => personalPageHandler("/bookmarked")}

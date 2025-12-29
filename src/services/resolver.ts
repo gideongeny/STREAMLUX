@@ -32,7 +32,7 @@ export class ResolverService {
         imdbId?: string
     ): Promise<ResolvedSource[]> {
         const tmdbId = id.toString();
-        const imdb = imdbId || tmdbId;
+
 
         const sources: ResolvedSource[] = [
             {

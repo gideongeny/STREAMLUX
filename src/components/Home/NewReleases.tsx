@@ -4,7 +4,7 @@ import { getNewReleases } from "../../services/home";
 import SectionSlider from "../Slider/SectionSlider";
 
 const NewReleases: FC = () => {
-    const { data, isLoading } = useQuery(
+    const { data } = useQuery(
         ["newReleases"],
         async () => {
             const [movies, tv] = await Promise.all([

@@ -154,7 +154,7 @@ const DiverseNavigation: React.FC<DiverseNavigationProps> = ({ currentTab = "mov
     };
 
     fetchImages();
-  }, [currentTab]); // Re-fetch when tab changes
+  }, [currentTab, lastTab, navigationItems.length]); // Re-fetch when tab changes
 
   return (
     <div className="py-8">

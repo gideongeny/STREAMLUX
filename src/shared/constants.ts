@@ -158,6 +158,82 @@ export const EMBED_ALTERNATIVES = {
   ABS_CBN: "https://abs-cbn.com", // Filipino content
 };
 
+export interface SportsChannelConfig {
+  id: string;
+  name: string;
+  logo: string;
+  category: string;
+  country?: string;
+  streamUrl: string;
+}
+
+export const SPORTS_CHANNELS: SportsChannelConfig[] = [
+  {
+    id: "ss-pl",
+    name: "SuperSport Premier League",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_pl.png", // placeholder
+    category: "Football",
+    country: "South Africa",
+    streamUrl: "https://sportslive.run/channels/supersport-premier-league"
+  },
+  {
+    id: "ss-laliga",
+    name: "SuperSport La Liga",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_laliga.png",
+    category: "Football",
+    country: "South Africa",
+    streamUrl: "https://sportslive.run/channels/supersport-la-liga"
+  },
+  {
+    id: "sky-main",
+    name: "Sky Sports Main Event",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/sky_sports.png",
+    category: "General",
+    country: "UK",
+    streamUrl: "https://sportslive.run/channels/sky-sports-main-event"
+  },
+  {
+    id: "bein-1",
+    name: "beIN Sports 1",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/bein_1.png",
+    category: "General",
+    country: "Qatar",
+    streamUrl: "https://sportslive.run/channels/bein-sports-1"
+  },
+  {
+    id: "espn",
+    name: "ESPN",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/espn.png",
+    category: "General",
+    country: "USA",
+    streamUrl: "https://sportslive.run/channels/espn"
+  },
+  {
+    id: "ss-grandstand",
+    name: "SuperSport Grandstand",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/ss_grandstand.png",
+    category: "General",
+    country: "South Africa",
+    streamUrl: "https://sportslive.run/channels/supersport-grandstand"
+  },
+  {
+    id: "canal-sport",
+    name: "Canal+ Sport 1",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/canal_sport.png",
+    category: "Football",
+    country: "France",
+    streamUrl: "https://sportslive.run/channels/canal-sport-1"
+  },
+  {
+    id: "fox-1",
+    name: "Fox Sports 1",
+    logo: "https://v-mps.crazymaplestudios.com/images/channels/fox_1.png",
+    category: "General",
+    country: "USA",
+    streamUrl: "https://sportslive.run/channels/fox-sports-1"
+  }
+];
+
 export interface SportsLeagueConfig {
   id: string;
   name: string;
@@ -187,6 +263,7 @@ export interface SportsFixtureConfig {
   minute?: string;
   isLive?: boolean;
   matchId?: string; // For linking to sportslive.run
+  channelId?: string; // For linked channels
 }
 
 export const SPORTS_LEAGUES: SportsLeagueConfig[] = [

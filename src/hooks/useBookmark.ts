@@ -24,7 +24,7 @@ export const useBookmark = (item: Item | null) => {
         });
 
         return () => unsubDoc();
-    }, [currentUser, item?.id]);
+    }, [currentUser, item]);
 
     const toggleBookmark = async (e?: React.MouseEvent) => {
         if (e) {

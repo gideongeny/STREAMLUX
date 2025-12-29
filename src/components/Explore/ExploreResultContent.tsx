@@ -1,7 +1,6 @@
 import { FunctionComponent } from "react";
 import { Item, ItemsPage } from "../../shared/types";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import InfiniteScroll from "react-infinite-scroll-component";
 import FilmItem from "../Common/FilmItem";
 import Skeleton from "../Common/Skeleton";
 

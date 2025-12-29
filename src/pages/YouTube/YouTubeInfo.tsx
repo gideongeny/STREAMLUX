@@ -13,19 +13,19 @@ const YouTubeInfo: FC = () => {
         () => getYouTubeVideoDetail(id as string)
     );
 
-    const { data: similar, isLoading: isSimilarLoading } = useQuery<YouTubeVideo[], Error>(
+    const { data: similar } = useQuery<YouTubeVideo[], Error>(
         ["relatedVideos", id],
         () => getRelatedVideos(id as string),
         { enabled: !!video }
     );
 
-    const { data: reviews, isLoading: isReviewsLoading } = useQuery<any[], Error>(
+    const { data: reviews } = useQuery<any[], Error>(
         ["youtubeComments", id],
         () => getYouTubeComments(id as string),
         { enabled: !!video }
     );
 
-    const { data: episodes, isLoading: isEpisodesLoading } = useQuery<YouTubeVideo[], Error>(
+    const { data: episodes } = useQuery<YouTubeVideo[], Error>(
         ["youtubeEpisodes", id],
         () => getYouTubeSeriesEpisodes(video!.title, video!.channelId),
         { enabled: !!video && video.type === 'tv' }

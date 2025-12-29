@@ -1,6 +1,5 @@
-import { FC, useState, useEffect } from "react";
+import { FC, useState } from "react";
 import { usePlayer } from "../../context/PlayerContext";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { MdClose, MdOpenInFull } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 
@@ -40,6 +39,7 @@ const MiniPlayer: FC = () => {
                 className="w-full h-full"
                 allowFullScreen
                 frameBorder="0"
+                title="StreamLux Mini Player"
             />
 
             {/* Overlay Controls */}

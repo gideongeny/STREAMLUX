@@ -11,7 +11,7 @@ import Footer from "../../components/Footer/Footer";
 import LiveScoreboard from "../../components/Sports/LiveScoreboard";
 import UpcomingCalendar from "../../components/Sports/UpcomingCalendar";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
-import { SPORTS_FIXTURES, SPORTS_LEAGUES, SportsFixtureConfig } from "../../shared/constants";
+import { SPORTS_FIXTURES, SPORTS_LEAGUES, SPORTS_CHANNELS, SportsFixtureConfig } from "../../shared/constants";
 import { getLiveScores, getUpcomingFixturesAPI, subscribeToLiveScores } from "../../services/sportsAPI";
 
 const SportsHome: FC = () => {
@@ -22,9 +22,9 @@ const SportsHome: FC = () => {
   const [liveFixtures, setLiveFixtures] = useState<SportsFixtureConfig[]>([]);
   const [upcomingFixtures, setUpcomingFixtures] = useState<SportsFixtureConfig[]>([]);
 
-  // Redirect to sportslive.run when component mounts (like MovieBox)
+  // No auto-redirect - we want users to stay on StreamLux
   useEffect(() => {
-    window.location.href = "https://sportslive.run/live?utm_source=MB_Website&sportType=football";
+    console.log("Welcome to StreamLux Sports");
   }, []);
 
 
@@ -59,16 +59,16 @@ const SportsHome: FC = () => {
   const allFixtures = useMemo(() => {
     // Always include static data as base
     const combined = [...SPORTS_FIXTURES];
-    
+
     // Add real API data if available
     if (liveFixtures.length > 0 || upcomingFixtures.length > 0) {
       combined.push(...liveFixtures, ...upcomingFixtures);
     }
-    
+
     // Remove duplicates by id (prioritize API data over static)
     const seen = new Set<string>();
     const unique: SportsFixtureConfig[] = [];
-    
+
     // First add API data
     [...liveFixtures, ...upcomingFixtures].forEach((fixture) => {
       if (!seen.has(fixture.id)) {
@@ -76,7 +76,7 @@ const SportsHome: FC = () => {
         unique.push(fixture);
       }
     });
-    
+
     // Then add static data that's not already included
     SPORTS_FIXTURES.forEach((fixture) => {
       if (!seen.has(fixture.id)) {
@@ -84,7 +84,7 @@ const SportsHome: FC = () => {
         unique.push(fixture);
       }
     });
-    
+
     return unique;
   }, [liveFixtures, upcomingFixtures]);
 
@@ -153,7 +153,7 @@ const SportsHome: FC = () => {
               partners you configure.
             </p>
           </div>
-          
+
           {!isMobile && (
             <div className="mb-6 max-w-md">
               <SearchBox relative={true} />
@@ -165,6 +165,45 @@ const SportsHome: FC = () => {
             <LiveScoreboard />
           </div>
 
+          {/* Live Channels Section */}
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <span className="w-2 h-6 bg-primary rounded-full"></span>
+                Live Sports Channels
+              </h2>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+              {SPORTS_CHANNELS.map((channel) => (
+                <a
+                  key={channel.id}
+                  href={channel.streamUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0 w-36 md:w-44 group"
+                >
+                  <div className="aspect-video relative rounded-xl overflow-hidden border border-gray-800 bg-gray-900 group-hover:border-primary/50 transition duration-300 shadow-lg">
+                    <div className="absolute inset-0 flex items-center justify-center p-4">
+                      {/* Placeholder for real logo or icon grid */}
+                      <div className="text-center">
+                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2 text-primary border border-primary/20">
+                          <span className="text-xl md:text-2xl font-bold">{channel.name.charAt(0)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="absolute top-2 right-2 flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-red-600 animate-pulse text-[8px] font-bold text-white uppercase">
+                      Live
+                    </div>
+                  </div>
+                  <h3 className="mt-2 text-sm text-gray-200 font-medium group-hover:text-primary transition truncate">
+                    {channel.name}
+                  </h3>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest">{channel.country}</p>
+                </a>
+              ))}
+            </div>
+          </div>
+
           {/* Upcoming Calendar */}
           <div className="mb-8">
             <UpcomingCalendar />
@@ -173,31 +212,28 @@ const SportsHome: FC = () => {
           <div className="flex flex-wrap gap-3 mb-6">
             <button
               onClick={() => setActiveStatus("live")}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                activeStatus === "live"
-                  ? "bg-red-600 text-white border-red-500"
-                  : "border-red-600/40 text-red-400 hover:border-red-400"
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${activeStatus === "live"
+                ? "bg-red-600 text-white border-red-500"
+                : "border-red-600/40 text-red-400 hover:border-red-400"
+                }`}
             >
               Live Now
             </button>
             <button
               onClick={() => setActiveStatus("upcoming")}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                activeStatus === "upcoming"
-                  ? "bg-amber-500 text-black border-amber-400"
-                  : "border-amber-400/40 text-amber-300 hover:border-amber-300"
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${activeStatus === "upcoming"
+                ? "bg-amber-500 text-black border-amber-400"
+                : "border-amber-400/40 text-amber-300 hover:border-amber-300"
+                }`}
             >
               Upcoming
             </button>
             <button
               onClick={() => setActiveStatus("replay")}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                activeStatus === "replay"
-                  ? "bg-emerald-500 text-black border-emerald-500"
-                  : "border-emerald-500/40 text-emerald-300 hover:border-emerald-300"
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${activeStatus === "replay"
+                ? "bg-emerald-500 text-black border-emerald-500"
+                : "border-emerald-500/40 text-emerald-300 hover:border-emerald-300"
+                }`}
             >
               Replays
             </button>
@@ -231,11 +267,10 @@ const SportsHome: FC = () => {
           <div className="flex flex-wrap gap-2 mb-8">
             <button
               onClick={() => setActiveLeague("all")}
-              className={`px-3 py-1.5 rounded-full text-xs md:text-sm border transition ${
-                activeLeague === "all"
-                  ? "bg-white text-black border-white"
-                  : "border-gray-600 text-gray-300 hover:border-gray-300"
-              }`}
+              className={`px-3 py-1.5 rounded-full text-xs md:text-sm border transition ${activeLeague === "all"
+                ? "bg-white text-black border-white"
+                : "border-gray-600 text-gray-300 hover:border-gray-300"
+                }`}
             >
               All Competitions
             </button>
@@ -243,11 +278,10 @@ const SportsHome: FC = () => {
               <button
                 key={league.id}
                 onClick={() => setActiveLeague(league.id)}
-                className={`px-3 py-1.5 rounded-full text-xs md:text-sm border transition flex items-center gap-2 ${
-                  activeLeague === league.id
-                    ? "bg-primary text-white border-primary"
-                    : "border-gray-700 text-gray-300 hover:border-gray-300"
-                }`}
+                className={`px-3 py-1.5 rounded-full text-xs md:text-sm border transition flex items-center gap-2 ${activeLeague === league.id
+                  ? "bg-primary text-white border-primary"
+                  : "border-gray-700 text-gray-300 hover:border-gray-300"
+                  }`}
               >
                 {league.flag && <span>{league.flag}</span>}
                 <span>{league.shortName}</span>
@@ -272,11 +306,12 @@ const SportsHome: FC = () => {
               );
 
               return (
-                <a
+                <Link
                   key={fixture.id}
-                  href="https://sportslive.run/live?utm_source=MB_Website&sportType=football"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  to={fixture.matchId
+                    ? `/sports/${fixture.leagueId}/${fixture.id}/watch`
+                    : `/sports/${fixture.leagueId}/${fixture.id}/watch` // Use our route as default
+                  }
                   className="group rounded-xl bg-dark-lighten border border-gray-800 hover:border-primary/70 hover:shadow-xl hover:shadow-primary/20 transition overflow-hidden"
                 >
                   <div className="p-4 flex items-start gap-3">
@@ -292,7 +327,7 @@ const SportsHome: FC = () => {
                             {league?.flag && (
                               <span className="text-base">{league.flag}</span>
                             )}
-                            <span>{league?.name}</span>
+                            <span>{league?.name || "Other"}</span>
                           </span>
                           {fixture.round && (
                             <>
@@ -302,19 +337,18 @@ const SportsHome: FC = () => {
                           )}
                         </p>
                         <span
-                          className={`text-[10px] px-2 py-1 rounded-full font-semibold tracking-wide ${
-                            fixture.status === "live"
-                              ? "bg-red-600/20 text-red-400 border border-red-500/60 animate-pulse"
-                              : fixture.status === "upcoming"
+                          className={`text-[10px] px-2 py-1 rounded-full font-semibold tracking-wide ${fixture.status === "live"
+                            ? "bg-red-600/20 text-red-400 border border-red-500/60 animate-pulse"
+                            : fixture.status === "upcoming"
                               ? "bg-amber-500/15 text-amber-300 border border-amber-400/60"
                               : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/60"
-                          }`}
+                            }`}
                         >
                           {fixture.status === "live"
                             ? "🔴 LIVE"
                             : fixture.status === "upcoming"
-                            ? "UPCOMING"
-                            : "REPLAY"}
+                              ? "UPCOMING"
+                              : "REPLAY"}
                         </span>
                       </div>
 
@@ -394,7 +428,7 @@ const SportsHome: FC = () => {
                         <p className="text-[10px] text-gray-400">
                           Broadcast:{" "}
                           <span className="text-gray-200">
-                            {fixture.broadcast.join(" · ")}
+                            {fixture.broadcast?.join(" · ")}
                           </span>
                         </p>
                       )}
@@ -403,16 +437,15 @@ const SportsHome: FC = () => {
 
                   <div className="px-4 pb-4 flex items-center justify-between text-xs text-gray-400 border-t border-gray-800">
                     <span className="py-2">
-                      Click to{" "}
                       <span className="text-primary font-medium">
-                        open secure stream
+                        View Details & Streams
                       </span>
                     </span>
-                    <span className="py-2 text-primary opacity-0 group-hover:opacity-100 transition">
+                    <span className="py-2 text-primary opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
                       Watch now →
                     </span>
                   </div>
-                </a>
+                </Link>
               );
             })}
           </div>

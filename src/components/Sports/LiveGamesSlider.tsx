@@ -22,7 +22,7 @@ const LiveGamesSlider: FC<LiveGamesSliderProps> = ({ type, title }) => {
 
     const fetchFixtures = async () => {
       if (!isMounted) return;
-      
+
       setIsLoading(true);
       try {
         // Add timeout to prevent hanging on iPhone
@@ -38,9 +38,9 @@ const LiveGamesSlider: FC<LiveGamesSliderProps> = ({ type, title }) => {
         } else {
           result = await getUpcomingFixturesAPI().catch(() => []);
         }
-        
+
         if (timeoutId) clearTimeout(timeoutId);
-        
+
         if (isMounted && Array.isArray(result)) {
           setFixtures(result.slice(0, 20));
           setIsLoading(false);
@@ -55,7 +55,7 @@ const LiveGamesSlider: FC<LiveGamesSliderProps> = ({ type, title }) => {
     };
 
     fetchFixtures();
-    
+
     // Refresh every 60 seconds for live games (reduced frequency for older devices)
     // Only refresh if component is still mounted and visible
     if (type === "live") {
@@ -71,7 +71,7 @@ const LiveGamesSlider: FC<LiveGamesSliderProps> = ({ type, title }) => {
       if (intervalId) clearInterval(intervalId);
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [type]);
+  }, [type, fixtures.length]);
 
   useEffect(() => {
     // Update time every 5 seconds for countdown (reduced frequency for older devices)
@@ -108,13 +108,13 @@ const LiveGamesSlider: FC<LiveGamesSliderProps> = ({ type, title }) => {
     try {
       const date = new Date(timeStr);
       const diffMs = date.getTime() - currentTime.getTime();
-      
+
       if (diffMs < 0) return "LIVE";
-      
+
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
       const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
       const diffSecs = Math.floor((diffMs % (1000 * 60)) / 1000);
-      
+
       // Use polyfill-safe padding for older browsers
       const pad = (num: number): string => {
         const str = String(num);
@@ -143,12 +143,12 @@ const LiveGamesSlider: FC<LiveGamesSliderProps> = ({ type, title }) => {
           </a>
         </div>
       )}
-      
+
       <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {fixtures.map((fixture) => (
           <a
             key={fixture.id}
-            href={fixture.matchId 
+            href={fixture.matchId
               ? `https://sportslive.run/matches/${fixture.matchId}?utm_source=MB_Website&sportType=football`
               : `https://sportslive.run/live?utm_source=MB_Website&sportType=football&home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}`
             }

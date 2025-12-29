@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from "react";
+import { FC, useMemo, useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { MdSportsSoccer } from "react-icons/md";
@@ -8,22 +8,63 @@ import SidebarMini from "../../components/Common/SidebarMini";
 import Title from "../../components/Common/Title";
 import Footer from "../../components/Footer/Footer";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
-import { SPORTS_FIXTURES, SPORTS_LEAGUES } from "../../shared/constants";
+import { SPORTS_FIXTURES, SPORTS_LEAGUES, SportsFixtureConfig } from "../../shared/constants";
+import { getLiveScores, getUpcomingFixturesAPI } from "../../services/sportsAPI";
 
 const SportsWatch: FC = () => {
   const { leagueId, matchId } = useParams();
   const { isMobile } = useCurrentViewportView();
   const [isSidebarActive, setIsSidebarActive] = useState(false);
+  const [dynamicFixture, setDynamicFixture] = useState<SportsFixtureConfig | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const fixture = SPORTS_FIXTURES.find(
-    (item) => item.id === matchId && item.leagueId === leagueId
-  );
+  // Static fixture search
+  const staticFixture = useMemo(() =>
+    SPORTS_FIXTURES.find((item) => item.id === matchId && item.leagueId === leagueId),
+    [matchId, leagueId]);
+
+  // If not static, try to find in dynamic API data
+  useEffect(() => {
+    if (!staticFixture && matchId) {
+      const fetchDynamic = async () => {
+        setIsLoading(true);
+        try {
+          const [live, upcoming] = await Promise.all([
+            getLiveScores(),
+            getUpcomingFixturesAPI(),
+          ]);
+          const found = [...live, ...upcoming].find(f => f.id === matchId);
+          if (found) {
+            setDynamicFixture(found);
+          }
+        } catch (error) {
+          console.error("Error fetching match detail:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchDynamic();
+    }
+  }, [staticFixture, matchId]);
+
+  const fixture = staticFixture || dynamicFixture;
   const league = SPORTS_LEAGUES.find((item) => item.id === leagueId);
 
-  const sources = useMemo(
-    () => fixture?.streamSources ?? [],
-    [fixture?.streamSources]
-  );
+  const sources = useMemo(() => {
+    if (fixture?.streamSources) return fixture.streamSources;
+
+    // Construct dynamic sources for API fixtures
+    if (fixture?.matchId) {
+      return [`https://sportslive.run/matches/${fixture.matchId}?utm_source=MB_Website&sportType=football`, `https://streamed.pk/watch/${fixture.matchId}`];
+    }
+
+    // Fallback search link
+    if (fixture) {
+      return [`https://sportslive.run/live?utm_source=MB_Website&sportType=football&home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}`];
+    }
+
+    return [];
+  }, [fixture]);
 
   const getSourceDisplayName = (url: string) => {
     if (url.includes("dstv")) return "DStv";
@@ -75,7 +116,12 @@ const SportsWatch: FC = () => {
         )}
 
         <div className="flex-grow px-[2vw] md:pt-11 pt-0 pb-10">
-          {!fixture ? (
+          {isLoading ? (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center">
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-4 text-gray-400">Fetching match details...</p>
+            </div>
+          ) : !fixture ? (
             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center">
               <p className="text-2xl font-semibold text-white mb-3">
                 Match not found
@@ -124,25 +170,24 @@ const SportsWatch: FC = () => {
                 </div>
                 <div className="flex flex-col items-start md:items-end gap-2">
                   <span
-                    className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[10px] font-semibold tracking-wide ${
-                      fixture.status === "live"
-                        ? "bg-red-600/20 text-red-400 border border-red-500/60"
-                        : fixture.status === "upcoming"
+                    className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[10px] font-semibold tracking-wide ${fixture.status === "live"
+                      ? "bg-red-600/20 text-red-400 border border-red-500/60"
+                      : fixture.status === "upcoming"
                         ? "bg-amber-500/15 text-amber-300 border border-amber-400/60"
                         : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/60"
-                    }`}
+                      }`}
                   >
                     {fixture.status === "live"
                       ? "LIVE"
                       : fixture.status === "upcoming"
-                      ? "UPCOMING"
-                      : "REPLAY"}
+                        ? "UPCOMING"
+                        : "REPLAY"}
                   </span>
                   {fixture.broadcast && (
                     <p className="text-[11px] text-gray-400">
                       Broadcast partners:{" "}
                       <span className="text-gray-200">
-                        {fixture.broadcast.join(" · ")}
+                        {fixture.broadcast?.join(" · ")}
                       </span>
                     </p>
                   )}

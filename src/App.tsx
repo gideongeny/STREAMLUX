@@ -3,6 +3,14 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Route, Routes, useLocation, useNavigationType, useNavigate } from "react-router-dom";
 import { Analytics } from '@vercel/analytics/react';
+import { ToastContainer } from "react-toastify";
+import AppDownloadPopup from "./components/Common/AppDownloadPopup";
+import MiniPlayer from "./components/FilmWatch/MiniPlayer";
+import { auth, db } from "./shared/firebase";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
+import { setCurrentUser, setCurrentProfile } from "./store/slice/authSlice";
+import { getProfiles } from "./services/user";
+import SmartAdPopup from "./components/Common/SmartAdPopup";
 
 import Protected from "./components/Common/Protected";
 
@@ -28,15 +36,8 @@ const UserAgreement = lazy(() => import("./pages/UserAgreement"));
 const Disclaimer = lazy(() => import("./pages/Disclaimer"));
 const Download = lazy(() => import("./pages/Download"));
 const Downloads = lazy(() => import("./pages/Downloads"));
+const CalendarPage = lazy(() => import("./pages/CalendarPage"));
 const Settings = lazy(() => import("./pages/Settings"));
-import { ToastContainer } from "react-toastify";
-import AppDownloadPopup from "./components/Common/AppDownloadPopup";
-import MiniPlayer from "./components/FilmWatch/MiniPlayer";
-import { auth, db } from "./shared/firebase";
-import { useAppDispatch, useAppSelector } from "./store/hooks";
-import { setCurrentUser, setCurrentProfile } from "./store/slice/authSlice";
-import { getProfiles } from "./services/user";
-import SmartAdPopup from "./components/Common/SmartAdPopup";
 
 function App() {
   const location = useLocation();
@@ -318,6 +319,7 @@ function App() {
           <Route path="disclaimer" element={<Disclaimer />} />
           <Route path="download" element={<Download />} />
           <Route path="downloads" element={<Downloads />} />
+          <Route path="calendar" element={<CalendarPage />} />
           <Route path="settings" element={<Settings />} />
           <Route
             path="bookmarked"

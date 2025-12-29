@@ -84,7 +84,7 @@ const youtube = axios.create({
   timeout: 5000, // 5 second timeout to prevent infinite loading
 });
 
-const STUDIOS = ["ABS-CBN Entertainment", "StarTimes", "GMA Network", "FilmRise", "Viu"];
+
 
 /**
  * Fetch video details (including duration) for a list of video IDs.

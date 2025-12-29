@@ -1,3 +1,4 @@
+/* eslint-disable no-extend-native */
 // Polyfills for older browsers (iPhone 6+, Android 5+)
 
 // Export empty object to make this a module

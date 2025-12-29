@@ -35,8 +35,7 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
     // 1. Parallelize fetches
     const {
         videos: ytVideos,
-        loading: ytLoading,
-        error: ytError
+        loading: ytLoading
     } = useYouTubeVideos({ region, category, type });
 
     // Map region to TMDB specific codes if needed

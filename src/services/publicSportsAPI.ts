@@ -4,8 +4,7 @@
 import axios from "axios";
 import { SportsFixtureConfig } from "../shared/constants";
 
-// Livescore.com API (public, no key required)
-const LIVESCORE_BASE = "https://livescore-api.com/api-client";
+
 
 // Sofascore API (public)
 const SOFASCORE_BASE = "https://api.sofascore.com/api/v1";
@@ -20,7 +19,7 @@ export const getTeamLogo = async (teamName: string): Promise<string | null> => {
       params: { t: teamName },
       timeout: 5000,
     });
-    
+
     if (response.data?.teams && response.data.teams.length > 0) {
       return response.data.teams[0].strTeamBadge || response.data.teams[0].strTeamLogo || null;
     }
@@ -55,21 +54,21 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
   try {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0].replaceAll('-', '/');
-    
+
     const response = await axios.get(`${SPORTSDB_BASE}/eventsday.php`, {
       params: { d: dateStr },
       timeout: 8000,
     });
 
     if (response.data?.events && Array.isArray(response.data.events)) {
-      const liveEvents = response.data.events.filter((e: any) => 
+      const liveEvents = response.data.events.filter((e: any) =>
         e.strStatus === "Live" || e.strStatus === "HT" || e.strStatus === "1H" || e.strStatus === "2H" ||
         e.strStatus === "Half Time" || e.strStatus === "Second Half"
       );
 
       // Process up to 30 live events
       const eventsToProcess = liveEvents.slice(0, 30);
-      
+
       for (const event of eventsToProcess) {
         try {
           const [homeLogo, awayLogo] = await Promise.all([
@@ -97,7 +96,7 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
           continue;
         }
       }
-      
+
       if (fixtures.length > 0) {
         console.log(`TheSportsDB returned ${fixtures.length} live fixtures`);
         return fixtures;
@@ -118,7 +117,7 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
     });
 
     if (response.data?.events && Array.isArray(response.data.events)) {
-      const liveEvents = response.data.events.filter((e: any) => 
+      const liveEvents = response.data.events.filter((e: any) =>
         e.status?.type === "inprogress" || e.status?.type === "live"
       );
 
@@ -144,7 +143,7 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
           continue;
         }
       }
-      
+
       if (fixtures.length > 0) {
         console.log(`Sofascore returned ${fixtures.length} live fixtures`);
         return fixtures;
@@ -178,10 +177,10 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
         });
 
         if (response.data?.events && Array.isArray(response.data.events)) {
-          const upcomingEvents = response.data.events.filter((e: any) => 
-            e.strStatus !== "Live" && 
-            e.strStatus !== "HT" && 
-            e.strStatus !== "1H" && 
+          const upcomingEvents = response.data.events.filter((e: any) =>
+            e.strStatus !== "Live" &&
+            e.strStatus !== "HT" &&
+            e.strStatus !== "1H" &&
             e.strStatus !== "2H" &&
             e.strStatus !== "FT" &&
             e.strStatus !== "Finished"
@@ -219,12 +218,12 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
         continue;
       }
     }
-    
+
     // Remove duplicates
     const unique = allFixtures.filter((fixture, index, self) =>
       index === self.findIndex((f) => f.id === fixture.id)
     );
-    
+
     if (unique.length > 0) {
       console.log(`TheSportsDB returned ${unique.length} upcoming fixtures`);
       return unique.slice(0, 50);
@@ -252,7 +251,7 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
         });
 
         if (response.data?.events && Array.isArray(response.data.events)) {
-          const upcomingEvents = response.data.events.filter((e: any) => 
+          const upcomingEvents = response.data.events.filter((e: any) =>
             e.status?.type !== "finished" && e.status?.type !== "inprogress"
           );
 
@@ -282,11 +281,11 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
         continue;
       }
     }
-    
+
     const unique = allFixtures.filter((fixture, index, self) =>
       index === self.findIndex((f) => f.id === fixture.id)
     );
-    
+
     if (unique.length > 0) {
       console.log(`Sofascore returned ${unique.length} upcoming fixtures`);
       return unique.slice(0, 50);

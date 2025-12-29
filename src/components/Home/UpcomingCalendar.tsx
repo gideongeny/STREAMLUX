@@ -6,6 +6,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
+import { AiOutlineRight } from "react-icons/ai";
 import axios from "../../shared/axios";
 import { Item } from "../../shared/types";
 
@@ -34,8 +35,13 @@ const UpcomingCalendar: FC = () => {
 
     return (
         <div className="mb-12">
-            <h2 className="text-2xl text-white font-bold mb-6 flex items-center gap-2">
-                Upcoming Calendar
+            <h2 className="text-2xl text-white font-bold mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    Upcoming Calendar
+                </div>
+                <Link to="/calendar" className="text-primary text-sm font-medium hover:underline flex items-center gap-1">
+                    View All <AiOutlineRight size={14} />
+                </Link>
             </h2>
             <Swiper
                 modules={[Navigation]}

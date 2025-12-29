@@ -42,9 +42,9 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({
     });
 
     try {
-      await downloadService.downloadMovie(downloadInfo, (progressUpdate) => {
+      await downloadService.downloadMovie(downloadInfo, undefined, (progressUpdate) => {
         setProgress(progressUpdate);
-        
+
         if (progressUpdate.status === 'completed') {
           if (progressUpdate.message.includes('page') || progressUpdate.message.includes('interface')) {
             toast.info('Download interface opened! Video will download automatically if possible.');
@@ -78,9 +78,9 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({
     });
 
     try {
-      await downloadService.downloadMovie(downloadInfo, (progressUpdate) => {
+      await downloadService.downloadMovie(downloadInfo, undefined, (progressUpdate) => {
         setProgress(progressUpdate);
-        
+
         if (progressUpdate.status === 'completed') {
           toast.success('Download page opened successfully!');
         } else if (progressUpdate.status === 'error') {
@@ -109,7 +109,7 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({
           ${className}
         `}
       >
-        <AiOutlineDownload 
+        <AiOutlineDownload
           className={`${isDownloading ? 'animate-bounce' : ''}`}
           size={size === 'sm' ? 16 : size === 'md' ? 18 : 20}
         />
@@ -123,16 +123,16 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({
             <span className="font-medium">Download Progress</span>
             <span className="text-primary">{Math.round(progress.progress)}%</span>
           </div>
-          
+
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-            <div 
+            <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress.progress}%` }}
             ></div>
           </div>
-          
+
           <p className="text-xs text-gray-300 mb-2">{progress.message}</p>
-          
+
           {progress.status === 'error' && (
             <button
               onClick={handleAlternativeDownload}

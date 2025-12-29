@@ -5,7 +5,7 @@ import axios from "axios";
 import { SportsFixtureConfig } from "../shared/constants";
 
 // Import public sports API functions
-import { 
+import {
   getLiveFixturesAPI as getLiveFixturesPublic,
   getUpcomingFixturesAPI as getUpcomingFixturesPublic,
   getLiveScores as getLiveScoresPublic,
@@ -26,7 +26,7 @@ export const getTeamLogo = async (teamName: string): Promise<string | null> => {
       params: { t: teamName },
       timeout: 5000,
     });
-    
+
     if (response.data?.teams && response.data.teams.length > 0) {
       return response.data.teams[0].strTeamBadge || response.data.teams[0].strTeamLogo || null;
     }
@@ -39,12 +39,6 @@ export const getTeamLogo = async (teamName: string): Promise<string | null> => {
 
 // Get live fixtures - DISABLED TEMPORARILY to prevent website crashes
 export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
-  // Temporarily disabled - returns empty array to prevent website crashes
-  // TODO: Re-enable once API stability issues are resolved
-  console.warn("Sports API temporarily disabled to prevent website crashes");
-  return [];
-  
-  /* DISABLED CODE - Re-enable when API is stable
   // Try public APIs first (TheSportsDB, Sofascore)
   const publicFixtures = await getLiveFixturesPublic();
   if (publicFixtures.length > 0) {
@@ -53,7 +47,6 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
 
   // Fallback to API Sports if public APIs fail
   return await getLiveFixturesAPISports();
-  */
 };
 
 // Get live fixtures from API Sports (fallback)
@@ -64,12 +57,12 @@ const getLiveFixturesAPISports = async (): Promise<SportsFixtureConfig[]> => {
     const hasAbortController = typeof AbortController !== 'undefined';
     let controller: AbortController | null = null;
     let timeoutId: NodeJS.Timeout | null = null;
-    
+
     if (hasAbortController) {
       controller = new AbortController();
       timeoutId = setTimeout(() => controller!.abort(), 8000); // 8 second timeout
     }
-    
+
     const response = await axios.get(`${API_SPORTS_BASE}/fixtures`, {
       params: { live: "all" },
       headers: {
@@ -78,7 +71,7 @@ const getLiveFixturesAPISports = async (): Promise<SportsFixtureConfig[]> => {
       timeout: 8000,
       ...(controller && { signal: controller.signal }),
     });
-    
+
     if (timeoutId) clearTimeout(timeoutId);
 
     console.log("API Sports live fixtures response:", response.data);
@@ -99,7 +92,7 @@ const getLiveFixturesAPISports = async (): Promise<SportsFixtureConfig[]> => {
         minute: fixture.fixture.status?.elapsed ? `${fixture.fixture.status.elapsed}'` : undefined,
         isLive: true,
       }));
-      
+
       console.log(`API Sports returned ${fixtures.length} live fixtures`);
       return fixtures;
     } else {
@@ -120,14 +113,14 @@ const getLiveFixturesAPISports = async (): Promise<SportsFixtureConfig[]> => {
   try {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0].replaceAll('-', '/');
-    
+
     const response = await axios.get(`${SPORTSDB_BASE}/eventsday.php`, {
       params: { d: dateStr },
       timeout: 10000,
     });
 
     if (response.data?.events && Array.isArray(response.data.events)) {
-      const liveEvents = response.data.events.filter((e: any) => 
+      const liveEvents = response.data.events.filter((e: any) =>
         e.strStatus === "Live" || e.strStatus === "HT" || e.strStatus === "1H" || e.strStatus === "2H" ||
         e.strStatus === "Half Time" || e.strStatus === "Second Half"
       );
@@ -135,7 +128,7 @@ const getLiveFixturesAPISports = async (): Promise<SportsFixtureConfig[]> => {
       const fixtures: SportsFixtureConfig[] = [];
       // Process up to 20 live events
       const eventsToProcess = liveEvents.slice(0, 20);
-      
+
       for (const event of eventsToProcess) {
         try {
           const [homeLogo, awayLogo] = await Promise.all([
@@ -163,7 +156,7 @@ const getLiveFixturesAPISports = async (): Promise<SportsFixtureConfig[]> => {
           continue;
         }
       }
-      
+
       if (fixtures.length > 0) {
         return fixtures;
       }
@@ -176,14 +169,8 @@ const getLiveFixturesAPISports = async (): Promise<SportsFixtureConfig[]> => {
   return [];
 };
 
-// Get upcoming fixtures - DISABLED TEMPORARILY to prevent website crashes
+// Get upcoming fixtures
 export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
-  // Temporarily disabled - returns empty array to prevent website crashes
-  // TODO: Re-enable once API stability issues are resolved
-  console.warn("Sports API temporarily disabled to prevent website crashes");
-  return [];
-  
-  /* DISABLED CODE - Re-enable when API is stable
   // Try public APIs first (TheSportsDB, Sofascore)
   const publicFixtures = await getUpcomingFixturesPublic();
   if (publicFixtures.length > 0) {
@@ -192,7 +179,6 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
 
   // Fallback to API Sports if public APIs fail
   return await getUpcomingFixturesAPISports();
-  */
 };
 
 // Get upcoming fixtures from API Sports (fallback)
@@ -207,21 +193,21 @@ const getUpcomingFixturesAPISports = async (): Promise<SportsFixtureConfig[]> =>
     }
 
     const allFixtures: SportsFixtureConfig[] = [];
-    
+
     // Fetch from API Sports for each date (limit to first 2 dates for older devices)
     // Use feature detection for AbortController
     const hasAbortController = typeof AbortController !== 'undefined';
-    
+
     for (const dateStr of dates.slice(0, 2)) {
       try {
         let controller: AbortController | null = null;
         let timeoutId: NodeJS.Timeout | null = null;
-        
+
         if (hasAbortController) {
           controller = new AbortController();
           timeoutId = setTimeout(() => controller!.abort(), 8000);
         }
-        
+
         const response = await axios.get(`${API_SPORTS_BASE}/fixtures`, {
           params: { date: dateStr },
           headers: {
@@ -230,7 +216,7 @@ const getUpcomingFixturesAPISports = async (): Promise<SportsFixtureConfig[]> =>
           timeout: 8000,
           ...(controller && { signal: controller.signal }),
         });
-        
+
         if (timeoutId) clearTimeout(timeoutId);
 
         if (response.data?.response && Array.isArray(response.data.response)) {
@@ -271,17 +257,16 @@ const getUpcomingFixturesAPISports = async (): Promise<SportsFixtureConfig[]> =>
         continue;
       }
     }
-    
+
     // Remove duplicates
     const unique = allFixtures.filter((fixture, index, self) =>
       index === self.findIndex((f) => f.id === fixture.id)
     );
-    
+
     return unique.slice(0, 50); // Limit to 50
   } catch (error: any) {
-    // Return empty array instead of throwing
+    // Continue to fallback instead of returning empty
     console.log("Error fetching upcoming fixtures from API Sports");
-    return [];
   }
 
   // Fallback to TheSportsDB
@@ -294,7 +279,7 @@ const getUpcomingFixturesAPISports = async (): Promise<SportsFixtureConfig[]> =>
     }
 
     const allFixtures: SportsFixtureConfig[] = [];
-    
+
     for (const dateStr of dates) {
       try {
         const response = await axios.get(`${SPORTSDB_BASE}/eventsday.php`, {
@@ -303,10 +288,10 @@ const getUpcomingFixturesAPISports = async (): Promise<SportsFixtureConfig[]> =>
         });
 
         if (response.data?.events && Array.isArray(response.data.events)) {
-          const upcomingEvents = response.data.events.filter((e: any) => 
-            e.strStatus !== "Live" && 
-            e.strStatus !== "HT" && 
-            e.strStatus !== "1H" && 
+          const upcomingEvents = response.data.events.filter((e: any) =>
+            e.strStatus !== "Live" &&
+            e.strStatus !== "HT" &&
+            e.strStatus !== "1H" &&
             e.strStatus !== "2H" &&
             e.strStatus !== "FT" &&
             e.strStatus !== "Finished"
@@ -347,11 +332,11 @@ const getUpcomingFixturesAPISports = async (): Promise<SportsFixtureConfig[]> =>
         continue;
       }
     }
-    
+
     const unique = allFixtures.filter((fixture, index, self) =>
       index === self.findIndex((f) => f.id === fixture.id)
     );
-    
+
     return unique.slice(0, 30);
   } catch (error) {
     console.warn("Error fetching upcoming fixtures from TheSportsDB:", error);
@@ -378,14 +363,7 @@ const getLeagueIdFromName = (leagueName: string): string => {
 
 // Get live scores for scoreboard - use public APIs
 export const getLiveScores = async (): Promise<SportsFixtureConfig[]> => {
-  // Temporarily disabled - returns empty array to prevent website crashes
-  // TODO: Re-enable once API stability issues are resolved
-  console.warn("Sports API temporarily disabled to prevent website crashes");
-  return [];
-  
-  /* DISABLED CODE - Re-enable when API is stable
   return await getLiveScoresPublic();
-  */
 };
 
 // Auto-refresh live scores every 30 seconds (faster updates) - DISABLED TEMPORARILY
@@ -393,14 +371,6 @@ export const subscribeToLiveScores = (
   callback: (fixtures: SportsFixtureConfig[]) => void,
   interval: number = 30000 // 30 seconds for faster updates
 ): (() => void) => {
-  // Temporarily disabled - returns no-op unsubscribe function
-  // TODO: Re-enable once API stability issues are resolved
-  console.warn("Sports API temporarily disabled to prevent website crashes");
-  callback([]); // Call with empty array immediately
-  return () => {}; // Return no-op unsubscribe function
-  
-  /* DISABLED CODE - Re-enable when API is stable
   return subscribeToLiveScoresPublic(callback, interval);
-  */
 };
 

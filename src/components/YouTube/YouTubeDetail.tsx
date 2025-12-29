@@ -1,6 +1,6 @@
 import { FC, useState, useEffect } from "react";
-import { AiOutlineHistory, AiOutlineHome, AiOutlineDownload, AiFillStar, AiFillHeart, AiOutlineArrowLeft, AiOutlineClose } from "react-icons/ai";
-import { BsFillPlayFill, BsShareFill, BsThreeDots } from "react-icons/bs";
+import { AiOutlineDownload, AiFillHeart, AiOutlineArrowLeft, AiOutlineClose } from "react-icons/ai";
+import { BsFillPlayFill, BsShareFill } from "react-icons/bs";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link, useNavigate } from "react-router-dom";

@@ -9,16 +9,7 @@ import {
   QuerySnapshot,
 } from "firebase/firestore";
 
-interface TMDBCollectionQueryParams {
-  mediaType: "movie" | "tv";
-  sortBy: string;
-  genres: number[];
-  year: string;
-  runtime: string;
-  region: string;
-  voteAverageGte: string;
-  withOriginalLanguage: string;
-}
+
 
 interface TMDBCollectionQueryResult {
   data: Item[];
@@ -239,7 +230,7 @@ export const useTMDBCollectionQuery = (
     };
 
     fetchData();
-  }, [mediaType, sortBy, genres, year, runtime, region]);
+  }, [mediaType, sortBy, genres, year, runtime, region, voteAverageGte, withOriginalLanguage]);
 
   return { data, isLoading, error };
 };
@@ -274,7 +265,7 @@ export const useCollectionQuery: (
     );
 
     return () => unsubscribe();
-  }, [id]);
+  }, [id, collection]);
 
   return { isLoading, isError, data };
 };
