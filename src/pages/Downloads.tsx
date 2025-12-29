@@ -67,8 +67,8 @@ const Downloads: FC = () => {
                 }>
                     {downloads.map((item) => (
                         <div key={item.id} className={`group ${viewMode === 'list'
-                                ? "bg-white/5 border border-white/5 rounded-2xl p-4 flex items-center gap-6 hover:bg-white/10 transition"
-                                : "relative"
+                            ? "bg-white/5 border border-white/5 rounded-2xl p-4 flex items-center gap-6 hover:bg-white/10 transition"
+                            : "relative"
                             }`}>
                             <div className={`${viewMode === 'list' ? 'shrink-0 w-24 aspect-[2/3]' : 'relative aspect-[2/3] rounded-2xl'
                                 } overflow-hidden bg-[#222] shadow-xl group-hover:scale-[1.02] transition duration-500`}>
@@ -138,8 +138,8 @@ const Downloads: FC = () => {
                                         </div>
                                         {viewMode === 'list' && (
                                             <div className="flex gap-4 text-xs text-gray-400">
-                                                <span>Speed: 4.2 MB/s</span>
-                                                <span>ETA: 2 mins</span>
+                                                <span>Speed: {item.speed || "..."}</span>
+                                                <span>ETA: {item.eta || "..."}</span>
                                             </div>
                                         )}
                                     </div>

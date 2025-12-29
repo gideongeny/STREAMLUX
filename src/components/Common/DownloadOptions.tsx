@@ -53,7 +53,7 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
       message: `Preparing ${source.quality} download...`
     });
 
-    const downloadId = downloadInfo.seasonId ? Number(`${downloadInfo.seasonId}${downloadInfo.episodeId}`) : Date.now();
+    const downloadId = downloadService.generateDownloadId(downloadInfo);
 
     dispatch(addDownload({
       id: downloadId,
@@ -79,7 +79,9 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
 
         dispatch(updateDownloadProgress({
           id: downloadId,
-          progress: progressUpdate.progress
+          progress: progressUpdate.progress,
+          speed: progressUpdate.speed,
+          eta: progressUpdate.eta
         }));
 
         if (progressUpdate.status === 'completed') {
@@ -185,7 +187,7 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
                     >
                       <div className="flex items-center gap-4">
                         <div className={`p-2 rounded-lg ${source.quality === '1080p' ? 'bg-green-500/10 text-green-500' :
-                            source.quality === '720p' ? 'bg-primary/10 text-primary' : 'bg-gray-500/10 text-gray-400'
+                          source.quality === '720p' ? 'bg-primary/10 text-primary' : 'bg-gray-500/10 text-gray-400'
                           }`}>
                           <AiOutlineDownload size={20} />
                         </div>
