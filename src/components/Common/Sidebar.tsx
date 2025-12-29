@@ -179,17 +179,6 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
         <div className="text-white text-lg font-medium mt-12">{t('PERSONAL')}</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
-          {!currentUser && (
-            <div className="mb-4 p-3 bg-primary/10 border border-primary/30 rounded-lg">
-              <p className="text-xs text-gray-400 mb-2">Sign in to access:</p>
-              <Link
-                to="/auth"
-                className="text-primary hover:underline text-sm font-medium"
-              >
-                Sign In / Sign Up →
-              </Link>
-            </div>
-          )}
           <button
             onClick={() => personalPageHandler("/bookmarked")}
             className={`flex gap-6 items-center  ${location.pathname === "/bookmarked" &&
@@ -261,10 +250,6 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             <p>{t('Profile')}</p>
           </button>
 
-          <div className="mt-4">
-            <p className="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wider">{t('Language')}</p>
-            <LanguageSelector />
-          </div>
 
           {!currentUser && (
             <Link

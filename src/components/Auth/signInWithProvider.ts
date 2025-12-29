@@ -9,7 +9,7 @@ export const signInWithProvider = async (provider: any, type: string) => {
     toast.error("Authentication service is not available. Please refresh the page.");
     throw new Error("Firebase not initialized");
   }
-  
+
   try {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;

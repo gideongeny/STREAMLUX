@@ -12,7 +12,7 @@ const LANGUAGES = [
     { code: "ur", label: "Urdu", flag: "🇵🇰" },
     { code: "ar", label: "العربية", flag: "🇸🇦" },
     { code: "hi", label: "हिन्दी", flag: "🇮🇳" },
-    { code: "sw", label: "Kiswahili", flag: "🇹🇿" },
+    { code: "sw", label: "Kiswahili", flag: "🇰🇪" },
     { code: "zh", label: "中文", flag: "🇨🇳" },
 ];
 

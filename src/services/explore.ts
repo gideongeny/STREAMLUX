@@ -126,7 +126,10 @@ export const getExploreMovie: (
       if (!countries.some((c: string) => filterCountries.includes(c))) return false;
     }
     return item.poster_path;
-  });
+  }).map(item => ({
+    ...item,
+    media_type: item.media_type || "movie"
+  }));
 
   return {
     page: tmdbData.data?.page ?? page,
@@ -216,7 +219,10 @@ export const getExploreTV: (
       if (!countries.some((c: string) => filterCountries.includes(c))) return false;
     }
     return item.poster_path;
-  });
+  }).map(item => ({
+    ...item,
+    media_type: item.media_type || "tv"
+  }));
 
   return {
     page: tmdbData.data?.page ?? page,

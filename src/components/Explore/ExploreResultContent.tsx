@@ -25,7 +25,7 @@ const ExploreResultContent: FunctionComponent<ExploreResultContentProps> = ({
   ) || [];
 
   const filteredItems = currentTab
-    ? allItems.filter((item) => item.media_type === currentTab || item.youtubeId)
+    ? allItems.filter((item) => !item.media_type || item.media_type === currentTab || item.youtubeId)
     : allItems;
 
   return (

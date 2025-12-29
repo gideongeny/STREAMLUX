@@ -5,6 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
 import NotificationRequest from "../components/Common/NotificationRequest";
+import LanguageSelector from "../components/Common/LanguageSelector";
 import { validateYouTubeKey } from "../services/youtube";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setCurrentProfile } from "../store/slice/authSlice";
@@ -283,6 +284,22 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                                     >
                                         Clear Cache
                                     </button>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="h-px bg-white/5" />
+
+                                {/* Language Selection */}
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-white font-medium">App Language</p>
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            Change the application interface language.
+                                        </p>
+                                    </div>
+                                    <div className="w-48">
+                                        <LanguageSelector />
+                                    </div>
                                 </div>
                             </div>
                         </div>
