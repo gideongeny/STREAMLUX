@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { IoArrowBack } from "react-icons/io5";
 import Sidebar from "../components/Common/Sidebar";
+import Title from "../components/Common/Title";
 import ExploreFilter from "../components/Explore/ExploreFilter";
 import ExploreResult from "../components/Explore/ExploreResult";
 import { useTMDBCollectionQuery } from "../hooks/useCollectionQuery";
@@ -161,92 +162,90 @@ const Explore = () => {
   const currentSource = searchParams.get("source") || "tmdb";
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="container mx-auto px-4 py-8">
-        {/* Mobile header with clickable logo, consistent with other pages */}
-        <div className="flex md:hidden justify-between items-center mb-5">
-          <Link to="/" className="flex gap-2 items-center">
-            <img src="/logo.svg" alt="StreamLux Logo" className="h-10 w-10" />
-            <p className="text-xl text-white font-medium tracking-wider uppercase">
-              Stream<span className="text-primary">Lux</span>
+    <>
+      <Title value={filters.region ? `${getRegionTitle(filters.region)} | StreamLux` : "Explore | StreamLux"} />
+
+      <div className="flex md:hidden justify-between items-center px-5 my-5">
+        <Link to="/" className="flex gap-2 items-center">
+          <img
+            src="/logo.png"
+            alt="StreamLux Logo"
+            className="h-10 w-10"
+          />
+          <p className="text-xl text-white font-medium tracking-wider uppercase">
+            Stream<span className="text-primary">Lux</span>
+          </p>
+        </Link>
+        <button onClick={() => setIsSidebarActive((prev) => !prev)}>
+          <GiHamburgerMenu size={25} />
+        </button>
+      </div>
+
+      <div className="flex items-start relative">
+        <Sidebar
+          onCloseSidebar={() => setIsSidebarActive(false)}
+          isSidebarActive={isSidebarActive}
+        />
+
+        <div className="flex-grow md:pt-7 pt-0 pb-7 border-x md:px-[2vw] px-[4vw] border-gray-darken min-h-screen bg-dark relative z-0 min-w-0">
+          <div className="mb-8">
+            {/* Back button */}
+            <Link
+              to="/"
+              className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors group"
+            >
+              <IoArrowBack size={20} className="group-hover:-translate-x-1 transition-transform" />
+              <span>Back to Home</span>
+            </Link>
+
+            <h1 className="text-4xl font-bold mb-4 text-white">
+              {filters.region ? getRegionTitle(filters.region) : "Explore Content"}
+            </h1>
+            <p className="text-gray-400 text-lg">
+              {filters.region
+                ? `Discover hand-picked ${currentTab === "movie" ? "movies" : "TV shows"} from this region.`
+                : `Filter and discover the best ${currentTab === "movie" ? "movies" : "TV shows"} matching your preference.`
+              }
             </p>
-          </Link>
-          <button onClick={() => setIsSidebarActive((prev) => !prev)}>
-            <GiHamburgerMenu size={25} />
-          </button>
-        </div>
-
-        {/* Sidebar for navigation on mobile */}
-        <div className="md:hidden">
-          <Sidebar onCloseSidebar={() => setIsSidebarActive(false)} isSidebarActive={isSidebarActive} />
-        </div>
-
-        {/* Desktop header with logo */}
-        <div className="hidden md:flex items-center mb-6">
-          <Link to="/" className="flex gap-2 items-center">
-            <img src="/logo.svg" alt="StreamLux Logo" className="h-10 w-10" />
-            <p className="text-xl text-white font-medium tracking-wider uppercase">
-              Stream<span className="text-primary">Lux</span>
-            </p>
-          </Link>
-        </div>
-
-        <div className="mb-8">
-          {/* Back button */}
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
-          >
-            <IoArrowBack size={20} />
-            <span>Back to Home</span>
-          </Link>
-
-          <h1 className="text-4xl font-bold mb-2">
-            {filters.region ? getRegionTitle(filters.region) : "Explore Movies & TV Shows"}
-          </h1>
-          {filters.region && (
-            <p className="text-gray-400">
-              Discover amazing {currentTab === "movie" ? "movies" : "TV shows"} from around the world
-            </p>
-          )}
-        </div>
-
-        <SeasonalBanner onSelectCategory={(cat) => {
-          const newParams = new URLSearchParams(searchParams);
-          newParams.set("category", cat);
-          newParams.delete("region"); // Clear region if category is selected
-          navigate(`?${newParams.toString()}`);
-        }} />
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-1">
-            <ExploreFilter
-              currentTab={currentTab}
-              onTabChange={handleTabChange}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-            />
           </div>
 
-          <div className="lg:col-span-3">
-            {currentSource === "youtube" ? (
-              <YouTubeGrid
-                videos={ytVideos}
-                loading={ytLoading}
-                error={ytError}
-              />
-            ) : (
-              <ExploreResult
-                data={combinedItems}
-                isLoading={isLoading || ytLoading}
-                error={data && data.length > 0 ? (error || null) : (error || ytError)}
+          <SeasonalBanner onSelectCategory={(cat) => {
+            const newParams = new URLSearchParams(searchParams);
+            newParams.set("category", cat);
+            newParams.delete("region"); // Clear region if category is selected
+            navigate(`?${newParams.toString()}`);
+          }} />
+
+          <div className="flex flex-col lg:flex-row gap-8">
+            <div className="w-full lg:w-[300px] shrink-0">
+              <ExploreFilter
                 currentTab={currentTab}
+                onTabChange={handleTabChange}
+                filters={filters}
+                onFilterChange={handleFilterChange}
               />
-            )}
+            </div>
+
+            <div className="flex-grow overflow-hidden">
+              {currentSource === "youtube" ? (
+                <YouTubeGrid
+                  videos={ytVideos}
+                  loading={ytLoading}
+                  error={ytError}
+                />
+              ) : (
+                <ExploreResult
+                  data={combinedItems}
+                  isLoading={isLoading || ytLoading}
+                  error={data && data.length > 0 ? (error || null) : (error || ytError)}
+                  currentTab={currentTab}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

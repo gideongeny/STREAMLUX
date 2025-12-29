@@ -209,28 +209,6 @@ export const useTMDBCollectionQuery = (
           .filter((item) => Boolean(item.poster_path))
           .slice(0, 100); // Limit to 100 items
 
-        // Fallback: If no results after filtering, get popular content instead
-        if (filteredResults.length === 0) {
-          console.log("No results after filtering, falling back to popular content");
-          try {
-            const fallbackResult = mediaType === "movie"
-              ? await getExploreMovie(1, {}).catch(() => ({ results: [] }))
-              : await getExploreTV(1, {}).catch(() => ({ results: [] }));
-
-            const fallbackItems = (fallbackResult.results || [])
-              .filter((item: Item) => item.media_type === mediaType && Boolean(item.poster_path))
-              .slice(0, 20);
-
-            if (fallbackItems.length > 0) {
-              setData(fallbackItems);
-              setIsLoading(false);
-              return;
-            }
-          } catch (fallbackErr) {
-            console.warn("Fallback to popular content failed:", fallbackErr);
-          }
-        }
-
         setData(filteredResults);
       } catch (err) {
         console.error("Error fetching collection data:", err);

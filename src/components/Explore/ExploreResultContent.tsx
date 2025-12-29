@@ -41,27 +41,19 @@ const ExploreResultContent: FunctionComponent<ExploreResultContentProps> = ({
           <p className="text-white text-3xl mt-5">There is no such films</p>
         </div>
       ) : (
-        <InfiniteScroll
-          dataLength={filteredItems.length}
-          next={() => fetchNext()}
-          hasMore={!!hasMore}
-          loader={<div>Loading...</div>}
-          endMessage={<></>}
-        >
-          <ul className="grid grid-cols-sm lg:grid-cols-lg gap-x-8 gap-y-10 pt-2 px-2">
-            {filteredItems.map((item) => (
-              <li key={item.youtubeId || item.id}>
-                <FilmItem item={item} />
+        <ul className="grid grid-cols-sm lg:grid-cols-lg gap-x-8 gap-y-10 pt-2 px-2">
+          {filteredItems.map((item) => (
+            <li key={item.youtubeId || item.id}>
+              <FilmItem item={item} />
+            </li>
+          ))}
+          {!data &&
+            [...new Array(15)].map((_, index) => (
+              <li key={index}>
+                <Skeleton className="h-0 pb-[160%]" />
               </li>
             ))}
-            {!data &&
-              [...new Array(15)].map((_, index) => (
-                <li key={index}>
-                  <Skeleton className="h-0 pb-[160%]" />
-                </li>
-              ))}
-          </ul>
-        </InfiniteScroll>
+        </ul>
       )}
     </>
   );

@@ -14,6 +14,8 @@ const CATEGORY_GENRE_MAP: Record<string, number[]> = {
     "horror": [27],
     "documentary": [99],
     "drama": [18],
+    "holiday": [10751, 10770],
+    "family": [10751, 16],
     "global": [], // Popular
 };
 

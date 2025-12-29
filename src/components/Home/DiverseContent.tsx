@@ -79,15 +79,29 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
 
       {/* Action Categories */}
       <HybridSectionSlider
-        title="💥 Action & Adventure"
+        title="💥 High Octane Action"
         category="action"
         type={mediaType}
       />
 
       {/* Horror Categories */}
       <HybridSectionSlider
-        title="👻 Horror & Thriller"
+        title="👻 Spooky Season (Horror)"
         category="horror"
+        type={mediaType}
+      />
+
+      {/* Holiday Specials */}
+      <HybridSectionSlider
+        title="🎄 Holiday Specials"
+        category="holiday"
+        type={mediaType}
+      />
+
+      {/* Family & Kids */}
+      <HybridSectionSlider
+        title="🎈 Family & Kids"
+        category="family"
         type={mediaType}
       />
 

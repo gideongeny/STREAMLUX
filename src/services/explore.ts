@@ -57,7 +57,6 @@ export const getExploreMovie: (
   const originCountry = config.with_origin_country || (config as any).region;
 
   // Optimized: Fetch from fewer sources for faster loading
-  // Only use essential sources, skip heavy ones for initial load
   const fetchPromises = [
     // Primary: TMDB discover (most reliable)
     axios.get("/discover/movie", {
@@ -69,23 +68,21 @@ export const getExploreMovie: (
         // Ensure origin_country filtering is applied
         ...(originCountry && { with_origin_country: originCountry }),
       },
-      timeout: 4000, // Reduced timeout for faster loading
+      timeout: 4000,
     }).catch(() => ({ data: { results: [] } })),
 
-    // Fallback: TMDB popular (fast fallback)
+    // Secondary: TMDB popular (fast fallback)
     axios.get("/movie/popular", {
       params: { page },
-      timeout: 3000, // Reduced timeout
+      timeout: 3000,
     }).catch(() => ({ data: { results: [] } })),
 
-    // Only load additional sources if region is specified (for World Cinema) AND not skipped
+    // Only load additional sources if region is specified
     ...(originCountry && !config.skipExternalSources ? [
-      // FZMovies content (only for regional content)
       getFZContentByGenre(genreId || 0, "movie", page).catch(() => []),
-      // Regional content sources (limited to 2 countries max)
       Promise.all(
         (typeof originCountry === 'string' ? originCountry.split('|') : [originCountry])
-          .slice(0, 2) // Reduced from 3 to 2
+          .slice(0, 2)
           .map(country => getFZContentByCountry(country, "movie", page).catch(() => []))
       ).then(results => results.flat()).catch(() => []),
     ] : []),
@@ -97,8 +94,6 @@ export const getExploreMovie: (
   const fzMovies = (originCountry && !config.skipExternalSources ? results[2] : []) as Item[];
   const regionalContent = (originCountry && !config.skipExternalSources ? results[3] : []) as Item[];
 
-  // Combine all TMDB results (discover, popular)
-
   const allTmdbResults = [
     ...(tmdbData.data?.results ?? []),
     ...(popularData.data?.results ?? []),
@@ -106,17 +101,11 @@ export const getExploreMovie: (
 
   const tmdbItems = allTmdbResults
     .filter((item: Item) => {
-      // If genre filter is applied, ensure item has that genre
-      if (genreId && item.genre_ids) {
-        if (!item.genre_ids.includes(genreId)) return false;
-      }
-      // If origin_country filter is applied, ensure item matches
+      if (genreId && item.genre_ids && !item.genre_ids.includes(genreId)) return false;
       if (originCountry) {
         const countries = item.origin_country || [];
         const filterCountries = typeof originCountry === 'string' ? originCountry.split('|') : [originCountry];
-        if (!countries.some((c: string) => filterCountries.includes(c))) {
-          return false;
-        }
+        if (!countries.some((c: string) => filterCountries.includes(c))) return false;
       }
       return item.poster_path;
     })
@@ -125,60 +114,25 @@ export const getExploreMovie: (
       media_type: "movie" as const,
     }));
 
-  // Merge with FZMovies and regional content
   const combined = [...tmdbItems, ...(fzMovies || []), ...(regionalContent || [])];
   const seen = new Set<number>();
   const adjustedItems = combined.filter((item) => {
     if (seen.has(item.id)) return false;
     seen.add(item.id);
-    // Final genre check
-    if (genreId && item.genre_ids && !item.genre_ids.includes(genreId)) {
-      return false;
-    }
-    // Final origin_country check
+    if (genreId && item.genre_ids && !item.genre_ids.includes(genreId)) return false;
     if (originCountry) {
       const countries = item.origin_country || [];
       const filterCountries = typeof originCountry === 'string' ? originCountry.split('|') : [originCountry];
-      if (!countries.some((c: string) => filterCountries.includes(c))) {
-        return false;
-      }
+      if (!countries.some((c: string) => filterCountries.includes(c))) return false;
     }
     return item.poster_path;
   });
-
-  // Fallback: If no results after filtering, show popular content instead of empty page
-  if (adjustedItems.length === 0) {
-    console.log("No results for specific filters, falling back to popular content");
-    try {
-      // Get popular content as fallback
-      const fallbackResponse = await axios.get("/movie/popular", {
-        params: { page: 1 },
-        timeout: 3000,
-      }).catch(() => ({ data: { results: [] } }));
-
-      const fallbackItems = (fallbackResponse.data?.results || []).slice(0, 20).map((item: any) => ({
-        ...item,
-        media_type: "movie" as const,
-      })).filter((item: Item) => item.poster_path);
-
-      if (fallbackItems.length > 0) {
-        return {
-          page: 1,
-          total_pages: 1,
-          results: fallbackItems,
-          total_results: fallbackItems.length,
-        };
-      }
-    } catch (err) {
-      console.warn("Fallback to popular content failed:", err);
-    }
-  }
 
   return {
     page: tmdbData.data?.page ?? page,
     total_pages: tmdbData.data?.total_pages ?? 1,
     results: adjustedItems,
-    total_results: adjustedItems.length, // Update total to reflect merged results
+    total_results: adjustedItems.length,
   };
 };
 
@@ -192,7 +146,6 @@ export const getExploreTV: (
   const originCountry = config.with_origin_country || (config as any).region;
 
   // Optimized: Fetch from fewer sources for faster loading
-  // Only use essential sources, skip heavy ones for initial load
   const fetchPromises = [
     // Primary: TMDB discover (most reliable)
     axios.get("/discover/tv", {
@@ -204,23 +157,21 @@ export const getExploreTV: (
         // Ensure origin_country filtering is applied
         ...(originCountry && { with_origin_country: originCountry }),
       },
-      timeout: 4000, // Reduced timeout for faster loading
+      timeout: 4000,
     }).catch(() => ({ data: { results: [] } })),
 
-    // Fallback: TMDB popular (fast fallback)
+    // Secondary: TMDB popular (fast fallback)
     axios.get("/tv/popular", {
       params: { page },
-      timeout: 3000, // Reduced timeout
+      timeout: 3000,
     }).catch(() => ({ data: { results: [] } })),
 
-    // Only load additional sources if region is specified (for World Cinema) AND not skipped
+    // Only load additional sources if region is specified
     ...(originCountry && !config.skipExternalSources ? [
-      // FZMovies content (only for regional content)
       getFZContentByGenre(genreId || 0, "tv", page).catch(() => []),
-      // Regional content sources (limited to 2 countries max)
       Promise.all(
         (typeof originCountry === 'string' ? originCountry.split('|') : [originCountry])
-          .slice(0, 2) // Reduced from 3 to 2
+          .slice(0, 2)
           .map(country => getFZContentByCountry(country, "tv", page).catch(() => []))
       ).then(results => results.flat()).catch(() => []),
     ] : []),
@@ -232,9 +183,6 @@ export const getExploreTV: (
   const fzTV = (originCountry && !config.skipExternalSources ? results[2] : []) as Item[];
   const regionalContent = (originCountry && !config.skipExternalSources ? results[3] : []) as Item[];
 
-  // Combine all TMDB results (discover, popular, trending)
-  // Type assertion to handle the union type from Promise.all
-
   const allTmdbResults = [
     ...(tmdbData.data?.results ?? []),
     ...(popularData.data?.results ?? []),
@@ -242,22 +190,12 @@ export const getExploreTV: (
 
   const tmdbItems = allTmdbResults
     .filter((item: Item) => {
-      // Must have poster
       if (!item.poster_path) return false;
-
-      // If genre filter is applied, ensure item has that genre
-      if (genreId && item.genre_ids) {
-        if (!item.genre_ids.includes(genreId)) return false;
-      }
-      // If origin_country filter is applied, ensure item matches - STRICT FILTERING
+      if (genreId && item.genre_ids && !item.genre_ids.includes(genreId)) return false;
       if (originCountry) {
         const countries = item.origin_country || [];
         const filterCountries = typeof originCountry === 'string' ? originCountry.split('|') : [originCountry];
-        // Only include if at least one country matches
-        const hasMatchingCountry = countries.some((c: string) => filterCountries.includes(c));
-        if (!hasMatchingCountry) {
-          return false; // Strictly filter out items that don't match
-        }
+        if (!countries.some((c: string) => filterCountries.includes(c))) return false;
       }
       return true;
     })
@@ -266,59 +204,24 @@ export const getExploreTV: (
       media_type: "tv" as const,
     }));
 
-  // Merge with FZMovies and regional content
   const combined = [...tmdbItems, ...(fzTV || []), ...(regionalContent || [])];
   const seen = new Set<number>();
   const adjustedItems = combined.filter((item) => {
     if (seen.has(item.id)) return false;
     seen.add(item.id);
-    // Final genre check
-    if (genreId && item.genre_ids && !item.genre_ids.includes(genreId)) {
-      return false;
-    }
-    // Final origin_country check
+    if (genreId && item.genre_ids && !item.genre_ids.includes(genreId)) return false;
     if (originCountry) {
       const countries = item.origin_country || [];
       const filterCountries = typeof originCountry === 'string' ? originCountry.split('|') : [originCountry];
-      if (!countries.some((c: string) => filterCountries.includes(c))) {
-        return false;
-      }
+      if (!countries.some((c: string) => filterCountries.includes(c))) return false;
     }
     return item.poster_path;
   });
-
-  // Fallback: If no results after filtering, show popular content instead of empty page
-  if (adjustedItems.length === 0) {
-    console.log("No results for specific filters, falling back to popular content");
-    try {
-      // Get popular content as fallback
-      const fallbackResponse = await axios.get("/tv/popular", {
-        params: { page: 1 },
-        timeout: 3000,
-      }).catch(() => ({ data: { results: [] } }));
-
-      const fallbackItems = (fallbackResponse.data?.results || []).slice(0, 20).map((item: any) => ({
-        ...item,
-        media_type: "tv" as const,
-      })).filter((item: Item) => item.poster_path);
-
-      if (fallbackItems.length > 0) {
-        return {
-          page: 1,
-          total_pages: 1,
-          results: fallbackItems,
-          total_results: fallbackItems.length,
-        };
-      }
-    } catch (err) {
-      console.warn("Fallback to popular content failed:", err);
-    }
-  }
 
   return {
     page: tmdbData.data?.page ?? page,
     total_pages: tmdbData.data?.total_pages ?? 1,
     results: adjustedItems,
-    total_results: adjustedItems.length, // Update total to reflect merged results
+    total_results: adjustedItems.length,
   };
 };

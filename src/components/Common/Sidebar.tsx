@@ -4,7 +4,7 @@ import { AiOutlineHistory, AiOutlineHome } from "react-icons/ai";
 import { BiSearch, BiUserCircle } from "react-icons/bi";
 import { BsBookmarkHeart } from "react-icons/bs";
 import { HiOutlineLogin, HiOutlineLogout } from "react-icons/hi";
-import { MdOutlineExplore, MdSportsSoccer } from "react-icons/md";
+import { MdOutlineExplore, MdSportsSoccer, MdOutlineMenuBook } from "react-icons/md";
 import { FaDownload } from "react-icons/fa";
 import { IoSettingsOutline } from "react-icons/io5";
 import { LazyLoadImage } from "react-lazy-load-image-component";
@@ -140,6 +140,16 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             <MdOutlineExplore size={25} />
             <p>{t('Explore')}</p>
           </Link>
+
+          <a
+            href="https://novelhub.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex gap-6 items-center hover:text-white transition duration-300"
+          >
+            <MdOutlineMenuBook size={25} />
+            <p>Novel Hub</p>
+          </a>
 
           <Link
             to="/search"

@@ -6,6 +6,10 @@ import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
 import NotificationRequest from "../components/Common/NotificationRequest";
 import { validateYouTubeKey } from "../services/youtube";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { setCurrentProfile } from "../store/slice/authSlice";
+import { updateProfile } from "../services/user";
+import { UserProfile } from "../shared/types";
 
 interface SettingsProps { }
 
@@ -23,6 +27,10 @@ const Settings: FunctionComponent<SettingsProps> = () => {
     const [apiKey, setApiKey] = useState("");
     const [isValidating, setIsValidating] = useState(false);
     const keyInputRef = useRef<HTMLInputElement>(null);
+
+    const dispatch = useAppDispatch();
+    const currentUser = useAppSelector((state) => state.auth.user);
+    const currentProfile = useAppSelector((state) => state.auth.currentProfile);
 
     useEffect(() => {
         // Load saved key on mount
@@ -59,6 +67,28 @@ const Settings: FunctionComponent<SettingsProps> = () => {
         document.documentElement.style.setProperty("--color-primary", color);
         localStorage.setItem("theme_primary_color", color);
         toast.success("Theme updated!", { position: "top-right", autoClose: 1000 });
+    };
+
+    const handleKidModeToggle = async () => {
+        if (!currentUser || !currentProfile) {
+            toast.error("Please log in to change profile settings.");
+            return;
+        }
+
+        const newIsKid = !currentProfile.isKid;
+        const updatedProfile: UserProfile = { ...currentProfile, isKid: newIsKid };
+
+        // 1. Update Redux
+        dispatch(setCurrentProfile(updatedProfile));
+
+        // 2. Update Firestore for persistence
+        const success = await updateProfile(currentUser.uid, currentProfile.id, { isKid: newIsKid });
+
+        if (success) {
+            toast.success(`Kid Mode ${newIsKid ? "Enabled" : "Disabled"}`, { position: "top-right", autoClose: 1000 });
+        } else {
+            toast.warn("Settings updated locally, but failed to save to cloud.", { position: "top-right" });
+        }
     };
 
     return (
@@ -175,10 +205,31 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                         {/* Other Settings Placeholders */}
                         {/* Playback Preferences */}
                         <div className="bg-dark p-6 rounded-xl border border-white/5 shadow-lg mb-8">
-                            <h2 className="text-xl text-white font-bold mb-4">Playback & Data</h2>
+                            <h2 className="text-xl text-white font-bold mb-4">Playback & Experience</h2>
                             <p className="text-gray-400 text-sm mb-4">Manage your viewing experience and data.</p>
 
                             <div className="space-y-6">
+                                {/* Kid Mode Toggle */}
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-white font-medium">Kid Mode</p>
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            Filters content to be family-friendly (Animation, Family genres).
+                                            <br />
+                                            Active for the current profile: <span className="text-primary font-bold">{currentProfile?.name || "Guest"}</span>
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleKidModeToggle}
+                                        className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${currentProfile?.isKid ? "bg-primary" : "bg-gray-700"}`}
+                                    >
+                                        <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${currentProfile?.isKid ? "translate-x-6" : ""}`} />
+                                    </button>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="h-px bg-white/5" />
+
                                 {/* Auto-Play Toggle */}
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -194,8 +245,8 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                                             const newState = !(localStorage.getItem("autoplay_enabled") === "true");
                                             localStorage.setItem("autoplay_enabled", String(newState));
                                             toast.info(`Auto-Play ${newState ? "Enabled" : "Disabled"}`, { position: "bottom-right", autoClose: 1000 });
-                                            // Force re-render if needed, or simple toast is enough as it reads from localStorage
-                                            setApiKey(apiKey); // dummy update to trigger render if we used state
+                                            // Force re-render if needed
+                                            setApiKey(apiKey);
                                         }}
                                         className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${localStorage.getItem("autoplay_enabled") === "true" ? "bg-primary" : "bg-gray-700"}`}
                                     >

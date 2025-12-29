@@ -272,7 +272,7 @@ const Home: FC = () => {
           {!currentProfile?.isKid && <LiveSports />}
 
           {/* Discover World navigation (moved from sidebar) */}
-          <DiverseNavigation />
+          <DiverseNavigation currentTab={currentTab as "movie" | "tv" | "sports"} />
 
           {/* Discover World content */}
           <ErrorBoundary fallback={<div className="p-10 text-center text-gray-500">Some content could not be loaded.</div>}>
