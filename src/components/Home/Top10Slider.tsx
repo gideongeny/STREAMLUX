@@ -20,15 +20,15 @@ const Top10Slider: FC<Top10SliderProps> = ({ films }) => {
             </h1>
 
             <Swiper
-                spaceBetween={12}
-                slidesPerView={1.3}
+                spaceBetween={16}
+                slidesPerView={1.1}
                 breakpoints={{
-                    400: { slidesPerView: 1.5 },
-                    500: { slidesPerView: 2.2 },
-                    640: { slidesPerView: 3.2 },
-                    768: { slidesPerView: 3.5 },
-                    1024: { slidesPerView: 4.5 },
-                    1280: { slidesPerView: 5.5 },
+                    400: { slidesPerView: 1.2 },
+                    500: { slidesPerView: 1.8 },
+                    640: { slidesPerView: 2.5 },
+                    768: { slidesPerView: 2.8 },
+                    1024: { slidesPerView: 3.5 },
+                    1280: { slidesPerView: 4.2 },
                 }}
                 className="!pb-5 !pl-2 overflow-visible"
             >

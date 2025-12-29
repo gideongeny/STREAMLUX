@@ -231,33 +231,14 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                       </Link>
 
                       {detail && (
-                        <div className="flex gap-3 items-center">
-                          <DownloadButton
-                            downloadInfo={downloadService.generateDownloadInfo(
-                              detail,
-                              detail.media_type as "movie" | "tv"
-                            )}
-                            variant="outline"
-                            size="lg"
-                          />
-                          <button
-                            onClick={() => {
-                              const info = downloadService.generateDownloadInfo(detail, detail.media_type as "movie" | "tv");
-                              const tmdbId = detail.id;
-                              const title = (detail as DetailMovie).title || (detail as DetailTV).name;
-
-                              // Fallback direct link construction for "Download Regardless"
-                              const fallbackUrl = `https://vidsrc.me/embed/${(detail as DetailMovie).imdb_id || tmdbId}`;
-                              window.open(fallbackUrl, '_blank');
-                              toast.info("Fallback download source opened. You can download from the player options.");
-                            }}
-                            className="px-4 py-3 rounded-full border border-amber-500/50 text-amber-500 hover:bg-amber-500 hover:text-black transition duration-300 text-sm font-bold flex items-center gap-2"
-                            title="Download regardless of quality checks (Fallback Source)"
-                          >
-                            <AiOutlineDownload size={18} />
-                            <span>REALLY DOWNLOAD</span>
-                          </button>
-                        </div>
+                        <DownloadButton
+                          downloadInfo={downloadService.generateDownloadInfo(
+                            detail,
+                            detail.media_type as "movie" | "tv"
+                          )}
+                          variant="outline"
+                          size="lg"
+                        />
                       )}
                     </div>
                   )}
