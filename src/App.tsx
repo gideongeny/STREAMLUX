@@ -1,33 +1,34 @@
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Route, Routes, useLocation, useNavigationType, useNavigate } from "react-router-dom";
 import { Analytics } from '@vercel/analytics/react';
 
 import Protected from "./components/Common/Protected";
-import Auth from "./pages/Auth";
-import Bookmarked from "./pages/Bookmarked";
-import Copyright from "./pages/Copyright";
-import Error from "./pages/Error";
-import Explore from "./pages/Explore";
-import History from "./pages/History";
-import Home from "./pages/Home";
-import MovieInfo from "./pages/Movie/MovieInfo";
-import MovieWatch from "./pages/Movie/MovieWatch";
-import SportsHome from "./pages/Sports/SportsHome";
-import SportsWatch from "./pages/Sports/SportsWatch";
-import Profile from "./pages/Profile";
-import ProfileGate from "./components/Profile/ProfileGate";
-import Search from "./pages/Search";
-import TVInfo from "./pages/TV/TVInfo";
-import TVWatch from "./pages/TV/TVWatch";
-import YouTubeInfo from "./pages/YouTube/YouTubeInfo";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import UserAgreement from "./pages/UserAgreement";
-import Disclaimer from "./pages/Disclaimer";
-import Download from "./pages/Download";
-import Downloads from "./pages/Downloads";
-import Settings from "./pages/Settings";
+
+// Lazy load pages
+const Auth = lazy(() => import("./pages/Auth"));
+const Bookmarked = lazy(() => import("./pages/Bookmarked"));
+const Copyright = lazy(() => import("./pages/Copyright"));
+const Explore = lazy(() => import("./pages/Explore"));
+const History = lazy(() => import("./pages/History"));
+const Home = lazy(() => import("./pages/Home"));
+const MovieInfo = lazy(() => import("./pages/Movie/MovieInfo"));
+const MovieWatch = lazy(() => import("./pages/Movie/MovieWatch"));
+const SportsHome = lazy(() => import("./pages/Sports/SportsHome"));
+const SportsWatch = lazy(() => import("./pages/Sports/SportsWatch"));
+const Profile = lazy(() => import("./pages/Profile"));
+const ProfileGate = lazy(() => import("./components/Profile/ProfileGate"));
+const Search = lazy(() => import("./pages/Search"));
+const TVInfo = lazy(() => import("./pages/TV/TVInfo"));
+const TVWatch = lazy(() => import("./pages/TV/TVWatch"));
+const YouTubeInfo = lazy(() => import("./pages/YouTube/YouTubeInfo"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const UserAgreement = lazy(() => import("./pages/UserAgreement"));
+const Disclaimer = lazy(() => import("./pages/Disclaimer"));
+const Download = lazy(() => import("./pages/Download"));
+const Downloads = lazy(() => import("./pages/Downloads"));
+const Settings = lazy(() => import("./pages/Settings"));
 import { ToastContainer } from "react-toastify";
 import AppDownloadPopup from "./components/Common/AppDownloadPopup";
 import MiniPlayer from "./components/FilmWatch/MiniPlayer";
@@ -108,13 +109,18 @@ function App() {
           if (found) {
             dispatch(setCurrentProfile(found));
           } else {
-            // Invalid ID, force selection
-            if (location.pathname !== "/profiles") navigate("/profiles");
+            // Invalid ID or no saved profile, force selection ONLY if not on Home page
+            // This ensures users land on Home directly when booting up
+            if (location.pathname !== "/profiles" && location.pathname !== "/") {
+              navigate("/profiles");
+            }
           }
         });
       } else {
-        // No saved profile, force selection
-        if (location.pathname !== "/profiles") navigate("/profiles");
+        // No saved profile, force selection ONLY if not on Home page
+        if (location.pathname !== "/profiles" && location.pathname !== "/") {
+          navigate("/profiles");
+        }
       }
     }
   }, [isSignedIn, currentProfile, location.pathname, dispatch, navigate]);
@@ -284,62 +290,69 @@ function App() {
   return (
     <>
       <Analytics />
-      <Routes>
-        <Route index element={<Home />} />
-        <Route path="movie/:id" element={<MovieInfo />} />
-        <Route path="tv/:id" element={<TVInfo />} />
-        <Route path="movie/:id/watch" element={<MovieWatch />} />
-        <Route path="tv/:id/watch" element={<TVWatch />} />
-        <Route path="youtube/:id" element={<YouTubeInfo />} />
-        <Route path="sports" element={<SportsHome />} />
-        <Route
-          path="sports/:leagueId/:matchId/watch"
-          element={<SportsWatch />}
-        />
-        <Route path="explore" element={<Explore />} />
-        <Route path="search" element={<Search />} />
-        <Route path="auth" element={<Auth />} />
-        <Route path="copyright" element={<Copyright />} />
-        <Route path="privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="user-agreement" element={<UserAgreement />} />
-        <Route path="disclaimer" element={<Disclaimer />} />
-        <Route path="download" element={<Download />} />
-        <Route path="downloads" element={<Downloads />} />
-        <Route path="settings" element={<Settings />} />
-        <Route
-          path="bookmarked"
-          element={
-            <Protected isSignedIn={isSignedIn}>
-              <Bookmarked />
-            </Protected>
-          }
-        />
-        <Route
-          path="history"
-          element={
-            <Protected isSignedIn={isSignedIn}>
-              <History />
-            </Protected>
-          }
-        />
-        <Route
-          path="profiles"
-          element={
-            <Protected isSignedIn={isSignedIn}>
-              <ProfileGate />
-            </Protected>
-          }
-        />
-        <Route
-          path="profile"
-          element={
-            <Protected isSignedIn={isSignedIn}>
-              <Profile />
-            </Protected>
-          }
-        />
-        <Route path="*" element={<Error />} />
-      </Routes>
+      <Suspense fallback={
+        <div className="min-h-screen bg-dark flex flex-col items-center justify-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-400 animate-pulse font-medium">StreamLux Premium...</p>
+        </div>
+      }>
+        <Routes>
+          <Route index element={<Home />} />
+          <Route path="movie/:id" element={<MovieInfo />} />
+          <Route path="tv/:id" element={<TVInfo />} />
+          <Route path="movie/:id/watch" element={<MovieWatch />} />
+          <Route path="tv/:id/watch" element={<TVWatch />} />
+          <Route path="youtube/:id" element={<YouTubeInfo />} />
+          <Route path="sports" element={<SportsHome />} />
+          <Route
+            path="sports/:leagueId/:matchId/watch"
+            element={<SportsWatch />}
+          />
+          <Route path="explore" element={<Explore />} />
+          <Route path="search" element={<Search />} />
+          <Route path="auth" element={<Auth />} />
+          <Route path="copyright" element={<Copyright />} />
+          <Route path="privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="user-agreement" element={<UserAgreement />} />
+          <Route path="disclaimer" element={<Disclaimer />} />
+          <Route path="download" element={<Download />} />
+          <Route path="downloads" element={<Downloads />} />
+          <Route path="settings" element={<Settings />} />
+          <Route
+            path="bookmarked"
+            element={
+              <Protected isSignedIn={isSignedIn}>
+                <Bookmarked />
+              </Protected>
+            }
+          />
+          <Route
+            path="history"
+            element={
+              <Protected isSignedIn={isSignedIn}>
+                <History />
+              </Protected>
+            }
+          />
+          <Route
+            path="profiles"
+            element={
+              <Protected isSignedIn={isSignedIn}>
+                <ProfileGate />
+              </Protected>
+            }
+          />
+          <Route
+            path="profile"
+            element={
+              <Protected isSignedIn={isSignedIn}>
+                <Profile />
+              </Protected>
+            }
+          />
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </Suspense>
       <ToastContainer
         position="top-right"
         autoClose={2000}

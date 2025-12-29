@@ -303,6 +303,7 @@ export class DownloadService {
   // Main download method - Direct download like MovieBox.ph
   async downloadMovie(
     downloadInfo: DownloadInfo,
+    selectedSource?: ResolvedSource,
     onProgress?: (progress: DownloadProgress) => void
   ): Promise<void> {
     const downloadId = this.generateDownloadId(downloadInfo);
@@ -310,43 +311,50 @@ export class DownloadService {
     const progress: DownloadProgress = {
       progress: 0,
       status: "idle",
-      message: "Resolving direct links..."
+      message: selectedSource ? `Starting ${selectedSource.quality} download...` : "Resolving direct links..."
     };
 
     this.downloads.set(downloadId, progress);
     onProgress?.(progress);
 
     try {
-      // 1. Resolve sources using the new ResolverService
-      progress.progress = 10;
-      onProgress?.(progress);
+      let activeSource = selectedSource;
 
-      const tmdbId = downloadInfo.mediaType === "movie"
-        ? (downloadInfo as any).tmdbId || downloadInfo.sources[0].match(/\/(\d+)/)?.[1]
-        : (downloadInfo as any).tmdbId;
+      // 1. Resolve sources if none provided
+      if (!activeSource) {
+        progress.progress = 10;
+        onProgress?.(progress);
 
-      const resolvedSources = await resolverService.resolveSources(
-        downloadInfo.mediaType,
-        tmdbId,
-        downloadInfo.seasonId,
-        downloadInfo.episodeId
-      );
+        const tmdbId = downloadInfo.mediaType === "movie"
+          ? (downloadInfo as any).tmdbId || downloadInfo.sources[0].match(/\/(\d+)/)?.[1]
+          : (downloadInfo as any).tmdbId;
 
-      // 2. Identify if there's a 'direct' source for 1-click download
-      const directSource = resolvedSources.find(s => s.type === 'direct');
+        const resolvedSources = await resolverService.resolveSources(
+          downloadInfo.mediaType,
+          tmdbId,
+          downloadInfo.seasonId,
+          downloadInfo.episodeId
+        );
 
-      if (directSource) {
-        progress.message = "Starting automatic download...";
-        progress.progress = 40;
+        activeSource = resolvedSources.find(s => s.type === 'direct') || resolvedSources[0];
+      }
+
+      if (activeSource) {
+        progress.message = `Downloading from ${activeSource.name}...`;
+        progress.progress = 30;
         onProgress?.(progress);
 
         // Try to trigger the browser's download manager immediately
-        const success = await this.startDirectDownload(directSource.url, this.generateFilename(downloadInfo));
+        const filename = this.generateFilename(downloadInfo);
+        const success = await this.startDirectDownload(activeSource.url, filename, (p) => {
+          progress.progress = 30 + (p * 0.6); // Scale progress to 30-90%
+          onProgress?.(progress);
+        });
 
         if (success) {
           progress.status = "completed";
           progress.progress = 100;
-          progress.message = "Download starting...";
+          progress.message = "Download complete!";
           onProgress?.(progress);
           return;
         }
@@ -357,7 +365,8 @@ export class DownloadService {
       progress.progress = 60;
       onProgress?.(progress);
 
-      const downloadPage = this.createSmartDownloadPage(downloadInfo, tmdbId);
+      const tmdbIdFallback = (downloadInfo as any).tmdbId || (downloadInfo.sources[0].match(/\/(\d+)/)?.[1] || 0);
+      const downloadPage = this.createSmartDownloadPage(downloadInfo, Number(tmdbIdFallback));
       const newTab = window.open(downloadPage, '_blank');
 
       if (newTab) {
@@ -378,22 +387,52 @@ export class DownloadService {
 
   /**
    * Attempts to trigger a direct browser download.
-   * This mimics the "automatic" feel of Moviebox.
+   * Uses Blobs for same-origin or CORS-enabled URLs to ensure "Save As" behavior.
    */
-  private async startDirectDownload(url: string, filename: string): Promise<boolean> {
+  private async startDirectDownload(url: string, filename: string, onUpdate?: (p: number) => void): Promise<boolean> {
     try {
-      // Method A: Link with download attribute (works if same-origin or CORS allowed)
+      // 1. Try Fetch Blob method (Best for mobile gallery saving if CORS allows)
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          const reader = response.body?.getReader();
+          const contentLength = +response.headers.get('Content-Length')!;
+          let receivedLength = 0;
+          const chunks = [];
+
+          if (reader) {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              chunks.push(value);
+              receivedLength += value.length;
+              onUpdate?.((receivedLength / contentLength) * 100);
+            }
+            const blob = new Blob(chunks);
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+            return true;
+          }
+        }
+      } catch (fetchError) {
+        console.warn("Fetch blob failed (likely CORS), falling back to simple link", fetchError);
+      }
+
+      // 2. Simple link fallback (Doesn't provide progress, might open in new tab)
       const link = document.createElement('a');
       link.href = url;
       link.download = filename;
+      link.target = "_blank";
       link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      // We assume success, but in many cases with external URLs, 
-      // the browser will just open the URL in a new tab if it's not same-origin.
-      // However, premium scrapers often provide headers that force a download.
       return true;
     } catch (e) {
       console.warn("Direct download link trigger failed", e);

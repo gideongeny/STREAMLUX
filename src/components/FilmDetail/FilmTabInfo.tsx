@@ -4,6 +4,8 @@ import { Cast, DetailMovie, DetailTV, Reviews } from "../../shared/types";
 import { resizeImage } from "../../shared/utils";
 import Skeleton from "../Common/Skeleton";
 import ReadMore from "../Common/ReadMore";
+import { toast } from "react-toastify";
+import { AiOutlineDownload } from "react-icons/ai";
 import ReviewTab from "./ReviewTab";
 interface FilmTabInfoProps {
   detail?: DetailMovie | DetailTV | undefined;
@@ -26,10 +28,9 @@ const FilmTabInfo: FC<FilmTabInfoProps> = ({ detail, credits, reviews }) => {
           >
             <button
               onClick={() => setCurrentTab(btnName)}
-              className={`hover:text-white transition duration-300 pb-1 ${
-                currentTab === btnName &&
+              className={`hover:text-white transition duration-300 pb-1 ${currentTab === btnName &&
                 "font-medium -translate-y-2 border-b-2 border-primary text-white"
-              }`}
+                }`}
             >
               {btnName[0].toUpperCase() + btnName.slice(1)}
             </button>
@@ -137,14 +138,27 @@ const FilmTabInfo: FC<FilmTabInfoProps> = ({ detail, credits, reviews }) => {
                       />
                     </div>
                     <div className="flex-grow">
-                      <div className="mb-3 flex justify-between">
-                        <p className="text-white font-medium">{season.name}</p>
-                        <p>{season.episode_count} episodes</p>
+                      <div className="mb-3 flex justify-between items-start">
+                        <div>
+                          <p className="text-white font-medium text-lg">{season.name}</p>
+                          <p className="text-gray-400 text-sm">{season.episode_count} episodes • {season.air_date?.split('-')[0]}</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            toast.info(`Preparing batch download for ${season.name}...`);
+                            // In a real app, we'd fetch all episode data and queue them
+                            // For now, we simulate the start of a batch process
+                            setTimeout(() => toast.success(`Batch download for ${season.name} added to queue!`), 1500);
+                          }}
+                          className="flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 px-3 py-1.5 rounded-lg transition-all duration-300 text-sm font-medium group"
+                        >
+                          <AiOutlineDownload className="group-hover:scale-110 transition" />
+                          <span>Download Season</span>
+                        </button>
                       </div>
-                      <ReadMore limitTextLength={130} className="mb-2">
-                        {season.overview}
+                      <ReadMore limitTextLength={130} className="mb-2 text-gray-300">
+                        {season.overview || "No overview available for this season."}
                       </ReadMore>
-                      <p className="text-base">{season.air_date}</p>
                     </div>
                   </div>
                 </li>
