@@ -30,6 +30,8 @@ const config: CapacitorConfig = {
       'https://sportslive.run',
       'https://streamlux.vercel.app',
       'https://moonlight-films-five.vercel.app',
+      'https://novelhubapp.com',
+      'https://otieu.com'
     ],
   },
   android: {
