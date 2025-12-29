@@ -149,30 +149,26 @@ const LiveGamesSlider: FC<LiveGamesSliderProps> = ({ type, title }) => {
           <a
             key={fixture.id}
             href={fixture.matchId
-              ? `https://sportslive.run/matches/${fixture.matchId}?utm_source=MB_Website&sportType=football`
-              : `https://sportslive.run/live?utm_source=MB_Website&sportType=football&home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}`
+              ? `https://sportslive.run/matches/${fixture.matchId}?utm_source=StreamLux&sportType=football`
+              : `https://sportslive.run/live?utm_source=StreamLux&sportType=football&home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}`
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-shrink-0 w-[280px] rounded-lg overflow-hidden hover:shadow-lg hover:shadow-primary/20 transition-all group cursor-pointer"
+            className="flex-shrink-0 w-[280px] rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-primary/30 transition-all group cursor-pointer border border-white/10"
             style={{
-              background: 'linear-gradient(to bottom right, rgba(239, 68, 68, 0.3) 0%, rgba(239, 68, 68, 0.3) 50%, rgba(59, 130, 246, 0.3) 50%, rgba(59, 130, 246, 0.3) 100%)',
-              border: '2px solid rgba(239, 68, 68, 0.4)'
+              background: 'linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)',
             }}
           >
-            {/* Status/Time Header - MovieBox style */}
-            <div className="px-4 py-2 border-b border-red-500/30"
-              style={{
-                background: 'linear-gradient(to right, rgba(220, 38, 38, 0.5) 0%, rgba(220, 38, 38, 0.5) 50%, rgba(37, 99, 235, 0.5) 50%, rgba(37, 99, 235, 0.5) 100%)'
-              }}
+            {/* Status/Time Header - StreamLux Style */}
+            <div className="px-4 py-2 bg-gradient-to-r from-primary to-primary/80"
             >
               <div className="flex items-center justify-between">
-                <span className="text-white text-xs font-semibold">
+                <span className="text-black text-[10px] font-bold tracking-widest uppercase">
                   {fixture.status === "live" ? (
                     <span className="flex items-center gap-2">
                       <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                       </span>
                       LIVE
                     </span>
@@ -180,84 +176,85 @@ const LiveGamesSlider: FC<LiveGamesSliderProps> = ({ type, title }) => {
                     formatTime(fixture.kickoffTimeFormatted)
                   )}
                 </span>
-                {fixture.minute && fixture.status === "live" && (
-                  <span className="text-red-300 text-xs font-bold">{fixture.minute}</span>
-                )}
+                <span className="text-black/70 text-[10px] font-black">{fixture.leagueId.toUpperCase()}</span>
               </div>
             </div>
 
             {/* Teams Section */}
-            <div className="p-4">
-              <div className="flex items-center justify-between gap-3">
+            <div className="p-5 bg-black/40 backdrop-blur-sm">
+              <div className="flex items-center justify-between gap-2">
                 {/* Home Team */}
-                <div className="flex flex-col items-center gap-2 flex-1">
-                  {fixture.homeTeamLogo ? (
-                    <img
-                      src={fixture.homeTeamLogo}
-                      alt={fixture.homeTeam}
-                      className="w-12 h-12 object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-gray-700/50 flex items-center justify-center text-sm font-bold text-gray-300">
-                      {fixture.homeTeam.charAt(0)}
-                    </div>
-                  )}
-                  <span className="text-white text-sm font-semibold text-center line-clamp-2">
+                <div className="flex flex-col items-center gap-3 flex-1">
+                  <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center p-2 group-hover:bg-white/10 transition">
+                    {fixture.homeTeamLogo ? (
+                      <img
+                        src={fixture.homeTeamLogo}
+                        alt={fixture.homeTeam}
+                        className="w-full h-full object-contain filter drop-shadow-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fixture.homeTeam)}&background=random&color=fff&size=128`;
+                        }}
+                      />
+                    ) : (
+                      <span className="text-2xl font-bold text-primary">{fixture.homeTeam.charAt(0)}</span>
+                    )}
+                  </div>
+                  <span className="text-white text-xs font-bold text-center line-clamp-1 w-full">
                     {fixture.homeTeam}
                   </span>
-                  {fixture.status === "live" && fixture.homeScore !== undefined && (
-                    <span className="text-2xl font-bold text-white">
-                      {fixture.homeScore}
-                    </span>
-                  )}
                 </div>
 
-                {/* VS or Score */}
-                <div className="flex flex-col items-center gap-1">
+                {/* VS / Score */}
+                <div className="flex flex-col items-center justify-center min-w-[50px]">
                   {fixture.status === "live" && fixture.homeScore !== undefined && fixture.awayScore !== undefined ? (
-                    <>
-                      <span className="text-white text-xl font-bold">-</span>
-                    </>
+                    <div className="flex flex-col items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-3xl font-black text-white">{fixture.homeScore}</span>
+                        <span className="text-primary font-bold">:</span>
+                        <span className="text-3xl font-black text-white">{fixture.awayScore}</span>
+                      </div>
+                      {fixture.minute && (
+                        <span className="mt-1 px-2 py-0.5 bg-primary/20 text-primary text-[9px] font-black rounded-full animate-pulse capitalize">
+                          {fixture.minute}
+                        </span>
+                      )}
+                    </div>
                   ) : (
-                    <span className="text-white text-lg font-bold">VS</span>
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="w-10 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+                      <span className="text-primary font-black italic text-lg tracking-tighter">VS</span>
+                      <div className="w-10 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+                    </div>
                   )}
                 </div>
 
                 {/* Away Team */}
-                <div className="flex flex-col items-center gap-2 flex-1">
-                  {fixture.awayTeamLogo ? (
-                    <img
-                      src={fixture.awayTeamLogo}
-                      alt={fixture.awayTeam}
-                      className="w-12 h-12 object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-gray-700/50 flex items-center justify-center text-sm font-bold text-gray-300">
-                      {fixture.awayTeam.charAt(0)}
-                    </div>
-                  )}
-                  <span className="text-white text-sm font-semibold text-center line-clamp-2">
+                <div className="flex flex-col items-center gap-3 flex-1">
+                  <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center p-2 group-hover:bg-white/10 transition">
+                    {fixture.awayTeamLogo ? (
+                      <img
+                        src={fixture.awayTeamLogo}
+                        alt={fixture.awayTeam}
+                        className="w-full h-full object-contain filter drop-shadow-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fixture.awayTeam)}&background=random&color=fff&size=128`;
+                        }}
+                      />
+                    ) : (
+                      <span className="text-2xl font-bold text-primary">{fixture.awayTeam.charAt(0)}</span>
+                    )}
+                  </div>
+                  <span className="text-white text-xs font-bold text-center line-clamp-1 w-full">
                     {fixture.awayTeam}
                   </span>
-                  {fixture.status === "live" && fixture.awayScore !== undefined && (
-                    <span className="text-2xl font-bold text-white">
-                      {fixture.awayScore}
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
 
             {/* League Info Footer */}
-            <div className="px-4 py-2 bg-gray-900/30 border-t border-gray-700/50">
-              <span className="text-gray-400 text-xs uppercase tracking-wide">
-                {fixture.leagueId}
+            <div className="px-4 py-2 bg-white/5 flex items-center justify-center border-t border-white/10 group-hover:bg-primary/10 transition">
+              <span className="text-white/40 text-[9px] font-bold uppercase tracking-[0.2em]">
+                {fixture.venue || "Match Details"}
               </span>
             </div>
           </a>

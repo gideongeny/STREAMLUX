@@ -27,3 +27,16 @@ If they are already pointing to the same project but look different:
 
 > [!TIP]
 > The easiest way to keep them consistent is to have **ONE** Vercel project and add **ALL** your domains to it under the Domains settings.
+
+## 4. Critical Environment Variables
+
+Ensure these are set in **Settings** > **Environment Variables** for EACH project:
+
+| Variable | Value Hint | Purpose |
+| :--- | :--- | :--- |
+| `REACT_APP_API_KEY` | `698...` | TMDB API Key |
+| `REACT_APP_FIREBASE_API_KEY` | `AIza...` | Firebase Auth & DB |
+| `REACT_APP_FIREBASE_AUTH_DOMAIN` | `YOUR_AUTH_DOMAIN` | Must include all Vercel URLs |
+
+> [!IMPORTANT]
+> Make sure to add all your Vercel URLs to the **Authorized Domains** list in your Firebase Console (Authentication > Settings > Authorized Domains).

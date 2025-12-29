@@ -135,6 +135,8 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           <Link
             to="/explore"
             className={`flex gap-6 items-center  ${location.pathname === "/explore" &&
+              !location.search.includes("genre=16") &&
+              !location.search.includes("sort_by=popularity.desc") &&
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300`}
           >

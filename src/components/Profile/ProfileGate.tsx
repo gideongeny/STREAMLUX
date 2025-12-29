@@ -25,12 +25,24 @@ const ProfileGate: FC = () => {
         if (!currentUser) return;
         setLoading(true);
         setError(null);
+
+        // Add a 7-second safety timeout to prevent hanging on skeletons
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Request timed out")), 7000)
+        );
+
         try {
-            const data = await getProfiles(currentUser.uid);
+            const data = await Promise.race([
+                getProfiles(currentUser.uid),
+                timeoutPromise
+            ]) as UserProfile[];
+
             if (data.length === 0) {
                 // Auto create Main profile if none exist (First time migration)
                 const mainProfile = await createProfile(currentUser.uid, {
-                    name: currentUser.displayName || "User",
+                    name: (currentUser.displayName && currentUser.displayName !== "undefined undefined")
+                        ? currentUser.displayName
+                        : "Main User",
                     avatar: PROFILE_AVATARS[0],
                     isKid: false,
                     language: "en"
@@ -41,7 +53,9 @@ const ProfileGate: FC = () => {
             }
         } catch (err: any) {
             console.error("Failed to load profiles:", err);
-            setError("Failed to load profiles. Please check your connection and try again.");
+            setError(err.message === "Request timed out"
+                ? "Profile loading is taking longer than expected. Please check your connection or try again."
+                : "Failed to load profiles. Please check your connection and try again.");
         } finally {
             setLoading(false);
         }

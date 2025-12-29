@@ -14,34 +14,49 @@ const LiveSports: FC = () => {
 
         {/* Live Sports Channels Section */}
         <div className="px-4 md:px-0">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
               <span className="w-2 h-6 bg-primary rounded-full"></span>
               Sports Channels
             </h3>
+            <span className="text-xs text-gray-500 font-bold tracking-widest uppercase">Premium Streams</span>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {SPORTS_CHANNELS.map((channel) => (
               <a
                 key={channel.id}
                 href={channel.streamUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-shrink-0 w-36 md:w-44 group"
+                className="group relative"
               >
-                <div className="aspect-video relative rounded-xl overflow-hidden border border-gray-800 bg-gray-900 group-hover:border-primary/50 transition duration-300 shadow-lg">
+                <div className="aspect-video relative rounded-xl overflow-hidden border border-white/5 bg-gradient-to-br from-white/10 to-transparent group-hover:border-primary/50 transition duration-500 shadow-xl">
                   <div className="absolute inset-0 flex items-center justify-center p-4">
-                    <div className="text-center">
-                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2 text-primary border border-primary/20">
-                        <span className="text-xl md:text-2xl font-bold">{channel.name.charAt(0)}</span>
-                      </div>
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      {channel.logo ? (
+                        <img
+                          src={channel.logo}
+                          alt={channel.name}
+                          className="max-w-[80%] max-h-[70%] object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] group-hover:scale-110 transition duration-500"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                          <span className="text-xl font-black">{channel.name.charAt(0)}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="absolute top-2 right-2 flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-red-600 animate-pulse text-[8px] font-bold text-white uppercase">
+
+                  {/* Glass Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
+
+                  {/* Live Badge */}
+                  <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-600 shadow-lg text-[8px] font-black text-white uppercase tracking-tighter">
+                    <span className="w-1 h-1 rounded-full bg-white animate-pulse"></span>
                     Live
                   </div>
                 </div>
-                <h3 className="mt-2 text-sm text-gray-200 font-medium group-hover:text-primary transition truncate">
+                <h3 className="mt-2 text-xs text-gray-400 font-bold group-hover:text-primary transition truncate px-1 uppercase tracking-wider">
                   {channel.name}
                 </h3>
               </a>
