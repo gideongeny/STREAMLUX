@@ -94,10 +94,6 @@ const Home: FC = () => {
   }, [currentTab]);
 
   const handleTabChange = (tab: "movie" | "tv" | "sports") => {
-    if (tab === "sports") {
-      window.open("https://sportslive.run/live?utm_source=MB_Website&sportType=football", "_blank");
-      return;
-    }
     setCurrentTab(tab);
   };
 
@@ -243,6 +239,13 @@ const Home: FC = () => {
               )}
             </ErrorBoundary>
           )}
+          {currentTab === "sports" && (
+            <ErrorBoundary fallback={<div className="text-red-500 p-10 text-center">Failed to load Sports section.</div>}>
+              <div className="pt-4 mb-10">
+                <LiveSports />
+              </div>
+            </ErrorBoundary>
+          )}
 
           {/* Ad Banner (MovieBox Style) - Lazy loaded for Android TV performance */}
           <Suspense fallback={<div className="h-[90px]" />}>
@@ -296,14 +299,14 @@ const Home: FC = () => {
           {showLowerSections && <NewReleases />}
 
           {/* Live Sports Ticker (MovieBox.ph style) - Wrapped in ErrorBoundary */}
-          {!currentProfile?.isKid && showLowerSections && (
+          {!currentProfile?.isKid && currentTab !== "sports" && showLowerSections && (
             <ErrorBoundary fallback={null}>
               <LiveSportsTicker />
             </ErrorBoundary>
           )}
 
           {/* Live & Upcoming Sports Section (MovieBox-style) - Already has ErrorBoundary */}
-          {!currentProfile?.isKid && showLowerSections && <LiveSports />}
+          {!currentProfile?.isKid && currentTab !== "sports" && showLowerSections && <LiveSports />}
 
           {/* Discover World navigation (moved from sidebar) */}
           <DiverseNavigation currentTab={currentTab as "movie" | "tv" | "sports"} />

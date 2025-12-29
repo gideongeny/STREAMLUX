@@ -21,18 +21,22 @@ const UpcomingCalendar: FC = () => {
         const tv = tvRes.data.results.map((t: any) => ({ ...t, media_type: "tv" }));
 
         const combined = [...movies, ...tv];
-        const today = new Date();
+        const dateLimit = new Date();
+        dateLimit.setDate(dateLimit.getDate() - 30); // Show items from up to 30 days ago (Just Released)
 
-        // Filter for items with a release/air date in the future
+        // Filter for items with a release/air date in the past 30 days or in the future
         return combined.filter((item: any) => {
             const releaseDate = item.release_date || item.first_air_date;
             if (!releaseDate) return false;
-            return new Date(releaseDate) >= today;
+            return new Date(releaseDate) >= dateLimit;
         }).sort((a, b) => {
             const dateA = new Date(a.release_date || a.first_air_date).getTime();
             const dateB = new Date(b.release_date || b.first_air_date).getTime();
             return dateA - dateB;
-        }) as Item[];
+        }).map(item => ({
+            ...item,
+            title: item.title || item.name // Fix for TV show names
+        })) as Item[];
     });
 
     if (isLoading || !data) return null;
