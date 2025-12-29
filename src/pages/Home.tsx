@@ -220,8 +220,8 @@ const Home: FC = () => {
                 <MainHomeFilm
                   data={filteredDataMovie}
                   dataDetail={detailQueryMovie.data}
-                  isLoadingBanner={detailQueryMovie.isLoading || !filteredDataMovie || (filteredDataMovie && (!filteredDataMovie.Trending || filteredDataMovie.Trending.length === 0))}
-                  isLoadingSection={isLoadingMovie || !filteredDataMovie || (filteredDataMovie && Object.values(filteredDataMovie).every(section => !Array.isArray(section) || section.length === 0))}
+                  isLoadingBanner={detailQueryMovie.isLoading}
+                  isLoadingSection={isLoadingMovie}
                 />
               )}
             </ErrorBoundary>
@@ -234,8 +234,8 @@ const Home: FC = () => {
                 <MainHomeFilm
                   data={filteredDataTV}
                   dataDetail={detailQueryTV.data}
-                  isLoadingBanner={detailQueryTV.isLoading || !filteredDataTV || (filteredDataTV && (!filteredDataTV.Trending || filteredDataTV.Trending.length === 0))}
-                  isLoadingSection={isLoadingTV || !filteredDataTV || (filteredDataTV && Object.values(filteredDataTV).every(section => !Array.isArray(section) || section.length === 0))}
+                  isLoadingBanner={detailQueryTV.isLoading}
+                  isLoadingSection={isLoadingTV}
                 />
               )}
             </ErrorBoundary>
