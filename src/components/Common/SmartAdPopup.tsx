@@ -6,7 +6,7 @@ const SmartAdPopup: FC = () => {
     const [adData, setAdData] = useState({
         title: "StreamLux Premium",
         description: "Experience ad-free streaming, 4K quality, and offline downloads!",
-        image: "/premium_promo.jpg",
+        image: "/premium_promo.png",
         link: "https://otieu.com/4/10378373", // Example high-yielding ad link
     });
 
