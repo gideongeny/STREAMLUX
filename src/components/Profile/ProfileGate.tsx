@@ -18,20 +18,30 @@ const ProfileGate: FC = () => {
     const [newProfileName, setNewProfileName] = useState("");
     const [isKid, setIsKid] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-
     const [error, setError] = useState<string | null>(null);
 
     const loadProfiles = async () => {
-        if (!currentUser) {
-            setLoading(false);
-            return;
+        if (!currentUser) return;
+
+        // Try to load from cache first for instant UI
+        const cached = localStorage.getItem(`profiles_${currentUser.uid}`);
+        if (cached) {
+            try {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    setProfiles(parsed);
+                    setLoading(false);
+                }
+            } catch (e) { }
+        } else {
+            setLoading(true);
         }
-        setLoading(true);
+
         setError(null);
 
-        // Add a 10-second safety timeout to prevent hanging on skeletons
+        // Add a 7-second safety timeout
         const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Request timed out")), 10000)
+            setTimeout(() => reject(new Error("Request timed out")), 7000)
         );
 
         try {
@@ -41,7 +51,6 @@ const ProfileGate: FC = () => {
             ]) as UserProfile[];
 
             if (data.length === 0) {
-                // Auto create Main profile if none exist (First time migration)
                 const mainProfile = await createProfile(currentUser.uid, {
                     name: (currentUser.displayName && currentUser.displayName !== "undefined undefined")
                         ? currentUser.displayName
@@ -50,28 +59,40 @@ const ProfileGate: FC = () => {
                     isKid: false,
                     language: "en"
                 });
-                if (mainProfile) setProfiles([mainProfile]);
+                if (mainProfile) {
+                    const freshProfiles = [mainProfile];
+                    setProfiles(freshProfiles);
+                    localStorage.setItem(`profiles_${currentUser.uid}`, JSON.stringify(freshProfiles));
+
+                    // Instant auto-select if it's the only one
+                    handleSelectProfile(mainProfile);
+                }
             } else {
                 setProfiles(data);
+                localStorage.setItem(`profiles_${currentUser.uid}`, JSON.stringify(data));
+
+                // If only one profile and not editing, auto-select for speed
+                if (data.length === 1 && !isEditing) {
+                    const lastUsed = localStorage.getItem("current_profile_id");
+                    if (!lastUsed || lastUsed === data[0].id) {
+                        // Small delay to allow component to mount cleanly
+                        setTimeout(() => handleSelectProfile(data[0]), 100);
+                    }
+                }
             }
         } catch (err: any) {
             console.error("Failed to load profiles:", err);
-            setError(err.message === "Request timed out"
-                ? "Profile loading is taking longer than expected. Please check your connection or try again."
-                : "Failed to load profiles. Please check your connection and try again.");
+            // If we have cached profiles, don't show full error screen
+            if (profiles.length === 0) {
+                setError("Profile loading is slow. Tap below to retry or go back.");
+            }
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        loadProfiles();
-    }, [currentUser]);
-
     const handleSelectProfile = (profile: UserProfile) => {
-        if (isEditing) return; // Don't navigate when editing
         dispatch(setCurrentProfile(profile));
-        // Persist choice for faster restoration in App.tsx
         localStorage.setItem("current_profile_id", profile.id);
         localStorage.setItem("current_profile", JSON.stringify(profile));
         navigate("/");
@@ -79,11 +100,13 @@ const ProfileGate: FC = () => {
 
     const handleDeleteProfile = async (e: React.MouseEvent, profileId: string) => {
         e.stopPropagation();
-        if (!currentUser || profiles.length <= 1) return; // Prevent deleting last profile
+        if (!currentUser || profiles.length <= 1) return;
 
         const success = await deleteProfile(currentUser.uid, profileId);
         if (success) {
-            setProfiles(profiles.filter(p => p.id !== profileId));
+            const updated = profiles.filter(p => p.id !== profileId);
+            setProfiles(updated);
+            localStorage.setItem(`profiles_${currentUser.uid}`, JSON.stringify(updated));
         }
     };
 
@@ -99,34 +122,25 @@ const ProfileGate: FC = () => {
         });
 
         if (newProfile) {
-            setProfiles([...profiles, newProfile]);
+            const updated = [...profiles, newProfile];
+            setProfiles(updated);
+            localStorage.setItem(`profiles_${currentUser.uid}`, JSON.stringify(updated));
             setIsCreating(false);
             setNewProfileName("");
             setIsKid(false);
         }
     };
 
-    if (error) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-[#141414] text-center px-4">
-                <h1 className="text-3xl text-white mb-4">Something went wrong</h1>
-                <p className="text-gray-400 mb-8 max-w-md">{error}</p>
-                <button
-                    onClick={loadProfiles}
-                    className="bg-white text-black font-bold px-8 py-3 rounded hover:bg-primary hover:text-white transition shadow-lg"
-                >
-                    Retry
-                </button>
-            </div>
-        );
-    }
+    useEffect(() => {
+        loadProfiles();
+    }, [currentUser]);
 
-    if (loading) {
+    if (loading && profiles.length === 0) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-[#141414]">
-                <div className="flex gap-4">
-                    <Skeleton className="w-[150px] h-[150px] rounded-md" />
-                    <Skeleton className="w-[150px] h-[150px] rounded-md" />
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#141414]">
+                <div className="flex flex-col items-center gap-8">
+                    <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <h1 className="text-2xl text-white font-medium animate-pulse italic">Setting up your StreamLux...</h1>
                 </div>
             </div>
         );
