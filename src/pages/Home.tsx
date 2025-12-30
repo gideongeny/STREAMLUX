@@ -321,16 +321,6 @@ const Home: FC = () => {
                 </Suspense>
               )}
 
-              {/* Live Sports Ticker (MovieBox.ph style) - Only in Movie/TV tabs as a teaser */}
-              {!currentProfile?.isKid && showLowerSections && (
-                <ErrorBoundary fallback={null}>
-                  <LiveSportsTicker />
-                </ErrorBoundary>
-              )}
-
-              {/* Live & Upcoming Sports Section (Teaser) */}
-              {!currentProfile?.isKid && showLowerSections && <LiveSports />}
-
               {/* Discover World navigation */}
               <DiverseNavigation currentTab={currentTab as "movie" | "tv" | "sports"} />
 
@@ -347,7 +337,7 @@ const Home: FC = () => {
                 <LiveSports />
               </div>
               <div className="mt-12 px-4 md:px-8">
-                <UpcomingCalendar />
+                <UpcomingCalendar title="Sports Calendar Events" />
               </div>
             </div>
           )}

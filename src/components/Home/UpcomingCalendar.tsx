@@ -10,7 +10,11 @@ import { AiOutlineRight } from "react-icons/ai";
 import axios from "../../shared/axios";
 import { Item } from "../../shared/types";
 
-const UpcomingCalendar: FC = () => {
+interface UpcomingCalendarProps {
+    title?: string;
+}
+
+const UpcomingCalendar: FC<UpcomingCalendarProps> = ({ title = "Upcoming Calendar" }) => {
     const { data, isLoading } = useQuery(["upcoming-calendar"], async () => {
         // Fetch multiple pages of upcoming to ensure we have enough future items
         const [movieRes, tvRes] = await Promise.all([
@@ -64,7 +68,7 @@ const UpcomingCalendar: FC = () => {
         <div className="mb-12">
             <h2 className="text-2xl text-white font-bold mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    Upcoming Calendar
+                    {title}
                 </div>
                 <Link to="/calendar" className="text-primary text-sm font-medium hover:underline flex items-center gap-1">
                     View All <AiOutlineRight size={14} />
