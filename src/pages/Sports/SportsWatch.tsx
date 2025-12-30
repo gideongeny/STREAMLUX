@@ -70,9 +70,15 @@ const SportsWatch: FC = () => {
   const sources = useMemo(() => {
     if (fixture?.streamSources) return fixture.streamSources;
 
-    // Construct dynamic sources for API fixtures
-    if (fixture?.matchId) {
-      return [`https://sportslive.run/matches/${fixture.matchId}?utm_source=MB_Website&sportType=football`, `https://streamed.pk/watch/${fixture.matchId}`];
+    // Use matchId from URL params or fixture as fallback
+    const targetMatchId = matchId || fixture?.matchId;
+
+    if (targetMatchId) {
+      // Prioritize sportslive.run as it has the best coverage
+      return [
+        `https://sportslive.run/matches/${targetMatchId}?utm_source=MB_Website&sportType=football`,
+        `https://streamed.pk/watch/${targetMatchId}`
+      ];
     }
 
     // Fallback search link
@@ -81,7 +87,7 @@ const SportsWatch: FC = () => {
     }
 
     return [];
-  }, [fixture]);
+  }, [fixture, matchId]);
 
   const getSourceDisplayName = (url: string) => {
     if (url.includes("dstv")) return "DStv";

@@ -89,7 +89,7 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical" }) => {
                             {/* Video */}
                             <div className="w-full h-full cursor-pointer relative" onClick={togglePlay}>
                                 <iframe
-                                    src={`https://www.youtube.com/embed/${short.videoId}?autoplay=1&controls=0&loop=1&playlist=${short.videoId}&mute=${isMuted ? 1 : 0}&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&enablejsapi=1`}
+                                    src={`https://www.youtube.com/embed/${short.videoId}?autoplay=1&controls=0&loop=1&playlist=${short.videoId}&mute=${(activeIndex === index && !isMuted) ? 0 : 1}&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&enablejsapi=1`}
                                     className="w-full h-full pointer-events-none scale-[1.05]"
                                     title={short.title}
                                     frameBorder="0"
@@ -166,7 +166,7 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical" }) => {
                                 onClick={togglePlay}
                             >
                                 <iframe
-                                    src={`https://www.youtube.com/embed/${short.videoId}?autoplay=${activeIndex === index && isPlaying ? 1 : 0}&controls=0&loop=1&playlist=${short.videoId}&mute=${isMuted ? 1 : 0}&rel=0&modestbranding=1&iv_load_policy=3`}
+                                    src={`https://www.youtube.com/embed/${short.videoId}?autoplay=${activeIndex === index && isPlaying ? 1 : 0}&controls=0&loop=1&playlist=${short.videoId}&mute=${(activeIndex === index && !isMuted) ? 0 : 1}&rel=0&modestbranding=1&iv_load_policy=3`}
                                     className="w-full h-full pointer-events-none scale-[1.02]"
                                     title={short.title}
                                     frameBorder="0"

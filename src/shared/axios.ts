@@ -15,7 +15,7 @@ instance.interceptors.request.use(
     // Check cache first
     const cacheKey = config.url || '';
     const cachedData = apiCache.get(cacheKey, config.params);
-    
+
     if (cachedData) {
       // Return cached data by throwing a special error that will be caught
       // This is a workaround since we can't return data directly from interceptor
@@ -39,10 +39,10 @@ instance.interceptors.response.use(
     const config = response.config;
     const url = config.url || '';
     const params = config.params;
-    
+
     // Different TTL for different endpoints
     let ttl = 5 * 60 * 1000; // 5 minutes default
-    
+
     if (url.includes('/trending')) {
       ttl = 10 * 60 * 1000; // 10 minutes for trending (changes less frequently)
     } else if (url.includes('/popular') || url.includes('/top_rated')) {
@@ -54,7 +54,7 @@ instance.interceptors.response.use(
     }
 
     apiCache.set(url, params, response.data, ttl);
-    
+
     return response;
   },
   (error) => {
@@ -70,16 +70,16 @@ instance.interceptors.response.use(
     }
 
     // Handle quota exceeded errors
-    if (error.response?.status === 429 || 
-        error.message?.includes('quota') || 
-        error.message?.includes('Quota Exceeded')) {
+    if (error.response?.status === 429 ||
+      error.message?.includes('quota') ||
+      error.message?.includes('Quota Exceeded')) {
       console.error('API quota exceeded. Using cached data if available.');
-      
+
       // Try to get cached data as fallback
       const config = error.config;
       const url = config?.url || '';
       const cachedData = apiCache.get(url, config?.params);
-      
+
       if (cachedData) {
         return Promise.resolve({
           data: cachedData,
@@ -89,7 +89,7 @@ instance.interceptors.response.use(
           config: config,
         });
       }
-      
+
       // If no cache, return empty results to prevent app crash
       return Promise.resolve({
         data: { results: [], page: 1, total_pages: 1, total_results: 0 },
@@ -103,5 +103,13 @@ instance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Add prefetch capability for speed optimization
+export const prefetchData = (url: string, params?: any) => {
+  // Use the instance to trigger a request and populate cache
+  instance.get(url, { params }).catch(() => {
+    // Silently ignore prefetch errors to prevent UI noise
+  });
+};
 
 export default instance;

@@ -12,9 +12,10 @@ import { Item } from "../../shared/types";
 
 const UpcomingCalendar: FC = () => {
     const { data, isLoading } = useQuery(["upcoming-calendar"], async () => {
+        // Fetch multiple pages of upcoming to ensure we have enough future items
         const [movieRes, tvRes] = await Promise.all([
-            axios.get("/movie/upcoming"),
-            axios.get("/tv/on_the_air") // TMDB doesn't have a direct "upcoming" for TV, so we'll filter airing soon
+            axios.get("/movie/upcoming", { params: { page: 1 } }),
+            axios.get("/tv/on_the_air", { params: { page: 1 } })
         ]);
 
         const movies = movieRes.data.results.map((m: any) => ({ ...m, media_type: "movie" }));
@@ -22,9 +23,9 @@ const UpcomingCalendar: FC = () => {
 
         const combined = [...movies, ...tv];
         const dateLimit = new Date();
-        dateLimit.setDate(dateLimit.getDate() - 30); // Show items from up to 30 days ago (Just Released)
+        dateLimit.setDate(dateLimit.getDate() - 7); // Show items from the last 7 days + future
 
-        // Filter for items with a release/air date in the past 30 days or in the future
+        // Filter for items released recently or in the future
         return combined.filter((item: any) => {
             const releaseDate = item.release_date || item.first_air_date;
             if (!releaseDate) return false;
@@ -35,8 +36,10 @@ const UpcomingCalendar: FC = () => {
             return dateA - dateB;
         }).map(item => ({
             ...item,
-            title: item.title || item.name // Fix for TV show names
+            title: item.title || item.name // Ensure TV names work
         })) as Item[];
+    }, {
+        staleTime: 3600000 // Cache for 1 hour
     });
 
     if (isLoading || !data) return null;

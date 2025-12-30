@@ -7,6 +7,8 @@ import { Item } from "../../shared/types";
 import { resizeImage } from "../../shared/utils";
 import { useBookmark } from "../../hooks/useBookmark";
 
+import { prefetchData } from "../../shared/axios";
+
 interface FilmItemProps {
   item: Item;
   onClick?: (item: Item) => void;
@@ -14,6 +16,15 @@ interface FilmItemProps {
 
 const FilmItem: FunctionComponent<FilmItemProps> = ({ item, onClick }) => {
   const { isBookmarked, toggleBookmark } = useBookmark(item);
+
+  const handleMouseEnter = () => {
+    // Prefetch detail and watch data
+    if (item.media_type === "movie") {
+      prefetchData(`/movie/${item.id}`, { append_to_response: "videos,credits,recommendations,similar,external_ids" });
+    } else if (item.media_type === "tv") {
+      prefetchData(`/tv/${item.id}`, { append_to_response: "videos,credits,recommendations,similar,external_ids" });
+    }
+  };
 
   // Check if movie is unreleased
   const isUnreleased = item.media_type === "movie" && item.release_date
@@ -33,7 +44,10 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item, onClick }) => {
         : `/`;
 
   const content = (
-    <div className="shadow-sm bg-dark-darken pb-2 rounded-md overflow-hidden hover:scale-105 hover:brightness-110 transition duration-300 relative group cursor-pointer h-full flex flex-col">
+    <div
+      onMouseEnter={handleMouseEnter}
+      className="shadow-sm bg-dark-darken pb-2 rounded-md overflow-hidden hover:scale-105 hover:brightness-110 transition duration-300 relative group cursor-pointer h-full flex flex-col"
+    >
       <div className="relative aspect-[2/3] overflow-hidden">
         <LazyLoadImage
           alt="Poster film"

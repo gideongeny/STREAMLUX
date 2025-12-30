@@ -1,4 +1,5 @@
 import { FC } from "react";
+import { Link } from "react-router-dom";
 import ErrorBoundary from "../Common/ErrorBoundary";
 import LiveGamesSlider from "../Sports/LiveGamesSlider";
 import { SPORTS_CHANNELS } from "../../shared/constants";
@@ -23,11 +24,9 @@ const LiveSports: FC = () => {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {SPORTS_CHANNELS.map((channel) => (
-              <a
+              <Link
                 key={channel.id}
-                href={channel.streamUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                to={`/sports/channel/${channel.id}/watch`}
                 className="group relative"
               >
                 <div className="aspect-video relative rounded-xl overflow-hidden border border-white/5 bg-gradient-to-br from-white/10 to-transparent group-hover:border-primary/50 transition duration-500 shadow-xl">
@@ -59,7 +58,7 @@ const LiveSports: FC = () => {
                 <h3 className="mt-2 text-xs text-gray-400 font-bold group-hover:text-primary transition truncate px-1 uppercase tracking-wider">
                   {channel.name}
                 </h3>
-              </a>
+              </Link>
             ))}
           </div>
         </div>

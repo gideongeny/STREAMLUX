@@ -135,14 +135,12 @@ const LiveGamesSlider: FC<LiveGamesSliderProps> = ({ type, title }) => {
       {title && (
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-white">{title}</h3>
-          <a
-            href="https://sportslive.run/live?utm_source=MB_Website&sportType=football"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/sports"
             className="text-primary hover:text-primary/80 text-sm font-medium transition"
           >
             More &gt;
-          </a>
+          </Link>
         </div>
       )}
 
