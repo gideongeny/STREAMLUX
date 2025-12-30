@@ -40,6 +40,12 @@
   <link rel="dns-prefetch" href="https://www.youtube.com" />
   <link rel="dns-prefetch" href="https://vidsrc.me" />
 
+  <!-- Performance Monitoring -->
+  <script>
+    window.BOOT_START = Date.now();
+    console.log("%c[StreamLux] %cBooting Engine...", "color:#e11d48;font-weight:bold", "color:gray");
+  </script>
+
   <!-- Vercel Web Analytics -->
   <script>
     window.VA_LOADED = false;
@@ -51,11 +57,12 @@
       script.onload = function () {
         window.va = window.va || function () { (window.va.q = window.va.q || []).push(arguments); };
         window.VA_LOADED = true;
+        console.log("%c[StreamLux] %cAnalytics Ready", "color:#e11d48;font-weight:bold", "color:gray");
       };
       document.head.appendChild(script);
     }
     window.addEventListener('load', function () {
-      setTimeout(loadVercelAnalytics, 3000);
+      setTimeout(loadVercelAnalytics, 4000);
     });
   </script>
   <!-- 

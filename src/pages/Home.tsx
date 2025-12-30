@@ -2,35 +2,33 @@ import { FC, useState, useEffect, useMemo, lazy, Suspense, useCallback } from "r
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
-import SearchBox from "../components/Common/SearchBox";
 import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
-import Footer from "../components/Footer/Footer";
 import MainHomeFilm from "../components/Home/MainHomeFilm";
-import RecommendGenres from "../components/Home/RecommendGenres";
-import TrendingNow from "../components/Home/TrendingNow";
-import DiverseNavigation from "../components/Common/DiverseNavigation";
-import DiverseContent from "../components/Home/DiverseContent";
 import LiveSports from "../components/Home/LiveSports";
 import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
 import ErrorBoundary from "../components/Common/ErrorBoundary";
 import { useHomeData } from "../hooks/useHomeData";
 import { useAppSelector } from "../store/hooks";
-
-import ContinueWatching from "../components/Home/ContinueWatching";
 import { useWatchProgress } from "../hooks/useWatchProgress";
-import Top10Slider from "../components/Home/Top10Slider";
 import { useQuery } from "@tanstack/react-query";
 import { getTop10Trending } from "../services/home";
-import BecauseYouWatched from "../components/Home/BecauseYouWatched";
-import NewReleases from "../components/Home/NewReleases";
-import UpcomingCalendar from "../components/Home/UpcomingCalendar";
-import SectionSlider from "../components/Slider/SectionSlider";
-import VerticalShorts from "../components/Home/VerticalShorts";
-import LiveSportsAlert from "../components/Sports/LiveSportsAlert";
-
-// Lazy load for performance (Android TV optimization)
+// Lazy load non-critical components for performance (Android TV & Slow Web optimization)
 const AdBanner = lazy(() => import("../components/Common/AdBanner"));
+const ContinueWatching = lazy(() => import("../components/Home/ContinueWatching"));
+const Top10Slider = lazy(() => import("../components/Home/Top10Slider"));
+const TrendingNow = lazy(() => import("../components/Home/TrendingNow"));
+const BecauseYouWatched = lazy(() => import("../components/Home/BecauseYouWatched"));
+const NewReleases = lazy(() => import("../components/Home/NewReleases"));
+const UpcomingCalendar = lazy(() => import("../components/Home/UpcomingCalendar"));
+const SectionSlider = lazy(() => import("../components/Slider/SectionSlider"));
+const VerticalShorts = lazy(() => import("../components/Home/VerticalShorts"));
+const DiverseNavigation = lazy(() => import("../components/Common/DiverseNavigation"));
+const DiverseContent = lazy(() => import("../components/Home/DiverseContent"));
+const Footer = lazy(() => import("../components/Footer/Footer"));
+const LiveSportsAlert = lazy(() => import("../components/Sports/LiveSportsAlert"));
+const SearchBox = lazy(() => import("../components/Common/SearchBox"));
+const RecommendGenres = lazy(() => import("../components/Home/RecommendGenres"));
 
 const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
@@ -257,48 +255,71 @@ const Home: FC = () => {
                 </div>
               </Suspense>
 
+
               {/* Continue Watching Section */}
               <div className="px-4 md:px-8">
-                <ContinueWatching watchHistory={watchHistory} onClearProgress={clearProgress} />
+                <Suspense fallback={<div className="h-20" />}>
+                  <ContinueWatching watchHistory={watchHistory} onClearProgress={clearProgress} />
+                </Suspense>
               </div>
 
               {/* Top 10 Section */}
-              {showLowerSections && <Top10Slider films={top10Data || []} />}
+              {showLowerSections && (
+                <Suspense fallback={<div className="h-40" />}>
+                  <Top10Slider films={top10Data || []} />
+                </Suspense>
+              )}
 
               {/* Trending Section (Horizontal) */}
               {showLowerSections && (
                 <div className="mt-12">
-                  <TrendingNow isMainFlow={true} />
+                  <Suspense fallback={<div className="h-40" />}>
+                    <TrendingNow isMainFlow={true} />
+                  </Suspense>
                 </div>
               )}
 
               {/* HOT Section (Horizontal) */}
               {showLowerSections && dataMovie?.Hot && (
                 <div className="mt-12 px-4 md:px-8">
-                  <SectionSlider
-                    films={dataMovie.Hot}
-                    title="🔥 HOT & Trending"
-                    seeMoreParams={{ sort_by: "popularity.desc", page: 2 }}
-                  />
+                  <Suspense fallback={<div className="h-40" />}>
+                    <SectionSlider
+                      films={dataMovie.Hot}
+                      title="🔥 HOT & Trending"
+                      seeMoreParams={{ sort_by: "popularity.desc", page: 2 }}
+                    />
+                  </Suspense>
                 </div>
               )}
 
               {/* Upcoming Calendar Section (MovieBox Style) */}
               <div className="px-4 md:px-8">
-                <UpcomingCalendar />
+                <Suspense fallback={<div className="h-40" />}>
+                  <UpcomingCalendar />
+                </Suspense>
               </div>
 
               {/* Horizontal Shorts Section (Discovery Mode) */}
               {!currentProfile?.isKid && showLowerSections && (
                 <div className="px-4 md:px-8 mt-12">
-                  <VerticalShorts variant="horizontal" />
+                  <Suspense fallback={<div className="h-40" />}>
+                    <VerticalShorts variant="horizontal" />
+                  </Suspense>
                 </div>
               )}
 
               {/* Because You Watched Section */}
-              {showLowerSections && <BecauseYouWatched />}
+              {showLowerSections && (
+                <Suspense fallback={<div className="h-40" />}>
+                  <BecauseYouWatched />
+                </Suspense>
+              )}
 
-              {showLowerSections && <NewReleases />}
+              {showLowerSections && (
+                <Suspense fallback={<div className="h-40" />}>
+                  <NewReleases />
+                </Suspense>
+              )}
 
               {/* Live Sports Ticker (MovieBox.ph style) - Only in Movie/TV tabs as a teaser */}
               {!currentProfile?.isKid && showLowerSections && (
@@ -332,18 +353,25 @@ const Home: FC = () => {
           )}
         </div>
 
+
         <div className="shrink-0 max-w-[310px] w-full hidden lg:block px-6 top-0 sticky ">
           <ErrorBoundary fallback={null}>
-            <SearchBox />
-            <RecommendGenres currentTab={currentTab} />
+            <Suspense fallback={<div className="w-full h-10 bg-gray-800 animate-pulse rounded" />}>
+              <SearchBox />
+            </Suspense>
+            <Suspense fallback={<div className="w-full h-40 bg-gray-800 animate-pulse rounded mt-6" />}>
+              <RecommendGenres currentTab={currentTab} />
+            </Suspense>
           </ErrorBoundary>
         </div>
       </div>
 
-
-
-      <Footer />
-      <LiveSportsAlert />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
+      <Suspense fallback={null}>
+        <LiveSportsAlert />
+      </Suspense>
     </>
   );
 };

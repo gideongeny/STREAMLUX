@@ -73,6 +73,14 @@ function App() {
 
   const [isSignedIn, setIsSignedIn] = useState<boolean>(() => getInitialSignedIn());
 
+  // Performance logging for boot time
+  useEffect(() => {
+    if ((window as any).BOOT_START) {
+      const bootTime = Date.now() - (window as any).BOOT_START;
+      console.log(`%c[StreamLux] %cEngine Ready in ${bootTime}ms`, "color:#10b981;font-weight:bold", "color:gray");
+    }
+  }, []);
+
   // Load saved theme color on mount
   useEffect(() => {
     const savedColor = localStorage.getItem("theme_primary_color");
@@ -310,7 +318,7 @@ function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowTimeoutMessage(true);
-    }, 15000); // 15 seconds threshold
+    }, 12000); // 12 seconds threshold
 
     return () => clearTimeout(timer);
   }, []);
@@ -319,28 +327,47 @@ function App() {
     <>
       <Analytics />
       <Suspense fallback={
-        <div className="min-h-screen bg-dark flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-gray-400 animate-pulse font-medium">StreamLux Premium...</p>
-
-          {showTimeoutMessage && (
-            <div className="mt-8 p-6 bg-gray-900/50 rounded-2xl border border-white/5 max-w-sm animate-fade-in">
-              <p className="text-sm text-gray-500 mb-4 leading-relaxed">
-                Loading is taking longer than usual. This might be due to a poor connection or a temporary issue with our servers.
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="bg-primary text-black font-bold px-6 py-2 rounded-full hover:scale-105 active:scale-95 transition-all text-sm mb-4"
-              >
-                RETRY LOADING
-              </button>
-              <div className="pt-4 border-t border-white/5">
-                <p className="text-[10px] text-gray-600 uppercase tracking-widest">
-                  StreamLux Dashboard v1.2
-                </p>
+        <div className="skeleton-shell">
+          <div className="skeleton-sidebar"></div>
+          <div className="skeleton-main">
+            <div className="skeleton-header">
+              <div className="skeleton-tabs">
+                <div className="skeleton-tab"></div>
+                <div className="skeleton-tab"></div>
+                <div className="skeleton-tab"></div>
               </div>
+              <div className="skeleton-avatar"></div>
             </div>
-          )}
+            <div className="skeleton-banner"></div>
+            <div className="skeleton-row-title"></div>
+            <div className="skeleton-row">
+              <div className="skeleton-card"></div>
+              <div className="skeleton-card"></div>
+              <div className="skeleton-card"></div>
+              <div className="skeleton-card"></div>
+            </div>
+
+            {showTimeoutMessage && (
+              <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 text-center">
+                <div className="bg-gray-900/90 p-8 rounded-3xl border border-white/10 max-w-sm shadow-2xl animate-fade-in">
+                  <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                  <h3 className="text-xl font-bold text-white mb-2">Still loading?</h3>
+                  <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                    StreamLux is taking longer than usual to boot. This might be a temporary network issue.
+                  </p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="w-full bg-primary text-black font-black py-3 rounded-full hover:brightness-110 active:scale-95 transition-all text-sm mb-4"
+                  >
+                    RETRY BOOT
+                  </button>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest pt-4 border-t border-white/5">
+                    StreamLux Engine v6.1
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       }>
         <Routes>
