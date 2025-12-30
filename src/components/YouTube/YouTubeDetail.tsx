@@ -223,16 +223,28 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews, episod
                                                             <AiFillHeart size={22} />
                                                         </button>
 
-                                                        {/* Download Button - Styled to be visible */}
-                                                        <a
-                                                            href={`https://ssyoutube.com/watch?v=${video.id}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-primary hover:border-primary transition-all text-white"
-                                                            title="Download Video"
-                                                        >
-                                                            <AiOutlineDownload size={22} />
-                                                        </a>
+                                                        {/* Download Buttons - Using high-reliability public converters */}
+                                                        <div className="flex gap-2">
+                                                            <a
+                                                                href={`https://www.ssyoutube.com/watch?v=${video.id}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center justify-center h-12 px-6 rounded-full border-2 border-primary/50 bg-primary/10 hover:bg-primary transition-all text-white font-bold gap-2 group"
+                                                                title="Download Video (HD)"
+                                                            >
+                                                                <AiOutlineDownload size={22} className="group-hover:scale-110 transition-transform" />
+                                                                <span>DOWNLOAD</span>
+                                                            </a>
+                                                            <a
+                                                                href={`https://y2mate.is/watch?v=${video.id}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all text-white"
+                                                                title="Alternative Download (Server 2)"
+                                                            >
+                                                                <span className="text-[10px] font-bold">ALT</span>
+                                                            </a>
+                                                        </div>
 
                                                         <button
                                                             className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all"

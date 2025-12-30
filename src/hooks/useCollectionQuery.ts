@@ -8,6 +8,7 @@ import {
   Query,
   QuerySnapshot,
 } from "firebase/firestore";
+import { getAfricanHits } from "../services/home";
 
 
 
@@ -25,7 +26,8 @@ export const useTMDBCollectionQuery = (
   runtime: string = "",
   region: string = "",
   voteAverageGte: string = "0",
-  withOriginalLanguage: string = ""
+  withOriginalLanguage: string = "",
+  category: string = ""
 ): TMDBCollectionQueryResult => {
   const [data, setData] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,9 +102,16 @@ export const useTMDBCollectionQuery = (
         };
 
         // Use enhanced explore functions that fetch from all sources
-        const exploreResult = mediaType === "movie"
-          ? await getExploreMovie(1, exploreConfig).catch(() => ({ results: [] }))
-          : await getExploreTV(1, exploreConfig).catch(() => ({ results: [] }));
+        let exploreResult: { results: Item[] };
+
+        if (region === "nollywood" || (category && category.toLowerCase() === "nollywood")) {
+          const hits = await getAfricanHits();
+          exploreResult = { results: hits };
+        } else {
+          exploreResult = mediaType === "movie"
+            ? await getExploreMovie(1, exploreConfig).catch(() => ({ results: [] }))
+            : await getExploreTV(1, exploreConfig).catch(() => ({ results: [] }));
+        }
 
         let resultsPage1 = exploreResult.results || [];
 
@@ -230,7 +239,7 @@ export const useTMDBCollectionQuery = (
     };
 
     fetchData();
-  }, [mediaType, sortBy, genres, year, runtime, region, voteAverageGte, withOriginalLanguage]);
+  }, [mediaType, sortBy, genres, year, runtime, region, voteAverageGte, withOriginalLanguage, category]);
 
   return { data, isLoading, error };
 };

@@ -27,9 +27,16 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         type={mediaType}
       />
 
+      {/* Nollywood & African Hits (MovieBox Source) */}
+      <HybridSectionSlider
+        title="🇳🇬 Nollywood & African Hits (MovieBox Source)"
+        category="nollywood"
+        type={mediaType}
+      />
+
       {/* African Cinema */}
       <HybridSectionSlider
-        title="✊🏿 African Cinema & Nollywood"
+        title="✊🏿 African Cinema"
         region="africa"
         type={mediaType}
       />

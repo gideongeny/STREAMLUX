@@ -162,70 +162,66 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
 
   // Try TheSportsDB first
   try {
-    const dates: string[] = [];
-    for (let i = 0; i <= 7; i++) {
+    const leagueIds = ["4328", "4480", "4335", "4332", "4334", "4422"]; // EPL, UCL, LaLiga, Serie A, Ligue 1, AFCON
+
+    // Fetch next events for each major league in parallel
+    const leaguePromises = leagueIds.map(id =>
+      axios.get(`${SPORTSDB_BASE}/eventsnextleague.php`, { params: { id }, timeout: 8000 }).catch(() => null)
+    );
+
+    // Also fetch by days as before
+    const datePromises = [0, 1, 2, 3, 4, 5, 6, 7].map(i => {
       const date = new Date();
       date.setDate(date.getDate() + i);
-      dates.push(date.toISOString().split('T')[0].replaceAll('-', '/'));
-    }
+      const dateStr = date.toISOString().split('T')[0].replaceAll('-', '/');
+      return axios.get(`${SPORTSDB_BASE}/eventsday.php`, { params: { d: dateStr }, timeout: 8000 }).catch(() => null);
+    });
 
-    for (const dateStr of dates.slice(0, 3)) {
-      try {
-        const response = await axios.get(`${SPORTSDB_BASE}/eventsday.php`, {
-          params: { d: dateStr },
-          timeout: 8000,
-        });
+    const results = await Promise.all([...leaguePromises, ...datePromises]);
 
-        if (response.data?.events && Array.isArray(response.data.events)) {
-          const upcomingEvents = response.data.events.filter((e: any) =>
-            e.strStatus !== "Live" &&
-            e.strStatus !== "HT" &&
-            e.strStatus !== "1H" &&
-            e.strStatus !== "2H" &&
-            e.strStatus !== "FT" &&
-            e.strStatus !== "Finished"
-          );
+    for (const res of results) {
+      if (res?.data?.events && Array.isArray(res.data.events)) {
+        const events = res.data.events.filter((e: any) =>
+          e.strStatus !== "Live" &&
+          !["HT", "1H", "2H", "FT", "Finished"].includes(e.strStatus)
+        );
 
-          for (const event of upcomingEvents.slice(0, 15)) {
-            try {
-              const [homeLogo, awayLogo] = await Promise.all([
-                getTeamLogo(event.strHomeTeam || ""),
-                getTeamLogo(event.strAwayTeam || ""),
-              ]);
+        for (const event of events) {
+          try {
+            const eventDate = new Date((event.dateEvent || "") + " " + (event.strTime || "12:00"));
+            const isoString = isNaN(eventDate.getTime()) ? new Date().toISOString() : eventDate.toISOString();
 
-              const eventDate = new Date((event.dateEvent || dateStr.replaceAll('/', '-')) + " " + (event.strTime || "12:00"));
-              const isoString = eventDate.toISOString();
-
-              allFixtures.push({
-                id: `upcoming-${event.idEvent || Math.random()}`,
-                leagueId: getLeagueIdFromName(event.strLeague || ""),
-                homeTeam: event.strHomeTeam || "TBD",
-                awayTeam: event.strAwayTeam || "TBD",
-                homeTeamLogo: homeLogo || undefined,
-                awayTeamLogo: awayLogo || undefined,
-                status: "upcoming",
-                kickoffTimeFormatted: isoString, // Store ISO string for countdown
-                venue: event.strVenue || "TBD",
-                round: event.strRound || undefined,
-                matchId: event.idEvent?.toString(),
-              });
-            } catch (e) {
-              continue;
-            }
+            allFixtures.push({
+              id: `upcoming-${event.idEvent || Math.random()}`,
+              leagueId: getLeagueIdFromName(event.strLeague || ""),
+              homeTeam: event.strHomeTeam || "TBD",
+              awayTeam: event.strAwayTeam || "TBD",
+              homeTeamLogo: event.strHomeTeamBadge || undefined, // Some responses have badges directly
+              awayTeamLogo: event.strAwayTeamBadge || undefined,
+              status: "upcoming",
+              kickoffTimeFormatted: isoString,
+              venue: event.strVenue || "TBD",
+              round: event.strRound || undefined,
+              matchId: event.idEvent?.toString(),
+            });
+          } catch (e) {
+            continue;
           }
         }
-      } catch (e) {
-        continue;
       }
     }
 
-    // Remove duplicates
+    // Attempt to fill missing logos for top items
     const unique = allFixtures.filter((fixture, index, self) =>
       index === self.findIndex((f) => f.id === fixture.id)
-    );
+    ).sort((a, b) => new Date(a.kickoffTimeFormatted).getTime() - new Date(b.kickoffTimeFormatted).getTime());
 
     if (unique.length > 0) {
-      console.log(`TheSportsDB returned ${unique.length} upcoming fixtures`);
+      // Lazy logo fetching for top 10 if missing
+      for (const f of unique.slice(0, 10)) {
+        if (!f.homeTeamLogo) f.homeTeamLogo = await getTeamLogo(f.homeTeam) || undefined;
+        if (!f.awayTeamLogo) f.awayTeamLogo = await getTeamLogo(f.awayTeam) || undefined;
+      }
       return unique.slice(0, 50);
     }
   } catch (error) {

@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Mousewheel, Pagination } from "swiper";
 import "swiper/css";
 import "swiper/css/pagination";
-import { AiOutlineHeart, AiOutlineMessage, AiOutlineShareAlt, AiFillPlayCircle } from "react-icons/ai";
+import { AiOutlineHeart, AiOutlineMessage, AiOutlineShareAlt, AiFillPlayCircle, AiOutlineDownload } from "react-icons/ai";
 
 const shortsData = [
     {
@@ -136,6 +136,15 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical" }) => {
                                             <span className="text-[10px] font-bold text-white uppercase tracking-wider">@{short.creator}</span>
                                         </div>
                                         <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight drop-shadow-lg">{short.title}</h3>
+                                        <a
+                                            href={`https://www.ssyoutube.com/watch?v=${short.videoId}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-primary hover:text-white transition-colors pointer-events-auto"
+                                        >
+                                            <AiOutlineDownload size={14} />
+                                            DOWNLOAD CLIP
+                                        </a>
                                     </div>
 
                                     {/* Hot Label */}
@@ -238,6 +247,16 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical" }) => {
                                 <button className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition shadow-lg pointer-events-auto border border-white/5">
                                     <AiOutlineShareAlt size={24} className="text-white" />
                                 </button>
+
+                                <a
+                                    href={`https://www.ssyoutube.com/watch?v=${short.videoId}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-12 h-12 bg-primary backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white hover:text-primary transition shadow-lg pointer-events-auto border border-white/5 text-black"
+                                    title="Download Short"
+                                >
+                                    <AiOutlineDownload size={24} />
+                                </a>
                             </div>
 
                             <div className="absolute left-6 bottom-12 z-10 pointer-events-none">

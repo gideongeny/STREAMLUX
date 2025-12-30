@@ -9,6 +9,7 @@ import {
 } from "./fzmovies";
 import { getAllSourceContent } from "./contentSources";
 import { getAllAPIContent } from "./movieAPIs";
+import { getNinjarocksTrending, getNinjarocksNollywood } from "./ninjarocks";
 
 // MOVIE TAB
 ///////////////////////////////////////////////////////////////
@@ -23,6 +24,22 @@ export const getTrendingMovies = async (): Promise<Item[]> => {
 export const getTop10Trending = async (): Promise<Item[]> => {
   const response = await axios.get("/trending/all/week");
   return response.data.results.slice(0, 10);
+};
+
+export const getTop10Movies = async (): Promise<Item[]> => {
+  const response = await axios.get("/trending/movie/week");
+  return response.data.results.slice(0, 10).map((item: any) => ({
+    ...item,
+    media_type: "movie"
+  }));
+};
+
+export const getTop10TVs = async (): Promise<Item[]> => {
+  const response = await axios.get("/trending/tv/week");
+  return response.data.results.slice(0, 10).map((item: any) => ({
+    ...item,
+    media_type: "tv"
+  }));
 };
 
 export const getHomeMovies = async (): Promise<HomeFilms> => {
@@ -775,6 +792,28 @@ export const getAfricanContent = async (): Promise<Item[]> => {
 };
 
 // Separate function for East African content
+export const getAfricanHits = async (): Promise<Item[]> => {
+  try {
+    const [fzMovies, fzTV, rocksTrending, rocksNollywood] = await Promise.all([
+      getFZContentByCountry("NG", "movie", 1),
+      getFZContentByCountry("NG", "tv", 1),
+      getNinjarocksTrending("all"),
+      getNinjarocksNollywood(1),
+    ]);
+
+    const combined = [...fzMovies, ...fzTV, ...rocksTrending, ...rocksNollywood];
+    const seen = new Set<string | number>();
+    return combined.filter(item => {
+      if (!item.poster_path || seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    }).slice(0, 20);
+  } catch (error) {
+    console.error("Error fetching African hits:", error);
+    return [];
+  }
+};
+
 export const getEastAfricanContent = async (): Promise<Item[]> => {
   try {
     const eastAfricanCountries = ["KE", "TZ", "UG", "ET", "RW", "ZM"].join("|");

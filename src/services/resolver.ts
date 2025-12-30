@@ -158,6 +158,22 @@ export class ResolverService {
                 speed: "medium",
                 status: "active",
                 type: "embed"
+            },
+            {
+                name: "FZMovies Mirror",
+                url: `${EMBED_ALTERNATIVES.FZMOVIES_EMBED}/${tmdbId}`,
+                quality: "HD",
+                speed: "medium",
+                status: "active",
+                type: "embed"
+            },
+            {
+                name: "9jaRocks Flash",
+                url: `${EMBED_ALTERNATIVES.NINJAROCKS_EMBED}/${tmdbId}`,
+                quality: "720p",
+                speed: "medium",
+                status: "active",
+                type: "embed"
             }
         ];
 

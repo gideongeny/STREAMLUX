@@ -174,7 +174,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
     logo: "/images/sports/supersports logo.png",
     category: "Football",
     country: "Africa",
-    streamUrl: "https://sportslive.run/channels/supersport-premier-league"
+    streamUrl: "https://sportslive.run/supersport-premier-league"
   },
   {
     id: "ss-laliga",
@@ -182,7 +182,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
     logo: "/images/sports/supersports logo.png",
     category: "Football",
     country: "Africa",
-    streamUrl: "https://sportslive.run/channels/supersport-la-liga"
+    streamUrl: "https://sportslive.run/supersport-la-liga"
   },
   {
     id: "ss-footy",
@@ -190,7 +190,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
     logo: "/images/sports/supersports logo.png",
     category: "Football",
     country: "Africa",
-    streamUrl: "https://sportslive.run/channels/supersport-football"
+    streamUrl: "https://sportslive.run/supersport-football"
   },
   {
     id: "ss-grand",
@@ -198,7 +198,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
     logo: "/images/sports/supersports logo.png",
     category: "General",
     country: "Africa",
-    streamUrl: "https://sportslive.run/channels/supersport-grandstand"
+    streamUrl: "https://sportslive.run/supersport-grandstand"
   },
   {
     id: "ss-act",
@@ -206,7 +206,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
     logo: "/images/sports/supersports logo.png",
     category: "General",
     country: "Africa",
-    streamUrl: "https://sportslive.run/channels/supersport-action"
+    streamUrl: "https://sportslive.run/supersport-action"
   },
   {
     id: "ss-var1",
@@ -214,7 +214,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
     logo: "/images/sports/supersports logo.png",
     category: "General",
     country: "Africa",
-    streamUrl: "https://sportslive.run/channels/supersport-variety-1"
+    streamUrl: "https://sportslive.run/supersport-variety-1"
   },
   {
     id: "sky-main",
@@ -222,7 +222,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
     logo: "/images/sports/sky sports.jpg",
     category: "General",
     country: "UK",
-    streamUrl: "https://sportslive.run/channels/sky-sports-main-event"
+    streamUrl: "https://sportslive.run/sky-sports-main-event"
   },
   {
     id: "sky-pl",
@@ -230,7 +230,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
     logo: "/images/sports/sky sports.jpg",
     category: "Football",
     country: "UK",
-    streamUrl: "https://sportslive.run/channels/sky-sports-premier-league"
+    streamUrl: "https://sportslive.run/sky-sports-premier-league"
   },
   {
     id: "sky-f1",
@@ -238,7 +238,7 @@ export const SPORTS_CHANNELS: SportsChannelConfig[] = [
     logo: "/images/sports/sky sports.jpg",
     category: "Motorsport",
     country: "UK",
-    streamUrl: "https://sportslive.run/channels/sky-sports-f1"
+    streamUrl: "https://sportslive.run/sky-sports-f1"
   },
   {
     id: "tnt-1",

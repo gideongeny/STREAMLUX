@@ -1,7 +1,7 @@
 import { signOut } from "firebase/auth";
 import { FC, useState } from "react";
 import { AiOutlineHistory, AiOutlineHome, AiOutlineEye, AiOutlineQrcode } from "react-icons/ai";
-import { BiSearch, BiUserCircle } from "react-icons/bi";
+import { BiSearch, BiUserCircle, BiCoffeeTogo } from "react-icons/bi";
 import { BsBookmarkHeart, BsTwitterX, BsFacebook, BsWhatsapp, BsTelegram } from "react-icons/bs";
 import { HiOutlineLogin, HiOutlineLogout, HiOutlineDeviceMobile } from "react-icons/hi";
 import { MdOutlineExplore, MdSportsSoccer, MdOutlineMenuBook, MdOutlineAnimation } from "react-icons/md";
@@ -171,7 +171,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               } hover:text-white transition duration-300`}
           >
             <AiOutlineCalendar size={25} />
-            <p>TV Calendar</p>
+            <p>Calendar</p>
           </Link>
 
           <a
@@ -198,15 +198,10 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             href="https://buymeacoffee.com/gideongeny"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex gap-6 items-center text-yellow-500 hover:text-yellow-400 transition duration-300"
+            className="flex gap-6 items-center text-yellow-400 hover:text-yellow-300 transition duration-300 group"
           >
-            <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="25" width="25" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.95-7-4.5-7-8.9h2c0 4.42 3.58 8 8 8v.93zM13 18.00c-.41.51-.77 1.09-1.07 1.73-.29.64-.61 1.25-.93 1.83V5.5c.32.58.64 1.19.93 1.83.3.64.66 1.22 1.07 1.73V18.00z"></path>
-              <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4zM14 13h-3v3H9v-3H6v-2h3V8h2v3h3v2z"></path>
-              <path d="M20 3H4v10c0 5.52 4.48 10 10 10s10-4.48 10-10V5c0-1.1-.9-2-2-2zM4 5h16v8c0 4.41-3.59 8-8 8s-8-3.59-8-8V5z"></path>
-            </svg>
-            {/* Note: In a real app we'd use a real icon import, but SVG is safer here to avoid missing lib errors */}
-            <p>{t('Support Us')}</p>
+            <BiCoffeeTogo size={25} className="group-hover:scale-110 transition-transform shadow-[0_0_10px_rgba(250,204,21,0.3)]" />
+            <p className="font-medium tracking-wide">{t('Support Us')}</p>
           </a>
         </div>
 

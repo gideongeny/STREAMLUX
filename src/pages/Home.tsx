@@ -12,7 +12,7 @@ import { useHomeData } from "../hooks/useHomeData";
 import { useAppSelector } from "../store/hooks";
 import { useWatchProgress } from "../hooks/useWatchProgress";
 import { useQuery } from "@tanstack/react-query";
-import { getTop10Trending } from "../services/home";
+import { getTop10Movies, getTop10TVs } from "../services/home";
 // Lazy load non-critical components for performance (Android TV & Slow Web optimization)
 const AdBanner = lazy(() => import("../components/Common/AdBanner"));
 const ContinueWatching = lazy(() => import("../components/Home/ContinueWatching"));
@@ -47,9 +47,6 @@ const Home: FC = () => {
     );
   }, [currentProfile?.isKid]);
 
-  const { data: top10Data } = useQuery(["top10"], getTop10Trending, {
-    select: (data: any) => filterContent(data as any[])
-  });
 
   const [isSidebarActive, setIsSidebarActive] = useState(false);
   const [showLowerSections, setShowLowerSections] = useState(false);
@@ -94,6 +91,14 @@ const Home: FC = () => {
   const handleTabChange = (tab: "movie" | "tv" | "sports") => {
     setCurrentTab(tab);
   };
+
+  const { data: top10Data } = useQuery(["top10", currentTab], () => {
+    if (currentTab === "movie") return getTop10Movies();
+    if (currentTab === "tv") return getTop10TVs();
+    return getTop10Movies(); // Default
+  }, {
+    select: (data: any) => filterContent(data as any[])
+  });
 
   const {
     data: dataMovie,
@@ -141,8 +146,10 @@ const Home: FC = () => {
     return filterContent(bannerDataTV || []);
   }, [bannerDataTV, filterContent]);
 
-  // Error handling moved to inside the JSX to keep the sidebar visible
-
+  // Debug state monitoring
+  useEffect(() => {
+    console.log(`%c[StreamLux] %cActive Tab: ${currentTab}`, "color:#10b981;font-weight:bold", "color:gray");
+  }, [currentTab]);
 
   return (
     <>
@@ -237,13 +244,6 @@ const Home: FC = () => {
               )}
             </ErrorBoundary>
           )}
-          {currentTab === "sports" && (
-            <ErrorBoundary fallback={<div className="text-red-500 p-10 text-center">Failed to load Sports section.</div>}>
-              <div className="pt-4 mb-10">
-                <LiveSports />
-              </div>
-            </ErrorBoundary>
-          )}
 
           {/* Conditionally show sections based on tab */}
           {currentTab !== "sports" ? (
@@ -295,7 +295,10 @@ const Home: FC = () => {
               {/* Upcoming Calendar Section (MovieBox Style) */}
               <div className="px-4 md:px-8">
                 <Suspense fallback={<div className="h-40" />}>
-                  <UpcomingCalendar />
+                  <UpcomingCalendar
+                    title={currentTab === "movie" ? "Upcoming Movies" : "Upcoming TV Releases"}
+                    contentType={currentTab as "movie" | "tv"}
+                  />
                 </Suspense>
               </div>
 
@@ -331,13 +334,18 @@ const Home: FC = () => {
             </>
           ) : (
             <div className="mt-4">
-              {/* Specialized Sports Layout */}
-              <LiveSportsTicker />
+              <Suspense fallback={<div className="h-10 bg-gray-800/50 rounded animate-pulse" />}>
+                <LiveSportsTicker />
+              </Suspense>
+
               <div className="mt-8">
                 <LiveSports />
               </div>
+
               <div className="mt-12 px-4 md:px-8">
-                <UpcomingCalendar title="Sports Calendar Events" />
+                <Suspense fallback={<div className="h-40 bg-gray-800/20 rounded-xl animate-pulse" />}>
+                  <UpcomingCalendar title="Sports Calendar Events" contentType="sports" />
+                </Suspense>
               </div>
             </div>
           )}
