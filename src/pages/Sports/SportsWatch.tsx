@@ -74,16 +74,21 @@ const SportsWatch: FC = () => {
     const targetMatchId = matchId || fixture?.matchId;
 
     if (targetMatchId) {
-      // Prioritize sportslive.run as it has the best coverage
+      // Prioritize sportslive.run with better parameters for instant play
       return [
-        `https://sportslive.run/matches/${targetMatchId}?utm_source=MB_Website&sportType=football`,
+        `https://sportslive.run/matches/${targetMatchId}?utm_source=StreamLux`,
+        `https://strmd.link/watch/${targetMatchId}`,
         `https://streamed.pk/watch/${targetMatchId}`
       ];
     }
 
-    // Fallback search link
+    // Fallback search link if we have team names but no ID
     if (fixture) {
-      return [`https://sportslive.run/live?utm_source=MB_Website&sportType=football&home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}`];
+      const searchSlug = `${fixture.homeTeam}-vs-${fixture.awayTeam}`.toLowerCase().replace(/\s+/g, '-');
+      return [
+        `https://sportslive.run/live?home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}`,
+        `https://strmd.link/search?q=${encodeURIComponent(searchSlug)}`
+      ];
     }
 
     return [];

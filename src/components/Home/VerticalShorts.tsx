@@ -84,56 +84,68 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical" }) => {
                     className="!pb-10 overflow-visible"
                     onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
                 >
-                    {shortsData.map((short, index) => (
-                        <SwiperSlide key={short.id} className="relative aspect-[9/16] rounded-2xl overflow-hidden border border-white/10 group bg-black shadow-2xl transition-transform duration-300 hover:scale-[1.02]">
-                            {/* Video */}
-                            <div className="w-full h-full cursor-pointer relative" onClick={togglePlay}>
-                                <iframe
-                                    src={`https://www.youtube.com/embed/${short.videoId}?autoplay=1&controls=0&loop=1&playlist=${short.videoId}&mute=${(activeIndex === index && !isMuted) ? 0 : 1}&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&enablejsapi=1`}
-                                    className="w-full h-full pointer-events-none scale-[1.05]"
-                                    title={short.title}
-                                    frameBorder="0"
-                                    allow="autoplay; encrypted-media"
-                                />
+                    {shortsData.map((short, index) => {
+                        // LAZY LOADING: Only load iframe if it's active or adjacent
+                        const isNear = Math.abs(index - activeIndex) <= 1;
 
-                                {/* Overlays */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
-
-                                {/* Mute/Unmute Logic */}
-                                <button
-                                    onClick={toggleMute}
-                                    className="absolute top-4 right-4 z-30 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 hover:bg-primary transition-colors text-white hover:text-black"
-                                >
-                                    {isMuted ? (
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                                        </svg>
+                        return (
+                            <SwiperSlide key={short.id} className="relative aspect-[9/16] rounded-2xl overflow-hidden border border-white/10 group bg-black shadow-2xl transition-transform duration-300 hover:scale-[1.02]">
+                                {/* Video */}
+                                <div className="w-full h-full cursor-pointer relative" onClick={togglePlay}>
+                                    {isNear ? (
+                                        <iframe
+                                            key={`${short.id}-${activeIndex === index}`}
+                                            src={`https://www.youtube.com/embed/${short.videoId}?autoplay=1&controls=0&loop=1&playlist=${short.videoId}&mute=${(activeIndex === index && !isMuted) ? 0 : 1}&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&enablejsapi=1`}
+                                            className="w-full h-full pointer-events-none scale-[1.05]"
+                                            title={short.title}
+                                            frameBorder="0"
+                                            allow="autoplay; encrypted-media"
+                                        />
                                     ) : (
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                        </svg>
-                                    )}
-                                </button>
-
-                                {/* Info */}
-                                <div className="absolute left-4 bottom-4 z-20 pointer-events-none group-hover:translate-y-[-5px] transition-transform duration-300">
-                                    <div className="flex items-center gap-1.5 mb-1.5">
-                                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[8px] font-black text-black">
-                                            {short.creator[0]}
+                                        <div className="w-full h-full bg-[#111] animate-pulse flex items-center justify-center">
+                                            <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
                                         </div>
-                                        <span className="text-[10px] font-bold text-white uppercase tracking-wider">@{short.creator}</span>
-                                    </div>
-                                    <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight drop-shadow-lg">{short.title}</h3>
-                                </div>
+                                    )}
 
-                                {/* Hot Label */}
-                                <div className="absolute top-4 left-4 z-20 bg-primary/95 text-black px-2 py-0.5 rounded-sm text-[8px] font-black tracking-tighter shadow-lg">
-                                    TOP PICK
+                                    {/* Overlays */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
+
+                                    {/* Mute/Unmute Logic */}
+                                    <button
+                                        onClick={toggleMute}
+                                        className="absolute top-4 right-4 z-30 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 hover:bg-primary transition-colors text-white hover:text-black"
+                                    >
+                                        {isMuted ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                                            </svg>
+                                        ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                            </svg>
+                                        )}
+                                    </button>
+
+                                    {/* Info */}
+                                    <div className="absolute left-4 bottom-4 z-20 pointer-events-none group-hover:translate-y-[-5px] transition-transform duration-300">
+                                        <div className="flex items-center gap-1.5 mb-1.5">
+                                            <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[8px] font-black text-black">
+                                                {short.creator[0]}
+                                            </div>
+                                            <span className="text-[10px] font-bold text-white uppercase tracking-wider">@{short.creator}</span>
+                                        </div>
+                                        <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight drop-shadow-lg">{short.title}</h3>
+                                    </div>
+
+                                    {/* Hot Label */}
+                                    <div className="absolute top-4 left-4 z-20 bg-primary/95 text-black px-2 py-0.5 rounded-sm text-[8px] font-black tracking-tighter shadow-lg">
+                                        TOP PICK
+                                    </div>
                                 </div>
-                            </div>
-                        </SwiperSlide>
-                    ))}
+                            </SwiperSlide>
+                        );
+                    })}
                 </Swiper>
             </div>
         );
@@ -165,13 +177,20 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical" }) => {
                                 className="w-full h-full cursor-pointer relative"
                                 onClick={togglePlay}
                             >
-                                <iframe
-                                    src={`https://www.youtube.com/embed/${short.videoId}?autoplay=${activeIndex === index && isPlaying ? 1 : 0}&controls=0&loop=1&playlist=${short.videoId}&mute=${(activeIndex === index && !isMuted) ? 0 : 1}&rel=0&modestbranding=1&iv_load_policy=3`}
-                                    className="w-full h-full pointer-events-none scale-[1.02]"
-                                    title={short.title}
-                                    frameBorder="0"
-                                    allow="autoplay; encrypted-media"
-                                />
+                                {activeIndex === index ? (
+                                    <iframe
+                                        key={`${short.id}-active`}
+                                        src={`https://www.youtube.com/embed/${short.videoId}?autoplay=${isPlaying ? 1 : 0}&controls=0&loop=1&playlist=${short.videoId}&mute=${!isMuted ? 0 : 1}&rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1`}
+                                        className="w-full h-full pointer-events-none scale-[1.02]"
+                                        title={short.title}
+                                        frameBorder="0"
+                                        allow="autoplay; encrypted-media"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-[#050505] flex items-center justify-center">
+                                        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                                    </div>
+                                )}
 
                                 {/* Mute Overlay for Vertical */}
                                 <button

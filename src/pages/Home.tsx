@@ -247,74 +247,89 @@ const Home: FC = () => {
             </ErrorBoundary>
           )}
 
-          {/* Ad Banner (MovieBox Style) - Lazy loaded for Android TV performance */}
-          <Suspense fallback={<div className="h-[90px]" />}>
-            <div className="px-4 md:px-8 mb-6 mt-4">
-              <AdBanner />
-            </div>
-          </Suspense>
+          {/* Conditionally show sections based on tab */}
+          {currentTab !== "sports" ? (
+            <>
+              {/* Ad Banner (MovieBox Style) - Lazy loaded for Android TV performance */}
+              <Suspense fallback={<div className="h-[90px]" />}>
+                <div className="px-4 md:px-8 mb-6 mt-4">
+                  <AdBanner />
+                </div>
+              </Suspense>
 
-          {/* Continue Watching Section */}
-          <div className="px-4 md:px-8">
-            <ContinueWatching watchHistory={watchHistory} onClearProgress={clearProgress} />
-          </div>
+              {/* Continue Watching Section */}
+              <div className="px-4 md:px-8">
+                <ContinueWatching watchHistory={watchHistory} onClearProgress={clearProgress} />
+              </div>
 
+              {/* Top 10 Section */}
+              {showLowerSections && <Top10Slider films={top10Data || []} />}
 
-          {/* Top 10 Section */}
-          {showLowerSections && <Top10Slider films={top10Data || []} />}
+              {/* Trending Section (Horizontal) */}
+              {showLowerSections && (
+                <div className="mt-12">
+                  <TrendingNow isMainFlow={true} />
+                </div>
+              )}
 
-          {/* Trending Section (Horizontal) */}
-          {showLowerSections && (
-            <div className="mt-12">
-              <TrendingNow isMainFlow={true} />
-            </div>
-          )}
+              {/* HOT Section (Horizontal) */}
+              {showLowerSections && dataMovie?.Hot && (
+                <div className="mt-12 px-4 md:px-8">
+                  <SectionSlider
+                    films={dataMovie.Hot}
+                    title="🔥 HOT & Trending"
+                    seeMoreParams={{ sort_by: "popularity.desc", page: 2 }}
+                  />
+                </div>
+              )}
 
-          {/* HOT Section (Horizontal) */}
-          {showLowerSections && dataMovie?.Hot && (
-            <div className="mt-12 px-4 md:px-8">
-              <SectionSlider
-                films={dataMovie.Hot}
-                title="🔥 HOT & Trending"
-                seeMoreParams={{ sort_by: "popularity.desc", page: 2 }}
-              />
-            </div>
-          )}
+              {/* Upcoming Calendar Section (MovieBox Style) */}
+              <div className="px-4 md:px-8">
+                <UpcomingCalendar />
+              </div>
 
-          {/* Upcoming Calendar Section (MovieBox Style) */}
-          <div className="px-4 md:px-8">
-            <UpcomingCalendar />
-          </div>
+              {/* Horizontal Shorts Section (Discovery Mode) */}
+              {!currentProfile?.isKid && showLowerSections && (
+                <div className="px-4 md:px-8 mt-12">
+                  <VerticalShorts variant="horizontal" />
+                </div>
+              )}
 
-          {/* Horizontal Shorts Section (Discovery Mode) */}
-          {!currentProfile?.isKid && showLowerSections && (
-            <div className="px-4 md:px-8 mt-12">
-              <VerticalShorts variant="horizontal" />
-            </div>
-          )}
+              {/* Because You Watched Section */}
+              {showLowerSections && <BecauseYouWatched />}
 
-          {/* Because You Watched Section */}
-          {showLowerSections && <BecauseYouWatched />}
+              {showLowerSections && <NewReleases />}
 
-          {showLowerSections && <NewReleases />}
+              {/* Live Sports Ticker (MovieBox.ph style) - Only in Movie/TV tabs as a teaser */}
+              {!currentProfile?.isKid && showLowerSections && (
+                <ErrorBoundary fallback={null}>
+                  <LiveSportsTicker />
+                </ErrorBoundary>
+              )}
 
-          {/* Live Sports Ticker (MovieBox.ph style) - Wrapped in ErrorBoundary */}
-          {!currentProfile?.isKid && currentTab !== "sports" && showLowerSections && (
-            <ErrorBoundary fallback={null}>
+              {/* Live & Upcoming Sports Section (Teaser) */}
+              {!currentProfile?.isKid && showLowerSections && <LiveSports />}
+
+              {/* Discover World navigation */}
+              <DiverseNavigation currentTab={currentTab as "movie" | "tv" | "sports"} />
+
+              {/* Discover World content */}
+              <ErrorBoundary fallback={<div className="p-10 text-center text-gray-500">Some content could not be loaded.</div>}>
+                {showLowerSections && <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />}
+              </ErrorBoundary>
+            </>
+          ) : (
+            <div className="mt-4">
+              {/* Specialized Sports Layout */}
               <LiveSportsTicker />
-            </ErrorBoundary>
+              <div className="mt-8">
+                <LiveSports />
+              </div>
+              <div className="mt-12 px-4 md:px-8">
+                <UpcomingCalendar />
+              </div>
+            </div>
           )}
-
-          {/* Live & Upcoming Sports Section (MovieBox-style) - Already has ErrorBoundary */}
-          {!currentProfile?.isKid && currentTab !== "sports" && showLowerSections && <LiveSports />}
-
-          {/* Discover World navigation (moved from sidebar) */}
-          <DiverseNavigation currentTab={currentTab as "movie" | "tv" | "sports"} />
-
-          {/* Discover World content */}
-          <ErrorBoundary fallback={<div className="p-10 text-center text-gray-500">Some content could not be loaded.</div>}>
-            {showLowerSections && <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />}
-          </ErrorBoundary>
         </div>
 
         <div className="shrink-0 max-w-[310px] w-full hidden lg:block px-6 top-0 sticky ">
