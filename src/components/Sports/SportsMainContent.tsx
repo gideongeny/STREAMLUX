@@ -69,22 +69,14 @@ const SportsMainContent: FC = () => {
         };
     }, []);
 
-    // Combine real API data with static data
+    // Combine real API data (No static data as per user request)
     const allFixtures = useMemo(() => {
-        const combined = [...SPORTS_FIXTURES];
-        if (liveFixtures.length > 0 || upcomingFixtures.length > 0) {
-            combined.push(...liveFixtures, ...upcomingFixtures);
-        }
+        const combined = [...liveFixtures, ...upcomingFixtures];
+
         // Remove duplicates
         const seen = new Set<string>();
         const unique: SportsFixtureConfig[] = [];
-        [...liveFixtures, ...upcomingFixtures].forEach((fixture) => {
-            if (!seen.has(fixture.id)) {
-                seen.add(fixture.id);
-                unique.push(fixture);
-            }
-        });
-        SPORTS_FIXTURES.forEach((fixture) => {
+        combined.forEach((fixture) => {
             if (!seen.has(fixture.id)) {
                 seen.add(fixture.id);
                 unique.push(fixture);
