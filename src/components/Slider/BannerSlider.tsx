@@ -92,6 +92,22 @@ const BannerSlider: FC<BannerSliderProps> = ({
                     {film.title || film.name}
                   </h2>
 
+                  {film.media_type === "sports" && (film.homeLogo || film.awayLogo) && (
+                    <div className="flex items-center gap-4 md:gap-8 mt-4 md:mt-6 mb-2">
+                      {film.homeLogo && (
+                        <div className="w-12 h-12 md:w-20 md:h-20 bg-white/10 rounded-full p-2 flex items-center justify-center backdrop-blur-md border border-white/20">
+                          <img src={film.homeLogo} alt="Home" className="w-full h-full object-contain drop-shadow-2xl" />
+                        </div>
+                      )}
+                      <span className="text-white font-black text-xl md:text-3xl italic opacity-80">VS</span>
+                      {film.awayLogo && (
+                        <div className="w-12 h-12 md:w-20 md:h-20 bg-white/10 rounded-full p-2 flex items-center justify-center backdrop-blur-md border border-white/20">
+                          <img src={film.awayLogo} alt="Away" className="w-full h-full object-contain drop-shadow-2xl" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div>
                     <p className="text-white font-semibold md:text-2xl text-base mt-6">
                       {dataDetail?.[index]?.translation?.[0]}

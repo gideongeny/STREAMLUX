@@ -10,7 +10,9 @@ export interface Item {
   vote_average: number;
 
   // Additional props
-  media_type: "movie" | "tv" | "person";
+  media_type: "movie" | "tv" | "person" | "sports";
+  homeLogo?: string;
+  awayLogo?: string;
 
   // Movie items
   release_date?: string;

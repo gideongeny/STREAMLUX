@@ -175,6 +175,8 @@ const SportsMainContent: FC = () => {
                 vote_average: 9.8,
                 release_date: f.kickoffTimeFormatted,
                 media_type: "sports",
+                homeLogo: f.homeTeamLogo,
+                awayLogo: f.awayTeamLogo,
                 genre_ids: [],
                 original_language: "en",
                 popularity: 100,
