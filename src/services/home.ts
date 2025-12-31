@@ -1658,3 +1658,23 @@ export const getPremiumVIP = async (): Promise<Item[]> => {
   }
 };
 
+// Fetch mega-upcoming content (2026 and later) for fans
+export const getFutureUpcoming = async (mediaType: "movie" | "tv"): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/${mediaType}`, {
+      params: {
+        [mediaType === "movie" ? "primary_release_date.gte" : "first_air_date.gte"]: "2026-01-01",
+        sort_by: "popularity.desc",
+        page: 1,
+        include_adult: false,
+      },
+    });
+    return (response.data.results || []).map((item: any) => ({
+      ...item,
+      media_type: mediaType,
+    })).filter((item: Item) => item.poster_path);
+  } catch (error) {
+    console.error(`Error fetching future ${mediaType} content:`, error);
+    return [];
+  }
+};

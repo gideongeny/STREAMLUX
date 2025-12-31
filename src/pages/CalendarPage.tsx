@@ -30,20 +30,34 @@ const CalendarPage: FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const currentType = searchParams.get("type") || "tv";
 
-    // Fetch TV airing today for the selected day
+    // Fetch TV airing today for the selected day (Improved to include far future)
     const { data: airingToday, isLoading: isLoadingTV } = useQuery(["calendar-airing", selectedDay], async () => {
+        const { getFutureUpcoming } = await import("../services/home");
+
         const res = await axios.get("/tv/on_the_air", {
             params: { page: selectedDay + 1 }
         });
-        return res.data.results as Item[];
+        const farRes = await getFutureUpcoming("tv");
+
+        const combined = [...(res.data.results as Item[]), ...farRes];
+        return combined.filter((item, index, self) =>
+            index === self.findIndex((t) => t.id === item.id)
+        );
     }, { enabled: currentType === "tv" });
 
-    // Fetch Movies upcoming
+    // Fetch Movies upcoming (Improved to include far future 2026+)
     const { data: upcomingMovies, isLoading: isLoadingMovies } = useQuery(["calendar-movies"], async () => {
-        const res = await axios.get("/movie/upcoming", {
-            params: { page: 1 }
-        });
-        return res.data.results as Item[];
+        const { getFutureUpcoming } = await import("../services/home");
+
+        // Fetch both "near" upcoming and "far" future
+        const nearRes = await axios.get("/movie/upcoming", { params: { page: 1 } });
+        const farRes = await getFutureUpcoming("movie");
+
+        const combined = [...(nearRes.data.results || []), ...farRes];
+        // Dedupe
+        return combined.filter((item, index, self) =>
+            index === self.findIndex((t) => t.id === item.id)
+        );
     }, { enabled: currentType === "movie" });
 
     // Fetch sports fixtures

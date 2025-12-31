@@ -122,9 +122,9 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
 
     if (isLoadingVideo && !videoError && !isManualSelection) {
       timeoutId = setTimeout(() => {
-        console.log(`Source ${currentSourceIndex + 1} timed out (20s), trying next...`);
+        console.log(`Source ${currentSourceIndex + 1} timed out (30s), trying next...`);
         handleVideoError();
-      }, 20000); // 20 seconds as requested
+      }, 30000); // 30 seconds as requested
     }
 
     return () => {

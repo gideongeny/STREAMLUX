@@ -39,6 +39,11 @@ export const useHomeData = (type: "movies" | "tvs", enabled: boolean = true) => 
     return res.data.results || [];
   }, { staleTime: 1000 * 60 * 10, enabled: enabled && !!bannerQuery.data });
 
+  const futureHitsQuery = useQuery([`home-${type}-future`], async () => {
+    const { getFutureUpcoming } = await import("../services/home");
+    return await getFutureUpcoming(type === "movies" ? "movie" : "tv");
+  }, { staleTime: 1000 * 60 * 60 * 24, enabled: enabled && !!bannerQuery.data });
+
   // Combine data for backward compatibility
   const data = useMemo(() => {
     if (!bannerQuery.data) return undefined;
@@ -48,9 +53,10 @@ export const useHomeData = (type: "movies" | "tvs", enabled: boolean = true) => 
       "Top Rated": topRatedQuery.data || [],
       Hot: hotQuery.data || [],
       Upcoming: upcomingQuery.data || [],
+      "Future Hits (2026+)": futureHitsQuery.data || [],
     };
     return combined;
-  }, [bannerQuery.data, popularQuery.data, topRatedQuery.data, hotQuery.data, upcomingQuery.data]);
+  }, [bannerQuery.data, popularQuery.data, topRatedQuery.data, hotQuery.data, upcomingQuery.data, futureHitsQuery.data]);
 
   const isLoading = bannerQuery.isLoading;
   const isError = bannerQuery.isError;
