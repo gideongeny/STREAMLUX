@@ -7,7 +7,7 @@ import LiveScoreboard from "./LiveScoreboard";
 import UpcomingCalendar from "./UpcomingCalendar";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import { SPORTS_FIXTURES, SPORTS_LEAGUES, SPORTS_CHANNELS, SportsFixtureConfig } from "../../shared/constants";
-import { getLiveScores, getUpcomingFixturesAPI, subscribeToLiveScores } from "../../services/sportsAPI";
+import { getLiveFixturesAPI, getUpcomingFixturesAPI, subscribeToLiveScores } from "../../services/sportsAPI";
 
 const SportsMainContent: FC = () => {
     const { isMobile } = useCurrentViewportView();
@@ -41,7 +41,7 @@ const SportsMainContent: FC = () => {
             // 2. Fetch Fresh Data
             try {
                 const [live, upcoming] = await Promise.all([
-                    getLiveScores(),
+                    getLiveFixturesAPI(), // Use robust API with fallbacks
                     getUpcomingFixturesAPI(),
                 ]);
                 setLiveFixtures(live);
