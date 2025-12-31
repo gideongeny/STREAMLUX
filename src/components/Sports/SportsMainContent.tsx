@@ -152,12 +152,17 @@ const SportsMainContent: FC = () => {
                             className="flex-shrink-0 w-36 md:w-44 group"
                         >
                             <div className="aspect-video relative rounded-xl overflow-hidden border border-gray-800 bg-gray-900 group-hover:border-primary/50 transition duration-300 shadow-lg">
-                                <div className="absolute inset-0 flex items-center justify-center p-4">
-                                    <div className="text-center">
-                                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2 text-primary border border-primary/20">
-                                            <span className="text-xl md:text-2xl font-bold">{channel.name.charAt(0)}</span>
-                                        </div>
-                                    </div>
+                                <div className="absolute inset-0 flex items-center justify-center p-2">
+                                    <img
+                                        src={channel.logo}
+                                        alt={channel.name}
+                                        className="w-full h-full object-contain p-2 group-hover:scale-110 transition duration-300 drop-shadow-lg"
+                                        onError={(e) => {
+                                            // Fallback to text if image fails
+                                            e.currentTarget.style.display = 'none';
+                                            e.currentTarget.parentElement!.innerHTML = `<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20"><span class="text-xl font-bold">${channel.name.charAt(0)}</span></div>`;
+                                        }}
+                                    />
                                 </div>
                                 <div className="absolute top-2 right-2 flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-red-600 animate-pulse text-[8px] font-bold text-white uppercase">
                                     Live
