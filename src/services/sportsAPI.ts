@@ -348,6 +348,8 @@ const getUpcomingFixturesAPISports = async (): Promise<SportsFixtureConfig[]> =>
 // Helper to map league names to our league IDs
 const getLeagueIdFromName = (leagueName: string): string => {
   const name = leagueName.toLowerCase();
+
+  // Soccer
   if (name.includes("premier league") || name.includes("epl")) return "epl";
   if (name.includes("champions league") || name.includes("ucl")) return "ucl";
   if (name.includes("la liga")) return "laliga";
@@ -355,10 +357,36 @@ const getLeagueIdFromName = (leagueName: string): string => {
   if (name.includes("serie a") || name.includes("seriea")) return "seriea";
   if (name.includes("afcon") || name.includes("africa cup")) return "afcon";
   if (name.includes("bundesliga")) return "bundesliga";
+
+  // Basketball
+  if (name.includes("nba")) return "nba";
+
+  // American Football
+  if (name.includes("nfl")) return "nfl";
+
+  // Baseball
+  if (name.includes("mlb")) return "mlb";
+
+  // Hockey
+  if (name.includes("nhl")) return "nhl";
+
+  // Motorsport
+  if (name.includes("f1") || name.includes("formula 1")) return "f1";
+
+  // Combat Sports
+  if (name.includes("ufc") || name.includes("mma")) return "ufc";
+  if (name.includes("wwe") || name.includes("wrestling")) return "wwe";
+
+  // Tennis
+  if (name.includes("atp")) return "atp";
+  if (name.includes("wta")) return "wta";
+
+  // Others
   if (name.includes("rugby")) return "rugby-world-cup";
-  if (name.includes("ufc")) return "ufc";
-  if (name.includes("wwe")) return "wwe";
-  return "epl"; // Default
+  if (name.includes("six nations")) return "six-nations";
+  if (name.includes("athletics")) return "athletics";
+
+  return "other"; // Default
 };
 
 // Get live scores for scoreboard - use public APIs

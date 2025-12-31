@@ -3,7 +3,12 @@ import { EMBED_TO, IMAGE_URL } from "./constants";
 export const resizeImage = (
   imageUrl: string,
   width: string = "original"
-): string => imageUrl ? `${IMAGE_URL}/${width}${imageUrl}` : "/no-image.png";
+): string => {
+  if (!imageUrl) return "/no-image.png";
+  const trimmedUrl = imageUrl.trim();
+  if (trimmedUrl.startsWith("http") || trimmedUrl.startsWith("https") || trimmedUrl.startsWith("//") || trimmedUrl.startsWith("data:")) return trimmedUrl;
+  return `${IMAGE_URL}/${width}${trimmedUrl}`;
+};
 
 // export const embedMovie = (id: number): string =>
 //   `${EMBED_URL}/movie?tmdb=${id}`;

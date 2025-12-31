@@ -9,7 +9,7 @@ import SidebarMini from "../../components/Common/SidebarMini";
 import Title from "../../components/Common/Title";
 import Footer from "../../components/Footer/Footer";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
-import { SPORTS_FIXTURES, SPORTS_LEAGUES, SPORTS_CHANNELS, SportsFixtureConfig } from "../../shared/constants";
+import { SPORTS_LEAGUES, SPORTS_CHANNELS, SportsFixtureConfig } from "../../shared/constants";
 import { getLiveScores, getUpcomingFixturesAPI } from "../../services/sportsAPI";
 
 const SportsWatch: FC = () => {
@@ -19,7 +19,7 @@ const SportsWatch: FC = () => {
   const [dynamicFixture, setDynamicFixture] = useState<SportsFixtureConfig | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Static fixture or channel search
+  // Channel or dynamic fixture search
   const staticFixture = useMemo(() => {
     if (leagueId === "channel") {
       const channel = SPORTS_CHANNELS.find((item: any) => item.id === matchId);
@@ -37,12 +37,12 @@ const SportsWatch: FC = () => {
         } as any;
       }
     }
-    return SPORTS_FIXTURES.find((item) => item.id === matchId && item.leagueId === leagueId);
+    return null; // Static fixtures removed in v3.2
   }, [matchId, leagueId]);
 
-  // If not static, try to find in dynamic API data
+  // If not a channel, find in dynamic API data
   useEffect(() => {
-    if (!staticFixture && matchId) {
+    if (!staticFixture && matchId && leagueId !== "channel") {
       const fetchDynamic = async () => {
         setIsLoading(true);
         try {

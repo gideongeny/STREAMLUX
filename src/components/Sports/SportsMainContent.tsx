@@ -1,13 +1,17 @@
 
-import { FC, useMemo, useState, useEffect } from "react";
+import { FC, useMemo, useState, useEffect, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { MdSportsSoccer } from "react-icons/md";
 import SearchBox from "../Common/SearchBox";
 import LiveScoreboard from "./LiveScoreboard";
-import UpcomingCalendar from "./UpcomingCalendar";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
-import { SPORTS_FIXTURES, SPORTS_LEAGUES, SPORTS_CHANNELS, SportsFixtureConfig } from "../../shared/constants";
+import { SPORTS_LEAGUES, SPORTS_CHANNELS, SportsFixtureConfig } from "../../shared/constants";
 import { getLiveFixturesAPI, getUpcomingFixturesAPI, subscribeToLiveScores } from "../../services/sportsAPI";
+import BannerSlider from "../Slider/BannerSlider";
+import { Item } from "../../shared/types";
+
+// Unified calendar row
+const UpcomingCalendar = lazy(() => import("../Home/UpcomingCalendar"));
 
 const SportsMainContent: FC = () => {
     const { isMobile } = useCurrentViewportView();
@@ -100,8 +104,96 @@ const SportsMainContent: FC = () => {
     const upcomingCount = allFixtures.filter((fixture) => fixture.status === "upcoming").length;
     const replayCount = allFixtures.filter((fixture) => fixture.status === "replay").length;
 
+    // Map sports fixtures to Banner-compatible format
+    const bannerFilms = useMemo(() => {
+        // High-quality generic sports backdrops for more premium look
+        const sportsBackdrops: Record<string, string> = {
+            soccer: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1280&q=80",
+            basketball: "https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=1280&q=80",
+            tennis: "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?auto=format&fit=crop&w=1280&q=80",
+            f1: "https://images.unsplash.com/photo-1504450334710-90c056d6d84a?auto=format&fit=crop&w=1280&q=80",
+            ufc: "https://images.unsplash.com/photo-1552667466-07f704e139bd?auto=format&fit=crop&w=1280&q=80",
+            cricket: "https://images.unsplash.com/photo-1531415074941-03f6ad8899ac?auto=format&fit=crop&w=1280&q=80",
+            rugby: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1280&q=80",
+            baseball: "https://images.unsplash.com/photo-1508344928928-7165b67de128?auto=format&fit=crop&w=1280&q=80",
+            hockey: "https://images.unsplash.com/photo-151271901372c-5d1c5d718c9c?auto=format&fit=crop&w=1280&q=80",
+            generic: "https://images.unsplash.com/photo-1431324155629-1a6eda1eed2d?auto=format&fit=crop&w=1280&q=80"
+        };
+
+        return upcomingFixtures.slice(0, 5).map((f, idx) => {
+            // Determine backdrop based on availability, then fall back to generic sports images
+            let backdrop = f.banner || f.thumb || f.fanart || sportsBackdrops.generic;
+
+            // If we don't have a match-specific image, use our categorical backdrops
+            if (!f.banner && !f.thumb && !f.fanart) {
+                const leagueLower = f.leagueId.toLowerCase();
+                const homeLower = f.homeTeam.toLowerCase();
+                const awayLower = f.awayTeam.toLowerCase();
+                const combined = `${leagueLower} ${homeLower} ${awayLower}`;
+
+                // 1. Explicit League Mapping
+                if (["epl", "ucl", "laliga", "ligue1", "seriea", "afcon", "bundesliga", "football"].includes(leagueLower)) {
+                    backdrop = sportsBackdrops.soccer;
+                } else if (leagueLower === "nba" || combined.includes("basketball")) {
+                    backdrop = sportsBackdrops.basketball;
+                } else if (leagueLower === "atp" || leagueLower === "wta" || combined.includes("tennis")) {
+                    backdrop = sportsBackdrops.tennis;
+                } else if (leagueLower === "f1" || combined.includes("racing") || combined.includes("formula 1")) {
+                    backdrop = sportsBackdrops.f1;
+                } else if (leagueLower === "ufc" || combined.includes("mma") || combined.includes("combat") || combined.includes("fight")) {
+                    backdrop = sportsBackdrops.ufc;
+                } else if (combined.includes("cricket")) {
+                    backdrop = sportsBackdrops.cricket;
+                } else if (leagueLower === "rugby-world-cup" || leagueLower === "six-nations" || combined.includes("rugby")) {
+                    backdrop = sportsBackdrops.rugby;
+                } else if (leagueLower === "mlb" || combined.includes("baseball")) {
+                    backdrop = sportsBackdrops.baseball;
+                } else if (leagueLower === "nhl" || combined.includes("hockey")) {
+                    backdrop = sportsBackdrops.hockey;
+                } else if (combined.includes("nfl") || combined.includes("american football")) {
+                    backdrop = sportsBackdrops.soccer;
+                }
+
+                // 2. Keyword check if still generic
+                if (backdrop === sportsBackdrops.generic) {
+                    if (combined.includes("cup") || combined.includes("league") || combined.includes("fifa")) backdrop = sportsBackdrops.soccer;
+                }
+
+                // Cycle through backdrops if multiple games and still generic
+                if (backdrop === sportsBackdrops.generic) {
+                    const genericPool = Object.values(sportsBackdrops);
+                    backdrop = genericPool[idx % genericPool.length];
+                }
+            }
+
+            return {
+                id: `${f.leagueId}/${f.id}`,
+                title: `${f.homeTeam} vs ${f.awayTeam}`,
+                backdrop_path: backdrop,
+                poster_path: f.homeTeamLogo || f.awayTeamLogo || "",
+                overview: `Stream Live: ${f.homeTeam} takes on ${f.awayTeam} in the ${f.leagueId.toUpperCase()} Tournament. Witness every goal, basket, and play in premium 4K quality.`,
+                vote_average: 9.8,
+                release_date: f.kickoffTimeFormatted,
+                media_type: "sports",
+                genre_ids: [],
+                original_language: "en",
+                popularity: 100,
+                vote_count: 1000
+            };
+        }) as unknown as Item[];
+    }, [upcomingFixtures]);
+
     return (
         <div className="w-full">
+            {/* Premium Banner */}
+            <div className="mb-10">
+                <BannerSlider
+                    films={bannerFilms.length > 0 ? bannerFilms : undefined}
+                    dataDetail={undefined}
+                    isLoadingBanner={liveFixtures.length === 0 && upcomingFixtures.length === 0}
+                />
+            </div>
+
             <div className="mb-6">
                 <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3 mb-2">
                     <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/20 text-primary">
@@ -112,8 +204,7 @@ const SportsMainContent: FC = () => {
                 <p className="text-gray-400 text-sm md:text-base max-w-2xl">
                     Stream EPL, UEFA Champions League, La Liga, Ligue&nbsp;1,
                     Serie&nbsp;A, AFCON, Rugby, UFC, WWE and more. Times are shown in your
-                    local timezone. Streams are provided by secure third‑party
-                    partners you configure.
+                    local timezone.
                 </p>
             </div>
 
@@ -150,9 +241,12 @@ const SportsMainContent: FC = () => {
                                         alt={channel.name}
                                         className="w-full h-full object-contain p-2 group-hover:scale-110 transition duration-300 drop-shadow-lg"
                                         onError={(e) => {
-                                            // Fallback to text if image fails
+                                            // Fallback to Icon if image fails
                                             e.currentTarget.style.display = 'none';
-                                            e.currentTarget.parentElement!.innerHTML = `<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20"><span class="text-xl font-bold">${channel.name.charAt(0)}</span></div>`;
+                                            const fallbackDiv = document.createElement('div');
+                                            fallbackDiv.className = "w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary border border-primary/20";
+                                            fallbackDiv.innerHTML = `<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M16.75 2.222a.75.75 0 0 1 .168.805l-1.396 3.14a4.99 4.99 0 0 0-2.81 1.708l-3.264-1.451a.75.75 0 0 1-.29-.117L4.972 3.655a.75.75 0 0 1 .458-1.353h11.32zM21.5 12a9.5 9.5 0 1 1-19 0 9.5 9.5 0 0 1 19 0zM12 4.25a7.75 7.75 0 1 0 0 15.5 7.75 7.75 0 0 0 0-15.5zm0 2a5.75 5.75 0 1 1 0 11.5 5.75 5.75 0 0 1 0-11.5zm0 2.5a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5z"></path></svg>`;
+                                            e.currentTarget.parentElement!.appendChild(fallbackDiv);
                                         }}
                                     />
                                 </div>
@@ -169,9 +263,14 @@ const SportsMainContent: FC = () => {
                 </div>
             </div>
 
-            {/* Upcoming Calendar */}
-            <div className="mb-8">
-                <UpcomingCalendar />
+            {/* Upcoming Calendar Row (Unified Swiper Row) */}
+            <div className="mb-12">
+                <Suspense fallback={<div className="h-40 bg-gray-800/20 rounded-xl animate-pulse" />}>
+                    <UpcomingCalendar
+                        title="Upcoming Football & Tournaments"
+                        contentType="sports"
+                    />
+                </Suspense>
             </div>
 
             <div className="flex flex-wrap gap-3 mb-6">

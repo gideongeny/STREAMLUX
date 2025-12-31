@@ -33,29 +33,69 @@ export const getTeamLogo = async (teamName: string): Promise<string | null> => {
 // Helper to map league names to our league IDs
 const getLeagueIdFromName = (leagueName: string): string => {
   const name = leagueName.toLowerCase();
-  if (name.includes("premier league") || name.includes("epl")) return "epl";
+
+  // Soccer
+  if (name.includes("premier league") || name.includes("eng.1")) return "epl";
   if (name.includes("champions league") || name.includes("ucl")) return "ucl";
-  if (name.includes("la liga")) return "laliga";
-  if (name.includes("ligue 1") || name.includes("ligue1")) return "ligue1";
-  if (name.includes("serie a") || name.includes("seriea")) return "seriea";
+  if (name.includes("la liga") || name.includes("esp.1")) return "laliga";
+  if (name.includes("ligue 1") || name.includes("fra.1")) return "ligue1";
+  if (name.includes("serie a") || name.includes("ita.1")) return "seriea";
+  if (name.includes("bundesliga") || name.includes("ger.1")) return "bundesliga";
   if (name.includes("afcon") || name.includes("africa cup")) return "afcon";
-  if (name.includes("bundesliga")) return "bundesliga";
+
+  // Basketball
+  if (name.includes("nba")) return "nba";
+
+  // American Football
+  if (name.includes("nfl")) return "nfl";
+
+  // Baseball
+  if (name.includes("mlb")) return "mlb";
+
+  // Hockey
+  if (name.includes("nhl")) return "nhl";
+
+  // Motorsport
+  if (name.includes("f1") || name.includes("formula 1")) return "f1";
+
+  // Combat Sports
+  if (name.includes("ufc") || name.includes("mma")) return "ufc";
+  if (name.includes("wwe") || name.includes("wrestling")) return "wwe";
+
+  // Tennis
+  if (name.includes("atp")) return "atp";
+  if (name.includes("wta")) return "wta";
+
+  // Others
   if (name.includes("rugby")) return "rugby-world-cup";
-  if (name.includes("ufc")) return "ufc";
-  if (name.includes("wwe")) return "wwe";
-  return "epl"; // Default
+
+  return "other"; // Default
 };
 
 // ESPN API Endpoints (Public & Reliable)
 const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports";
 const ESPN_LEAGUES = [
+  // Soccer
   { id: "eng.1", path: "soccer/eng.1", name: "Premier League" },
   { id: "esp.1", path: "soccer/esp.1", name: "La Liga" },
   { id: "ita.1", path: "soccer/ita.1", name: "Serie A" },
   { id: "fra.1", path: "soccer/fra.1", name: "Ligue 1" },
   { id: "ger.1", path: "soccer/ger.1", name: "Bundesliga" },
   { id: "uefa.champions", path: "soccer/uefa.champions", name: "Champions League" },
-  { id: "nba", path: "basketball/nba", name: "NBA" } // Bonus: NBA
+
+  // Major US Sports
+  { id: "nba", path: "basketball/nba", name: "NBA" },
+  { id: "nfl", path: "football/nfl", name: "NFL" },
+  { id: "mlb", path: "baseball/mlb", name: "MLB" },
+  { id: "nhl", path: "hockey/nhl", name: "NHL" },
+
+  // Motorsport & Combat
+  { id: "f1", path: "racing/f1", name: "Formula 1" },
+  { id: "ufc", path: "mma/ufc", name: "UFC" },
+
+  // Tennis
+  { id: "atp", path: "tennis/atp", name: "ATP Tennis" },
+  { id: "wta", path: "tennis/wta", name: "WTA Tennis" }
 ];
 
 // Helper to normalized ESPN status to our status
@@ -220,6 +260,9 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
               venue: event.strVenue || "TBD",
               round: event.strRound || undefined,
               matchId: event.idEvent?.toString(),
+              thumb: event.strThumb,
+              banner: event.strBanner,
+              fanart: event.strFanart,
             });
           } catch (e) {
             continue;

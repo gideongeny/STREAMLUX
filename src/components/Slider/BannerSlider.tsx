@@ -46,20 +46,33 @@ const BannerSlider: FC<BannerSliderProps> = ({
                 to={
                   film.media_type === "movie"
                     ? `/movie/${film.id}`
-                    : `/tv/${film.id}`
+                    : film.media_type === "tv"
+                      ? `/tv/${film.id}`
+                      : typeof film.id === 'string' && (film.id as string).includes('/')
+                        ? `/sports/${film.id}/watch`
+                        : `/sports/all/${film.id}/watch`
                 }
                 className="group block w-full h-full"
               >
-                <LazyLoadImage
+                <img
                   src={resizeImage(film.backdrop_path, "w1280")}
-                  alt="Backdrop image"
-                  effect="blur"
-                  className="w-full h-full object-cover object-center"
-                  style={{ display: 'block', width: '100%', height: '100%' }}
-                  wrapperClassName="w-full h-full block"
+                  alt={film.title || film.name}
+                  className="w-full h-full object-cover object-center transition-opacity duration-500"
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: '#1a1a1c',
+                    backgroundImage: 'linear-gradient(to bottom, #1a1a1c, #0d0d0f)'
+                  }}
+                  onLoad={(e) => {
+                    (e.target as HTMLImageElement).style.opacity = '1';
+                  }}
                   onError={(e) => {
-                    // Fallback if image fails to load
-                    (e.target as HTMLImageElement).style.backgroundColor = '#1C1C1E';
+                    // Fallback to a nice gradient if image fails
+                    const el = e.target as HTMLImageElement;
+                    el.style.backgroundImage = 'linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%)';
+                    el.style.opacity = '0.5';
                   }}
                 />
 
@@ -125,8 +138,9 @@ const BannerSlider: FC<BannerSliderProps> = ({
           It's important to note that this div has pointer event set to "auto" instead of "none" for this logic to work*/}
           <div className="absolute top-0 left-0 w-[8%] h-[11%] z-10"></div>
         </Swiper>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 
