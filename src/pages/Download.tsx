@@ -1,10 +1,10 @@
 import { FC, useState } from "react";
 import { Link } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
-import { 
-  FaDownload, 
-  FaAndroid, 
-  FaCheckCircle, 
+import {
+  FaDownload,
+  FaAndroid,
+  FaCheckCircle,
   FaShieldAlt,
   FaMobileAlt,
   FaFilm,
@@ -12,9 +12,9 @@ import {
   FaSearch,
   FaBookmark
 } from "react-icons/fa";
-import { 
-  MdSecurity, 
-  MdSpeed, 
+import {
+  MdSecurity,
+  MdSpeed,
   MdHighQuality,
   MdCloudDownload
 } from "react-icons/md";
@@ -57,7 +57,7 @@ const Download: FC = () => {
             onCloseSidebar={() => setIsSidebarActive(false)}
           />
         )}
-        {!isMobile && <Sidebar isSidebarActive={true} onCloseSidebar={() => {}} />}
+        {!isMobile && <Sidebar isSidebarActive={true} onCloseSidebar={() => { }} />}
 
         <div className="flex-1 min-h-screen bg-dark md:pt-7 pt-0 pb-7">
           <div className="container mx-auto px-4 py-8 md:pl-8">
@@ -80,7 +80,7 @@ const Download: FC = () => {
                   <h2 className="text-3xl font-bold text-white mb-2">
                     StreamLux Android App
                   </h2>
-                  <p className="text-gray-400 mb-4">Version 1.0.0</p>
+                  <p className="text-gray-400 mb-4">Version 1.1.0</p>
                   <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                     <FaCheckCircle className="text-green-500" />
                     <span>Latest Version</span>
@@ -88,21 +88,17 @@ const Download: FC = () => {
                 </div>
 
                 <a
-                  href="https://github.com/gideongeny/STREAMLUX/releases/tag/V1.00"
+                  href="https://github.com/gideongeny/STREAMLUX/releases/download/v1.1.0/streamlux.apk"
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleDownload();
-                  }}
                   className="bg-gradient-to-r from-primary to-orange-600 hover:from-primary/90 hover:to-orange-600/90 text-white font-bold py-4 px-8 rounded-xl text-lg md:text-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-primary/50 flex items-center gap-3 mx-auto cursor-pointer inline-block"
                 >
                   <FaDownload className="text-2xl" />
-                  <span>Download APK</span>
+                  <span>Download APK (v1.1.0)</span>
                 </a>
 
                 <p className="text-gray-400 text-sm mt-4">
-                  Click to download from GitHub Releases
+                  Download from GitHub Releases
                 </p>
 
                 <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400">

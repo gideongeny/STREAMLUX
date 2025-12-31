@@ -104,6 +104,20 @@ function App() {
     }
   }, [dispatch, currentProfile]);
 
+  // Priority Data Prefetching (Parallel with Auth)
+  useEffect(() => {
+    const activeTab = localStorage.getItem("currentTab")?.replace(/"/g, '') || "movie";
+    const endpoint = activeTab === "tv" ? "/trending/tv/day" : "/trending/movie/day";
+
+    // Import prefetchData dynamically or ensure it's available
+    import("./shared/axios").then(({ prefetchData }) => {
+      prefetchData(endpoint);
+      // Pre-fetch the first page of popular too
+      const popularEndpoint = activeTab === "tv" ? "/tv/popular" : "/movie/popular";
+      prefetchData(popularEndpoint);
+    });
+  }, []);
+
   // Sync to localStorage when isSignedIn changes
   useEffect(() => {
     try {
@@ -318,7 +332,7 @@ function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowTimeoutMessage(true);
-    }, 12000); // 12 seconds threshold
+    }, 30000); // 30 seconds threshold
 
     return () => clearTimeout(timer);
   }, []);
@@ -351,15 +365,21 @@ function App() {
               <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 text-center">
                 <div className="bg-gray-900/90 p-8 rounded-3xl border border-white/10 max-w-sm shadow-2xl animate-fade-in">
                   <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-                  <h3 className="text-xl font-bold text-white mb-2">Still loading?</h3>
+                  <h3 className="text-xl font-bold text-white mb-2">Connection slow?</h3>
                   <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                    StreamLux is taking longer than usual to boot. This might be a temporary network issue.
+                    StreamLux is taking a while to load. This seems to be a network issue.
                   </p>
                   <button
                     onClick={() => window.location.reload()}
                     className="w-full bg-primary text-black font-black py-3 rounded-full hover:brightness-110 active:scale-95 transition-all text-sm mb-4"
                   >
-                    RETRY BOOT
+                    RELOAD PAGE
+                  </button>
+                  <button
+                    onClick={() => setShowTimeoutMessage(false)}
+                    className="w-full bg-gray-800 text-white font-bold py-3 rounded-full hover:bg-gray-700 active:scale-95 transition-all text-sm"
+                  >
+                    KEEP WAITING
                   </button>
                   <p className="text-[10px] text-gray-500 uppercase tracking-widest pt-4 border-t border-white/5">
                     StreamLux Engine v6.1

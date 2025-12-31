@@ -60,12 +60,12 @@ Official website: [https://streamlux.vercel.app/](https://streamlux.vercel.app/)
   - And many more curated sections.
 - **Direct Download Feature**: Download movies and TV shows directly to your device with a single click, similar to MovieBox.ph.
 - **Android App & Web Sync**: Unified experience across web and Android with seamless Capacitor synchronization.
-- **Latest Updates (v2.5)**:
-  - **Integrated Sports & Channels**: Removed external redirects in the sports section; added a row of 9+ live sports broadcasters.
-  - **TV Release Grid**: Added a weekly calendar view for TV enthusiasts.
-  - **User Feedback Loop**: Implemented the "Request Content" system linked to Firebase.
-  - **UI/UX Polished**: Finalized MovieBox-inspired design elements across the dashboard.
-  - **Stability & Performance**: Fixed critical build issues (date-fns, type safety) and optimized the main app container.
+- **Latest Updates (v2.6) - New Year Edition**:
+  - **African Hits Repaired**: Fixed broken links and 404s in "Nollywood & African Hits" by switching to reliable TMDB data sources.
+  - **Sports Caching**: Implemented a 5-minute local cache for the Sports page to reduce API usage and speed up navigation.
+  - **APK Update (v1.1.0)**: Updated Android APK download to the latest version, hosted directly on the server for faster access.
+  - **Content Separation**: Fixed "African Hits" displaying TV shows in the Movies tab and vice versa.
+  - **UI/UX Polish**: Removed confusing sources labels (e.g., "MovieBox Source") for a cleaner look.
 
 ## 📱 Android App
 

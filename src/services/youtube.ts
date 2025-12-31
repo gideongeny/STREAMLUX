@@ -21,6 +21,7 @@ export interface YouTubeVideo {
 
 const API_KEYS = [
   process.env.REACT_APP_YOUTUBE_API_KEY,
+  "AIzaSyDiVIkSR8xWqbAvMWVPLX6DHY6ak0Rv45o", // User provided key
   "AIzaSyDbTHAbBxPWdvKWjbWG_xcd8-09t3w-CCI",
   "AIzaSyD-a127DhdfAMABKkKwMOxfBZSG18RjAUU",
   "AIzaSyDa8q95gdMLye6qr3s2u8Kj-0AOnyZFlKM",
@@ -100,8 +101,13 @@ export async function fetchVideosDetail(ids: string[]): Promise<any[]> {
       },
     });
     return response.data.items;
-  } catch (error) {
-    console.error("Error fetching video details:", error);
+  } catch (error: any) {
+    const isQuotaError = error.response?.status === 403 || error.response?.status === 429;
+    if (isQuotaError) {
+      console.warn("YouTube API quota exhausted. Returning empty video details.");
+    } else {
+      console.error("Error fetching video details:", error);
+    }
     return [];
   }
 }
@@ -135,7 +141,8 @@ const isLowQuality = (title: string) => {
 export async function fetchYouTubeVideos(
   query: string,
   pageToken?: string,
-  type: "movie" | "tv" | "multi" | "all" = "movie"
+  type: "movie" | "tv" | "multi" | "all" = "movie",
+  retryCount = 0
 ): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string; error?: string }> {
   // Combine keywords for a single efficient search call to save quota
   // Heuristic: Search for both "Movie" and "Official" in one go
@@ -156,10 +163,12 @@ export async function fetchYouTubeVideos(
   const optimizedQuery = `${query}${suffix}`;
   const cacheKey = `search_${optimizedQuery}_${pageToken || 'p0'}`;
 
-  // Check Cache First
-  const cachedData = CacheService.get<{ videos: YouTubeVideo[]; nextPageToken?: string }>(cacheKey);
-  if (cachedData) {
-    return cachedData;
+  // Check Cache First (only on first try)
+  if (retryCount === 0) {
+    const cachedData = CacheService.get<{ videos: YouTubeVideo[]; nextPageToken?: string }>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
   }
 
   try {
@@ -211,20 +220,26 @@ export async function fetchYouTubeVideos(
     return result;
   } catch (error: any) {
     const errorMsg = error.response?.data?.error?.message || error.message;
-    const isQuotaError = errorMsg?.toLowerCase().includes("quota") || error.response?.status === 403;
+    const isQuotaError = errorMsg?.toLowerCase().includes("quota") ||
+      errorMsg?.toLowerCase().includes("unavailable") ||
+      error.response?.status === 403 ||
+      error.response?.status === 429;
 
     if (isQuotaError) {
-      console.warn(`Quota exhausted for key index ${currentKeyIndex}. Rotating...`);
-      rotateApiKey();
-      // Retry once with the new key - avoid infinite recursion
-      // We pass a flag or check if we've tried all keys? 
-      // For now, let's just try one more time if we haven't exhausted all.
-      return fetchYouTubeVideos(query, pageToken, type);
+      if (retryCount < API_KEYS.length) {
+        console.warn(`YouTube API quota exhausted for key index ${currentKeyIndex}. Rotating and retrying (${retryCount + 1}/${API_KEYS.length})...`);
+        rotateApiKey();
+        return fetchYouTubeVideos(query, pageToken, type, retryCount + 1);
+      } else {
+        console.warn(`All YouTube keys exhausted. Returning empty results.`);
+        return { videos: [], nextPageToken: undefined, error: "QUOTA_EXCEEDED" };
+      }
     }
 
     console.error("YouTube API Error:", errorMsg);
 
-    return { videos: [], nextPageToken: undefined, error: isQuotaError ? "QUOTA_EXCEEDED" : errorMsg };
+    // Return empty results gracefully instead of throwing
+    return { videos: [], nextPageToken: undefined, error: errorMsg };
   }
 }
 
@@ -287,8 +302,13 @@ export async function getRelatedVideos(videoId: string): Promise<YouTubeVideo[]>
       type: classifyVideo(item.snippet.title, item.snippet.description),
       duration: parseDuration(item.contentDetails.duration),
     }));
-  } catch (error) {
-    console.error("Error fetching related videos:", error);
+  } catch (error: any) {
+    const isQuotaError = error.response?.status === 403 || error.response?.status === 429;
+    if (isQuotaError) {
+      console.warn("YouTube API quota exhausted. Returning empty related videos.");
+    } else {
+      console.error("Error fetching related videos:", error);
+    }
     return [];
   }
 }
@@ -348,8 +368,13 @@ export async function getYouTubeSeriesEpisodes(title: string, channelId?: string
         type: classifyVideo(item.snippet.title, item.snippet.description),
         duration: parseDuration(item.contentDetails.duration),
       }));
-  } catch (error) {
-    console.error("Error fetching series episodes:", error);
+  } catch (error: any) {
+    const isQuotaError = error.response?.status === 403 || error.response?.status === 429;
+    if (isQuotaError) {
+      console.warn("YouTube API quota exhausted. Returning empty episodes.");
+    } else {
+      console.error("Error fetching series episodes:", error);
+    }
     return [];
   }
 }
@@ -394,8 +419,13 @@ export async function getYouTubeComments(videoId: string): Promise<any[]> {
         rating: null
       }
     }));
-  } catch (error) {
-    console.error("Error fetching YouTube comments:", error);
+  } catch (error: any) {
+    const isQuotaError = error.response?.status === 403 || error.response?.status === 429;
+    if (isQuotaError) {
+      console.warn("YouTube API quota exhausted. Returning empty comments.");
+    } else {
+      console.error("Error fetching YouTube comments:", error);
+    }
     return [];
   }
 }

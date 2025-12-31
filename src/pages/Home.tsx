@@ -1,7 +1,7 @@
 import { FC, useState, useEffect, useMemo, lazy, Suspense, useCallback } from "react";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
 import MainHomeFilm from "../components/Home/MainHomeFilm";
@@ -34,6 +34,7 @@ const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
   const currentProfile = useAppSelector((state) => state.auth.currentProfile);
   const { watchHistory, clearProgress } = useWatchProgress();
+  const navigate = useNavigate();
 
   // Kid Mode Filter Logic
   const filterContent = useCallback((items: any[]) => {
@@ -83,12 +84,20 @@ const Home: FC = () => {
   useEffect(() => {
     try {
       localStorage.setItem("currentTab", JSON.stringify(currentTab));
+      // Auto-redirect if sports is selected (consistency fix)
+      if (currentTab === "sports") {
+        navigate("/sports");
+      }
     } catch (error) {
       console.warn("Error saving currentTab to localStorage:", error);
     }
-  }, [currentTab]);
+  }, [currentTab, navigate]);
 
   const handleTabChange = (tab: "movie" | "tv" | "sports") => {
+    if (tab === "sports") {
+      navigate("/sports");
+      return;
+    }
     setCurrentTab(tab);
   };
 
@@ -106,22 +115,22 @@ const Home: FC = () => {
     isError: isErrorMovie,
     detailQuery: detailQueryMovie,
     bannerData: bannerDataMovie,
-  } = useHomeData("movies");
+  } = useHomeData("movies", currentTab === "movie");
   const {
     data: dataTV,
     isLoading: isLoadingTV,
     isError: isErrorTV,
     detailQuery: detailQueryTV,
     bannerData: bannerDataTV,
-  } = useHomeData("tvs");
+  } = useHomeData("tvs", currentTab === "tv");
 
   // Apply filters to grouped data - use useMemo to prevent unnecessary recalculations
   const filteredDataMovie = useMemo(() => {
     if (!dataMovie) return undefined;
-    const filtered = Object.keys(dataMovie).reduce((acc, key) => {
-      acc[key] = filterContent(dataMovie[key]);
-      return acc;
-    }, {} as any);
+    const filtered: any = {};
+    Object.entries(dataMovie).forEach(([key, value]) => {
+      filtered[key] = filterContent(value);
+    });
     // If all sections are empty after filtering, return original data to prevent empty state
     const hasAnyData = Object.values(filtered).some(section => Array.isArray(section) && section.length > 0);
     return hasAnyData ? filtered : dataMovie;
@@ -129,10 +138,10 @@ const Home: FC = () => {
 
   const filteredDataTV = useMemo(() => {
     if (!dataTV) return undefined;
-    const filtered = Object.keys(dataTV).reduce((acc, key) => {
-      acc[key] = filterContent(dataTV[key]);
-      return acc;
-    }, {} as any);
+    const filtered: any = {};
+    Object.entries(dataTV).forEach(([key, value]) => {
+      filtered[key] = filterContent(value);
+    });
     // If all sections are empty after filtering, return original data to prevent empty state
     const hasAnyData = Object.values(filtered).some(section => Array.isArray(section) && section.length > 0);
     return hasAnyData ? filtered : dataTV;

@@ -1,4 +1,5 @@
 import { FC, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Navigation } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useYouTubeVideos } from "../../hooks/useYouTube";
@@ -24,13 +25,15 @@ interface HybridSectionSliderProps {
     region?: string;
     category?: string;
     type?: "movie" | "tv";
+    linkPath?: string;
 }
 
 const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
     title,
     region,
     category,
-    type = "movie"
+    type = "movie",
+    linkPath
 }: HybridSectionSliderProps) => {
     // 1. Parallelize fetches
     const {
@@ -99,6 +102,14 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
                 <h3 className="text-xl font-bold text-white mb-2">
                     {title}
                 </h3>
+                {linkPath && (
+                    <Link
+                        to={linkPath}
+                        className="text-primary hover:text-primary/80 text-sm font-medium transition duration-300 mb-2"
+                    >
+                        See More →
+                    </Link>
+                )}
             </div>
 
             {/* Slider */}

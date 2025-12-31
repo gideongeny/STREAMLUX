@@ -15,6 +15,7 @@ import { useAppSelector } from "../../store/hooks";
 import { useTranslation } from "react-i18next";
 import RequestModal from "./RequestModal";
 import { AiOutlineQuestionCircle, AiOutlineCalendar } from "react-icons/ai";
+import LanguageSelector from "./LanguageSelector";
 
 interface SidebarProps {
   isSidebarActive: boolean;
@@ -88,8 +89,9 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
       <div
         className={`shrink-0 md:max-w-[260px] w-[70vw] pl-4 md:pl-8 top-0 pt-6 md:pt-10  
         md:sticky md:translate-x-0 md:bg-transparent md:shadow-none md:self-start md:max-h-screen md:overflow-y-auto
-      -translate-x-full fixed h-screen shadow-md transition duration-300 bg-dark-lighten/95 backdrop-blur-xl border-r border-white/5 z-50 ${isSidebarActive && "translate-x-0"
+      -translate-x-full fixed h-[100dvh] overflow-y-auto pb-32 shadow-md transition duration-300 bg-dark-lighten/95 backdrop-blur-xl border-r border-white/5 z-50 scroll-smooth ${isSidebarActive && "translate-x-0"
           }`}
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {!isMobile && (
           <Link to="/" className="flex items-center gap-3">
@@ -105,8 +107,12 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           </Link>
         )}
 
+        <div className="mt-4 mb-2 md:mt-6 md:mb-4">
+          <LanguageSelector />
+        </div>
+
         <div
-          className={`text-white text-lg font-medium ${isSidebarActive ? "-mt-2 md:-mt-6" : "mt-8 md:mt-12"
+          className={`text-white text-lg font-medium ${isSidebarActive ? "-mt-2 md:-mt-6" : "mt-4 md:mt-8"
             }`}
         >
           {t('MENU')}

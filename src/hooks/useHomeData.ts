@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import axios from "../shared/axios";
 import {
-  getHomeMovies,
-  getHomeTVs,
   getMovieBannerInfo,
   getTVBannerInfo,
   getTrendingMovies,
@@ -9,8 +9,7 @@ import {
 } from "../services/home";
 import { BannerInfo, HomeFilms, Item } from "../shared/types";
 
-export const useHomeData = (type: "movies" | "tvs") => {
-  const getData = type === "movies" ? getHomeMovies : getHomeTVs;
+export const useHomeData = (type: "movies" | "tvs", enabled: boolean = true) => {
   const getTrending = type === "movies" ? getTrendingMovies : getTrendingTVs;
 
   // 1. Fetch Banner/Trending first (High Priority)
@@ -20,15 +19,42 @@ export const useHomeData = (type: "movies" | "tvs") => {
     { staleTime: 1000 * 60 * 10 } // Cache for 10 mins
   );
 
-  // 2. Fetch Secondary Sections (Lower Priority)
-  const { data, isLoading, isError, error } = useQuery<HomeFilms, Error>(
-    [`home-${type}`],
-    getData,
-    {
-      staleTime: 1000 * 60 * 5,
-      enabled: !!bannerQuery.data // Optional: Start sections after banner starts
-    }
-  );
+  const popularQuery = useQuery([`home-${type}-popular`], async () => {
+    const res = await axios.get(type === "movies" ? "/movie/popular" : "/tv/popular");
+    return res.data.results || [];
+  }, { staleTime: 1000 * 60 * 10, enabled: enabled && !!bannerQuery.data });
+
+  const topRatedQuery = useQuery([`home-${type}-toprated`], async () => {
+    const res = await axios.get(type === "movies" ? "/movie/top_rated" : "/tv/top_rated");
+    return res.data.results || [];
+  }, { staleTime: 1000 * 60 * 10, enabled: enabled && !!bannerQuery.data });
+
+  const hotQuery = useQuery([`home-${type}-hot`], async () => {
+    const res = await axios.get(type === "movies" ? "/trending/movie/day?page=2" : "/trending/tv/day?page=2");
+    return res.data.results || [];
+  }, { staleTime: 1000 * 60 * 10, enabled: enabled && !!bannerQuery.data });
+
+  const upcomingQuery = useQuery([`home-${type}-upcoming`], async () => {
+    const res = await axios.get(type === "movies" ? "/movie/upcoming" : "/tv/on_the_air");
+    return res.data.results || [];
+  }, { staleTime: 1000 * 60 * 10, enabled: enabled && !!bannerQuery.data });
+
+  // Combine data for backward compatibility
+  const data = useMemo(() => {
+    if (!bannerQuery.data) return undefined;
+    const combined: HomeFilms = {
+      Trending: bannerQuery.data,
+      Popular: popularQuery.data || [],
+      "Top Rated": topRatedQuery.data || [],
+      Hot: hotQuery.data || [],
+      Upcoming: upcomingQuery.data || [],
+    };
+    return combined;
+  }, [bannerQuery.data, popularQuery.data, topRatedQuery.data, hotQuery.data, upcomingQuery.data]);
+
+  const isLoading = bannerQuery.isLoading;
+  const isError = bannerQuery.isError;
+  const error = bannerQuery.error;
 
   // 3. Fetch Banner Details (Genre/Translation)
   const detailQuery = useQuery<BannerInfo[], Error>(
@@ -43,5 +69,16 @@ export const useHomeData = (type: "movies" | "tvs") => {
     }
   );
 
-  return { data, isLoading, isError, error, detailQuery, bannerData: bannerQuery.data };
+  return {
+    data,
+    isLoading,
+    isError,
+    error,
+    detailQuery,
+    bannerData: bannerQuery.data,
+    popularQuery,
+    topRatedQuery,
+    hotQuery,
+    upcomingQuery
+  };
 };

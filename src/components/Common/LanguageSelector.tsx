@@ -38,7 +38,7 @@ const LanguageSelector: FC<LanguageSelectorProps> = ({ className = "" }) => {
             </button>
 
             {/* Dropdown (Hover) */}
-            <div className="absolute bottom-full left-0 mb-2 w-48 bg-dark-lighten rounded-xl shadow-xl p-1 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all transform origin-bottom-left z-50 border border-gray-700">
+            <div className="absolute top-full left-0 mt-2 w-48 bg-dark-lighten rounded-xl shadow-xl p-1 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all transform origin-top-left z-50 border border-gray-700">
                 {LANGUAGES.map((lang) => (
                     <button
                         key={lang.code}

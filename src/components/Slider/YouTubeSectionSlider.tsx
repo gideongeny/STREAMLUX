@@ -1,4 +1,5 @@
 import { FC, useState } from "react";
+import { Link } from "react-router-dom";
 import { Navigation } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useYouTubeVideos } from "../../hooks/useYouTube";
@@ -11,14 +12,16 @@ interface YouTubeSectionSliderProps {
     region?: string;
     category?: string;
     type?: "movie" | "tv";
+    linkPath?: string;
 }
 
 const YouTubeSectionSlider: FC<YouTubeSectionSliderProps> = ({
     title,
     region,
     category,
-    type = "movie"
-}) => {
+    type = "movie",
+    linkPath
+}: YouTubeSectionSliderProps) => {
     const { videos, loading, error } = useYouTubeVideos({ region, category, type });
 
     if (error && !loading) return null; // Hide if error and no data
@@ -31,6 +34,14 @@ const YouTubeSectionSlider: FC<YouTubeSectionSliderProps> = ({
                     {title}
                     <span className="bg-red-600 text-[10px] px-2 py-0.5 rounded text-white font-bold uppercase tracking-wider">Free on YouTube</span>
                 </h3>
+                {linkPath && (
+                    <Link
+                        to={linkPath}
+                        className="text-primary hover:text-primary/80 text-sm font-medium transition duration-300 mb-2"
+                    >
+                        See More →
+                    </Link>
+                )}
             </div>
 
             {/* Slider */}

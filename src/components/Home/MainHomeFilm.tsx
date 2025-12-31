@@ -52,7 +52,7 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
       </div>
 
       <ul className="flex flex-col gap-10 mt-12">
-        {isLoadingSection ? (
+        {(isLoadingSection && (!data || Object.keys(data).every(k => data[k].length === 0))) ? (
           <>
             {new Array(2).fill("").map((_, index) => (
               <li key={index}>

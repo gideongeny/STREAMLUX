@@ -38,10 +38,10 @@ const QualitySelector: FC<QualitySelectorProps> = ({
         <div className={`relative ${className}`}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-dark-lighten rounded-lg hover:bg-dark-lighten/80 transition-colors text-sm font-bold"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-lg hover:bg-primary/80 transition-colors text-sm font-bold border border-white/10"
                 title="Video Quality"
             >
-                <MdHighQuality className="text-lg text-primary" />
+                <MdHighQuality className="text-lg text-primary group-hover:text-white" />
                 <span>{selectedQuality}</span>
             </button>
 

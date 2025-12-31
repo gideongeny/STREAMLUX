@@ -32,6 +32,8 @@ import SeasonSelection from "./SeasonSelection";
 import DownloadOptions from "../Common/DownloadOptions";
 import PlayerControls from "./PlayerControls";
 import QualitySelector from "./QualitySelector";
+import SubtitleSelector from "./SubtitleSelector";
+import { Subtitle } from "../../services/subtitles";
 
 interface FilmWatchProps {
   media_type: "movie" | "tv";
@@ -60,6 +62,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const [isResolving, setIsResolving] = useState(true);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false); // Keep closed initially to avoid clutter, will add effect to open if empty
   const [isManualSelection, setIsManualSelection] = useState(false);
+  const [currentSubtitle, setCurrentSubtitle] = useState<Subtitle | null>(null);
 
   // Fetch resolved sources
   useEffect(() => {
@@ -135,6 +138,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     setVideoError(false);
     setIsLoadingVideo(true);
     setIsManualSelection(false);
+    setCurrentSubtitle(null); // Reset subtitles on change
   }, [detail?.id, seasonId, episodeId]);
 
   // Generate download info when detail changes
@@ -340,6 +344,15 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end origin-top-right">
 
                   <div className="flex gap-2 items-center">
+                    <SubtitleSelector
+                      mediaType={media_type}
+                      id={detail.id}
+                      imdbId={media_type === "movie" ? (detail as DetailMovie).imdb_id : undefined}
+                      season={seasonId}
+                      episode={episodeId}
+                      currentSubtitle={currentSubtitle}
+                      onSelect={setCurrentSubtitle}
+                    />
                     <QualitySelector
                       currentQuality={preferredQuality}
                       onQualityChange={handleQualityChange}
@@ -367,7 +380,8 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                       }}
                       className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs font-bold text-white hover:bg-primary/80 transition flex items-center gap-2"
                     >
-                      <span>SERVER: {resolvedSources[currentSourceIndex]?.name || 'Loading...'}</span>
+                      <span className="hidden sm:inline text-[10px] opacity-70">SERVER:</span>
+                      <span>{resolvedSources[currentSourceIndex]?.name || 'Loading...'}</span>
                       <span className={`transition-transform duration-300 ${isSelectorOpen ? 'rotate-180' : ''}`}>▼</span>
                     </button>
                   </div>

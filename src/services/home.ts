@@ -42,113 +42,8 @@ export const getTop10TVs = async (): Promise<Item[]> => {
   }));
 };
 
-export const getHomeMovies = async (): Promise<HomeFilms> => {
-  const endpoints: { [key: string]: string } = {
-    Trending: "/trending/movie/day", // Keep for compatibility but prioritize TMDB
-    Popular: "/movie/popular",
-    "Top Rated": "/movie/top_rated",
-    Hot: "/trending/movie/day?page=2",
-    Upcoming: "/movie/upcoming",
-  };
 
-  // Priority 1: Fetch TMDB first (fast and reliable)
-  const tmdbResponses = await Promise.allSettled(
-    Object.entries(endpoints).map(async (endpoint) => {
-      try {
-        // Use Promise.race to add a 4s timeout to individual TMDB requests
-        const response = await Promise.race([
-          axios.get(endpoint[1]),
-          new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4000))
-        ]) as any;
-
-        if (!response?.data?.results || !Array.isArray(response.data.results)) {
-          return { data: { results: [] } };
-        }
-        return response;
-      } catch (e: any) {
-        console.error(`Error fetching TMDB ${endpoint[0]}:`, e);
-        return { data: { results: [] } };
-      }
-    })
-  ).then(results => results.map(result =>
-    result.status === 'fulfilled' ? result.value : { data: { results: [] } }
-  ));
-
-  // Priority 2: Load additional sources in background (with timeout to prevent blocking)
-  const additionalSourcesPromise = Promise.allSettled([
-    getFZTrending("movie"),
-    getFZPopular("movie", 1),
-    getFZTopRated("movie", 1),
-    getFZLatest("movie", 1),
-  ]).then((results) => ({
-    fzTrending: results[0].status === "fulfilled" ? results[0].value : [],
-    fzPopular: results[1].status === "fulfilled" ? results[1].value : [],
-    fzTopRated: results[2].status === "fulfilled" ? results[2].value : [],
-    fzLatest: results[3].status === "fulfilled" ? results[3].value : [],
-  }));
-
-  // Start loading additional sources but don't wait for them initially
-  const additionalSources = await Promise.race([
-    additionalSourcesPromise,
-    new Promise((resolve) => setTimeout(() => resolve({
-      fzTrending: [],
-      fzPopular: [],
-      fzTopRated: [],
-      fzLatest: [],
-    }), 1500)), // 1.5 second timeout for faster loading
-  ]) as { fzTrending: Item[], fzPopular: Item[], fzTopRated: Item[], fzLatest: Item[] };
-
-  // Load other sources in background (non-blocking) - these will be available later if needed
-  // Now includes Letterboxd, Rotten Tomatoes, and enhanced TMDB via getAllAPIContent
-  Promise.allSettled([
-    getAllSourceContent("movie", 1),
-    getAllAPIContent("movie", "popular"), // Includes IMDB -> Letterboxd -> Rotten Tomatoes -> TMDB fallback
-  ]).catch(() => { }); // Silently fail for background loading
-
-  // Helper function to merge and deduplicate items from all sources
-  const mergeAndDedupe = (tmdbItems: Item[], fzItems: Item[], otherItems: Item[] = []): Item[] => {
-    const combined = [...tmdbItems, ...fzItems, ...otherItems];
-    const seen = new Set<number>();
-    return combined.filter((item) => {
-      if (seen.has(item.id)) return false;
-      seen.add(item.id);
-      return item.poster_path; // Only include items with posters
-    });
-  };
-
-  const data = tmdbResponses.reduce((final, current, index) => {
-    const key = Object.entries(endpoints)[index][0];
-    const tmdbItems = (current.data?.results || []).map((item: Item) => ({
-      ...item,
-      media_type: "movie" as const,
-    }));
-
-    // Merge with FZMovies content based on category
-    let fzItems: Item[] = [];
-    if (key === "Trending" || key === "Hot") {
-      fzItems = additionalSources.fzTrending;
-    } else if (key === "Popular") {
-      fzItems = additionalSources.fzPopular;
-    } else if (key === "Top Rated") {
-      fzItems = additionalSources.fzTopRated;
-    } else if (key === "Upcoming") {
-      fzItems = additionalSources.fzLatest;
-    }
-
-    // Use only TMDB + FZMovies for initial fast load
-    final[key] = mergeAndDedupe(tmdbItems, fzItems, []);
-
-    return final;
-  }, {} as HomeFilms);
-
-  // Validate that we have at least some data - if all sections are empty, throw an error
-  const hasData = Object.values(data).some(section => Array.isArray(section) && section.length > 0);
-  if (!hasData) {
-    throw new Error("Failed to fetch movie data from all sources. Please check your internet connection and try again.");
-  }
-
-  return data;
-};
+// getHomeMovies is deprecated. Use useHomeData granularly.
 
 export const getMovieBannerInfo = async (
   movies: Item[]
@@ -219,118 +114,7 @@ export const getTrendingTVs = async (): Promise<Item[]> => {
 // TV TAB
 ///////////////////////////////////////////////////////////////
 
-export const getHomeTVs = async (): Promise<HomeFilms> => {
-  const endpoints: { [key: string]: string } = {
-    Trending: "/trending/tv/day",
-    Popular: "/tv/popular",
-    "Top Rated": "/tv/top_rated",
-    Hot: "/trending/tv/day?page=2",
-    "On the air": "/tv/on_the_air",
-  };
-
-  // Priority 1: Fetch TMDB first (fast and reliable)
-  const tmdbResponses = await Promise.allSettled(
-    Object.entries(endpoints).map(async (endpoint) => {
-      try {
-        // Use Promise.race to add a 4s timeout to individual TMDB requests
-        const response = await Promise.race([
-          axios.get(endpoint[1]),
-          new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 4000))
-        ]) as any;
-
-        if (!response?.data?.results || !Array.isArray(response.data.results)) {
-          return { data: { results: [] } };
-        }
-        return response;
-      } catch (e: any) {
-        console.error(`Error fetching TMDB TV ${endpoint[0]}:`, e);
-        return { data: { results: [] } };
-      }
-    })
-  ).then(results => results.map(result =>
-    result.status === 'fulfilled' ? result.value : { data: { results: [] } }
-  ));
-
-  // Priority 2: Load additional sources in background (with timeout to prevent blocking)
-  const additionalSourcesPromise = Promise.allSettled([
-    getFZTrending("tv"),
-    getFZPopular("tv", 1),
-    getFZTopRated("tv", 1),
-    getFZLatest("tv", 1),
-  ]).then((results) => ({
-    fzTrending: results[0].status === "fulfilled" ? results[0].value : [],
-    fzPopular: results[1].status === "fulfilled" ? results[1].value : [],
-    fzTopRated: results[2].status === "fulfilled" ? results[2].value : [],
-    fzLatest: results[3].status === "fulfilled" ? results[3].value : [],
-  }));
-
-  // Start loading additional sources but don't wait for them initially
-  const additionalSources = await Promise.race([
-    additionalSourcesPromise,
-    new Promise((resolve) => setTimeout(() => resolve({
-      fzTrending: [],
-      fzPopular: [],
-      fzTopRated: [],
-      fzLatest: [],
-    }), 1500)), // 1.5 second timeout for faster loading
-  ]) as { fzTrending: Item[], fzPopular: Item[], fzTopRated: Item[], fzLatest: Item[] };
-
-  // Load other sources in background (non-blocking) - these will be available later if needed
-  // Now includes Letterboxd, Rotten Tomatoes, and enhanced TMDB via getAllAPIContent
-  Promise.allSettled([
-    getAllSourceContent("tv", 1),
-    getAllAPIContent("tv", "popular"), // Includes IMDB -> Letterboxd -> Rotten Tomatoes -> TMDB fallback
-  ]).catch(() => { }); // Silently fail for background loading
-
-  // Helper function to merge and deduplicate items from all sources
-  const mergeAndDedupe = (tmdbItems: Item[], fzItems: Item[], otherItems: Item[] = []): Item[] => {
-    // CRITICAL: Filter out any movies that might have slipped in
-    const tvOnlyFz = fzItems.filter(item => !item.media_type || item.media_type === "tv");
-    const tvOnlyOthers = otherItems.filter(item => !item.media_type || item.media_type === "tv");
-
-    const combined = [...tmdbItems, ...tvOnlyFz, ...tvOnlyOthers];
-    const seen = new Set<number>();
-    return combined.filter((item) => {
-      if (seen.has(item.id)) return false;
-      seen.add(item.id);
-      // Double check: Only include items with posters AND TV media type
-      return item.poster_path && (!item.media_type || item.media_type === "tv");
-    });
-  };
-
-  const data = tmdbResponses.reduce((final, current, index) => {
-    const key = Object.entries(endpoints)[index][0];
-    const tmdbItems = (current.data?.results || []).map((item: Item) => ({
-      ...item,
-      media_type: "tv" as const,
-    }));
-
-    // Merge with FZMovies content based on category
-    let fzItems: Item[] = [];
-    if (key === "Trending" || key === "Hot") {
-      fzItems = additionalSources.fzTrending;
-    } else if (key === "Popular") {
-      fzItems = additionalSources.fzPopular;
-    } else if (key === "Top Rated") {
-      fzItems = additionalSources.fzTopRated;
-    } else if (key === "On the air") {
-      fzItems = additionalSources.fzLatest;
-    }
-
-    // Use only TMDB + FZMovies for initial fast load
-    final[key] = mergeAndDedupe(tmdbItems, fzItems, []);
-
-    return final;
-  }, {} as HomeFilms);
-
-  // Validate that we have at least some data - if all sections are empty, throw an error
-  const hasData = Object.values(data).some(section => Array.isArray(section) && section.length > 0);
-  if (!hasData) {
-    throw new Error("Failed to fetch TV data from all sources. Please check your internet connection and try again.");
-  }
-
-  return data;
-};
+// getHomeTVs is deprecated. Use useHomeData granularly.
 
 export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
   const detailRes = await Promise.all(
@@ -451,34 +235,30 @@ export const getVideo = async (
 };
 
 export const getTrendingNow = async (): Promise<Item[]> => {
-  // Optimized: Only use TMDB for fast loading, load others in background
   try {
-    const tmdbResults = await Promise.race([
-      axios.get("/trending/all/day?page=2"),
-      new Promise((resolve) => setTimeout(() => resolve({ data: { results: [] } }), 3000)),
-    ]) as { data: { results: Item[] } };
+    // Fetch page 1 for best content. Using a short timeout to prevent hanging.
+    const response = await axios.get("/trending/all/day?page=1", { timeout: 8000 });
 
-    const tmdbItems = tmdbResults.data.results || [];
+    // Validate and filter results
+    const results = (response.data?.results || []).filter((item: Item) =>
+      item && item.poster_path && item.backdrop_path // Ensure images exist
+    );
 
-    // Load additional sources in background (non-blocking)
-    Promise.allSettled([
-      getFZTrending("all").catch(() => []),
-    ]).then((results) => {
-      // Background update - doesn't block initial render
-      if (results[0].status === "fulfilled") {
-        // Could update cache here if needed
-      }
-    }).catch(() => { });
+    // If API returns empty, try fallback to movies only
+    if (results.length === 0) {
+      console.warn("Trending All returned empty, falling back to Trending Movies");
+      return getTrendingMovies();
+    }
 
-    const seen = new Set<number>();
-    return tmdbItems.filter((item) => {
-      if (seen.has(item.id)) return false;
-      seen.add(item.id);
-      return item.poster_path;
-    }).slice(0, 20); // Limit to 20 for faster loading
+    return results;
   } catch (error) {
-    console.error("Error fetching trending:", error);
-    return [];
+    console.warn("getTrendingNow failed, using fallback:", error);
+    // Fallback to simpler endpoint if the main one fails
+    try {
+      return await getTrendingMovies();
+    } catch (e) {
+      return []; // Return empty array as last resort to prevent crash
+    }
   }
 };
 
@@ -792,22 +572,52 @@ export const getAfricanContent = async (): Promise<Item[]> => {
 };
 
 // Separate function for East African content
+// Separate function for East African content
 export const getAfricanHits = async (): Promise<Item[]> => {
   try {
-    const [fzMovies, fzTV, rocksTrending, rocksNollywood] = await Promise.all([
-      getFZContentByCountry("NG", "movie", 1),
-      getFZContentByCountry("NG", "tv", 1),
-      getNinjarocksTrending("all"),
-      getNinjarocksNollywood(1),
-    ]);
+    // 1. Fetch African content directly from TMDB to ensure valid playback (valid IDs)
+    const nollywood = await axios.get(`/discover/movie`, {
+      params: {
+        with_origin_country: "NG|GH",
+        sort_by: "popularity.desc",
+        page: 1
+      }
+    });
 
-    const combined = [...fzMovies, ...fzTV, ...rocksTrending, ...rocksNollywood];
+    const africanTV = await axios.get(`/discover/tv`, {
+      params: {
+        with_origin_country: "NG|KE|ZA|GH",
+        sort_by: "popularity.desc",
+        page: 1
+      }
+    });
+
+    // 2. Search for specific popular Nollywood/African titles
+    const searchTerms = [
+      "Anikulapo", "King of Boys", "Blood Sisters", "Shanty Town",
+      "Gangs of Lagos", "The Black Book", "Jagun Jagun", "Brotherhood",
+      "Far From Home", "Young, Famous & African"
+    ];
+
+    const searchResults = await Promise.all(
+      searchTerms.map(term => axios.get(`/search/multi?query=${encodeURIComponent(term)}&page=1`))
+    );
+
+    const searchedItems = searchResults.flatMap(res => res.data.results || []);
+
+    const movies = (nollywood.data.results || []).map((i: any) => ({ ...i, media_type: "movie" }));
+    const tvs = (africanTV.data.results || []).map((i: any) => ({ ...i, media_type: "tv" }));
+
+    const combined = [...movies, ...tvs, ...searchedItems];
+
+    // Deduplicate
     const seen = new Set<string | number>();
     return combined.filter(item => {
       if (!item.poster_path || seen.has(item.id)) return false;
       seen.add(item.id);
       return true;
-    }).slice(0, 20);
+    }).slice(0, 30); // Return top 30 hits
+
   } catch (error) {
     console.error("Error fetching African hits:", error);
     return [];
@@ -1759,3 +1569,92 @@ export const getEnhancedKenyanContent = async (): Promise<Item[]> => {
     return [];
   }
 };
+
+export const getBlackStories = async (): Promise<Item[]> => {
+  try {
+    const searchTerms = [
+      "African American",
+      "Black Excellence",
+      "Tyler Perry",
+      "Madea",
+      "Black Panther",
+      "The Woman King",
+      "Creed",
+      "Jordan Peele",
+      "Spike Lee",
+      "Viola Davis",
+      "Denzel Washington"
+    ];
+
+    const responses = await Promise.all(
+      searchTerms.map(term => axios.get(`/search/movie?query=${encodeURIComponent(term)}&page=1`))
+    );
+
+    const results = responses.flatMap(res => res.data.results || []).map((item: any) => ({
+      ...item,
+      media_type: "movie" as const
+    }));
+
+    // Deduplicate
+    const unique = results.filter((item, index, self) =>
+      index === self.findIndex((t) => t.id === item.id) && item.poster_path
+    );
+
+    return unique;
+  } catch (error) {
+    console.warn("getBlackStories failed", error);
+    return [];
+  }
+};
+
+export const getTurkishDrama = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/tv`, {
+      params: {
+        with_original_language: "tr",
+        with_genres: 18, // Drama
+        sort_by: "popularity.desc",
+        "vote_count.gte": 50 // Filter out very obscure ones
+      }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "tv" as const }));
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getTeenRomance = async (): Promise<Item[]> => {
+  try {
+    // Keywords: 10683 (teenager), 6270 (high school), 11800 (coming of age)
+    const response = await axios.get(`/discover/movie`, {
+      params: {
+        with_genres: 10749, // Romance
+        with_keywords: "10683|6270|11800",
+        sort_by: "popularity.desc"
+      }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) {
+    return [];
+  }
+};
+
+
+export const getPremiumVIP = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: {
+        sort_by: "revenue.desc", // High grossing = usually "Premium" feel
+        "vote_average.gte": 7.5, // High quality only
+        "vote_count.gte": 1000, // Established movies
+        with_release_type: "2|3", // Theatrical releases
+        page: 1
+      }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) {
+    console.warn("getPremiumVIP failed", error);
+    return [];
+  }
+};
+

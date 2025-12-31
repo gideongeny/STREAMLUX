@@ -19,6 +19,7 @@ const ProfileGate: FC = () => {
     const [isKid, setIsKid] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showTroubleshooting, setShowTroubleshooting] = useState(false);
 
     const loadProfiles = async () => {
         if (!currentUser) return;
@@ -133,14 +134,63 @@ const ProfileGate: FC = () => {
 
     useEffect(() => {
         loadProfiles();
+
+        const timer = setTimeout(() => {
+            setShowTroubleshooting(true);
+        }, 5000); // Show help after 5 seconds
+
+        return () => clearTimeout(timer);
     }, [currentUser]);
+
+    const handleRetry = () => {
+        setLoading(true);
+        setShowTroubleshooting(false);
+        loadProfiles();
+    };
+
+    const handleClearCache = () => {
+        if (currentUser) {
+            localStorage.removeItem(`profiles_${currentUser.uid}`);
+            localStorage.removeItem("current_profile_id");
+            localStorage.removeItem("current_profile");
+            window.location.reload();
+        }
+    };
 
     if (loading && profiles.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-[#141414]">
-                <div className="flex flex-col items-center gap-8">
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#141414] px-6">
+                <div className="flex flex-col items-center gap-8 max-w-sm text-center">
                     <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                     <h1 className="text-2xl text-white font-medium animate-pulse italic">Setting up your StreamLux...</h1>
+
+                    {showTroubleshooting && (
+                        <div className="mt-8 p-6 bg-gray-900/50 rounded-2xl border border-white/5 animate-fade-in shadow-2xl">
+                            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                                Profiles taking a while? This can happen on slow connections or during first boot.
+                            </p>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={handleRetry}
+                                    className="w-full bg-primary text-black font-bold py-2 rounded-lg hover:brightness-110 active:scale-95 transition"
+                                >
+                                    RETRY LOADING
+                                </button>
+                                <button
+                                    onClick={() => navigate("/")}
+                                    className="w-full border border-gray-600 text-gray-400 py-2 rounded-lg hover:text-white hover:border-white transition"
+                                >
+                                    GO TO HOME
+                                </button>
+                                <button
+                                    onClick={handleClearCache}
+                                    className="text-[10px] text-gray-600 uppercase tracking-widest mt-4 hover:text-red-500 transition"
+                                >
+                                    Reset App Cache
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         );

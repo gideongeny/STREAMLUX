@@ -14,7 +14,11 @@ const HeroTrailer: FC<HeroTrailerProps> = ({ mediaId, mediaType, isActive }) => 
     useEffect(() => {
         if (isActive && !videoKey) {
             getVideo(mediaType, mediaId).then((key) => {
-                if (key) setVideoKey(key);
+                if (key) {
+                    setVideoKey(key);
+                    // Fallback: Show video after 2.5s even if onLoad doesn't fire (e.g. network lag)
+                    setTimeout(() => setIsLoaded(true), 2500);
+                }
             });
         }
     }, [isActive, mediaId, mediaType, videoKey]);

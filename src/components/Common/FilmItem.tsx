@@ -104,6 +104,13 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item, onClick }) => {
           {item.vote_average > 0 && <AiFillStar size={12} />}
         </div>
 
+        {/* Language Badge */}
+        {item.original_language && (
+          <div className="bg-black/70 backdrop-blur-sm px-2 py-0.5 rounded-full absolute top-[18%] left-[8%] z-20 text-white text-[9px] font-medium border border-white/20">
+            {item.original_language.toUpperCase()}
+          </div>
+        )}
+
         {isUnreleased && (
           <div className="bg-amber-500 px-2 py-1 rounded-full absolute top-[5%] right-[8%] z-20 text-black text-xs font-semibold">
             Coming Soon

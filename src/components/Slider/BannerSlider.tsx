@@ -48,14 +48,15 @@ const BannerSlider: FC<BannerSliderProps> = ({
                     ? `/movie/${film.id}`
                     : `/tv/${film.id}`
                 }
-                className="group"
+                className="group block w-full h-full"
               >
                 <LazyLoadImage
                   src={resizeImage(film.backdrop_path, "w1280")}
                   alt="Backdrop image"
                   effect="blur"
-                  className="w-full h-full object-cover"
-                  style={{ display: 'block' }}
+                  className="w-full h-full object-cover object-center"
+                  style={{ display: 'block', width: '100%', height: '100%' }}
+                  wrapperClassName="w-full h-full block"
                   onError={(e) => {
                     // Fallback if image fails to load
                     (e.target as HTMLImageElement).style.backgroundColor = '#1C1C1E';

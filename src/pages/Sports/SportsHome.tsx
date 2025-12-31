@@ -28,9 +28,27 @@ const SportsHome: FC = () => {
   }, []);
 
 
-  // Fetch real live data
+  // Fetch real live data with Caching
   useEffect(() => {
     const fetchRealData = async () => {
+      // 1. Check Cache
+      const cachedLive = localStorage.getItem("sports_live_fixtures");
+      const cachedUpcoming = localStorage.getItem("sports_upcoming_fixtures");
+      const cachedTime = localStorage.getItem("sports_cache_time");
+      const now = Date.now();
+      const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+      if (cachedLive && cachedUpcoming && cachedTime && (now - Number(cachedTime) < CACHE_DURATION)) {
+        try {
+          setLiveFixtures(JSON.parse(cachedLive));
+          setUpcomingFixtures(JSON.parse(cachedUpcoming));
+          return; // Exit if cache is valid
+        } catch (e) {
+          console.error("Error parsing sports cache", e);
+        }
+      }
+
+      // 2. Fetch Fresh Data
       try {
         const [live, upcoming] = await Promise.all([
           getLiveScores(),
@@ -38,6 +56,12 @@ const SportsHome: FC = () => {
         ]);
         setLiveFixtures(live);
         setUpcomingFixtures(upcoming);
+
+        // 3. Update Cache
+        localStorage.setItem("sports_live_fixtures", JSON.stringify(live));
+        localStorage.setItem("sports_upcoming_fixtures", JSON.stringify(upcoming));
+        localStorage.setItem("sports_cache_time", String(now));
+
       } catch (error) {
         console.error("Error fetching real sports data:", error);
       }
@@ -45,10 +69,10 @@ const SportsHome: FC = () => {
 
     fetchRealData();
 
-    // Subscribe to live updates
+    // Subscribe to live updates (still needed for live scores, but maybe less frequent)
     const unsubscribe = subscribeToLiveScores((fixtures) => {
       setLiveFixtures(fixtures);
-    }, 30000);
+    }, 60000); // Increased interval to 60s to save API calls
 
     return () => {
       unsubscribe();

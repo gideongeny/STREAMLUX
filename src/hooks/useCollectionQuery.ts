@@ -8,7 +8,7 @@ import {
   Query,
   QuerySnapshot,
 } from "firebase/firestore";
-import { getAfricanHits } from "../services/home";
+import { getAfricanHits, getBlackStories, getTurkishDrama, getTeenRomance, getAdventureMovies, getPremiumVIP } from "../services/home";
 
 
 
@@ -106,6 +106,24 @@ export const useTMDBCollectionQuery = (
 
         if (region === "nollywood" || (category && category.toLowerCase() === "nollywood")) {
           const hits = await getAfricanHits();
+          // Filter by mediaType to avoid showing TV shows in Movie tab and vice versa
+          exploreResult = {
+            results: hits.filter(item => item.media_type === mediaType)
+          };
+        } else if (category === "black_stories") {
+          const hits = await getBlackStories();
+          exploreResult = { results: hits };
+        } else if (category === "turkish_drama") {
+          const hits = await getTurkishDrama();
+          exploreResult = { results: hits };
+        } else if (category === "teen_romance") {
+          const hits = await getTeenRomance();
+          exploreResult = { results: hits };
+        } else if (category === "adventure") {
+          const hits = await getAdventureMovies();
+          exploreResult = { results: hits };
+        } else if (category === "premium_vip") {
+          const hits = await getPremiumVIP();
           exploreResult = { results: hits };
         } else {
           exploreResult = mediaType === "movie"

@@ -174,6 +174,22 @@ export class ResolverService {
                 speed: "medium",
                 status: "active",
                 type: "embed"
+            },
+            {
+                name: "MovieBox Premium (Aone)",
+                url: `https://h5.aoneroom.com/player/index.html?id=${tmdbId}&type=${mediaType === 'movie' ? 1 : 2}${season ? `&s=${season}` : ''}${episode ? `&e=${episode}` : ''}`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed"
+            },
+            {
+                name: "StreamLux 4K (Ultra)",
+                url: `https://vidsrc.cc/v2/embed/${mediaType}/${tmdbId}${season ? `/${season}/${episode}` : ''}`,
+                quality: "4K",
+                speed: "fast",
+                status: "active",
+                type: "embed"
             }
         ];
 

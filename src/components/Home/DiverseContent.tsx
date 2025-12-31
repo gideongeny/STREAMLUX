@@ -1,5 +1,8 @@
 import React from 'react';
 import HybridSectionSlider from '../Slider/HybridSectionSlider';
+import { useAppSelector } from '../../store/hooks';
+import { FaLock } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 interface DiverseContentProps {
   currentTab: "movie" | "tv" | "sports";
@@ -8,6 +11,7 @@ interface DiverseContentProps {
 const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
   // We use currentTab to determine whether to fetch movies or tv shows
   const mediaType = currentTab === "movie" ? "movie" : "tv";
+  const currentUser = useAppSelector((state: any) => state.auth.user);
 
   return (
     <div className="space-y-8 mt-8">
@@ -25,13 +29,70 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         title="🔥 Trending Global Cinema"
         category="global"
         type={mediaType}
+        linkPath={`/explore?genre=global&type=${mediaType}`}
       />
 
-      {/* Nollywood & African Hits (MovieBox Source) */}
+      {/* Black Shows - New */}
       <HybridSectionSlider
-        title="🇳🇬 Nollywood & African Hits (MovieBox Source)"
+        title="✊🏿 Black Shows"
+        category="black_stories"
+        type="movie"
+        linkPath="/explore?genre=black_stories"
+      />
+
+      {/* Premium VIP 4K Access - Login Required */}
+      <div className="relative">
+        <HybridSectionSlider
+          title="👑 Premium VIP 4K Access"
+          category="premium_vip"
+          type="movie"
+          linkPath="/explore?genre=premium_vip"
+        />
+        {!currentUser && (
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center z-10">
+            <FaLock className="text-primary text-5xl mb-4" />
+            <h3 className="text-white text-xl font-bold mb-2">Premium Content</h3>
+            <p className="text-gray-300 mb-4">Sign in to access 4K premium movies</p>
+            <Link
+              to="/auth"
+              className="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/90 transition"
+            >
+              Sign In Now
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* Adventure Movies */}
+      <HybridSectionSlider
+        title="🗺️ Adventure Movies"
+        category="adventure"
+        type="movie"
+        linkPath="/explore?genre=adventure"
+      />
+
+      {/* Teen Romance */}
+      <HybridSectionSlider
+        title="💓 Teen Romance 💓"
+        category="teen_romance"
+        type="movie"
+        linkPath="/explore?genre=teen_romance"
+      />
+
+      {/* Turkish Drama */}
+      <HybridSectionSlider
+        title="🇹🇷 Turkish Drama"
+        category="turkish_drama"
+        type="tv"
+        linkPath="/explore?genre=turkish_drama"
+      />
+
+      {/* Nollywood & African Hits */}
+      <HybridSectionSlider
+        title="🇳🇬 Nollywood & African Hits"
         category="nollywood"
         type={mediaType}
+        linkPath={`/explore?genre=nollywood&type=${mediaType}`}
       />
 
       {/* African Cinema */}
@@ -39,6 +100,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         title="✊🏿 African Cinema"
         region="africa"
         type={mediaType}
+        linkPath={`/explore?region=africa&type=${mediaType}`}
       />
 
       {/* Asian Cinema */}
@@ -46,6 +108,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         title="🌏 Asian Masterpieces"
         region="asia"
         type={mediaType}
+        linkPath={`/explore?region=asia&type=${mediaType}`}
       />
 
       {/* Korean Drama / Cinema */}
@@ -54,6 +117,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         region="kr"
         category="drama"
         type={mediaType}
+        linkPath={`/explore?region=kr&genre=drama&type=${mediaType}`}
       />
 
       {/* Bollywood */}
@@ -61,6 +125,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         title="🎭 Bollywood & Indian Cinema"
         region="in"
         type={mediaType}
+        linkPath={`/explore?region=in&type=${mediaType}`}
       />
 
       {/* Latin American */}
@@ -68,6 +133,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         title="💃 Latin American Cinema"
         region="latin"
         type={mediaType}
+        linkPath={`/explore?region=latin&type=${mediaType}`}
       />
 
       {/* Middle Eastern */}
@@ -75,6 +141,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         title="Middle Eastern Cinema"
         region="middleeast"
         type={mediaType}
+        linkPath={`/explore?region=middleeast&type=${mediaType}`}
       />
 
       {/* Filipino */}
@@ -82,6 +149,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         title="🇵🇭 Filipino Cinema & Shows"
         region="philippines"
         type={mediaType}
+        linkPath={`/explore?region=philippines&type=${mediaType}`}
       />
 
       {/* Action Categories */}
@@ -89,6 +157,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         title="💥 High Octane Action"
         category="action"
         type={mediaType}
+        linkPath={`/explore?genre=action&type=${mediaType}`}
       />
 
       {/* Horror Categories */}
@@ -96,6 +165,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         title="👻 Spooky Season (Horror)"
         category="horror"
         type={mediaType}
+        linkPath={`/explore?genre=horror&type=${mediaType}`}
       />
 
       {/* Holiday Specials */}
@@ -103,6 +173,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         title="🎄 Holiday Specials"
         category="holiday"
         type={mediaType}
+        linkPath={`/explore?genre=holiday&type=${mediaType}`}
       />
 
       {/* Family & Kids */}
@@ -110,6 +181,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         title="🎈 Family & Kids"
         category="family"
         type={mediaType}
+        linkPath={`/explore?genre=family&type=${mediaType}`}
       />
 
       {/* Documentary */}
@@ -117,6 +189,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         title="📹 Documentaries"
         category="documentary"
         type={mediaType}
+        linkPath={`/explore?genre=documentary&type=${mediaType}`}
       />
     </div>
   );

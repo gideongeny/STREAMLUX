@@ -7,7 +7,7 @@ import {
 } from "firebase/firestore";
 import { FC, useEffect, useState } from "react";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
-import { AiFillHeart, AiOutlineDownload } from "react-icons/ai";
+import { AiFillHeart } from "react-icons/ai";
 import { BsFillPlayFill, BsShareFill, BsThreeDots } from "react-icons/bs";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
