@@ -8,7 +8,7 @@ import {
   Query,
   QuerySnapshot,
 } from "firebase/firestore";
-import { getAfricanHits, getBlackStories, getTurkishDrama, getTeenRomance, getAdventureMovies, getPremiumVIP } from "../services/home";
+import { getAfricanHits, getBlackStories, getTurkishDrama, getTeenRomance, getAdventureMovies, getPremiumVIP, getSciFiFantasy, getMysteryThriller, getHistoryWar, getMusicalDance, getWesternAdventure, getKidsAnimation, getAwardWinning, getSupernatural, getCyberpunk, getSpace, getBritish, getFrench, getSpanish, getTrueCrime, getSuperheroes } from "../services/home";
 
 
 
@@ -124,6 +124,51 @@ export const useTMDBCollectionQuery = (
           exploreResult = { results: hits };
         } else if (category === "premium_vip") {
           const hits = await getPremiumVIP();
+          exploreResult = { results: hits };
+        } else if (category === "scifi_fantasy") {
+          const hits = await getSciFiFantasy();
+          exploreResult = { results: hits };
+        } else if (category === "mystery_thriller") {
+          const hits = await getMysteryThriller();
+          exploreResult = { results: hits };
+        } else if (category === "history_war") {
+          const hits = await getHistoryWar();
+          exploreResult = { results: hits };
+        } else if (category === "musical") {
+          const hits = await getMusicalDance();
+          exploreResult = { results: hits };
+        } else if (category === "western") {
+          const hits = await getWesternAdventure();
+          exploreResult = { results: hits };
+        } else if (category === "kids_animation") {
+          const hits = await getKidsAnimation();
+          exploreResult = { results: hits };
+        } else if (category === "award_winning") {
+          const hits = await getAwardWinning();
+          exploreResult = { results: hits };
+        } else if (category === "supernatural") {
+          const hits = await getSupernatural();
+          exploreResult = { results: hits };
+        } else if (category === "cyberpunk") {
+          const hits = await getCyberpunk();
+          exploreResult = { results: hits };
+        } else if (category === "space") {
+          const hits = await getSpace();
+          exploreResult = { results: hits };
+        } else if (category === "british") {
+          const hits = await getBritish(mediaType);
+          exploreResult = { results: hits };
+        } else if (category === "french") {
+          const hits = await getFrench(mediaType);
+          exploreResult = { results: hits };
+        } else if (category === "spanish") {
+          const hits = await getSpanish(mediaType);
+          exploreResult = { results: hits };
+        } else if (category === "true_crime") {
+          const hits = await getTrueCrime();
+          exploreResult = { results: hits };
+        } else if (category === "superheroes") {
+          const hits = await getSuperheroes();
           exploreResult = { results: hits };
         } else {
           exploreResult = mediaType === "movie"

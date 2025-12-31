@@ -63,44 +63,33 @@ const SubtitleSelector: FC<SubtitleSelectorProps> = ({
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-                    <div className="absolute bottom-full mb-2 right-0 min-w-[240px] max-w-[300px] bg-dark-lighten border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in flex flex-col">
+                    <div className="absolute top-full mt-2 right-0 min-w-[200px] max-w-[280px] bg-dark-lighten border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in flex flex-col">
                         <div className="px-4 py-3 border-b border-gray-700 flex justify-between items-center bg-black/20">
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                                Subtitles
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                SUBTITLES
                             </span>
                             <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-white">
                                 <MdClose size={18} />
                             </button>
                         </div>
 
-                        <div className="p-2 border-b border-gray-700">
-                            <input
-                                type="text"
-                                placeholder="Search language..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-primary/50 transition"
-                            />
-                        </div>
-
-                        <div className="flex flex-col max-h-[250px] overflow-y-auto custom-scrollbar">
+                        <div className="flex flex-col max-h-[300px] overflow-y-auto custom-scrollbar p-1">
                             <button
                                 onClick={() => {
                                     onSelect(null);
                                     setIsOpen(false);
                                 }}
-                                className={`px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex justify-between items-center ${!currentSubtitle ? "text-primary font-bold" : "text-gray-300"
+                                className={`px-3 py-2.5 rounded-lg text-left text-sm hover:bg-white/5 transition-all flex justify-between items-center ${!currentSubtitle ? "bg-primary/10 text-primary font-black" : "text-gray-300"
                                     }`}
                             >
-                                <span>Off</span>
-                                {!currentSubtitle && <MdCheck className="text-primary" />}
+                                <span>No Subtitles</span>
+                                {!currentSubtitle && <MdCheck size={18} />}
                             </button>
 
                             {isLoading ? (
                                 <div className="p-4 space-y-2">
                                     <Skeleton className="h-4 w-full rounded" />
                                     <Skeleton className="h-4 w-3/4 rounded" />
-                                    <Skeleton className="h-4 w-full rounded" />
                                 </div>
                             ) : (
                                 filteredSubtitles.map((sub) => (
@@ -110,14 +99,14 @@ const SubtitleSelector: FC<SubtitleSelectorProps> = ({
                                             onSelect(sub);
                                             setIsOpen(false);
                                         }}
-                                        className={`px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors flex justify-between items-center ${currentSubtitle?.id === sub.id ? "text-primary font-bold" : "text-gray-300"
+                                        className={`px-3 py-2.5 rounded-lg text-left text-sm hover:bg-white/5 transition-all flex justify-between items-center ${currentSubtitle?.id === sub.id ? "bg-primary/10 text-primary font-black" : "text-gray-300"
                                             }`}
                                     >
                                         <div className="flex flex-col">
-                                            <span>{sub.language}</span>
-                                            <span className="text-[10px] text-gray-500">{sub.source}</span>
+                                            <span className="font-bold">{sub.language}</span>
+                                            <span className="text-[9px] opacity-50 uppercase tracking-tighter">{sub.source}</span>
                                         </div>
-                                        {currentSubtitle?.id === sub.id && <MdCheck className="text-primary" />}
+                                        {currentSubtitle?.id === sub.id && <MdCheck size={18} />}
                                     </button>
                                 ))
                             )}
@@ -127,10 +116,6 @@ const SubtitleSelector: FC<SubtitleSelectorProps> = ({
                                     No subtitles found.
                                 </div>
                             )}
-                        </div>
-
-                        <div className="px-4 py-2 bg-black/10 text-[9px] text-gray-600 border-t border-gray-700">
-                            * Selected subtitles will be applied to compatible servers.
                         </div>
                     </div>
                 </>

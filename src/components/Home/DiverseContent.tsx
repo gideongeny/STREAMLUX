@@ -24,6 +24,22 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         </p>
       </div>
 
+      {/* Superheroes */}
+      <HybridSectionSlider
+        title="🦸 Superheroes & Comic Universes"
+        category="superheroes"
+        type="movie"
+        linkPath="/explore?category=superheroes"
+      />
+
+      {/* True Crime */}
+      <HybridSectionSlider
+        title="🕵️ True Crime & Investigation"
+        category="true_crime"
+        type="movie"
+        linkPath="/explore?category=true_crime"
+      />
+
       {/* Recommended Global Content */}
       <HybridSectionSlider
         title="🔥 Trending Global Cinema"
@@ -128,6 +144,64 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         linkPath={`/explore?region=in&type=${mediaType}`}
       />
 
+      {/* Award Winners */}
+      <HybridSectionSlider
+        title="🏆 Award-Winning Masterpieces"
+        category="award_winning"
+        type="movie"
+        linkPath="/explore?category=award_winning"
+      />
+
+      {/* Supernatural */}
+      <HybridSectionSlider
+        title="👻 Supernatural & Paranormal"
+        category="supernatural"
+        type="movie"
+        linkPath="/explore?category=supernatural"
+      />
+
+      {/* Cyberpunk & Future */}
+      <HybridSectionSlider
+        title="🤖 Cyberpunk & Dystopian Future"
+        category="cyberpunk"
+        type="movie"
+        linkPath="/explore?category=cyberpunk"
+      />
+
+      {/* Space exploration */}
+      <HybridSectionSlider
+        title="🚀 Space Exploration & Galaxies"
+        category="space"
+        type="movie"
+        linkPath="/explore?category=space"
+      />
+
+      {/* International Showcase */}
+      <div className="text-center py-6">
+        <h3 className="text-2xl font-black text-primary uppercase tracking-widest">Global Showcase</h3>
+      </div>
+
+      <HybridSectionSlider
+        title="🇬🇧 British Cinema & TV"
+        category="british"
+        type={mediaType}
+        linkPath={`/explore?category=british&type=${mediaType}`}
+      />
+
+      <HybridSectionSlider
+        title="🇫🇷 French Cinema & TV"
+        category="french"
+        type={mediaType}
+        linkPath={`/explore?category=french&type=${mediaType}`}
+      />
+
+      <HybridSectionSlider
+        title="🇪🇸 Spanish Cinema & TV"
+        category="spanish"
+        type={mediaType}
+        linkPath={`/explore?category=spanish&type=${mediaType}`}
+      />
+
       {/* Latin American */}
       <HybridSectionSlider
         title="💃 Latin American Cinema"
@@ -184,9 +258,65 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         linkPath={`/explore?genre=family&type=${mediaType}`}
       />
 
+      {/* Sci-Fi & Fantasy */}
+      <HybridSectionSlider
+        title="🌌 Sci-Fi & Interstellar Fantasy"
+        category="scifi_fantasy"
+        type="movie"
+        linkPath="/explore?category=scifi_fantasy"
+      />
+
+      {/* Mystery & Thriller */}
+      <HybridSectionSlider
+        title="🔍 Mind-Bending Mystery & Thrillers"
+        category="mystery_thriller"
+        type="movie"
+        linkPath="/explore?category=mystery_thriller"
+      />
+
+      {/* History & War */}
+      <HybridSectionSlider
+        title="⚔️ Historical Epics & War Stories"
+        category="history_war"
+        type="movie"
+        linkPath="/explore?category=history_war"
+      />
+
+      {/* Musical & Dance */}
+      <HybridSectionSlider
+        title="💃 Musical, Dance & Rhythm"
+        category="musical"
+        type="movie"
+        linkPath="/explore?category=musical"
+      />
+
+      {/* Western & Adventure */}
+      <HybridSectionSlider
+        title="🤠 Wild West & Epic Adventures"
+        category="western"
+        type="movie"
+        linkPath="/explore?category=western"
+      />
+
+      {/* Kids & Animation */}
+      <HybridSectionSlider
+        title="🎈 Family Fun & Animation"
+        category="kids_animation"
+        type="movie"
+        linkPath="/explore?category=kids_animation"
+      />
+
+      {/* Adventure Movies */}
+      <HybridSectionSlider
+        title="🗺️ Discovery & Exploration"
+        category="adventure"
+        type="movie"
+        linkPath="/explore?genre=adventure"
+      />
+
       {/* Documentary */}
       <HybridSectionSlider
-        title="📹 Documentaries"
+        title="📹 Real Life Stories (Documentaries)"
         category="documentary"
         type={mediaType}
         linkPath={`/explore?genre=documentary&type=${mediaType}`}

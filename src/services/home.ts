@@ -1678,3 +1678,139 @@ export const getFutureUpcoming = async (mediaType: "movie" | "tv"): Promise<Item
     return [];
   }
 };
+
+// Fetch specialized genre combinations (Moviebox Style)
+export const getSciFiFantasy = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: { with_genres: "878|14", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) { return []; }
+};
+
+export const getMysteryThriller = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: { with_genres: "9648|53", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) { return []; }
+};
+
+export const getHistoryWar = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: { with_genres: "36|10752", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) { return []; }
+};
+
+export const getMusicalDance = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: { with_genres: "10402", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) { return []; }
+};
+
+export const getWesternAdventure = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: { with_genres: "37|12", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) { return []; }
+};
+
+export const getKidsAnimation = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: { with_genres: "10751|16", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) { return []; }
+};
+
+export const getAwardWinning = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: { "vote_average.gte": 8, "vote_count.gte": 1000, sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) { return []; }
+};
+
+export const getSupernatural = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: { with_genres: "27", with_keywords: "6152|3713", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) { return []; }
+};
+
+export const getCyberpunk = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: { with_genres: "878", with_keywords: "207399|4565", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) { return []; }
+};
+
+export const getSpace = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: { with_genres: "878", with_keywords: "15486|3801", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) { return []; }
+};
+
+export const getBritish = async (mediaType: "movie" | "tv"): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/${mediaType}`, {
+      params: { with_origin_country: "GB", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: mediaType }));
+  } catch (error) { return []; }
+};
+
+export const getFrench = async (mediaType: "movie" | "tv"): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/${mediaType}`, {
+      params: { with_origin_country: "FR", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: mediaType }));
+  } catch (error) { return []; }
+};
+
+export const getSpanish = async (mediaType: "movie" | "tv"): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/${mediaType}`, {
+      params: { with_origin_country: "ES", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: mediaType }));
+  } catch (error) { return []; }
+};
+
+export const getTrueCrime = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: { with_genres: "80|99", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) { return []; }
+};
+
+export const getSuperheroes = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/movie`, {
+      params: { with_genres: "28|878", with_keywords: "9715|180547", sort_by: "popularity.desc", page: 1 }
+    });
+    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
+  } catch (error) { return []; }
+};
