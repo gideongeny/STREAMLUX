@@ -29,6 +29,7 @@ const Footer = lazy(() => import("../components/Footer/Footer"));
 const LiveSportsAlert = lazy(() => import("../components/Sports/LiveSportsAlert"));
 const SearchBox = lazy(() => import("../components/Common/SearchBox"));
 const RecommendGenres = lazy(() => import("../components/Home/RecommendGenres"));
+const SportsMainContent = lazy(() => import("../components/Sports/SportsMainContent"));
 
 const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
@@ -84,20 +85,12 @@ const Home: FC = () => {
   useEffect(() => {
     try {
       localStorage.setItem("currentTab", JSON.stringify(currentTab));
-      // Auto-redirect if sports is selected (consistency fix)
-      if (currentTab === "sports") {
-        navigate("/sports");
-      }
     } catch (error) {
       console.warn("Error saving currentTab to localStorage:", error);
     }
-  }, [currentTab, navigate]);
+  }, [currentTab]);
 
   const handleTabChange = (tab: "movie" | "tv" | "sports") => {
-    if (tab === "sports") {
-      navigate("/sports");
-      return;
-    }
     setCurrentTab(tab);
   };
 
@@ -343,19 +336,9 @@ const Home: FC = () => {
             </>
           ) : (
             <div className="mt-4">
-              <Suspense fallback={<div className="h-10 bg-gray-800/50 rounded animate-pulse" />}>
-                <LiveSportsTicker />
+              <Suspense fallback={<div className="h-40 bg-gray-800/20 rounded-xl animate-pulse" />}>
+                <SportsMainContent />
               </Suspense>
-
-              <div className="mt-8">
-                <LiveSports />
-              </div>
-
-              <div className="mt-12 px-4 md:px-8">
-                <Suspense fallback={<div className="h-40 bg-gray-800/20 rounded-xl animate-pulse" />}>
-                  <UpcomingCalendar title="Sports Calendar Events" contentType="sports" />
-                </Suspense>
-              </div>
             </div>
           )}
         </div>
