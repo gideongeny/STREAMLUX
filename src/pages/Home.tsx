@@ -5,8 +5,6 @@ import { Link, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
 import MainHomeFilm from "../components/Home/MainHomeFilm";
-import LiveSports from "../components/Home/LiveSports";
-import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
 import ErrorBoundary from "../components/Common/ErrorBoundary";
 import { useHomeData } from "../hooks/useHomeData";
 import { useAppSelector } from "../store/hooks";

@@ -11,6 +11,7 @@ import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setCurrentUser, setCurrentProfile } from "./store/slice/authSlice";
 import { getProfiles } from "./services/user";
 import SmartAdPopup from "./components/Common/SmartAdPopup";
+import { adService } from "./services/adService";
 
 import Protected from "./components/Common/Protected";
 
@@ -88,6 +89,28 @@ function App() {
       document.documentElement.style.setProperty("--color-primary", savedColor);
     }
   }, []);
+
+  // Initialize ad service
+  useEffect(() => {
+    // Configure Monetag IDs from environment or constants
+    adService.init({
+      multiTagId: process.env.REACT_APP_MONETAG_MULTITAG_ID || '',
+      pushNotificationId: process.env.REACT_APP_MONETAG_PUSH_ID || '',
+      interstitialFrequency: 10, // 10 minutes between ads
+    });
+  }, []);
+
+  // Trigger interstitial ads on multiple pages
+  useEffect(() => {
+    // Show interstitial when navigating to eligible pages
+    if (adService.shouldTriggerOnPage(location.pathname) && adService.shouldShowAd()) {
+      const timer = setTimeout(() => {
+        adService.showInterstitial();
+      }, 500); // Small delay for better UX
+
+      return () => clearTimeout(timer);
+    }
+  }, [location.pathname]);
 
   // Quick-restore profile from localStorage to avoid flashes
   useEffect(() => {

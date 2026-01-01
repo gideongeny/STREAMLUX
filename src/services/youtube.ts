@@ -435,3 +435,69 @@ export const fetchByRegion = (region: string, pageToken?: string, type: "movie" 
 
 export const fetchByCategory = (category: string, pageToken?: string, type: "movie" | "tv" | "multi" | "all" = "movie") =>
   fetchYouTubeVideos(category, pageToken, type);
+
+/**
+ * Fetch videos from specific channels (for regional content like Filipino, Turkish, etc.)
+ */
+export async function fetchFromChannels(
+  channelIds: string[],
+  type: "movie" | "tv" = "movie",
+  maxResults: number = 50
+): Promise<{ videos: YouTubeVideo[]; error?: string }> {
+  try {
+    const allVideos: YouTubeVideo[] = [];
+
+    for (const channelId of channelIds) {
+      const cacheKey = `channel_${channelId}_${type}`;
+      const cached = CacheService.get<YouTubeVideo[]>(cacheKey);
+
+      if (cached) {
+        allVideos.push(...cached);
+        continue;
+      }
+
+      const response = await youtube.get("/search", {
+        params: {
+          part: "snippet",
+          channelId: channelId,
+          maxResults: Math.min(maxResults, 50),
+          order: "date", // Latest uploads
+          type: "video",
+          key: getApiKey(),
+        },
+      });
+
+      if (!response.data.items || response.data.items.length === 0) continue;
+
+      const videoIds = response.data.items.map((item: any) => item.id.videoId);
+      const details = await fetchVideosDetail(videoIds);
+
+      const videos: YouTubeVideo[] = details
+        .map((item: any) => ({
+          id: item.id,
+          title: item.snippet.title,
+          description: item.snippet.description,
+          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+          channelTitle: item.snippet.channelTitle,
+          channelId: item.snippet.channelId,
+          type: classifyVideo(item.snippet.title, item.snippet.description),
+          duration: parseDuration(item.contentDetails.duration),
+          publishedAt: item.snippet.publishedAt,
+        }))
+        .filter((video: any) => {
+          if (type === 'tv') return video.type === 'tv';
+          if (type === 'movie') return video.type === 'movie';
+          return true;
+        });
+
+      CacheService.set(cacheKey, videos);
+      allVideos.push(...videos);
+    }
+
+    return { videos: allVideos };
+  } catch (error: any) {
+    const errorMsg = error.response?.data?.error?.message || error.message;
+    console.error("Error fetching from channels:", errorMsg);
+    return { videos: [], error: errorMsg };
+  }
+}
