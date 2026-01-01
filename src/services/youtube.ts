@@ -430,8 +430,57 @@ export async function getYouTubeComments(videoId: string): Promise<any[]> {
   }
 }
 
-export const fetchByRegion = (region: string, pageToken?: string, type: "movie" | "tv" | "multi" | "all" = "movie") =>
-  fetchYouTubeVideos(region, pageToken, type);
+import { REGIONAL_CHANNELS, REGIONAL_SEARCH_QUERIES } from "../shared/regionalChannels";
+
+/**
+ * Map Explore page region codes to internal configuration keys
+ */
+const REGION_MAPPING: Record<string, keyof typeof REGIONAL_CHANNELS> = {
+  "philippines": "filipino",
+  "korea": "korean",
+  "south-korea": "korean",
+  "china": "chinese",
+  "japan": "japanese",
+  "latin": "latino",
+  "bollywood": "indian",
+  "india": "indian",
+  "nollywood": "african",
+  "africa": "african",
+  "turkey": "turkish",
+  "turkish": "turkish"
+};
+
+export async function fetchByRegion(
+  region: string,
+  pageToken?: string,
+  type: "movie" | "tv" | "multi" | "all" = "movie"
+): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string; error?: string }> {
+  const mappedRegion = REGION_MAPPING[region.toLowerCase()] || region.toLowerCase();
+
+  // Check if we have specific channels for this region
+  if (mappedRegion in REGIONAL_CHANNELS) {
+    const channels = Object.values(REGIONAL_CHANNELS[mappedRegion as keyof typeof REGIONAL_CHANNELS]);
+
+    // Use channel-based fetching for accuracy
+    // Note: fetchFromChannels currently returns all videos without pagination token support in the return type
+    // We might need to enhance it or accept that channel search is "best match" first
+    const channelResult = await fetchFromChannels(channels, type === 'multi' || type === 'all' ? 'movie' : type);
+
+    if (channelResult.videos.length > 0) {
+      return { videos: channelResult.videos, nextPageToken: undefined };
+    }
+  }
+
+  // Fallback to strict search queries if channel fetch fails or no channels defined
+  let query = region;
+  if (mappedRegion in REGIONAL_SEARCH_QUERIES) {
+    const queries = REGIONAL_SEARCH_QUERIES[mappedRegion as keyof typeof REGIONAL_SEARCH_QUERIES];
+    // Pick a random specific query for variety, or the first one
+    query = queries[0];
+  }
+
+  return fetchYouTubeVideos(query, pageToken, type);
+}
 
 export const fetchByCategory = (category: string, pageToken?: string, type: "movie" | "tv" | "multi" | "all" = "movie") =>
   fetchYouTubeVideos(category, pageToken, type);
