@@ -102,13 +102,21 @@ function App() {
 
   // Trigger interstitial ads on multiple pages
   useEffect(() => {
-    // Show interstitial when navigating to eligible pages
-    if (adService.shouldTriggerOnPage(location.pathname) && adService.shouldShowAd()) {
-      const timer = setTimeout(() => {
-        adService.showInterstitial();
-      }, 500); // Small delay for better UX
+    try {
+      // Show interstitial when navigating to eligible pages
+      if (adService.shouldTriggerOnPage(location.pathname) && adService.shouldShowAd()) {
+        const timer = setTimeout(() => {
+          try {
+            adService.showInterstitial();
+          } catch (e) {
+            console.warn("Ad interstitial failed:", e);
+          }
+        }, 500); // Small delay for better UX
 
-      return () => clearTimeout(timer);
+        return () => clearTimeout(timer);
+      }
+    } catch (error) {
+      console.warn("Error in ad trigger effect:", error);
     }
   }, [location.pathname]);
 

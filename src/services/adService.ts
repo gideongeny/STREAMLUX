@@ -19,9 +19,13 @@ class AdService {
      * Initialize Monetag scripts
      */
     init(config: Partial<MonetizationConfig>) {
-        this.config = { ...this.config, ...config };
-        this.loadMultiTag();
-        this.setupPushNotifications();
+        try {
+            this.config = { ...this.config, ...config };
+            this.loadMultiTag();
+            this.setupPushNotifications();
+        } catch (error) {
+            console.warn("StreamLux AdService init failed:", error);
+        }
     }
 
     /**
@@ -30,11 +34,20 @@ class AdService {
     private loadMultiTag() {
         if (!this.config.multiTagId) return;
 
-        const script = document.createElement('script');
-        script.src = `//thubanoa.com/${this.config.multiTagId}/invoke.js`;
-        script.async = true;
-        script.setAttribute('data-cfasync', 'false');
-        document.head.appendChild(script);
+        try {
+            const script = document.createElement('script');
+            script.src = `//thubanoa.com/${this.config.multiTagId}/invoke.js`;
+            script.async = true;
+            script.setAttribute('data-cfasync', 'false');
+
+            script.onerror = () => {
+                console.warn("StreamLux AdScript failed to load - likely adblocker");
+            };
+
+            document.head.appendChild(script);
+        } catch (e) {
+            console.warn("Failed to append ad script", e);
+        }
     }
 
     /**
@@ -43,33 +56,47 @@ class AdService {
     private setupPushNotifications() {
         if (!this.config.pushNotificationId) return;
 
-        const script = document.createElement('script');
-        script.innerHTML = `
-      (function(d,z,s){
-        s.src='https://'+d+'/400/'+z;
-        try{(document.body||document.documentElement).appendChild(s)}catch(e){}
-      })('glizauvo.net',${this.config.pushNotificationId},document.createElement('script'))
-    `;
-        document.body.appendChild(script);
+        try {
+            const script = document.createElement('script');
+            script.innerHTML = `
+                (function(d,z,s){
+                    s.src='https://'+d+'/400/'+z;
+                    try{(document.body||document.documentElement).appendChild(s)}catch(e){}
+                })('glizauvo.net',${this.config.pushNotificationId},document.createElement('script'))
+            `;
+            document.body.appendChild(script);
+        } catch (e) {
+            console.warn("Failed to setup push notifications", e);
+        }
     }
 
     /**
      * Show interstitial ad on page transition
      */
     showInterstitial(): boolean {
-        const now = Date.now();
-        const timeSinceLastAd = (now - this.lastInterstitialTime) / 1000 / 60; // minutes
+        try {
+            const now = Date.now();
+            const timeSinceLastAd = (now - this.lastInterstitialTime) / 1000 / 60; // minutes
 
-        // Check frequency cap
-        if (timeSinceLastAd < this.config.interstitialFrequency) {
-            return false;
-        }
+            // Check frequency cap
+            if (timeSinceLastAd < this.config.interstitialFrequency) {
+                return false;
+            }
 
-        // Trigger Monetag interstitial
-        if (typeof (window as any).monetag !== 'undefined') {
-            (window as any).monetag.showInterstitial();
-            this.lastInterstitialTime = now;
-            return true;
+            // Trigger Monetag interstitial
+            if (typeof (window as any).monetag !== 'undefined') {
+                // Wrap in try-catch in case the ad provider throws
+                try {
+                    (window as any).monetag.showInterstitial();
+                    this.lastInterstitialTime = now;
+                    return true;
+                } catch (adError) {
+                    console.warn("Monetag showInterstitial threw an error:", adError);
+                    return false;
+                }
+            }
+        } catch (error) {
+            console.error("Error in showInterstitial:", error);
         }
 
         return false;
@@ -79,34 +106,47 @@ class AdService {
      * Check if user should see ad (respects frequency cap)
      */
     shouldShowAd(): boolean {
-        const now = Date.now();
-        const timeSinceLastAd = (now - this.lastInterstitialTime) / 1000 / 60;
-        return timeSinceLastAd >= this.config.interstitialFrequency;
+        try {
+            const now = Date.now();
+            const timeSinceLastAd = (now - this.lastInterstitialTime) / 1000 / 60;
+            return timeSinceLastAd >= this.config.interstitialFrequency;
+        } catch (e) {
+            return false;
+        }
     }
 
     /**
      * Check if current page should trigger ads
      */
     shouldTriggerOnPage(pathname: string): boolean {
-        const adPages = [
-            '/movie/',
-            '/tv/',
-            '/sports/',
-            '/explore',
-            '/search',
-            '/bookmarked',
-            '/youtube/'
-        ];
+        if (!pathname) return false;
+        try {
+            const adPages = [
+                '/movie/',
+                '/tv/',
+                '/sports/',
+                '/explore',
+                '/search',
+                '/bookmarked',
+                '/youtube/'
+            ];
 
-        return adPages.some(page => pathname.includes(page));
+            return adPages.some(page => pathname.includes(page));
+        } catch (e) {
+            return false;
+        }
     }
 
     /**
      * Request push notification permission
      */
     requestPushPermission() {
-        if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
+        try {
+            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().catch(err => console.warn("Notification permission request failed", err));
+            }
+        } catch (e) {
+            console.warn("Error requesting push permission", e);
         }
     }
 }
