@@ -2,6 +2,7 @@
 import axios from "axios";
 import { classifyVideo, VideoType } from "../shared/videoClassification";
 import { CacheService } from "./cache";
+import { REGIONAL_CHANNELS, REGIONAL_SEARCH_QUERIES } from "../shared/regionalChannels";
 
 export interface YouTubeVideo {
   id: string;
@@ -430,8 +431,6 @@ export async function getYouTubeComments(videoId: string): Promise<any[]> {
   }
 }
 
-import { REGIONAL_CHANNELS, REGIONAL_SEARCH_QUERIES } from "../shared/regionalChannels";
-
 /**
  * Map Explore page region codes to internal configuration keys
  */
@@ -459,7 +458,7 @@ export async function fetchByRegion(
 
   // Check if we have specific channels for this region
   if (mappedRegion in REGIONAL_CHANNELS) {
-    const channels = Object.values(REGIONAL_CHANNELS[mappedRegion as keyof typeof REGIONAL_CHANNELS]);
+    const channels = Object.values(REGIONAL_CHANNELS[mappedRegion as keyof typeof REGIONAL_CHANNELS]) as string[];
 
     // Use channel-based fetching for accuracy
     // Note: fetchFromChannels currently returns all videos without pagination token support in the return type
