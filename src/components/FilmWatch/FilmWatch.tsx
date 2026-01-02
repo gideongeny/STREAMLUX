@@ -40,6 +40,7 @@ interface FilmWatchProps {
   seasonId?: number;
   episodeId?: number;
   currentEpisode?: Episode;
+  downloads?: any[]; // Scraped downloads
 }
 
 const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
@@ -50,8 +51,9 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   seasonId,
   episodeId,
   currentEpisode,
+  downloads = []
 }) => {
-  const currentUser = useAppSelector((state) => state.auth.user);
+  const { user: currentUser } = useAppSelector((state) => state.auth);
   const { isMobile } = useCurrentViewportView();
   const [isSidebarActive, setIsSidebarActive] = useState(false);
   const [currentSourceIndex, setCurrentSourceIndex] = useState(0);
@@ -487,184 +489,199 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   )}
                 </div>
 
-                <iframe
-                  className="absolute w-full h-full top-0 left-0"
-                  src={currentSource}
-                  title="Film Video Player"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  onError={handleVideoError}
-                  onLoad={handleVideoLoad}
-                ></iframe>
-
-                {/* Resolving Status Overlay */}
-                {isResolving && (
-                  <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center">
-                    <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-                    <h2 className="text-xl font-bold text-white mb-2">Resolving Sources...</h2>
-                    <p className="text-gray-400 text-sm animate-pulse italic">Scanning high-quality direct links for you</p>
-                  </div>
-                )}
-
-                {/* Manual Error Message */}
-                {videoError && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-red-500/90 text-white px-6 py-3 rounded-full text-xs font-bold shadow-lg flex flex-col items-center gap-1">
-                    <span>⚠️ Video failed to load.</span>
-                    <button
-                      onClick={() => setIsSelectorOpen(true)}
-                      className="underline hover:text-gray-200"
+                <div className="w-full h-full relative bg-black">
+                  {/* Smart Player: Video Tag for MP4s, Iframe for others */}
+                  {currentSource && currentSource.match(/\.(mp4|mkv|webm)$/i) ? (
+                    <video
+                      controls
+                      autoPlay
+                      className="w-full h-full object-contain"
+                      src={currentSource}
+                      onError={() => setVideoError(true)}
+                      onLoadStart={() => setIsLoadingVideo(true)}
+                      onCanPlay={() => setIsLoadingVideo(false)}
                     >
-                      Click here to select another server
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-          <div className="mt-5 pb-8">
-            <div className="flex justify-between md:text-base text-sm">
-              <div className="flex-1">
-                {!detail && <Skeleton className="h-8 w-[400px]" />}
-                {detail && (
-                  <h1 className="text-white md:text-3xl text-xl font-medium">
-                    <Link
-                      to={
-                        media_type === "movie"
-                          ? `/movie/${detail.id}`
-                          : `/tv/${detail.id}`
-                      }
-                      className="hover:brightness-75 transition duration-300"
-                    >
-                      {(detail as DetailMovie).title ||
-                        (detail as DetailTV).name}
-                    </Link>
-                  </h1>
-                )}
-                {!detail && <Skeleton className="w-[100px] h-[23px] mt-5" />}
-                {detail && (
-                  <div className="flex gap-5 mt-5">
-                    <div className="flex gap-2 items-center">
-                      <AiFillStar size={25} className="text-primary" />
-                      {media_type === "movie" && (
-                        <p>{detail.vote_average.toFixed(1)}</p>
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <iframe
+                      className="absolute w-full h-full top-0 left-0"
+                      src={currentSource || ""}
+                      title="Film Video Player"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      onError={() => setVideoError(true)}
+                      onLoad={handleVideoLoad}
+                    ></iframe>
+                  )}
+
+                  {/* Resolving Status Overlay */}
+                  {isResolving && (
+                    <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                      <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                      <h2 className="text-xl font-bold text-white mb-2">Resolving Sources...</h2>
+                      <p className="text-gray-400 text-sm animate-pulse italic">Scanning high-quality direct links for you</p>
+                    </div>
+                  )}
+
+                  {/* Manual Error Message */}
+                  {videoError && (
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 bg-red-500/90 text-white px-6 py-3 rounded-full text-xs font-bold shadow-lg flex flex-col items-center gap-1">
+                      <span>⚠️ Video failed to load.</span>
+                      <button
+                        onClick={() => setIsSelectorOpen(true)}
+                        className="underline hover:text-gray-200"
+                      >
+                        Click here to select another server
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-5 pb-8">
+                  <div className="flex justify-between md:text-base text-sm">
+                    <div className="flex-1">
+                      {!detail && <Skeleton className="h-8 w-[400px]" />}
+                      {detail && (
+                        <h1 className="text-white md:text-3xl text-xl font-medium">
+                          <Link
+                            to={
+                              media_type === "movie"
+                                ? `/movie/${detail.id}`
+                                : `/tv/${detail.id}`
+                            }
+                            className="hover:brightness-75 transition duration-300"
+                          >
+                            {(detail as DetailMovie).title ||
+                              (detail as DetailTV).name}
+                          </Link>
+                        </h1>
                       )}
-                      {media_type === "tv" && (
-                        <p>{currentEpisode?.vote_average.toFixed(1)}</p>
+                      {!detail && <Skeleton className="w-[100px] h-[23px] mt-5" />}
+                      {detail && (
+                        <div className="flex gap-5 mt-5">
+                          <div className="flex gap-2 items-center">
+                            <AiFillStar size={25} className="text-primary" />
+                            {media_type === "movie" && (
+                              <p>{detail.vote_average.toFixed(1)}</p>
+                            )}
+                            {media_type === "tv" && (
+                              <p>{currentEpisode?.vote_average.toFixed(1)}</p>
+                            )}
+                          </div>
+                          <div className="flex gap-2 items-center">
+                            <AiTwotoneCalendar size={25} className="text-primary" />
+                            <p>
+                              {media_type === "movie" &&
+                                new Date(
+                                  (detail as DetailMovie).release_date
+                                ).getFullYear()}
+                              {media_type === "tv" &&
+                                new Date(
+                                  (currentEpisode as Episode).air_date
+                                ).getFullYear()}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {!detail && <Skeleton className="w-[100px] h-[23px] mt-2" />}
+                      {!isMobile && detail && (
+                        <ul className="flex gap-2 flex-wrap mt-3">
+                          {detail.genres.map((genre) => (
+                            <li key={genre.id} className="mb-2">
+                              <Link
+                                to={`/explore?genre=${genre.id}`}
+                                className="px-3 py-1 bg-dark-lighten rounded-full hover:brightness-75 duration-300 transition"
+                              >
+                                {genre.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
                       )}
                     </div>
-                    <div className="flex gap-2 items-center">
-                      <AiTwotoneCalendar size={25} className="text-primary" />
-                      <p>
-                        {media_type === "movie" &&
-                          new Date(
-                            (detail as DetailMovie).release_date
-                          ).getFullYear()}
-                        {media_type === "tv" &&
-                          new Date(
-                            (currentEpisode as Episode).air_date
-                          ).getFullYear()}
-                      </p>
-                    </div>
+                    {media_type === "tv" && currentEpisode && (
+                      <div className="flex-1">
+                        <h2 className="md:text-xl italic uppercase text-gray-200 mt-2 text-right">
+                          {currentEpisode.name}
+                        </h2>
+                        <p className="text-right md:text-lg mt-2">
+                          Season {seasonId} &#8212; Episode {episodeId}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
-                {!detail && <Skeleton className="w-[100px] h-[23px] mt-2" />}
-                {!isMobile && detail && (
-                  <ul className="flex gap-2 flex-wrap mt-3">
-                    {detail.genres.map((genre) => (
-                      <li key={genre.id} className="mb-2">
-                        <Link
-                          to={`/explore?genre=${genre.id}`}
-                          className="px-3 py-1 bg-dark-lighten rounded-full hover:brightness-75 duration-300 transition"
-                        >
-                          {genre.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+
+                  {isMobile && detail && (
+                    <ul className="flex gap-2 flex-wrap mt-3">
+                      {detail.genres.map((genre) => (
+                        <li key={genre.id} className="mb-2">
+                          <Link
+                            to={`/explore?genre=${genre.id}`}
+                            className="px-3 py-1 bg-dark-lighten rounded-full hover:brightness-75 duration-300 transition"
+                          >
+                            {genre.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <div className="md:text-xl text-lg font-medium text-white mt-5">
+                    Overview:
+                  </div>
+                  {!detail && <Skeleton className="h-[84px] mt-2" />}
+                  {detail && (
+                    <ReadMore
+                      limitTextLength={300}
+                      className="md:text-lg text-base mt-1"
+                    >
+                      {media_type === "movie"
+                        ? detail.overview
+                        : currentEpisode?.overview}
+                    </ReadMore>
+                  )}
+
+                  {/* Download Section */}
+                  {downloadInfo && (
+                    <div id="download-section" className="mt-6">
+                      <DownloadOptions downloadInfo={downloadInfo} />
+                    </div>
+                  )}
+                </div>
+                <Comments mediaType={media_type} mediaId={String(detail?.id)} />
               </div>
-              {media_type === "tv" && currentEpisode && (
-                <div className="flex-1">
-                  <h2 className="md:text-xl italic uppercase text-gray-200 mt-2 text-right">
-                    {currentEpisode.name}
-                  </h2>
-                  <p className="text-right md:text-lg mt-2">
-                    Season {seasonId} &#8212; Episode {episodeId}
+
+            <div className="shrink-0 md:max-w-[400px] w-full relative px-6">
+              {!isMobile && <SearchBox />}
+              {media_type === "movie" && (
+                <RightbarFilms
+                  name="Recommendations"
+                  films={recommendations?.filter((item) => item.id !== detail?.id)}
+                  limitNumber={4}
+                  isLoading={!recommendations}
+                  className="md:mt-24"
+                />
+              )}
+              {media_type === "tv" && (
+                <div className="md:mt-24">
+                  <p className="mb-6 text-xl font-medium flex justify-between items-center">
+                    <span className="text-white">Seasons:</span>
+                    <BsThreeDotsVertical size={20} />
                   </p>
+                  <SeasonSelection
+                    detailSeasons={detailSeasons}
+                    seasonId={seasonId}
+                    episodeId={episodeId}
+                  />
                 </div>
               )}
             </div>
-
-            {isMobile && detail && (
-              <ul className="flex gap-2 flex-wrap mt-3">
-                {detail.genres.map((genre) => (
-                  <li key={genre.id} className="mb-2">
-                    <Link
-                      to={`/explore?genre=${genre.id}`}
-                      className="px-3 py-1 bg-dark-lighten rounded-full hover:brightness-75 duration-300 transition"
-                    >
-                      {genre.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <div className="md:text-xl text-lg font-medium text-white mt-5">
-              Overview:
-            </div>
-            {!detail && <Skeleton className="h-[84px] mt-2" />}
-            {detail && (
-              <ReadMore
-                limitTextLength={300}
-                className="md:text-lg text-base mt-1"
-              >
-                {media_type === "movie"
-                  ? detail.overview
-                  : currentEpisode?.overview}
-              </ReadMore>
-            )}
-
-            {/* Download Section */}
-            {downloadInfo && (
-              <div id="download-section" className="mt-6">
-                <DownloadOptions downloadInfo={downloadInfo} />
-              </div>
-            )}
           </div>
-          <Comments mediaType={media_type} mediaId={String(detail?.id)} />
-        </div>
 
-        <div className="shrink-0 md:max-w-[400px] w-full relative px-6">
-          {!isMobile && <SearchBox />}
-          {media_type === "movie" && (
-            <RightbarFilms
-              name="Recommendations"
-              films={recommendations?.filter((item) => item.id !== detail?.id)}
-              limitNumber={4}
-              isLoading={!recommendations}
-              className="md:mt-24"
-            />
-          )}
-          {media_type === "tv" && (
-            <div className="md:mt-24">
-              <p className="mb-6 text-xl font-medium flex justify-between items-center">
-                <span className="text-white">Seasons:</span>
-                <BsThreeDotsVertical size={20} />
-              </p>
-              <SeasonSelection
-                detailSeasons={detailSeasons}
-                seasonId={seasonId}
-                episodeId={episodeId}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      <Footer />
-    </>
-  );
+          <Footer />
+        </>
+        );
 };
 
-export default FilmWatch;
+        export default FilmWatch;

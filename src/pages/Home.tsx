@@ -425,19 +425,7 @@ const Home: FC = () => {
                 </div>
               )}
 
-              {/* Scraped Content with TMDB Posters */}
-              {showLowerSections && scrapedContent && scrapedContent.length > 0 && (
-                <div className="px-4 md:px-8 mt-12">
-                  <Suspense fallback={<div className="h-40" />}>
-                    <SectionErrorBoundary>
-                      <SectionSlider
-                        films={scrapedContent.filter((item: any) => item.media_type === currentTab)}
-                        title={currentTab === "movie" ? "📥 Direct Download Movies" : "📥 Direct Download TV Shows"}
-                      />
-                    </SectionErrorBoundary>
-                  </Suspense>
-                </div>
-              )}
+
 
               {showLowerSections && (
                 <Suspense fallback={<div className="h-40" />}>
