@@ -15,7 +15,9 @@ const BecauseYouWatched: FC = () => {
             if (watchHistory.length === 0) return;
 
             const lastWatched = watchHistory[0];
-            setSourceItem({ title: lastWatched.title });
+            if (!lastWatched) return;
+
+            setSourceItem({ title: lastWatched.title || "Unknown Title" });
 
             const data = await getRecommendations(lastWatched.mediaType, lastWatched.mediaId);
             setRecommendations(data.slice(0, 20)); // Limit to 20

@@ -100,8 +100,8 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item, onClick }) => {
         </div>
 
         <div className="bg-primary/80 px-2 py-0.5 rounded-full absolute top-[5%] left-[8%] z-20 flex items-center gap-1 text-white text-[10px]">
-          {item.vote_average > 0 ? item.vote_average.toFixed(1) : "HD"}
-          {item.vote_average > 0 && <AiFillStar size={12} />}
+          {Number(item.vote_average) > 0 ? Number(item.vote_average).toFixed(1) : "HD"}
+          {Number(item.vote_average) > 0 && <AiFillStar size={12} />}
         </div>
 
         {/* Language Badge */}

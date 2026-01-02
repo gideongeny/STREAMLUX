@@ -12,7 +12,7 @@ class AdService {
     private config: MonetizationConfig = {
         multiTagId: '', // Set this in your Monetag dashboard
         pushNotificationId: '',
-        interstitialFrequency: 10, // 10 minutes between ads
+        interstitialFrequency: 5, // 5 minutes between ads
     };
 
     /**

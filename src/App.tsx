@@ -36,7 +36,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const UserAgreement = lazy(() => import("./pages/UserAgreement"));
 const Disclaimer = lazy(() => import("./pages/Disclaimer"));
 const Download = lazy(() => import("./pages/Download"));
-const Downloads = lazy(() => import("./pages/Downloads"));
+const DownloadsPage = lazy(() => import("./pages/DownloadsPage"));
 const CalendarPage = lazy(() => import("./pages/CalendarPage"));
 const Settings = lazy(() => import("./pages/Settings"));
 
@@ -73,6 +73,7 @@ function App() {
   };
 
   const [isSignedIn, setIsSignedIn] = useState<boolean>(() => getInitialSignedIn());
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   // Performance logging for boot time
   useEffect(() => {
@@ -92,12 +93,16 @@ function App() {
 
   // Initialize ad service
   useEffect(() => {
-    // Configure Monetag IDs from environment or constants
-    adService.init({
-      multiTagId: process.env.REACT_APP_MONETAG_MULTITAG_ID || '',
-      pushNotificationId: process.env.REACT_APP_MONETAG_PUSH_ID || '',
-      interstitialFrequency: 10, // 10 minutes between ads
-    });
+    try {
+      // Configure Monetag IDs from environment or constants
+      adService.init({
+        multiTagId: process.env.REACT_APP_MONETAG_MULTITAG_ID || '',
+        pushNotificationId: process.env.REACT_APP_MONETAG_PUSH_ID || '',
+        interstitialFrequency: 5, // 5 minutes between ads
+      });
+    } catch (e) {
+      console.warn("AdService init failed in App:", e);
+    }
   }, []);
 
   // Trigger interstitial ads on multiple pages
@@ -170,6 +175,9 @@ function App() {
 
   // Profile Persistence & Redirect
   useEffect(() => {
+    // Only run redirect logic if auth is initialized AND we have a signed in user
+    if (!isAuthReady) return;
+
     if (isSignedIn && !currentProfile) {
       // Don't redirect if already on a page that doesn't require a profile
       if (location.pathname === "/profiles" || location.pathname === "/auth" || location.pathname === "/profile" || location.pathname === "/settings") {
@@ -193,7 +201,7 @@ function App() {
         navigate("/profiles");
       }
     }
-  }, [isSignedIn, currentProfile, location.pathname, dispatch, navigate]);
+  }, [isSignedIn, currentProfile, location.pathname, dispatch, navigate, isAuthReady]);
 
   useEffect(() => {
     let unSubDoc: (() => void) | undefined;
@@ -201,6 +209,7 @@ function App() {
     const unSubAuth: () => void = onAuthStateChanged(
       auth,
       (user) => {
+        setIsAuthReady(true);
         try {
           if (!user) {
             dispatch(setCurrentUser(null));
@@ -441,7 +450,7 @@ function App() {
           <Route path="user-agreement" element={<UserAgreement />} />
           <Route path="disclaimer" element={<Disclaimer />} />
           <Route path="download" element={<Download />} />
-          <Route path="downloads" element={<Downloads />} />
+          <Route path="downloads" element={<DownloadsPage />} />
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="settings" element={<Settings />} />
           <Route

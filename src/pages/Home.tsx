@@ -6,6 +6,7 @@ import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
 import MainHomeFilm from "../components/Home/MainHomeFilm";
 import ErrorBoundary from "../components/Common/ErrorBoundary";
+import SectionErrorBoundary from "../components/Common/SectionErrorBoundary";
 import { useHomeData } from "../hooks/useHomeData";
 import { useAppSelector } from "../store/hooks";
 import { useWatchProgress } from "../hooks/useWatchProgress";
@@ -256,17 +257,22 @@ const Home: FC = () => {
               </Suspense>
 
 
+
               {/* Continue Watching Section */}
               <div className="px-4 md:px-8">
                 <Suspense fallback={<div className="h-20" />}>
-                  <ContinueWatching watchHistory={watchHistory} onClearProgress={clearProgress} />
+                  <SectionErrorBoundary>
+                    <ContinueWatching watchHistory={watchHistory} onClearProgress={clearProgress} />
+                  </SectionErrorBoundary>
                 </Suspense>
               </div>
 
               {/* Top 10 Section */}
               {showLowerSections && (
                 <Suspense fallback={<div className="h-40" />}>
-                  <Top10Slider films={top10Data || []} />
+                  <SectionErrorBoundary>
+                    <Top10Slider films={top10Data || []} />
+                  </SectionErrorBoundary>
                 </Suspense>
               )}
 
@@ -274,7 +280,9 @@ const Home: FC = () => {
               {showLowerSections && (
                 <div className="mt-12">
                   <Suspense fallback={<div className="h-40" />}>
-                    <TrendingNow isMainFlow={true} />
+                    <SectionErrorBoundary>
+                      <TrendingNow isMainFlow={true} />
+                    </SectionErrorBoundary>
                   </Suspense>
                 </div>
               )}
@@ -283,11 +291,13 @@ const Home: FC = () => {
               {showLowerSections && dataMovie?.Hot && (
                 <div className="mt-12 px-4 md:px-8">
                   <Suspense fallback={<div className="h-40" />}>
-                    <SectionSlider
-                      films={dataMovie.Hot}
-                      title="🔥 HOT & Trending"
-                      seeMoreParams={{ sort_by: "popularity.desc", page: 2 }}
-                    />
+                    <SectionErrorBoundary>
+                      <SectionSlider
+                        films={dataMovie.Hot}
+                        title="🔥 HOT & Trending"
+                        seeMoreParams={{ sort_by: "popularity.desc", page: 2 }}
+                      />
+                    </SectionErrorBoundary>
                   </Suspense>
                 </div>
               )}
@@ -295,10 +305,12 @@ const Home: FC = () => {
               {/* Upcoming Calendar Section (MovieBox Style) */}
               <div className="px-4 md:px-8">
                 <Suspense fallback={<div className="h-40" />}>
-                  <UpcomingCalendar
-                    title={currentTab === "movie" ? "Upcoming Movies" : "Upcoming TV Releases"}
-                    contentType={currentTab as "movie" | "tv"}
-                  />
+                  <SectionErrorBoundary>
+                    <UpcomingCalendar
+                      title={currentTab === "movie" ? "Upcoming Movies" : "Upcoming TV Releases"}
+                      contentType={currentTab as "movie" | "tv"}
+                    />
+                  </SectionErrorBoundary>
                 </Suspense>
               </div>
 
@@ -306,7 +318,9 @@ const Home: FC = () => {
               {!currentProfile?.isKid && showLowerSections && (
                 <div className="px-4 md:px-8 mt-12">
                   <Suspense fallback={<div className="h-40" />}>
-                    <VerticalShorts variant="horizontal" />
+                    <SectionErrorBoundary>
+                      <VerticalShorts variant="horizontal" />
+                    </SectionErrorBoundary>
                   </Suspense>
                 </div>
               )}
@@ -314,13 +328,17 @@ const Home: FC = () => {
               {/* Because You Watched Section */}
               {showLowerSections && (
                 <Suspense fallback={<div className="h-40" />}>
-                  <BecauseYouWatched />
+                  <SectionErrorBoundary>
+                    <BecauseYouWatched />
+                  </SectionErrorBoundary>
                 </Suspense>
               )}
 
               {showLowerSections && (
                 <Suspense fallback={<div className="h-40" />}>
-                  <NewReleases />
+                  <SectionErrorBoundary>
+                    <NewReleases />
+                  </SectionErrorBoundary>
                 </Suspense>
               )}
 
@@ -328,14 +346,16 @@ const Home: FC = () => {
               <DiverseNavigation currentTab={currentTab as "movie" | "tv" | "sports"} />
 
               {/* Discover World content */}
-              <ErrorBoundary fallback={<div className="p-10 text-center text-gray-500">Some content could not be loaded.</div>}>
+              <SectionErrorBoundary>
                 {showLowerSections && <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />}
-              </ErrorBoundary>
+              </SectionErrorBoundary>
             </>
           ) : (
             <div className="mt-4">
               <Suspense fallback={<div className="h-40 bg-gray-800/20 rounded-xl animate-pulse" />}>
-                <SportsMainContent />
+                <SectionErrorBoundary>
+                  <SportsMainContent />
+                </SectionErrorBoundary>
               </Suspense>
             </div>
           )}

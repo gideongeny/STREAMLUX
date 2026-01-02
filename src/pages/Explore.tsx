@@ -10,6 +10,7 @@ import { useTMDBCollectionQuery } from "../hooks/useCollectionQuery";
 import { useYouTubeVideos } from "../hooks/useYouTube";
 import YouTubeGrid from "../components/Explore/YouTubeGrid";
 import SeasonalBanner from "../components/Explore/SeasonalBanner";
+import SectionErrorBoundary from "../components/Common/SectionErrorBoundary";
 
 const Explore = () => {
   const [searchParams] = useSearchParams();
@@ -227,20 +228,22 @@ const Explore = () => {
             </div>
 
             <div className="flex-grow overflow-hidden">
-              {currentSource === "youtube" ? (
-                <YouTubeGrid
-                  videos={ytVideos}
-                  loading={ytLoading}
-                  error={ytError}
-                />
-              ) : (
-                <ExploreResult
-                  data={combinedItems}
-                  isLoading={isLoading || ytLoading}
-                  error={data && data.length > 0 ? (error || null) : (error || ytError)}
-                  currentTab={currentTab}
-                />
-              )}
+              <SectionErrorBoundary fallback={null}>
+                {currentSource === "youtube" ? (
+                  <YouTubeGrid
+                    videos={ytVideos}
+                    loading={ytLoading}
+                    error={ytError}
+                  />
+                ) : (
+                  <ExploreResult
+                    data={combinedItems}
+                    isLoading={isLoading || ytLoading}
+                    error={data && data.length > 0 ? (error || null) : (error || ytError)}
+                    currentTab={currentTab}
+                  />
+                )}
+              </SectionErrorBoundary>
             </div>
           </div>
         </div>

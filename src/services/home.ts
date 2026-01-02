@@ -720,10 +720,10 @@ export const getKenyanTVShows = async (): Promise<Item[]> => {
         sort_by: "popularity.desc",
         page: 1,
       },
-    });
+    }).catch(() => ({ data: { results: [] } }));
 
     const searchPromises = curatedTitles.map((title) =>
-      axios.get(`/search/tv?query=${encodeURIComponent(title)}&page=1`)
+      axios.get(`/search/tv?query=${encodeURIComponent(title)}&page=1`).catch(() => ({ data: { results: [] } }))
     );
 
     const [discoverResponse, ...searchResponses] = await Promise.all([
@@ -1441,10 +1441,10 @@ export const getEnhancedNollywoodContent = async (): Promise<Item[]> => {
 
     const [moviePromises, tvPromises] = await Promise.all([
       searchTerms.map(term =>
-        axios.get(`/search/movie?query=${encodeURIComponent(term)}&page=1`)
+        axios.get(`/search/movie?query=${encodeURIComponent(term)}&page=1`).catch(() => ({ data: { results: [] } }))
       ),
       searchTerms.map(term =>
-        axios.get(`/search/tv?query=${encodeURIComponent(term)}&page=1`)
+        axios.get(`/search/tv?query=${encodeURIComponent(term)}&page=1`).catch(() => ({ data: { results: [] } }))
       )
     ]);
 
@@ -1522,10 +1522,10 @@ export const getEnhancedKenyanContent = async (): Promise<Item[]> => {
     });
 
     const tvSearchPromises = curatedTvTitles.map((t) =>
-      axios.get(`/search/tv?query=${encodeURIComponent(t)}&page=1`)
+      axios.get(`/search/tv?query=${encodeURIComponent(t)}&page=1`).catch(() => ({ data: { results: [] } }))
     );
     const movieSearchPromises = curatedMovieTitles.map((t) =>
-      axios.get(`/search/movie?query=${encodeURIComponent(t)}&page=1`)
+      axios.get(`/search/movie?query=${encodeURIComponent(t)}&page=1`).catch(() => ({ data: { results: [] } }))
     );
 
     const [discMovieRes, discTvRes, tvSearchResList, movieSearchResList] = await Promise.all([
@@ -1587,7 +1587,7 @@ export const getBlackStories = async (): Promise<Item[]> => {
     ];
 
     const responses = await Promise.all(
-      searchTerms.map(term => axios.get(`/search/movie?query=${encodeURIComponent(term)}&page=1`))
+      searchTerms.map(term => axios.get(`/search/movie?query=${encodeURIComponent(term)}&page=1`).catch(() => ({ data: { results: [] } })))
     );
 
     const results = responses.flatMap(res => res.data.results || []).map((item: any) => ({
@@ -1669,7 +1669,7 @@ export const getFutureUpcoming = async (mediaType: "movie" | "tv"): Promise<Item
         include_adult: false,
       },
     });
-    return (response.data.results || []).map((item: any) => ({
+    return (response?.data?.results || []).map((item: any) => ({
       ...item,
       media_type: mediaType,
     })).filter((item: Item) => item.poster_path);

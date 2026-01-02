@@ -40,7 +40,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
           slidesPerView={1}
           className="!absolute !top-0 !left-0 !w-full !h-full  !rounded-lg"
         >
-          {films?.map((film, index) => (
+          {Array.isArray(films) && films.map((film, index) => (
             <SwiperSlide key={film.id}>
               <Link
                 to={

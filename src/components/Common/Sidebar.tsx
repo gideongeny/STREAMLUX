@@ -161,6 +161,16 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           </Link>
 
           <Link
+            to="/explore?region=kenya"
+            className={`flex gap-6 items-center  ${location.search.includes("region=kenya") &&
+              "!text-primary border-r-4 border-primary font-medium"
+              } hover:text-white transition duration-300`}
+          >
+            <span className="text-2xl">🇰🇪</span>
+            <p>Kenyan TV & Movies</p>
+          </Link>
+
+          <Link
             to="/explore?sort_by=popularity.desc"
             className={`flex gap-6 items-center  ${location.search.includes("sort_by=popularity.desc") &&
               "!text-primary border-r-4 border-primary font-medium"
@@ -248,6 +258,16 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             <FaDownload size={25} />
             <p>{t('My Downloads')}</p>
           </button>
+
+          <Link
+            to="/downloads"
+            className={`flex gap-6 items-center  ${location.pathname === "/downloads" &&
+              "!text-primary border-r-4 border-primary font-medium"
+              } hover:text-white transition duration-300`}
+          >
+            <FaDownload size={25} className="text-green-400" />
+            <p className="text-green-400">Direct Links</p>
+          </Link>
 
           <button
             onClick={() => setIsRequestModalOpen(true)}

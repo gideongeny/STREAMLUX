@@ -116,7 +116,8 @@ export async function fetchVideosDetail(ids: string[]): Promise<any[]> {
 /**
  * Converts ISO 8601 duration string (e.g. PT1H2M10S) to seconds.
  */
-function parseDuration(duration: string): number {
+function parseDuration(duration: string | undefined | null): number {
+  if (!duration) return 0;
   const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
   if (!match) return 0;
   const hours = parseInt(match[1] || "0");

@@ -62,7 +62,10 @@ class ErrorBoundary extends Component<Props, State> {
       });
     } else {
       // After 2 retries, do a full page reload
-      window.location.reload();
+      // After 2 retries, show a final error message instead of reloading
+      this.setState({
+        showError: true
+      });
     }
   };
 

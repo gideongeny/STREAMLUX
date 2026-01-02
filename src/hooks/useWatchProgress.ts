@@ -28,7 +28,13 @@ export const useWatchProgress = () => {
             const localData = localStorage.getItem(STORAGE_KEY);
             if (localData) {
                 const parsed = JSON.parse(localData);
-                setWatchHistory(parsed);
+                if (Array.isArray(parsed)) {
+                    setWatchHistory(parsed);
+                } else {
+                    console.warn("Corrupt watch history in localStorage, resetting.");
+                    localStorage.removeItem(STORAGE_KEY);
+                    setWatchHistory([]);
+                }
             }
 
             // Sync with Firebase if logged in

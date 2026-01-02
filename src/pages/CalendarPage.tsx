@@ -11,6 +11,7 @@ import Sidebar from "../components/Common/Sidebar";
 import Footer from "../components/Footer/Footer";
 import { getUpcomingFixturesAPI } from "../services/sportsAPI";
 import { useSearchParams } from "react-router-dom";
+import { resizeImage } from "../shared/utils";
 
 const CalendarPage: FC = () => {
     const days = [
@@ -39,7 +40,7 @@ const CalendarPage: FC = () => {
         });
         const farRes = await getFutureUpcoming("tv");
 
-        const combined = [...(res.data.results as Item[]), ...farRes];
+        const combined = [...(res.data.results as Item[] || []), ...(farRes || [])].filter(i => i && i.id);
         return combined.filter((item, index, self) =>
             index === self.findIndex((t) => t.id === item.id)
         );
@@ -53,7 +54,7 @@ const CalendarPage: FC = () => {
         const nearRes = await axios.get("/movie/upcoming", { params: { page: 1 } });
         const farRes = await getFutureUpcoming("movie");
 
-        const combined = [...(nearRes.data.results || []), ...farRes];
+        const combined = [...(nearRes.data.results || []), ...(farRes || [])].filter(i => i && i.id);
         // Dedupe
         return combined.filter((item, index, self) =>
             index === self.findIndex((t) => t.id === item.id)
@@ -172,7 +173,7 @@ const CalendarPage: FC = () => {
                                         >
                                             <div className="w-20 h-28 md:w-24 md:h-32 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl transition duration-500 group-hover:scale-105">
                                                 <LazyLoadImage
-                                                    src={`https://image.tmdb.org/t/p/w200${item.poster_path}`}
+                                                    src={resizeImage(item.poster_path, "w200")}
                                                     className="w-full h-full object-cover"
                                                     alt={item.name}
                                                 />
@@ -207,7 +208,7 @@ const CalendarPage: FC = () => {
                                         >
                                             <div className="w-20 h-28 md:w-24 md:h-32 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl transition duration-500 group-hover:scale-105">
                                                 <LazyLoadImage
-                                                    src={`https://image.tmdb.org/t/p/w200${item.poster_path}`}
+                                                    src={resizeImage(item.poster_path, "w200")}
                                                     className="w-full h-full object-cover"
                                                     alt={item.title}
                                                 />

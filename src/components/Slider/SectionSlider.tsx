@@ -71,7 +71,7 @@ const SectionSlider: FC<SectionSliderProps> = ({
           // Dynamic width calculation based on viewport and sidebars
           className="w-full tw-section-slider !py-2"
         >
-          {displayFilms?.map((film) => (
+          {Array.isArray(displayFilms) && displayFilms.map((film) => (
             <SwiperSlide key={film.id} className="!w-[175px]">
               <FilmItem item={film} />
             </SwiperSlide>
