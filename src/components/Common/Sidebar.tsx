@@ -259,16 +259,6 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             <p>{t('My Downloads')}</p>
           </button>
 
-          <Link
-            to="/downloads"
-            className={`flex gap-6 items-center  ${location.pathname === "/downloads" &&
-              "!text-primary border-r-4 border-primary font-medium"
-              } hover:text-white transition duration-300`}
-          >
-            <FaDownload size={25} className="text-green-400" />
-            <p className="text-green-400">Direct Links</p>
-          </Link>
-
           <button
             onClick={() => setIsRequestModalOpen(true)}
             className="flex gap-6 items-center hover:text-white transition duration-300"

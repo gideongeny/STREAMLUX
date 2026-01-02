@@ -11,7 +11,7 @@ import { useHomeData } from "../hooks/useHomeData";
 import { useAppSelector } from "../store/hooks";
 import { useWatchProgress } from "../hooks/useWatchProgress";
 import { useQuery } from "@tanstack/react-query";
-import { getTop10Movies, getTop10TVs } from "../services/home";
+import { getTop10Movies, getTop10TVs, getEnhancedKenyanContent } from "../services/home";
 // Lazy load non-critical components for performance (Android TV & Slow Web optimization)
 const AdBanner = lazy(() => import("../components/Common/AdBanner"));
 const ContinueWatching = lazy(() => import("../components/Home/ContinueWatching"));
@@ -98,6 +98,12 @@ const Home: FC = () => {
     if (currentTab === "tv") return getTop10TVs();
     return getTop10Movies(); // Default
   }, {
+    select: (data: any) => filterContent(data as any[])
+  });
+
+  // Fetch Kenyan content
+  const { data: kenyanContent } = useQuery(["kenyanContent"], getEnhancedKenyanContent, {
+    staleTime: 1000 * 60 * 30, // 30 minutes
     select: (data: any) => filterContent(data as any[])
   });
 
@@ -332,6 +338,21 @@ const Home: FC = () => {
                     <BecauseYouWatched />
                   </SectionErrorBoundary>
                 </Suspense>
+              )}
+
+              {/* Kenyan Content Section */}
+              {showLowerSections && kenyanContent && kenyanContent.length > 0 && (
+                <div className="px-4 md:px-8 mt-12">
+                  <Suspense fallback={<div className="h-40" />}>
+                    <SectionErrorBoundary>
+                      <SectionSlider
+                        films={kenyanContent.filter((item: any) => item.media_type === currentTab)}
+                        title={currentTab === "movie" ? "🇰🇪 Kenyan Movies" : "🇰🇪 Kenyan TV Shows"}
+                        seeMoreParams={{ region: "kenya" }}
+                      />
+                    </SectionErrorBoundary>
+                  </Suspense>
+                </div>
               )}
 
               {showLowerSections && (
