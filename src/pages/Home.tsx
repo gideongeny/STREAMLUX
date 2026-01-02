@@ -12,6 +12,7 @@ import { useAppSelector } from "../store/hooks";
 import { useWatchProgress } from "../hooks/useWatchProgress";
 import { useQuery } from "@tanstack/react-query";
 import { getTop10Movies, getTop10TVs, getEnhancedKenyanContent } from "../services/home";
+import { getEnrichedScrapedContent } from "../services/scrapedContent";
 // Lazy load non-critical components for performance (Android TV & Slow Web optimization)
 const AdBanner = lazy(() => import("../components/Common/AdBanner"));
 const ContinueWatching = lazy(() => import("../components/Home/ContinueWatching"));
@@ -104,6 +105,12 @@ const Home: FC = () => {
   // Fetch Kenyan content
   const { data: kenyanContent } = useQuery(["kenyanContent"], getEnhancedKenyanContent, {
     staleTime: 1000 * 60 * 30, // 30 minutes
+    select: (data: any) => filterContent(data as any[])
+  });
+
+  // Fetch enriched scraped content (with TMDB posters)
+  const { data: scrapedContent } = useQuery(["scrapedContent"], getEnrichedScrapedContent, {
+    staleTime: 1000 * 60 * 60, // 1 hour (expensive operation)
     select: (data: any) => filterContent(data as any[])
   });
 
@@ -349,6 +356,20 @@ const Home: FC = () => {
                         films={kenyanContent.filter((item: any) => item.media_type === currentTab)}
                         title={currentTab === "movie" ? "🇰🇪 Kenyan Movies" : "🇰🇪 Kenyan TV Shows"}
                         seeMoreParams={{ region: "kenya" }}
+                      />
+                    </SectionErrorBoundary>
+                  </Suspense>
+                </div>
+              )}
+
+              {/* Scraped Content with TMDB Posters */}
+              {showLowerSections && scrapedContent && scrapedContent.length > 0 && (
+                <div className="px-4 md:px-8 mt-12">
+                  <Suspense fallback={<div className="h-40" />}>
+                    <SectionErrorBoundary>
+                      <SectionSlider
+                        films={scrapedContent.filter((item: any) => item.media_type === currentTab)}
+                        title={currentTab === "movie" ? "📥 Direct Download Movies" : "📥 Direct Download TV Shows"}
                       />
                     </SectionErrorBoundary>
                   </Suspense>
