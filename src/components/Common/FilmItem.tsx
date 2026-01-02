@@ -6,6 +6,8 @@ import { Link } from "react-router-dom";
 import { Item } from "../../shared/types";
 import { resizeImage } from "../../shared/utils";
 import { useBookmark } from "../../hooks/useBookmark";
+import { hasDownloads } from "../../services/hybridContent";
+import DownloadBadge from "./DownloadBadge";
 
 import { prefetchData } from "../../shared/axios";
 
@@ -62,6 +64,9 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item, onClick }) => {
           effect="blur"
           style={{ height: '100%' }}
         />
+
+        {/* Download Badge */}
+        {hasDownloads(item.title || item.name || '') && <DownloadBadge />}
 
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center gap-4 p-2 z-10 backdrop-blur-[2px]">
