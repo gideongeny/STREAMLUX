@@ -8,11 +8,12 @@ import { crawlYTS } from './yts';
 import { crawlWaploaded } from './waploaded';
 import { crawlCoolMovieZ } from './coolmoviez';
 import { crawlMP4Mania } from './mp4mania';
+import { crawlGoojara } from './goojara';
 
 const OUTPUT_FILE = path.join(process.cwd(), '../src/data/downloads.json');
 
 const runAll = async () => {
-    console.log('Starting full scrape across 8 sources...');
+    console.log('Starting full scrape across 9 sources...');
 
     // Use Promise.allSettled to continue even if some scrapers fail
     const results = await Promise.allSettled([
@@ -23,16 +24,17 @@ const runAll = async () => {
         crawlYTS(),
         crawlWaploaded(),
         crawlCoolMovieZ(),
-        crawlMP4Mania()
+        crawlMP4Mania(),
+        crawlGoojara()
     ]);
 
     // Extract successful results
-    const [netnaija, o2tv, fzmovies, toxicwap, yts, waploaded, coolmoviez, mp4mania] = results.map(
+    const [netnaija, o2tv, fzmovies, toxicwap, yts, waploaded, coolmoviez, mp4mania, goojara] = results.map(
         (result, idx) => {
             if (result.status === 'fulfilled') {
                 return result.value;
             } else {
-                const sources = ['NetNaija', 'O2TvSeries', 'FzMovies', 'ToxicWap', 'YTS', 'Waploaded', 'CoolMovieZ', 'MP4Mania'];
+                const sources = ['NetNaija', 'O2TvSeries', 'FzMovies', 'ToxicWap', 'YTS', 'Waploaded', 'CoolMovieZ', 'MP4Mania', 'Goojara'];
                 console.warn(`${sources[idx]} scraper failed:`, result.reason);
                 return [];
             }
@@ -56,11 +58,12 @@ const runAll = async () => {
         ...yts,
         ...waploaded,
         ...coolmoviez,
-        ...mp4mania
+        ...mp4mania,
+        ...goojara
     ];
 
     console.log(`Total items found: ${allData.length}`);
-    console.log(`Breakdown: NetNaija=${netnaija.length}, O2TV=${o2tv.length}, FzMovies=${fzmovies.length}, ToxicWap=${toxicwap.length}, YTS=${yts.length}, Waploaded=${waploaded.length}, CoolMovieZ=${coolmoviez.length}, MP4Mania=${mp4mania.length}`);
+    console.log(`Breakdown: NetNaija=${netnaija.length}, O2TV=${o2tv.length}, FzMovies=${fzmovies.length}, ToxicWap=${toxicwap.length}, YTS=${yts.length}, Waploaded=${waploaded.length}, CoolMovieZ=${coolmoviez.length}, MP4Mania=${mp4mania.length}, Goojara=${goojara.length}`);
 
     // Ensure directory exists
     const dir = path.dirname(OUTPUT_FILE);

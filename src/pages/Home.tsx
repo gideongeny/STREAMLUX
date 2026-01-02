@@ -129,36 +129,99 @@ const Home: FC = () => {
     bannerData: bannerDataTV,
   } = useHomeData("tvs", currentTab === "tv");
 
-  // Apply filters to grouped data - use useMemo to prevent unnecessary recalculations
+  // Helper to merge scraped content into TMDB sliders
+  const mergeScrapedContent = (tmdbData: any, scrapedItems: any[]) => {
+    if (!tmdbData || !scrapedItems) return tmdbData;
+
+    const merged = { ...tmdbData };
+
+    // Distribute scraped items into categories
+    scrapedItems.forEach((item: any) => {
+      // Add to 'Trending' or 'Popular' if high quality
+      if (item.vote_average > 7 && merged.Trending) {
+        merged.Trending.splice(Math.floor(Math.random() * 10), 0, item);
+      }
+
+      // Add to specific genre sliders
+      Object.keys(merged).forEach(category => {
+        // Simple genre matching logic
+        const catLower = category.toLowerCase();
+        const isInGenre = item.genres?.some((g: any) => catLower.includes(g.name.toLowerCase()));
+
+        if (isInGenre && Array.isArray(merged[category])) {
+          // Insert randomly to mix it up
+          const randomIndex = Math.floor(Math.random() * merged[category].length);
+          merged[category].splice(randomIndex, 0, item);
+        }
+      });
+    });
+
+    return merged;
+  };
+
+  // Apply filters and merge scraped content
   const filteredDataMovie = useMemo(() => {
     if (!dataMovie) return undefined;
+
+    let processed = { ...dataMovie };
+
+    // Merge scraped movies
+    if (scrapedContent) {
+      const scrapedMovies = scrapedContent.filter((item: any) => item.media_type === "movie");
+      processed = mergeScrapedContent(processed, scrapedMovies);
+    }
+
     const filtered: any = {};
-    Object.entries(dataMovie).forEach(([key, value]) => {
-      filtered[key] = filterContent(value);
+    Object.entries(processed).forEach(([key, value]) => {
+      filtered[key] = filterContent(value as any[]);
     });
-    // If all sections are empty after filtering, return original data to prevent empty state
+
     const hasAnyData = Object.values(filtered).some(section => Array.isArray(section) && section.length > 0);
-    return hasAnyData ? filtered : dataMovie;
-  }, [dataMovie, filterContent]);
+    return hasAnyData ? filtered : processed;
+  }, [dataMovie, filterContent, scrapedContent]);
 
   const filteredDataTV = useMemo(() => {
     if (!dataTV) return undefined;
+
+    let processed = { ...dataTV };
+
+    // Merge scraped TV shows
+    if (scrapedContent) {
+      const scrapedTV = scrapedContent.filter((item: any) => item.media_type === "tv");
+      processed = mergeScrapedContent(processed, scrapedTV);
+    }
+
     const filtered: any = {};
-    Object.entries(dataTV).forEach(([key, value]) => {
-      filtered[key] = filterContent(value);
+    Object.entries(processed).forEach(([key, value]) => {
+      filtered[key] = filterContent(value as any[]);
     });
-    // If all sections are empty after filtering, return original data to prevent empty state
+
     const hasAnyData = Object.values(filtered).some(section => Array.isArray(section) && section.length > 0);
-    return hasAnyData ? filtered : dataTV;
-  }, [dataTV, filterContent]);
+    return hasAnyData ? filtered : processed;
+  }, [dataTV, filterContent, scrapedContent]);
 
   const filteredBannerMovie = useMemo(() => {
-    return filterContent(bannerDataMovie || []);
-  }, [bannerDataMovie, filterContent]);
+    // Also inject into banner if popular
+    let banners = bannerDataMovie ? [...bannerDataMovie] : [];
+    if (scrapedContent && banners.length > 0) {
+      const topScraped = scrapedContent
+        .filter((item: any) => item.media_type === 'movie' && item.vote_average > 7.5)
+        .slice(0, 3);
+      banners = [...topScraped, ...banners];
+    }
+    return filterContent(banners);
+  }, [bannerDataMovie, filterContent, scrapedContent]);
 
   const filteredBannerTV = useMemo(() => {
-    return filterContent(bannerDataTV || []);
-  }, [bannerDataTV, filterContent]);
+    let banners = bannerDataTV ? [...bannerDataTV] : [];
+    if (scrapedContent && banners.length > 0) {
+      const topScraped = scrapedContent
+        .filter((item: any) => item.media_type === 'tv' && item.vote_average > 7.5)
+        .slice(0, 3);
+      banners = [...topScraped, ...banners];
+    }
+    return filterContent(banners);
+  }, [bannerDataTV, filterContent, scrapedContent]);
 
   // Debug state monitoring
   useEffect(() => {
