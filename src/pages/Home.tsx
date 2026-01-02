@@ -16,6 +16,7 @@ import { getEnrichedScrapedContent } from "../services/scrapedContent";
 // Lazy load non-critical components for performance (Android TV & Slow Web optimization)
 const AdBanner = lazy(() => import("../components/Common/AdBanner"));
 const ContinueWatching = lazy(() => import("../components/Home/ContinueWatching"));
+const ContinueWatchingRail = lazy(() => import("../components/Home/ContinueWatchingRail"));
 const Top10Slider = lazy(() => import("../components/Home/Top10Slider"));
 const TrendingNow = lazy(() => import("../components/Home/TrendingNow"));
 const BecauseYouWatched = lazy(() => import("../components/Home/BecauseYouWatched"));
@@ -131,29 +132,46 @@ const Home: FC = () => {
 
   // Helper to merge scraped content into TMDB sliders
   const mergeScrapedContent = (tmdbData: any, scrapedItems: any[]) => {
-    if (!tmdbData || !scrapedItems) return tmdbData;
+    if (!tmdbData || !scrapedItems || scrapedItems.length === 0) return tmdbData;
 
     const merged = { ...tmdbData };
 
-    // Distribute scraped items into categories
-    scrapedItems.forEach((item: any) => {
-      // Add to 'Trending' or 'Popular' if high quality
-      if (item.vote_average > 7 && merged.Trending) {
-        merged.Trending.splice(Math.floor(Math.random() * 10), 0, item);
-      }
+    // 1. Distribute into specific categories
+    Object.keys(merged).forEach(category => {
+      if (!Array.isArray(merged[category])) return;
 
-      // Add to specific genre sliders
-      Object.keys(merged).forEach(category => {
-        // Simple genre matching logic
-        const catLower = category.toLowerCase();
-        const isInGenre = item.genres?.some((g: any) => catLower.includes(g.name.toLowerCase()));
+      const catLower = category.toLowerCase();
 
-        if (isInGenre && Array.isArray(merged[category])) {
-          // Insert randomly to mix it up
-          const randomIndex = Math.floor(Math.random() * merged[category].length);
-          merged[category].splice(randomIndex, 0, item);
+      // Filter appropriate items for this category
+      const relevantScraped = scrapedItems.filter((item: any) => {
+        // Trending/Hot/Top: Take high-rated items
+        if (['trending', 'hot', 'top', 'popular'].some(k => catLower.includes(k))) {
+          return item.vote_average > 6.0;
         }
+        // Genre matching
+        return item.genres?.some((g: any) => catLower.includes(g.name.toLowerCase()));
       });
+
+      // 2. Aggressive Injection: Interleave or Prepend
+      if (relevantScraped.length > 0) {
+        // Strategy: Add relevant scraped items to the BEGINNING of the list to ensure visibility
+        // But keep the very first item as TMDB for banner consistency if needed, or just mix top 5.
+
+        // Take up to 10 relevant scraped items
+        const itemsToInject = relevantScraped.slice(0, 15);
+
+        // Remove duplicates based on ID or Title
+        const existingIds = new Set(merged[category].map((i: any) => i.id));
+        const uniqueInjects = itemsToInject.filter((i: any) => !existingIds.has(i.id));
+
+        // SPLICE them in at varied positions for "filling" effect
+        // Inject 2 scraped items for every 3 existing items
+        uniqueInjects.forEach((item: any, idx: number) => {
+          // Insert at index 1, 3, 5, etc.
+          const insertPos = Math.min((idx * 2) + 1, merged[category].length);
+          merged[category].splice(insertPos, 0, item);
+        });
+      }
     });
 
     return merged;
@@ -325,6 +343,15 @@ const Home: FC = () => {
           {/* Conditionally show sections based on tab */}
           {currentTab !== "sports" ? (
             <>
+              {/* Continue Watching Rail (MovieBox Style) */}
+              {currentUser && (
+                <Suspense fallback={<div className="h-[200px]" />}>
+                  <div className="mt-8">
+                    <ContinueWatchingRail />
+                  </div>
+                </Suspense>
+              )}
+
               {/* Ad Banner (MovieBox Style) - Lazy loaded for Android TV performance */}
               <Suspense fallback={<div className="h-[90px]" />}>
                 <div className="px-4 md:px-8 mb-6 mt-4">

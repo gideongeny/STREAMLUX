@@ -21,7 +21,13 @@ import { auth } from "../shared/firebase";
 import { convertErrorCodeToMessage } from "../shared/utils";
 import { ToastContainer, toast } from "react-toastify";
 import BlackBackdrop from "../components/Common/BlackBackdrop";
-interface ProfileProps {}
+import ProfileStats from "../components/Profile/ProfileStats";
+import AchievementBadges from "../components/Profile/AchievementBadges";
+import AdBanner from "../components/Common/AdBanner";
+import { userStatsService } from "../services/userStats";
+import { continueWatchingService } from "../services/continueWatching";
+import { useEffect } from "react";
+interface ProfileProps { }
 
 const Profile: FunctionComponent<ProfileProps> = () => {
   const [isSidebarActive, setIsSidebarActive] = useState(false);
@@ -38,6 +44,14 @@ const Profile: FunctionComponent<ProfileProps> = () => {
     string | undefined
   >();
   const firebaseUser = auth.currentUser;
+
+  // Initialize services with user ID
+  useEffect(() => {
+    if (firebaseUser?.uid) {
+      userStatsService.setUserId(firebaseUser.uid);
+      continueWatchingService.setUserId(firebaseUser.uid);
+    }
+  }, [firebaseUser?.uid]);
 
   const reAuthentication = async (type: string) => {
     const oldPassword = oldPasswordValueRef.current.value;
@@ -220,6 +234,13 @@ const Profile: FunctionComponent<ProfileProps> = () => {
               Account settings
             </h1>
           </div>
+
+          {/* Profile Stats & Achievements (MovieBox Style) */}
+          <div className="mb-8">
+            <ProfileStats />
+            <AchievementBadges />
+          </div>
+
           <div className="flex flex-col-reverse md:flex-row gap-8 md:gap-0 ">
             <div className="flex-grow">
               <p className="text-white mt-5 text-xl font-medium mb-3">
@@ -261,6 +282,11 @@ const Profile: FunctionComponent<ProfileProps> = () => {
               />
             </div>
             <ProfileImage />
+          </div>
+
+          {/* Ad Banner (MovieBox Style - Bottom of Profile) */}
+          <div className="mt-8 mb-6 max-w-[728px]">
+            <AdBanner />
           </div>
         </div>
       </div>

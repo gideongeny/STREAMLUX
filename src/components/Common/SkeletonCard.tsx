@@ -1,15 +1,27 @@
-import { FC } from "react";
-import Skeleton from "./Skeleton";
+import React, { FC } from 'react';
 
-const SkeletonCard: FC = () => {
+interface SkeletonCardProps {
+    className?: string;
+}
+
+const SkeletonCard: FC<SkeletonCardProps> = ({ className = '' }) => {
     return (
-        <div className="flex flex-col gap-3">
-            {/* Poster Skeleton */}
-            <Skeleton className="w-full aspect-[2/3] rounded-md" />
+        <div className={`animate-pulse ${className}`}>
+            <div className="bg-dark-lighten rounded-lg overflow-hidden">
+                {/* Image skeleton */}
+                <div className="w-full aspect-[2/3] bg-gray-700 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-600 to-transparent shimmer" />
+                </div>
 
-            {/* Title Skeleton */}
-            <div className="flex justify-center px-1">
-                <Skeleton className="h-4 w-3/4 rounded" />
+                {/* Title skeleton */}
+                <div className="p-2">
+                    <div className="h-4 bg-gray-700 rounded w-3/4 mb-2 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-600 to-transparent shimmer" />
+                    </div>
+                    <div className="h-3 bg-gray-700 rounded w-1/2 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-600 to-transparent shimmer" />
+                    </div>
+                </div>
             </div>
         </div>
     );

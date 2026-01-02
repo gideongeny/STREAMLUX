@@ -192,3 +192,18 @@ input:-webkit-autofill:active {
 .animate-scale-up {
   animation: scale-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Shimmer animation for skeleton loaders */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer {
+  animation: shimmer 2s infinite;
+}

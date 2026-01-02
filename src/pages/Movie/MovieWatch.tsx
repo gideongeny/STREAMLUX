@@ -1,51 +1,54 @@
-```typescript
-import { FC, useRef, useState, useEffect } from "react";
+import { FC } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import FilmWatch from "../../components/FilmWatch/FilmWatch";
-import { getMovieDetail } from "../../services/movie";
-import { getRecommendation, getSimilar } from "../../services/home";
-import { hasDownloads, getDownloadCount, enrichWithDownloads } from "../../services/hybridContent";
-import SkeletonPage from "../../components/Common/SkeletonPage";
-import { getWatchReturnedType } from "../../shared/types";
+import { getWatchMovie } from "../../services/movie";
+import { getWatchReturnedType, DetailMovie } from "../../shared/types";
 import Error from "../Error";
+import { hasDownloads, enrichWithDownloads } from "../../services/hybridContent";
 
 const MovieWatch: FC = () => {
   const { id } = useParams();
-  const { data, error } = useQuery<getWatchReturnedType, Error>(
+
+  const { data, error, isLoading } = useQuery<getWatchReturnedType, Error>(
     ["watchMovie", id],
     () => getWatchMovie(Number(id as string)),
-    () => getMovieDetail(Number(id as string)), // Assuming getMovieDetail is the correct function for movie details
     { refetchOnWindowFocus: false }
   );
 
-  // if (error) return <div>ERROR: {error.message}</div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-dark text-white">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   if (error) return <Error />;
 
-  if (!data) return (
-    <div className="flex justify-center items-center h-screen bg-dark text-white">
-      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-    </div>
-  );
+  if (!data) return <Error />;
 
-  // Assuming 'data' contains the movie details and can be used as 'currentMovie'
-  const currentMovie = data;
+  const currentMovieDetail = data.detail as DetailMovie;
+  const movieTitle = currentMovieDetail?.title || "";
 
   return (
     <>
-      <FilmWatch {...data} media_type="movie" />
+      <FilmWatch
+        {...data}
+        media_type="movie"
+      />
 
       {/* Alternative Sources / Downloads */}
-      {currentMovie && hasDownloads(currentMovie.title) && (
-        <div className="mt-6 mb-8 bg-dark-lighten rounded-xl p-4 border border-gray-800">
+      {currentMovieDetail && movieTitle && hasDownloads(movieTitle) && (
+        <div className="mt-6 mb-8 bg-dark-lighten rounded-xl p-4 border border-gray-800 mx-4 md:mx-0">
           <div className="flex items-center gap-2 mb-3">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
             <h3 className="text-white font-medium">Alternative Sources Available</h3>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {enrichWithDownloads([currentMovie])[0]?.downloads?.map((dl, idx) => (
-              <a 
+            {(enrichWithDownloads([currentMovieDetail] as any[])[0] as any)?.downloads?.map((dl: any, idx: number) => (
+              <a
                 key={idx}
                 href={dl.url}
                 target="_blank"

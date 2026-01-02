@@ -3,6 +3,7 @@ import axios from "axios";
 import { classifyVideo, VideoType } from "../shared/videoClassification";
 import { CacheService } from "./cache";
 import { REGIONAL_CHANNELS, REGIONAL_SEARCH_QUERIES } from "../shared/regionalChannels";
+import { pipedService } from "./piped";
 
 export interface YouTubeVideo {
   id: string;
@@ -140,15 +141,18 @@ const isLowQuality = (title: string) => {
 /**
  * Fetch videos for a given keyword.
  */
+
+
+/**
+ * Fetch videos for a given keyword.
+ * Strategy: Cache -> Piped (Unlimited) -> Official API (Backup) -> RSS (Last Resort)
+ */
 export async function fetchYouTubeVideos(
   query: string,
   pageToken?: string,
   type: "movie" | "tv" | "multi" | "all" = "movie",
   retryCount = 0
 ): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string; error?: string }> {
-  // Combine keywords for a single efficient search call to save quota
-  // Heuristic: Search for both "Movie" and "Official" in one go
-  // If the query is just a region or genre, append specifics. If it's a specific search, respect it.
   const isSpecificSearch = query.includes("ABS-CBN") || query.includes("StarTimes") || query.includes("GMA");
 
   let suffix = "";
@@ -165,7 +169,7 @@ export async function fetchYouTubeVideos(
   const optimizedQuery = `${query}${suffix}`;
   const cacheKey = `search_${optimizedQuery}_${pageToken || 'p0'}`;
 
-  // Check Cache First (only on first try)
+  // 1. Check Cache First
   if (retryCount === 0) {
     const cachedData = CacheService.get<{ videos: YouTubeVideo[]; nextPageToken?: string }>(cacheKey);
     if (cachedData) {
@@ -173,6 +177,32 @@ export async function fetchYouTubeVideos(
     }
   }
 
+  // 2. Try Piped API (Unlimited Search) - Primary Source
+  try {
+    console.log(`[Piped] Searching for: ${optimizedQuery}`);
+    const pipedVideos = await pipedService.search(optimizedQuery);
+
+    // Filter results
+    const finalVideos = type === 'tv'
+      ? pipedVideos.filter(v => v.type === 'tv')
+      : type === 'movie'
+        ? pipedVideos.filter(v => v.type === 'movie')
+        : pipedVideos;
+
+    if (finalVideos.length > 0) {
+      const result = { videos: finalVideos, nextPageToken: undefined }; // Piped pagination is complex, treating as single page for now
+      CacheService.set(cacheKey, result);
+      return result;
+    } else {
+      throw new Error("Piped returned empty results, likely strict filtering or instance limits");
+    }
+
+  } catch (pipedError) {
+    console.warn("Piped API failed, falling back to Official YouTube API:", pipedError);
+    // Proceed to Official API fallback below...
+  }
+
+  // 3. Fallback to Official YouTube Data API
   try {
     const searchResponse = await youtube.get("/search", {
       params: {
@@ -193,28 +223,29 @@ export async function fetchYouTubeVideos(
     const details = await fetchVideosDetail(videoIds);
 
     const videos: YouTubeVideo[] = details
-      .map((item: any) => ({
-        id: item.id,
-        title: item.snippet.title,
-        description: item.snippet.description,
-        thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
-        channelTitle: item.snippet.channelTitle,
-        channelId: item.snippet.channelId,
-        type: classifyVideo(item.snippet.title, item.snippet.description),
-        duration: parseDuration(item.contentDetails.duration),
-      }))
+      .map((item: any) => {
+        const duration = parseDuration(item.contentDetails.duration);
+        return {
+          id: item.id,
+          title: item.snippet.title,
+          description: item.snippet.description,
+          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+          channelTitle: item.snippet.channelTitle,
+          channelId: item.snippet.channelId,
+          type: classifyVideo(item.snippet.title, item.snippet.description, duration),
+          duration: duration,
+        };
+      })
       .filter((video: any) => video.type !== "other" && !isLowQuality(video.title));
 
-    // strict post-filtering
     const finalVideos = type === 'tv'
       ? videos.filter(v => v.type === 'tv')
       : type === 'movie'
         ? videos.filter(v => v.type === 'movie')
-        : videos;
+        : videos.filter(v => v.type !== 'shorts'); // Default: Exclude shorts to prevent mixing
 
     const result = { videos: finalVideos, nextPageToken: searchResponse.data.nextPageToken };
 
-    // Save to Cache
     if (finalVideos.length > 0) {
       CacheService.set(cacheKey, result);
     }
@@ -229,18 +260,16 @@ export async function fetchYouTubeVideos(
 
     if (isQuotaError) {
       if (retryCount < API_KEYS.length) {
-        console.warn(`YouTube API quota exhausted for key index ${currentKeyIndex}. Rotating and retrying (${retryCount + 1}/${API_KEYS.length})...`);
+        console.warn(`YouTube API quota exhausted. Rotating key...`);
         rotateApiKey();
         return fetchYouTubeVideos(query, pageToken, type, retryCount + 1);
       } else {
-        console.warn(`All YouTube keys exhausted. Returning empty results.`);
+        // All Keys Exhausted - The ultimate backup is RSS if we had channel IDs, but for *search* we can't easily RSS fallback without a channel.
+        // We could try Piped one last time with a fresh instance maybe?
         return { videos: [], nextPageToken: undefined, error: "QUOTA_EXCEEDED" };
       }
     }
 
-    console.error("YouTube API Error:", errorMsg);
-
-    // Return empty results gracefully instead of throwing
     return { videos: [], nextPageToken: undefined, error: errorMsg };
   }
 }
@@ -263,7 +292,7 @@ export async function getYouTubeVideoDetail(id: string): Promise<YouTubeVideo | 
     thumbnail: item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
     channelTitle: item.snippet.channelTitle,
     channelId: item.snippet.channelId,
-    type: classifyVideo(item.snippet.title, item.snippet.description),
+    type: classifyVideo(item.snippet.title, item.snippet.description, parseDuration(item.contentDetails.duration)),
     duration: parseDuration(item.contentDetails.duration),
     viewCount: item.statistics.viewCount,
     likeCount: item.statistics.likeCount,
@@ -294,16 +323,19 @@ export async function getRelatedVideos(videoId: string): Promise<YouTubeVideo[]>
     const ids = response.data.items.map((item: any) => item.id.videoId);
     const details = await fetchVideosDetail(ids);
 
-    return details.map((item: any) => ({
-      id: item.id,
-      title: item.snippet.title,
-      description: item.snippet.description,
-      thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
-      channelTitle: item.snippet.channelTitle,
-      channelId: item.snippet.channelId,
-      type: classifyVideo(item.snippet.title, item.snippet.description),
-      duration: parseDuration(item.contentDetails.duration),
-    }));
+    return details.map((item: any) => {
+      const duration = parseDuration(item.contentDetails.duration);
+      return {
+        id: item.id,
+        title: item.snippet.title,
+        description: item.snippet.description,
+        thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+        channelTitle: item.snippet.channelTitle,
+        channelId: item.snippet.channelId,
+        type: classifyVideo(item.snippet.title, item.snippet.description, duration),
+        duration: duration,
+      };
+    });
   } catch (error: any) {
     const isQuotaError = error.response?.status === 403 || error.response?.status === 429;
     if (isQuotaError) {
@@ -360,16 +392,19 @@ export async function getYouTubeSeriesEpisodes(title: string, channelId?: string
 
         return matchesTitle && isEmbeddable;
       })
-      .map((item: any) => ({
-        id: item.id,
-        title: item.snippet.title,
-        description: item.snippet.description,
-        thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
-        channelTitle: item.snippet.channelTitle,
-        channelId: item.snippet.channelId,
-        type: classifyVideo(item.snippet.title, item.snippet.description),
-        duration: parseDuration(item.contentDetails.duration),
-      }));
+      .map((item: any) => {
+        const duration = parseDuration(item.contentDetails.duration);
+        return {
+          id: item.id,
+          title: item.snippet.title,
+          description: item.snippet.description,
+          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+          channelTitle: item.snippet.channelTitle,
+          channelId: item.snippet.channelId,
+          type: classifyVideo(item.snippet.title, item.snippet.description, duration),
+          duration: duration,
+        };
+      });
   } catch (error: any) {
     const isQuotaError = error.response?.status === 403 || error.response?.status === 429;
     if (isQuotaError) {
@@ -522,18 +557,22 @@ export async function fetchFromChannels(
       const details = await fetchVideosDetail(videoIds);
 
       const videos: YouTubeVideo[] = details
-        .map((item: any) => ({
-          id: item.id,
-          title: item.snippet.title,
-          description: item.snippet.description,
-          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
-          channelTitle: item.snippet.channelTitle,
-          channelId: item.snippet.channelId,
-          type: classifyVideo(item.snippet.title, item.snippet.description),
-          duration: parseDuration(item.contentDetails.duration),
-          publishedAt: item.snippet.publishedAt,
-        }))
+        .map((item: any) => {
+          const duration = parseDuration(item.contentDetails.duration);
+          return {
+            id: item.id,
+            title: item.snippet.title,
+            description: item.snippet.description,
+            thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+            channelTitle: item.snippet.channelTitle,
+            channelId: item.snippet.channelId,
+            type: classifyVideo(item.snippet.title, item.snippet.description, duration),
+            duration: duration,
+            publishedAt: item.snippet.publishedAt,
+          };
+        })
         .filter((video: any) => {
+          if (video.type === 'shorts') return false; // STRICT: No shorts in channels lists
           if (type === 'tv') return video.type === 'tv';
           if (type === 'movie') return video.type === 'movie';
           return true;
@@ -546,7 +585,81 @@ export async function fetchFromChannels(
     return { videos: allVideos };
   } catch (error: any) {
     const errorMsg = error.response?.data?.error?.message || error.message;
+    const isQuotaError = errorMsg?.toLowerCase().includes("quota") ||
+      errorMsg?.toLowerCase().includes("unavailable") ||
+      error.response?.status === 403 ||
+      error.response?.status === 429;
+
+    if (isQuotaError) {
+      console.warn("YouTube API Quota Exceeded in fetchFromChannels. Switching to RSS Fallback.");
+      try {
+        const rssPromises = channelIds.map(cid => fetchRSSVideos(cid, type));
+        const rssResults = await Promise.all(rssPromises);
+        const rssVideos = rssResults.flat();
+        return { videos: rssVideos };
+      } catch (rssError) {
+        console.error("RSS Fallback also failed:", rssError);
+        return { videos: [], error: "API_AND_RSS_FAILED" };
+      }
+    }
+
     console.error("Error fetching from channels:", errorMsg);
     return { videos: [], error: errorMsg };
+  }
+}
+
+/**
+ * Fallback: Fetch latest videos from YouTube RSS feed via CORS proxy
+ * URL: https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}
+ */
+async function fetchRSSVideos(channelId: string, type: "movie" | "tv" = "movie"): Promise<YouTubeVideo[]> {
+  try {
+    const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+    // Use allorigins.win as a free CORS proxy
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`;
+
+    const response = await fetch(proxyUrl);
+    if (!response.ok) return [];
+
+    const text = await response.text();
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "text/xml");
+    const entries = Array.from(xml.querySelectorAll("entry"));
+
+    return entries.map(entry => {
+      const videoId = entry.getElementsByTagName("yt:videoId")[0]?.textContent || "";
+      const title = entry.getElementsByTagName("title")[0]?.textContent || "";
+      const group = entry.getElementsByTagName("media:group")[0];
+      const description = group?.getElementsByTagName("media:description")[0]?.textContent || "";
+      const thumbnail = group?.getElementsByTagName("media:thumbnail")[0]?.getAttribute("url") || "";
+      const community = group?.getElementsByTagName("media:community")[0];
+      const views = community?.getElementsByTagName("media:statistics")[0]?.getAttribute("views") || "0";
+      const rating = community?.getElementsByTagName("media:starRating")[0]?.getAttribute("count") || "0";
+      const published = entry.getElementsByTagName("published")[0]?.textContent || "";
+      const authorName = entry.getElementsByTagName("author")[0]?.getElementsByTagName("name")[0]?.textContent || "";
+
+      return {
+        id: videoId,
+        title: title,
+        description: description,
+        thumbnail: thumbnail,
+        channelTitle: authorName,
+        channelId: channelId,
+        type: classifyVideo(title, description),
+        duration: 0, // RSS does not provide duration
+        viewCount: views,
+        likeCount: rating,
+        publishedAt: published,
+        tags: []
+      } as YouTubeVideo;
+    }).filter(video => {
+      if (type === 'tv') return video.type === 'tv';
+      if (type === 'movie') return video.type === 'movie';
+      return true;
+    });
+
+  } catch (e) {
+    console.warn(`RSS Fetch failed for channel ${channelId}`, e);
+    return [];
   }
 }
