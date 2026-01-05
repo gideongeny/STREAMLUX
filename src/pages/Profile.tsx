@@ -27,6 +27,7 @@ import AdBanner from "../components/Common/AdBanner";
 import { userStatsService } from "../services/userStats";
 import { continueWatchingService } from "../services/continueWatching";
 import { useEffect } from "react";
+import { logger } from "../utils/logger";
 interface ProfileProps { }
 
 const Profile: FunctionComponent<ProfileProps> = () => {
@@ -70,14 +71,20 @@ const Profile: FunctionComponent<ProfileProps> = () => {
       return;
     }
 
+    if (!firebaseUser || !firebaseUser.email) {
+      toast.error("User not authenticated", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+      return;
+    }
+
     const credential = EmailAuthProvider.credential(
-      // @ts-ignore
       firebaseUser.email,
       oldPassword
     );
 
     reauthenticateWithCredential(
-      // @ts-ignore
       firebaseUser,
       credential
     )
@@ -93,7 +100,7 @@ const Profile: FunctionComponent<ProfileProps> = () => {
         setIsShowPromptReAuthFor(undefined);
       })
       .catch((error) => {
-        console.log(error);
+        logger.error(error);
         // alert(convertErrorCodeToMessage(error.code));
         toast.error(convertErrorCodeToMessage(error.code), {
           position: "top-right",
@@ -110,15 +117,22 @@ const Profile: FunctionComponent<ProfileProps> = () => {
   const changeEmail = () => {
     const emailValue = emailValueRef.current.value;
 
+    if (!firebaseUser) {
+      toast.error("User not authenticated", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+      return;
+    }
+
     setIsUpdating(true);
-    // @ts-ignore
     updateEmail(firebaseUser, emailValue)
       .then(() => {
         setIsUpdatingEmail(false);
         // window.location.reload();
       })
       .catch((error) => {
-        console.log(error);
+        logger.error(error);
         toast.error(convertErrorCodeToMessage(error.code), {
           position: "top-right",
           autoClose: 2000,
@@ -135,15 +149,22 @@ const Profile: FunctionComponent<ProfileProps> = () => {
   const changePassword = () => {
     const newPassword = newPasswordValueRef.current.value;
 
+    if (!firebaseUser) {
+      toast.error("User not authenticated", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+      return;
+    }
+
     setIsUpdating(true);
-    // @ts-ignore
     updatePassword(firebaseUser, newPassword)
       .then(() => {
         setIsUpdatedPassword(true);
         newPasswordValueRef.current.value = "";
       })
       .catch((error) => {
-        console.log(error);
+        logger.error(error);
         toast.error(convertErrorCodeToMessage(error.code), {
           position: "top-right",
           autoClose: 2000,
@@ -158,8 +179,15 @@ const Profile: FunctionComponent<ProfileProps> = () => {
   };
 
   const deleteAccount = () => {
+    if (!firebaseUser) {
+      toast.error("User not authenticated", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+      return;
+    }
+
     setIsUpdating(true);
-    // @ts-ignore
     deleteUser(firebaseUser).finally(() => {
       setIsUpdating(false);
     });

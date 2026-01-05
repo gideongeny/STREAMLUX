@@ -12,6 +12,7 @@ import { setCurrentUser, setCurrentProfile } from "./store/slice/authSlice";
 import { getProfiles } from "./services/user";
 import SmartAdPopup from "./components/Common/SmartAdPopup";
 import { adService } from "./services/adService";
+import { logger } from "./utils/logger";
 
 import Protected from "./components/Common/Protected";
 
@@ -64,7 +65,7 @@ function App() {
         localStorage.removeItem("isSignedIn");
       }
     } catch (error) {
-      console.warn("Error reading isSignedIn from localStorage:", error);
+      logger.warn("Error reading isSignedIn from localStorage:", error);
       try {
         localStorage.removeItem("isSignedIn");
       } catch { }
@@ -77,9 +78,9 @@ function App() {
 
   // Performance logging for boot time
   useEffect(() => {
-    if ((window as any).BOOT_START) {
-      const bootTime = Date.now() - (window as any).BOOT_START;
-      console.log(`%c[StreamLux] %cEngine Ready in ${bootTime}ms`, "color:#10b981;font-weight:bold", "color:gray");
+    if (window.BOOT_START) {
+      const bootTime = Date.now() - window.BOOT_START;
+      logger.log(`%c[StreamLux] %cEngine Ready in ${bootTime}ms`, "color:#10b981;font-weight:bold", "color:gray");
     }
   }, []);
 
@@ -101,7 +102,7 @@ function App() {
         interstitialFrequency: 5, // 5 minutes between ads
       });
     } catch (e) {
-      console.warn("AdService init failed in App:", e);
+      logger.warn("AdService init failed in App:", e);
     }
   }, []);
 
@@ -114,14 +115,14 @@ function App() {
           try {
             adService.showInterstitial();
           } catch (e) {
-            console.warn("Ad interstitial failed:", e);
+            logger.warn("Ad interstitial failed:", e);
           }
         }, 500); // Small delay for better UX
 
         return () => clearTimeout(timer);
       }
     } catch (error) {
-      console.warn("Error in ad trigger effect:", error);
+      logger.warn("Error in ad trigger effect:", error);
     }
   }, [location.pathname]);
 

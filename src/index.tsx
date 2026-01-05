@@ -22,6 +22,7 @@ import { store } from "./store/store";
 import { Provider } from "react-redux";
 import ErrorBoundary from "./components/Common/ErrorBoundary";
 import { PlayerProvider } from "./context/PlayerContext";
+import { logger } from "./utils/logger";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,12 +58,12 @@ function initializeApp() {
 
   // Add error handler for unhandled errors
   window.addEventListener("error", (event) => {
-    console.error("Global error:", event.error);
+    logger.error("Global error:", event.error);
     // Don't prevent default - let React handle it
   });
 
   window.addEventListener("unhandledrejection", (event) => {
-    console.error("Unhandled promise rejection:", event.reason);
+    logger.error("Unhandled promise rejection:", event.reason);
     // Don't prevent default - let React handle it
   });
 
@@ -73,8 +74,8 @@ function initializeApp() {
       <ErrorBoundary
         onError={(error, errorInfo) => {
           // Log detailed error information for debugging
-          console.error("Application Error:", error);
-          console.error("Error Info:", errorInfo);
+          logger.error("Application Error:", error);
+          logger.error("Error Info:", errorInfo);
           // You can also send this to an error tracking service
         }}
         fallback={
@@ -124,7 +125,7 @@ function initializeApp() {
       </ErrorBoundary>
     );
   } catch (error) {
-    console.error("Failed to render app:", error);
+    logger.error("Failed to render app:", error);
     // Fallback rendering if React fails
     const rootElement = document.getElementById("root");
     if (rootElement) {

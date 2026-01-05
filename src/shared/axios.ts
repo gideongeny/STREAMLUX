@@ -1,26 +1,35 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { API_URL } from "./constants";
 import { apiCache } from "./apiCache";
+import { logger } from "../utils/logger";
 
 // =================================================================================
 // 🚀 HYPER-SCALE ARCHITECTURE: API KEY POOL
 // =================================================================================
 // This pool allows the app to handle millions of users by rotating keys when quotas are hit.
 // Each key acts as a separate "pipeline" for data.
-const API_KEY_POOL = [
-  process.env.REACT_APP_API_KEY,                    // Primary Owner Key
-  "8c247ea0b4b56ed2ff7d41c9a833aa77",               // Fallback Key 1
-  "df082717906d217997384ea69a1b021d",               // Fallback Key 2
-  "18265886ed20904f41050a4ad6871a31",               // Fallback Key 3
-  "4f56f35836934c9c612399d3d95180ce",               // Fallback Key 4 (High Capacity)
-].filter(Boolean) as string[];
+const getApiKeyPool = (): string[] => {
+  const primaryKey = process.env.REACT_APP_API_KEY;
+  const fallbackKeys = process.env.REACT_APP_TMDB_FALLBACK_KEYS 
+    ? process.env.REACT_APP_TMDB_FALLBACK_KEYS.split(',').map(k => k.trim()).filter(Boolean)
+    : [
+        "8c247ea0b4b56ed2ff7d41c9a833aa77",               // Fallback Key 1
+        "df082717906d217997384ea69a1b021d",               // Fallback Key 2
+        "18265886ed20904f41050a4ad6871a31",               // Fallback Key 3
+        "4f56f35836934c9c612399d3d95180ce",               // Fallback Key 4 (High Capacity)
+      ];
+  
+  return [primaryKey, ...fallbackKeys].filter(Boolean) as string[];
+};
+
+const API_KEY_POOL = getApiKeyPool();
 
 let currentKeyIndex = 0;
 
 // Rotate to the next key in the pool
 const rotateApiKey = () => {
   currentKeyIndex = (currentKeyIndex + 1) % API_KEY_POOL.length;
-  console.warn(`[TMDB] 429 Quota Exceeded. Rotating to Key Index: ${currentKeyIndex}`);
+  logger.warn(`[TMDB] 429 Quota Exceeded. Rotating to Key Index: ${currentKeyIndex}`);
 };
 
 // Get the current active key
@@ -100,7 +109,7 @@ instance.interceptors.response.use(
       error.message?.includes('quota') ||
       error.message?.includes('Quota Exceeded')) {
 
-      console.error('[TMDB] Quota Hit! Initiating Failover Rotation...');
+      logger.error('[TMDB] Quota Hit! Initiating Failover Rotation...');
 
       // 1. Rotate the Key
       rotateApiKey();

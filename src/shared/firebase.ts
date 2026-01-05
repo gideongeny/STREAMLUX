@@ -14,13 +14,12 @@ const firebaseConfig = {
   measurementId: "G-3C0V66LLLR"
 };
 
-// Initialize Firebase with error handling
-// Always initialize to prevent null errors - multiple fallbacks ensure success
+// Initialize Firebase with simplified error handling
 let app: ReturnType<typeof initializeApp>;
 let db: ReturnType<typeof getFirestore>;
 let auth: ReturnType<typeof getAuth>;
 
-// Initialize Firebase - ensure it always succeeds
+// Initialize Firebase - simplified approach with proper error handling
 try {
   // Check if Firebase app already exists
   const existingApps = getApps();
@@ -32,8 +31,8 @@ try {
   db = getFirestore(app);
   auth = getAuth(app);
 } catch (error) {
+  // Log error but don't crash - try one recovery attempt
   console.error("Firebase initialization failed:", error);
-  // If Firebase fails, try to get existing app
   try {
     const existingApps = getApps();
     if (existingApps.length > 0) {
@@ -41,36 +40,15 @@ try {
       db = getFirestore(app);
       auth = getAuth(app);
     } else {
-      // Last resort: try to initialize again (this should work)
+      // Last resort: try to initialize again
       app = initializeApp(firebaseConfig);
       db = getFirestore(app);
       auth = getAuth(app);
     }
   } catch (retryError) {
-    console.error("Firebase retry initialization also failed:", retryError);
-    // Final fallback: create a minimal app instance
-    // This should never happen, but ensures auth/db are always defined
-    try {
-      app = initializeApp(firebaseConfig, "streamlux-fallback");
-      db = getFirestore(app);
-      auth = getAuth(app);
-    } catch (finalError) {
-      console.error("Firebase final initialization failed:", finalError);
-      // If all else fails, try one more time with default config
-      // This ensures the app doesn't crash even if Firebase has issues
-      try {
-        app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
-      } catch (lastError) {
-        console.error("Firebase initialization completely failed:", lastError);
-        // Final attempt - this should always work unless there's a critical configuration issue
-        // If this fails, the app will crash, but this is better than silent failures
-        app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
-      }
-    }
+    // If all attempts fail, throw error to prevent silent failures
+    console.error("Firebase initialization completely failed:", retryError);
+    throw new Error("Failed to initialize Firebase. Please check your configuration.");
   }
 }
 
@@ -87,7 +65,10 @@ setTimeout(async () => {
   try {
     if (auth) {
       await setPersistence(auth, browserLocalPersistence);
-      console.log("Auth persistence set to browserLocalPersistence");
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Auth persistence set to browserLocalPersistence");
+      }
     }
   } catch (error) {
     console.error("Error setting auth persistence:", error);

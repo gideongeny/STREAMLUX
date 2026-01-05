@@ -6,6 +6,7 @@
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Http, HttpDownloadFileResult } from '@capacitor-community/http';
 import { Capacitor } from '@capacitor/core';
+import { logger } from '../utils/logger';
 
 export interface DownloadItem {
     id: string;
@@ -87,7 +88,7 @@ class OfflineDownloadService {
                 fileDirectory: Directory.Data,
                 progress: true,
                 // Progress callback would be handled via events in native code
-            });
+            } as any);
 
             if (result.path) {
                 item.status = 'completed';
@@ -101,7 +102,7 @@ class OfflineDownloadService {
                 throw new Error('Download failed');
             }
         } catch (error) {
-            console.error('Download error:', error);
+            logger.error('Download error:', error);
             item.status = 'failed';
         } finally {
             this.activeDownloads.delete(itemId);
@@ -149,7 +150,7 @@ class OfflineDownloadService {
                     directory: Directory.Data,
                 });
             } catch (error) {
-                console.error('Error deleting file:', error);
+                logger.error('Error deleting file:', error);
             }
         }
 
@@ -223,7 +224,7 @@ class OfflineDownloadService {
             });
         } catch (error) {
             // Directory might already exist
-            console.log('Downloads directory check:', error);
+            logger.log('Downloads directory check:', error);
         }
     }
 
@@ -266,7 +267,7 @@ class OfflineDownloadService {
                 });
             }
         } catch (error) {
-            console.error('Error loading downloads:', error);
+            logger.error('Error loading downloads:', error);
         }
     }
 
@@ -275,7 +276,7 @@ class OfflineDownloadService {
      */
     private notifyDownloadComplete(item: DownloadItem): void {
         // This would integrate with push notification service
-        console.log('Download complete:', item.title);
+        logger.log('Download complete:', item.title);
 
         // TODO: Send local notification
         // pushNotificationService.scheduleLocalNotification(

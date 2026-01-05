@@ -6,33 +6,63 @@
 import { AdMob, AdOptions, BannerAdOptions, BannerAdSize, BannerAdPosition, AdLoadInfo, RewardAdOptions, AdMobRewardItem } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 import { userStatsService } from './userStats'; // To unlock premium features
+import { logger } from '../utils/logger';
+
+export type RewardType = 'download' | 'premium_unlock' | 'remove_watermark';
+
+export interface RewardedAdConfig {
+    duration: number; // in seconds
+    cooldown: number; // in minutes
+}
 
 class AdManager {
     private isInitialized = false;
 
-    // TEST IDS (Replace with real IDs in production)
+    // Configuration for different reward types
+    private readonly REWARD_CONFIGS: Record<RewardType, RewardedAdConfig> = {
+        download: { duration: 15, cooldown: 60 },
+        premium_unlock: { duration: 30, cooldown: 1440 }, // 24 hours
+        remove_watermark: { duration: 30, cooldown: 120 }
+    };
+
+    // Track when user last watched an ad for a specific reward
+    private lastWatched: Record<string, number> = {};
+
+    getRewardedAdConfig(type: RewardType): RewardedAdConfig {
+        return this.REWARD_CONFIGS[type];
+    }
+
+    canWatchRewardedAd(type: RewardType): boolean {
+        const lastTime = this.lastWatched[type] || 0;
+        const now = Date.now();
+        const cooldownMs = this.REWARD_CONFIGS[type].cooldown * 60 * 1000;
+        return now - lastTime > cooldownMs;
+    }
+
+    markRewardedAdWatched(type: RewardType): void {
+        this.lastWatched[type] = Date.now();
+        // Here you would also trigger the actual reward logic (e.g. unlock download)
+    }
+
+    // TEST IDs (Replace with real IDs in production)
     private readonly BANNER_ID = 'ca-app-pub-3940256099942544/6300978111';
     private readonly INTERSTITIAL_ID = 'ca-app-pub-3940256099942544/1033173712';
     private readonly REWARDED_ID = 'ca-app-pub-3940256099942544/5224354917';
 
     async initialize(): Promise<void> {
         if (!Capacitor.isNativePlatform()) {
-            console.log('AdMob only available on native platforms');
+            logger.log('AdMob only available on native platforms');
             return;
         }
 
         if (this.isInitialized) return;
 
         try {
-            await AdMob.initialize({
-                requestTrackingAuthorization: true,
-                testingDevices: ['2077ef9a63d2b398840261c8221a0c9b'], // Add test device IDs here
-                initializeForTesting: true,
-            });
+            await AdMob.initialize();
             this.isInitialized = true;
-            console.log('AdMob initialized');
+            logger.log('AdMob initialized');
         } catch (error) {
-            console.error('AdMob initialization failed:', error);
+            logger.error('AdMob initialization failed:', error);
         }
     }
 
@@ -52,7 +82,7 @@ class AdManager {
             };
             await AdMob.showBanner(options);
         } catch (error) {
-            console.error('Failed to show banner:', error);
+            logger.error('Failed to show banner:', error);
         }
     }
 
@@ -64,7 +94,7 @@ class AdManager {
         try {
             await AdMob.hideBanner();
         } catch (error) {
-            console.error('Failed to hide banner:', error);
+            logger.error('Failed to hide banner:', error);
         }
     }
 
@@ -82,7 +112,7 @@ class AdManager {
             await AdMob.prepareInterstitial(options);
             await AdMob.showInterstitial();
         } catch (error) {
-            console.error('Failed to show interstitial:', error);
+            logger.error('Failed to show interstitial:', error);
         }
     }
 
@@ -93,6 +123,9 @@ class AdManager {
         if (!this.isInitialized) return false;
 
         return new Promise(async (resolve) => {
+            let rewardHandler: any = null;
+            let closeHandler: any = null;
+
             try {
                 const options: RewardAdOptions = {
                     adId: this.REWARDED_ID,
@@ -101,22 +134,41 @@ class AdManager {
 
                 await AdMob.prepareRewardVideoAd(options);
 
-                const rewardHandler = AdMob.addListener('onRewardVideoReward', (reward: AdMobRewardItem) => {
-                    console.log('User rewarded:', reward);
+                // Use type assertion for event names as they may not be fully typed in the library
+                // addListener returns a Promise, so we need to await it
+                rewardHandler = await AdMob.addListener('onRewardVideoReward' as any, (reward: AdMobRewardItem) => {
+                    logger.log('User rewarded:', reward);
                     // Grant premium access for 24h as a reward example
                     // In a real app, update user status in DB
                     resolve(true);
-                    rewardHandler.remove();
+                    if (rewardHandler && typeof rewardHandler.remove === 'function') {
+                        rewardHandler.remove();
+                    }
+                    if (closeHandler && typeof closeHandler.remove === 'function') {
+                        closeHandler.remove();
+                    }
                 });
 
-                const closeHandler = AdMob.addListener('onRewardVideoAdDismissed', () => {
+                closeHandler = await AdMob.addListener('onRewardVideoAdDismissed' as any, () => {
                     resolve(false); // Closed without reward? Logic depends on when reward fires
-                    closeHandler.remove();
+                    if (rewardHandler && typeof rewardHandler.remove === 'function') {
+                        rewardHandler.remove();
+                    }
+                    if (closeHandler && typeof closeHandler.remove === 'function') {
+                        closeHandler.remove();
+                    }
                 });
 
                 await AdMob.showRewardVideoAd();
             } catch (error) {
-                console.error('Failed to show rewarded ad:', error);
+                logger.error('Failed to show rewarded ad:', error);
+                // Clean up listeners on error
+                if (rewardHandler && typeof rewardHandler.remove === 'function') {
+                    rewardHandler.remove();
+                }
+                if (closeHandler && typeof closeHandler.remove === 'function') {
+                    closeHandler.remove();
+                }
                 resolve(false);
             }
         });
