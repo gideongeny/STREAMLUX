@@ -21,6 +21,7 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
   const [showQualityModal, setShowQualityModal] = useState(false);
   const [availableSources, setAvailableSources] = useState<ResolvedSource[]>([]);
   const [isResolving, setIsResolving] = useState(false);
+  const [resolvedManualUrl, setResolvedManualUrl] = useState<string | null>(null);
 
   const dispatch = useAppDispatch();
 
@@ -44,6 +45,7 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
 
   const handleSelectSource = async (source: ResolvedSource) => {
     setShowQualityModal(false);
+    setResolvedManualUrl(null);
     if (isDownloading) return;
 
     setIsDownloading(true);
@@ -87,7 +89,12 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
         if (progressUpdate.status === 'completed') {
           toast.success(`${downloadInfo.title} (${source.quality}) download started!`);
         } else if (progressUpdate.status === 'error') {
-          toast.error(progressUpdate.message);
+          if (progressUpdate.message === 'CORS_RESTRICTION') {
+            setResolvedManualUrl((progressUpdate as any).resolvedUrl);
+            setShowQualityModal(true); // Re-open with the manual option
+          } else {
+            toast.error(progressUpdate.message);
+          }
         }
       });
     } catch (error) {
@@ -212,11 +219,32 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
                   <AiOutlineInfoCircle size={40} className="mx-auto text-gray-600 mb-3" />
                   <p className="text-gray-400">No direct quality links found.</p>
                   <button
-                    onClick={() => handleSelectSource({ name: 'External', url: '', quality: 'Auto', speed: 'medium', status: 'active', type: 'embed', priority: 999 })}
+                    onClick={() => handleSelectSource({ name: 'External Mirror', url: downloadInfo.sources[0], quality: 'Auto', speed: 'medium', status: 'active', type: 'embed', priority: 999 })}
                     className="mt-4 text-primary underline text-sm"
                   >
-                    Try generic download instead
+                    Try generic mirror instead
                   </button>
+                </div>
+              )}
+
+              {resolvedManualUrl && (
+                <div className="mt-8 pt-6 border-t border-white/5 animate-slideUp">
+                  <div className="p-5 bg-green-500/10 rounded-2xl border border-green-500/20 text-center">
+                    <h4 className="text-green-500 font-bold text-lg mb-2">Direct Link Ready!</h4>
+                    <p className="text-gray-400 text-xs mb-4">Browser security prevents automatic background download. Click the button below to save directly to your device.</p>
+                    <a
+                      href={resolvedManualUrl}
+                      download={`${downloadInfo.title.replace(/[^a-z0-9]/gi, '_')}.mp4`}
+                      className="inline-block w-full py-3 bg-green-500 hover:bg-green-600 text-black font-bold rounded-xl transition shadow-lg shadow-green-500/20"
+                      onClick={() => {
+                        setResolvedManualUrl(null);
+                        setShowQualityModal(false);
+                        toast.success("Download initiated!");
+                      }}
+                    >
+                      DOWNLOAD TO DEVICE
+                    </a>
+                  </div>
                 </div>
               )}
 
@@ -224,8 +252,8 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
                 <div className="flex items-start gap-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
                   <AiOutlineCheckCircle size={28} className="text-primary mt-1 shrink-0" />
                   <div>
-                    <h4 className="text-primary font-bold text-sm">Gallery Protection</h4>
-                    <p className="text-gray-400 text-xs mt-1">Files are saved with correct metadata to ensure they appear in your Photos or Gallery app immediately.</p>
+                    <h4 className="text-primary font-bold text-sm">One-Click Device Download</h4>
+                    <p className="text-gray-400 text-[10px] mt-1 italic">Files save directly to your downloads or gallery. No external pages, no redirects, no mirrors.</p>
                   </div>
                 </div>
               </div>

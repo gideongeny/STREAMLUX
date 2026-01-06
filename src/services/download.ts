@@ -355,22 +355,19 @@ export class DownloadService {
         }
       }
 
-      progress.message = "Preparing secure download interface...";
-      progress.progress = 60;
-      onProgress?.(progress);
-
-      const tmdbIdFallback = downloadInfo.tmdbId;
-      const downloadPage = this.createSmartDownloadPage(downloadInfo, Number(tmdbIdFallback), activeSource?.url);
-      const newTab = window.open(downloadPage, '_blank');
-
-      if (newTab) {
-        progress.status = "completed";
-        progress.progress = 100;
-        progress.message = "Download interface opened!";
+      // If we are here, direct blob download failed (likely CORS)
+      // We signal to the UI to show a "One-Click Manual Download" button
+      if (activeSource && activeSource.type === 'direct') {
+        progress.status = "error";
+        progress.message = "CORS_RESTRICTION"; // Signal string
+        (progress as any).resolvedUrl = activeSource.url;
         onProgress?.(progress);
-      } else {
-        throw new Error("Popup blocked. Please allow popups to download.");
+        return;
       }
+
+      progress.status = "error";
+      progress.message = "No direct source found. Try another quality.";
+      onProgress?.(progress);
 
     } catch (error) {
       progress.status = "error";
