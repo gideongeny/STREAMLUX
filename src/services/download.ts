@@ -1,3 +1,4 @@
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { DetailMovie, DetailTV, Episode } from "../shared/types";
 import { EMBED_ALTERNATIVES } from "../shared/constants";
 import { resolverService, ResolvedSource } from "./resolver";
@@ -295,7 +296,7 @@ export class DownloadService {
         progress.progress = 10;
         onProgress?.(progress);
 
-        const tmdbId = (downloadInfo as any).tmdbId || (downloadInfo.sources[0].match(/\/(\d+)/)?.[1] || 0);
+        const tmdbId = downloadInfo.tmdbId;
 
         const resolvedSources = await resolverService.resolveSources(
           downloadInfo.mediaType,
@@ -307,14 +308,39 @@ export class DownloadService {
         activeSource = resolvedSources.find(s => s.type === 'direct') || resolvedSources[0];
       }
 
+      // Resolve embed source to direct link
+      if (activeSource && activeSource.type === 'embed') {
+        progress.message = `Resolving direct link from ${activeSource.name}...`;
+        progress.progress = 20;
+        onProgress?.(progress);
+
+        try {
+          const functions = getFunctions(undefined, 'us-central1');
+          const resolveStream = httpsCallable(functions, 'resolveStream');
+          const result = await resolveStream({
+            providerUrl: activeSource.url,
+            mediaType: downloadInfo.mediaType,
+            tmdbId: downloadInfo.tmdbId,
+          });
+
+          const { directUrl } = result.data as any;
+          if (directUrl) {
+            activeSource = { ...activeSource, url: directUrl, type: 'direct' };
+          }
+        } catch (resolveError) {
+          console.error("Failed to resolve direct link:", resolveError);
+          // Continue with original URL as fallback
+        }
+      }
+
       if (activeSource) {
         progress.message = `Downloading from ${activeSource.name}...`;
-        progress.progress = 30;
+        progress.progress = 40;
         onProgress?.(progress);
 
         const filename = this.generateFilename(downloadInfo);
         const success = await this.startDirectDownload(activeSource.url, filename, (p, speed, eta) => {
-          progress.progress = 30 + (p * 0.6);
+          progress.progress = 40 + (p * 0.5); // 40-90%
           progress.speed = speed;
           progress.eta = eta;
           onProgress?.(progress);
@@ -333,8 +359,8 @@ export class DownloadService {
       progress.progress = 60;
       onProgress?.(progress);
 
-      const tmdbIdFallback = (downloadInfo as any).tmdbId || (downloadInfo.sources[0].match(/\/(\d+)/)?.[1] || 0);
-      const downloadPage = this.createSmartDownloadPage(downloadInfo, Number(tmdbIdFallback));
+      const tmdbIdFallback = downloadInfo.tmdbId;
+      const downloadPage = this.createSmartDownloadPage(downloadInfo, Number(tmdbIdFallback), activeSource?.url);
       const newTab = window.open(downloadPage, '_blank');
 
       if (newTab) {
@@ -433,10 +459,21 @@ export class DownloadService {
     }
   }
 
-  private createSmartDownloadPage(downloadInfo: DownloadInfo, tmdbId: number): string {
+  private createSmartDownloadPage(downloadInfo: DownloadInfo, tmdbId: number, resolvedUrl?: string): string {
     const sources = downloadInfo.sources;
     const title = downloadInfo.title;
     const filename = this.generateFilename(downloadInfo);
+
+    const directLinkHtml = resolvedUrl
+      ? `
+        <div style="background: rgba(59, 130, 246, 0.1); padding: 20px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3); margin-bottom: 30px;">
+          <h2 style="color: #3b82f6; margin-top: 0;">Direct Link Found!</h2>
+          <p>Click the button below to start your direct device download.</p>
+          <a href="${resolvedUrl}" download="${filename}" class="btn" style="background: #10b981; font-size: 1.2em; padding: 20px 40px;">DOWNLOAD NOW</a>
+          <p style="font-size: 0.8em; color: #888; margin-top: 15px;">If it plays in your browser, long press (mobile) or right click (PC) and select "Save link as".</p>
+        </div>
+      `
+      : '';
 
     const html = `
       <!DOCTYPE html>
@@ -454,8 +491,10 @@ export class DownloadService {
         <h1>${title}</h1>
         <div class="loader"></div>
         <p>Preparing your download. If it doesn't start, use the links below.</p>
+        ${directLinkHtml}
         <div id="links">
-          ${sources.map((s, i) => `<a href="${s}" download="${filename}" class="btn">Download Source ${i + 1}</a>`).join('')}
+          <p style="color: #888; margin-bottom: 10px;">Alternative Sources (Embeds):</p>
+          ${sources.map((s, i) => `<a href="${s}" target="_blank" class="btn" style="background: #333; font-size: 0.9em;">Mirror ${i + 1}</a>`).join('')}
         </div>
         <script>
           window.onload = () => {
