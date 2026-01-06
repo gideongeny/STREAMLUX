@@ -212,7 +212,7 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
                   <AiOutlineInfoCircle size={40} className="mx-auto text-gray-600 mb-3" />
                   <p className="text-gray-400">No direct quality links found.</p>
                   <button
-                    onClick={() => handleSelectSource({ name: 'External', url: '', quality: 'Auto', speed: 'medium', status: 'active', type: 'embed' })}
+                    onClick={() => handleSelectSource({ name: 'External', url: '', quality: 'Auto', speed: 'medium', status: 'active', type: 'embed', priority: 999 })}
                     className="mt-4 text-primary underline text-sm"
                   >
                     Try generic download instead
