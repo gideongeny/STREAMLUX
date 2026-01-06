@@ -67,6 +67,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const [isManualSelection, setIsManualSelection] = useState(false);
   const [currentSubtitle, setCurrentSubtitle] = useState<Subtitle | null>(null);
   const [failoverCountdown, setFailoverCountdown] = useState<number | null>(null);
+  const [isTheaterMode, setIsTheaterMode] = useState(false);
   const failoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -231,17 +232,17 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
         </button>
       </div>
 
-      <div className="flex flex-col md:flex-row">
-        {!isMobile && <SidebarMini />}
-        {isMobile && (
+      <div className={`flex flex-col md:flex-row ${isTheaterMode ? 'md:flex-col' : ''}`}>
+        {!isMobile && !isTheaterMode && <SidebarMini />}
+        {isMobile && !isTheaterMode && (
           <Sidebar
             onCloseSidebar={() => setIsSidebarActive(false)}
             isSidebarActive={isSidebarActive}
           />
         )}
 
-        <div className="flex-grow px-[2vw] md:pt-11 pt-0">
-          <div className="relative h-0 pb-[56.25%]">
+        <div className={`flex-grow px-[2vw] md:pt-11 pt-0 transition-all duration-300 ${isTheaterMode ? 'md:px-0 md:pt-0' : ''}`}>
+          <div className={`relative h-0 pb-[56.25%] ${isTheaterMode ? 'md:pb-[45%]' : ''}`}>
             {!detail && (
               <Skeleton className="absolute top-0 left-0 w-full h-full rounded-sm" />
             )}
@@ -267,6 +268,13 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                       onSeek={() => { }}
                       onPopOut={() => { }}
                     />
+                    <button
+                      onClick={() => setIsTheaterMode(!isTheaterMode)}
+                      className={`hidden md:flex bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs font-bold text-white hover:bg-primary/80 transition items-center gap-2 ${isTheaterMode ? 'bg-primary/80 border-primary' : ''}`}
+                      title={isTheaterMode ? "Exit Theater Mode" : "Theater Mode"}
+                    >
+                      {isTheaterMode ? 'NORMAL' : 'THEATER'}
+                    </button>
                     <button
                       onClick={() => {
                         const nextState = !isSelectorOpen;

@@ -5,6 +5,7 @@ import { resolverService, ResolvedSource } from "./resolver";
 export interface DownloadInfo {
   title: string;
   mediaType: "movie" | "tv";
+  tmdbId: number;
   seasonId?: number;
   episodeId?: number;
   episodeName?: string;
@@ -52,6 +53,7 @@ export class DownloadService {
     return {
       title,
       mediaType,
+      tmdbId: detail.id,
       seasonId,
       episodeId,
       episodeName: currentEpisode?.name,

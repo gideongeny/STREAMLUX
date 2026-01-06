@@ -64,7 +64,7 @@ class OfflineSyncService {
             progress.progress = 10;
             this.notifyProgress(id, progress);
 
-            const functions = getFunctions();
+            const functions = getFunctions(undefined, 'us-central1');
             const resolveStream = httpsCallable(functions, 'resolveStream');
 
             const result = await resolveStream({

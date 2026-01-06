@@ -33,44 +33,44 @@ const RightbarFilms: FunctionComponent<RightbarFilmsProps> = ({
       <ul className="flex flex-col gap-5">
         {isLoading
           ? new Array(limitNumber).fill("").map((_, index) => (
-              <li key={index} className="flex gap-5 items-center h-[156px]">
-                <Skeleton className="shrink-0 max-w-[100px] w-full h-full rounded-md" />
-                <Skeleton className="flex-grow h-[85%] rounded-md" />
-              </li>
-            ))
-          : (films as Item[]).slice(0, limitNumber).map((item) => (
-              <li key={item.id}>
-                <Link
-                  to={
-                    item.media_type === "movie"
-                      ? `/movie/${item.id}`
-                      : `/tv/${item.id}`
-                  }
-                  className="hover:brightness-75 transiton duration-300 flex gap-5 items-center"
-                >
-                  <div className="shrink-0 max-w-[100px] w-full">
-                    <LazyLoadImage
-                      src={resizeImage(item.poster_path, "w154")}
-                      className="w-full h-full object-cover rounded-md"
-                      alt="poster"
-                      effect="blur"
-                    />
+            <li key={index} className="flex gap-5 items-center h-[156px]">
+              <Skeleton className="shrink-0 max-w-[100px] w-full h-full rounded-md" />
+              <Skeleton className="flex-grow h-[85%] rounded-md" />
+            </li>
+          ))
+          : (films || []).slice(0, limitNumber).map((item) => (
+            <li key={item.id}>
+              <Link
+                to={
+                  item.media_type === "movie"
+                    ? `/movie/${item.id}`
+                    : `/tv/${item.id}`
+                }
+                className="hover:brightness-75 transiton duration-300 flex gap-5 items-center"
+              >
+                <div className="shrink-0 max-w-[100px] w-full">
+                  <LazyLoadImage
+                    src={resizeImage(item.poster_path, "w154")}
+                    className="w-full h-full object-cover rounded-md"
+                    alt="poster"
+                    effect="blur"
+                  />
+                </div>
+                <div className="flex-grow">
+                  <p className="text-white mb-3 text-lg">
+                    {item.title || item.name}
+                  </p>
+                  <p className="mb-8">
+                    {item.release_date || item.first_air_date}
+                  </p>
+                  <div className="inline-flex gap-2 items-center px-3 py-[2px] rounded-full text-primary border border-primary text-sm">
+                    <span>{item.vote_average.toFixed(1)}</span>
+                    <AiFillStar size={15} />
                   </div>
-                  <div className="flex-grow">
-                    <p className="text-white mb-3 text-lg">
-                      {item.title || item.name}
-                    </p>
-                    <p className="mb-8">
-                      {item.release_date || item.first_air_date}
-                    </p>
-                    <div className="inline-flex gap-2 items-center px-3 py-[2px] rounded-full text-primary border border-primary text-sm">
-                      <span>{item.vote_average.toFixed(1)}</span>
-                      <AiFillStar size={15} />
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            ))}
+                </div>
+              </Link>
+            </li>
+          ))}
       </ul>
       <button
         onClick={() => navigate("/explore")}

@@ -30,7 +30,7 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
     try {
       const sources = await resolverService.resolveSources(
         downloadInfo.mediaType,
-        downloadInfo.mediaType === 'movie' ? (downloadInfo as any).tmdbId : (downloadInfo as any).tmdbId,
+        downloadInfo.tmdbId,
         downloadInfo.seasonId,
         downloadInfo.episodeId
       );
