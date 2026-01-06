@@ -5,12 +5,15 @@ export interface ResolvedSource {
     url: string;
     quality: string;
     speed: "fast" | "medium" | "slow";
-    status: "active" | "slow" | "down";
+    status: "active" | "slow" | "down" | "checking";
     type: "embed" | "direct";
+    priority: number; // Lower = higher priority
 }
 
 export class ResolverService {
     private static instance: ResolverService;
+    private healthCache: Map<string, { status: "active" | "slow" | "down", timestamp: number }> = new Map();
+    private readonly HEALTH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
     static getInstance(): ResolverService {
         if (!ResolverService.instance) {
@@ -20,9 +23,73 @@ export class ResolverService {
     }
 
     /**
+     * Ping a source to check if it's available
+     * Uses a lightweight HEAD request with timeout
+     */
+    async pingSource(url: string): Promise<"active" | "slow" | "down"> {
+        const cacheKey = url;
+        const cached = this.healthCache.get(cacheKey);
+
+        // Return cached result if still valid
+        if (cached && Date.now() - cached.timestamp < this.HEALTH_CACHE_TTL) {
+            return cached.status;
+        }
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+            const startTime = Date.now();
+            await fetch(url, {
+                method: 'HEAD',
+                signal: controller.signal,
+                mode: 'no-cors', // Avoid CORS issues
+            });
+            clearTimeout(timeoutId);
+
+            const responseTime = Date.now() - startTime;
+
+            // Determine status based on response time
+            let status: "active" | "slow" | "down";
+            if (responseTime < 2000) {
+                status = "active";
+            } else if (responseTime < 5000) {
+                status = "slow";
+            } else {
+                status = "down";
+            }
+
+            // Cache the result
+            this.healthCache.set(cacheKey, { status, timestamp: Date.now() });
+            return status;
+        } catch (error) {
+            // If fetch fails, mark as down
+            this.healthCache.set(cacheKey, { status: "down", timestamp: Date.now() });
+            return "down";
+        }
+    }
+
+    /**
+     * Get the first healthy source from the list
+     */
+    async getHealthySource(sources: ResolvedSource[]): Promise<ResolvedSource | null> {
+        // Sort by priority first
+        const sortedSources = [...sources].sort((a, b) => a.priority - b.priority);
+
+        for (const source of sortedSources) {
+            const health = await this.pingSource(source.url);
+            if (health === "active" || health === "slow") {
+                return { ...source, status: health };
+            }
+        }
+
+        // If no healthy source found, return the first one anyway
+        return sortedSources[0] || null;
+    }
+
+    /**
      * Generates a list of potential streaming/download sources based on media ID.
-     * In a real app, this would perform actual scraping. For now, it intelligently 
-     * maps constants to the specific media item.
+     * Includes VidSrc (primary), Vidplay, Upcloud, Vidcloud, and SmashyStream
      */
     async resolveSources(
         mediaType: "movie" | "tv",
@@ -33,171 +100,126 @@ export class ResolverService {
     ): Promise<ResolvedSource[]> {
         const tmdbId = id.toString();
 
-
+        // Build sources with priority ordering
         const sources: ResolvedSource[] = [
+            // Priority 1: VidSrc Me (Primary - most reliable)
             {
                 name: "VidSrc Me",
                 url: mediaType === "movie"
                     ? `${EMBED_ALTERNATIVES.VIDSRC_ME}/movie/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.VIDSRC_ME}/tv/${tmdbId}/${season}/${episode}`,
+                    : `${EMBED_ALTERNATIVES.VIDSRC_ME}/tv/${tmdbId}/${season || 1}/${episode || 1}`,
                 quality: "1080p",
                 speed: "fast",
-                status: "active",
-                type: "embed"
+                status: "checking",
+                type: "embed",
+                priority: 1
             },
+            // Priority 2: Vidplay
+            {
+                name: "Vidplay",
+                url: mediaType === "movie"
+                    ? `https://vidplay.online/e/movie/${tmdbId}`
+                    : `https://vidplay.online/e/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "1080p",
+                speed: "fast",
+                status: "checking",
+                type: "embed",
+                priority: 2
+            },
+            // Priority 3: Upcloud
+            {
+                name: "Upcloud",
+                url: mediaType === "movie"
+                    ? `https://upcloud.to/e/movie/${tmdbId}`
+                    : `https://upcloud.to/e/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "1080p",
+                speed: "medium",
+                status: "checking",
+                type: "embed",
+                priority: 3
+            },
+            // Priority 4: Vidcloud
+            {
+                name: "Vidcloud",
+                url: mediaType === "movie"
+                    ? `https://vidcloud.stream/e/movie/${tmdbId}`
+                    : `https://vidcloud.stream/e/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "720p",
+                speed: "medium",
+                status: "checking",
+                type: "embed",
+                priority: 4
+            },
+            // Priority 5: SmashyStream
+            {
+                name: "SmashyStream",
+                url: mediaType === "movie"
+                    ? `https://player.smashy.stream/movie/${tmdbId}`
+                    : `https://player.smashy.stream/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "1080p",
+                speed: "fast",
+                status: "checking",
+                type: "embed",
+                priority: 5
+            },
+            // Priority 6: VidSrc Pro (Alternative)
             {
                 name: "VidSrc Pro",
                 url: mediaType === "movie"
                     ? `${EMBED_ALTERNATIVES.VIDSRC_PRO}/movie/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.VIDSRC_PRO}/tv/${tmdbId}/${season}/${episode}`,
+                    : `${EMBED_ALTERNATIVES.VIDSRC_PRO}/tv/${tmdbId}/${season || 1}/${episode || 1}`,
                 quality: "1080p",
                 speed: "fast",
-                status: "active",
-                type: "embed"
+                status: "checking",
+                type: "embed",
+                priority: 6
             },
+            // Priority 7: Embed.su
             {
                 name: "Embed.su",
                 url: mediaType === "movie"
                     ? `${EMBED_ALTERNATIVES.EMBED_SU}/movie/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.EMBED_SU}/tv/${tmdbId}/${season}/${episode}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed"
-            },
-            {
-                name: "Smashy",
-                url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.SMASHY}/movie/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.SMASHY}/tv/${tmdbId}/${season}/${episode}`,
+                    : `${EMBED_ALTERNATIVES.EMBED_SU}/tv/${tmdbId}/${season || 1}/${episode || 1}`,
                 quality: "720p",
                 speed: "medium",
-                status: "active",
-                type: "embed"
+                status: "checking",
+                type: "embed",
+                priority: 7
             },
-            {
-                name: "VidSrc XYZ",
-                url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.VIDSRC_XYZ}/movie/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.VIDSRC_XYZ}/tv/${tmdbId}/${season}/${episode}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed"
-            },
+            // Priority 8: AutoEmbed
             {
                 name: "AutoEmbed",
                 url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.AUTOEMBED}/movie/tmdb/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.AUTOEMBED}/tv/tmdb/${tmdbId}/${season}/${episode}`,
+                    ? `${EMBED_ALTERNATIVES.AUTOEMBED}/movie/${tmdbId}`
+                    : `${EMBED_ALTERNATIVES.AUTOEMBED}/tv/${tmdbId}/${season || 1}/${episode || 1}`,
                 quality: "720p",
-                speed: "medium",
-                status: "active",
-                type: "embed"
-            },
-            {
-                name: "2Embed",
-                url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.TWOEMBED}/movie?tmdb=${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.TWOEMBED}/tv?tmdb=${tmdbId}&s=${season}&e=${episode}`,
-                quality: "HD",
-                speed: "medium",
-                status: "active",
-                type: "embed"
-            },
-            {
-                name: "SuperEmbed",
-                url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.SUPEREMBED}/movie/tmdb/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.SUPEREMBED}/tv/tmdb/${tmdbId}/${season}/${episode}`,
-                quality: "HD",
                 speed: "slow",
-                status: "active",
-                type: "embed"
-            },
-            {
-                name: "Nollywood TV (African)",
-                url: `${EMBED_ALTERNATIVES.NOLLYWOOD_TV}/embed/${tmdbId}`,
-                quality: "720p",
-                speed: "medium",
-                status: "active",
-                type: "embed"
-            },
-            {
-                name: "DramaCool (Asian)",
-                url: `${EMBED_ALTERNATIVES.DRAMACOOL}/embed/${tmdbId}`,
-                quality: "HD",
-                speed: "medium",
-                status: "active",
-                type: "embed"
-            },
-            {
-                name: "KissAsian (Asian)",
-                url: `${EMBED_ALTERNATIVES.KISSASIAN}/embed/${tmdbId}`,
-                quality: "HD",
-                speed: "medium",
-                status: "active",
-                type: "embed"
-            },
-            {
-                name: "123Movies",
-                url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.ONETWOTHREEMOVIES}/movie/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.ONETWOTHREEMOVIES}/tv/${tmdbId}/${season}/${episode}`,
-                quality: "SD",
-                speed: "slow",
-                status: "active",
-                type: "embed"
-            },
-            {
-                name: "Fmovies",
-                url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.FMOVIES}/movie/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.FMOVIES}/tv/${tmdbId}/${season}/${episode}`,
-                quality: "HD",
-                speed: "medium",
-                status: "active",
-                type: "embed"
-            },
-            {
-                name: "FZMovies Mirror",
-                url: `${EMBED_ALTERNATIVES.FZMOVIES_EMBED}/${tmdbId}`,
-                quality: "HD",
-                speed: "medium",
-                status: "active",
-                type: "embed"
-            },
-            {
-                name: "9jaRocks Flash",
-                url: `${EMBED_ALTERNATIVES.NINJAROCKS_EMBED}/${tmdbId}`,
-                quality: "720p",
-                speed: "medium",
-                status: "active",
-                type: "embed"
-            },
-            {
-                name: "MovieBox Premium (Aone)",
-                url: `https://h5.aoneroom.com/player/index.html?id=${tmdbId}&type=${mediaType === 'movie' ? 1 : 2}${season ? `&s=${season}` : ''}${episode ? `&e=${episode}` : ''}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed"
-            },
-            {
-                name: "StreamLux 4K (Ultra)",
-                url: `https://vidsrc.cc/v2/embed/${mediaType}/${tmdbId}${season ? `/${season}/${episode}` : ''}`,
-                quality: "4K",
-                speed: "fast",
-                status: "active",
-                type: "embed"
+                status: "checking",
+                type: "embed",
+                priority: 8
             }
         ];
 
         // Simulate network delay for "Resolving" feel
         await new Promise(resolve => setTimeout(resolve, 800));
 
+        // Check health of all sources in parallel (don't wait for results)
+        sources.forEach(source => {
+            this.pingSource(source.url).then(status => {
+                source.status = status;
+            });
+        });
+
         return sources;
+    }
+
+    /**
+     * Clear health cache (useful for testing or manual refresh)
+     */
+    clearHealthCache(): void {
+        this.healthCache.clear();
     }
 }
 
 export const resolverService = ResolverService.getInstance();
+

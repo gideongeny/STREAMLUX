@@ -77,18 +77,7 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
 
   return (
     <>
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        {/* YouTube Video Background (Avengers: Endgame Trailer) */}
-        <iframe
-          className="absolute top-1/2 left-1/2 w-[110vw] h-[110vh] -translate-x-1/2 -translate-y-1/2 scale-110 pointer-events-none"
-          src="https://www.youtube.com/embed/TcMBFSGZo14?autoplay=1&mute=1&controls=0&loop=1&playlist=TcMBFSGZo14&rel=0&showinfo=0&iv_load_policy=3&modestbranding=1"
-          frameBorder="0"
-          allow="autoplay; encrypted-media"
-          title="Background Video"
-        ></iframe>
-        {/* Dark Overlay for better contrast */}
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px]"></div>
-      </div>
+      {/* Background video is handled by parent Auth component */}
 
       {currentUser && (
         <ModalNotification type="success" message={"Sign in successfully"} />

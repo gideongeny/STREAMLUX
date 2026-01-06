@@ -40,6 +40,7 @@ const Download = lazy(() => import("./pages/Download"));
 const DownloadsPage = lazy(() => import("./pages/DownloadsPage"));
 const CalendarPage = lazy(() => import("./pages/CalendarPage"));
 const Settings = lazy(() => import("./pages/Settings"));
+const MyDownloads = lazy(() => import("./pages/MyDownloads"));
 
 function App() {
   const location = useLocation();
@@ -454,6 +455,7 @@ function App() {
           <Route path="downloads" element={<DownloadsPage />} />
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="my-downloads" element={<MyDownloads />} />
           <Route
             path="bookmarked"
             element={

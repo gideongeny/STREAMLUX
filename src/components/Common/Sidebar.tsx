@@ -270,15 +270,25 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
         <div className="text-white text-lg font-medium mt-12">{t('GENERAL')}</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
-          <Link
-            to="/download"
-            className={`flex gap-6 items-center  ${location.pathname === "/download" &&
-              "!text-primary border-r-4 border-primary font-medium"
-              } hover:text-white transition duration-300`}
+          <button
+            onClick={async () => {
+              try {
+                const { updaterService } = await import("../../services/updater");
+                const release = await updaterService.getLatestRelease();
+                if (release?.downloadUrl) {
+                  window.location.href = release.downloadUrl;
+                } else {
+                  window.open("https://github.com/gideongeny/STREAMLUX/releases", "_blank");
+                }
+              } catch {
+                window.open("https://github.com/gideongeny/STREAMLUX/releases", "_blank");
+              }
+            }}
+            className="flex gap-6 items-center hover:text-white transition duration-300 w-full text-left"
           >
             <HiOutlineDeviceMobile size={25} />
             <p>Download App</p>
-          </Link>
+          </button>
 
           <Link
             to="/settings"

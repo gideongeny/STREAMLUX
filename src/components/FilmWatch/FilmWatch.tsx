@@ -34,6 +34,7 @@ import PlayerControls from "./PlayerControls";
 import QualitySelector from "./QualitySelector";
 import SubtitleSelector from "./SubtitleSelector";
 import { Subtitle } from "../../services/subtitles";
+import OfflineSyncButton from "../Common/OfflineSyncButton";
 
 interface FilmWatchProps {
   media_type: "movie" | "tv";
@@ -65,6 +66,9 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [isManualSelection, setIsManualSelection] = useState(false);
   const [currentSubtitle, setCurrentSubtitle] = useState<Subtitle | null>(null);
+  const [failoverCountdown, setFailoverCountdown] = useState<number | null>(null);
+  const failoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch resolved sources
   useEffect(() => {
@@ -92,11 +96,54 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     console.log(`Video source ${currentSourceIndex + 1} failed.`);
     setVideoError(true);
     setIsLoadingVideo(false);
-  }, [currentSourceIndex]);
+
+    // Only auto-switch if manual selection is not active
+    if (!isManualSelection && currentSourceIndex < resolvedSources.length - 1) {
+      console.log('Starting 20-second failover countdown...');
+      setFailoverCountdown(20);
+
+      // Clear any existing timers
+      if (failoverTimerRef.current) clearTimeout(failoverTimerRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+
+      // Start countdown display
+      let countdown = 20;
+      countdownIntervalRef.current = setInterval(() => {
+        countdown -= 1;
+        setFailoverCountdown(countdown);
+        if (countdown <= 0 && countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+        }
+      }, 1000);
+
+      // Schedule the actual switch after 20 seconds
+      failoverTimerRef.current = setTimeout(() => {
+        console.log(`Switching to source ${currentSourceIndex + 2}...`);
+        setCurrentSourceIndex(prev => prev + 1);
+        setVideoError(false);
+        setIsLoadingVideo(true);
+        setFailoverCountdown(null);
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+        }
+      }, 20000);
+    }
+  }, [currentSourceIndex, isManualSelection, resolvedSources.length]);
 
   const handleVideoLoad = useCallback(() => {
     setIsLoadingVideo(false);
     setVideoError(false);
+    setFailoverCountdown(null);
+
+    // Clear any pending failover timers
+    if (failoverTimerRef.current) {
+      clearTimeout(failoverTimerRef.current);
+      failoverTimerRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
   }, []);
 
   const handleSpeedChange = (speed: number) => {
@@ -245,15 +292,43 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                               setVideoError(false);
                               setIsLoadingVideo(true);
                               setIsSelectorOpen(false);
+                              setIsManualSelection(true); // Lock auto-switching
+                              setFailoverCountdown(null);
+
+                              // Clear any pending failover timers
+                              if (failoverTimerRef.current) {
+                                clearTimeout(failoverTimerRef.current);
+                                failoverTimerRef.current = null;
+                              }
+                              if (countdownIntervalRef.current) {
+                                clearInterval(countdownIntervalRef.current);
+                                countdownIntervalRef.current = null;
+                              }
                             }}
                             className={`flex items-center justify-between p-2 rounded-lg transition-all text-left ${currentSourceIndex === index
                               ? 'bg-primary/20 border border-primary/50 text-white'
                               : 'hover:bg-white/5 text-gray-400 border border-transparent'
                               }`}
                           >
-                            <span className={`text-xs font-bold ${currentSourceIndex === index ? 'text-primary' : ''}`}>
-                              {source.name}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs font-bold ${currentSourceIndex === index ? 'text-primary' : ''}`}>
+                                {source.name}
+                              </span>
+                              {/* Health status indicator */}
+                              {source.status === 'active' && (
+                                <span className="w-2 h-2 rounded-full bg-green-500" title="Active"></span>
+                              )}
+                              {source.status === 'slow' && (
+                                <span className="w-2 h-2 rounded-full bg-yellow-500" title="Slow"></span>
+                              )}
+                              {source.status === 'down' && (
+                                <span className="w-2 h-2 rounded-full bg-red-500" title="Down"></span>
+                              )}
+                              {source.status === 'checking' && (
+                                <span className="w-2 h-2 rounded-full bg-gray-500 animate-pulse" title="Checking"></span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-gray-500">{source.quality}</span>
                           </button>
                         ))}
                       </div>
@@ -276,6 +351,35 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center">
                     <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
                     <h2 className="text-xl font-bold text-white mb-2">Resolving Sources...</h2>
+                  </div>
+                )}
+
+                {/* Failover Countdown Overlay */}
+                {failoverCountdown !== null && failoverCountdown > 0 && (
+                  <div className="absolute bottom-4 left-4 z-20 bg-black/90 backdrop-blur-md px-4 py-3 rounded-lg border border-yellow-500/50 shadow-2xl">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-10 h-10">
+                        <svg className="w-10 h-10 transform -rotate-90">
+                          <circle
+                            cx="20"
+                            cy="20"
+                            r="16"
+                            stroke="#fbbf24"
+                            strokeWidth="3"
+                            fill="none"
+                            strokeDasharray={`${(failoverCountdown / 20) * 100} 100`}
+                            className="transition-all duration-1000"
+                          />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-yellow-500 font-bold text-sm">
+                          {failoverCountdown}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-white font-medium text-sm">Auto-switching source...</p>
+                        <p className="text-gray-400 text-xs">Next: {resolvedSources[currentSourceIndex + 1]?.name || 'N/A'}</p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </>
@@ -304,6 +408,20 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 <DownloadOptions downloadInfo={downloadInfo} />
               </div>
             )}
+
+            {/* Offline Sync Section */}
+            {detail && currentSource && (
+              <div className="mt-6">
+                <OfflineSyncButton
+                  detail={detail}
+                  mediaType={media_type}
+                  providerUrl={currentSource}
+                  seasonNumber={seasonId}
+                  episodeNumber={episodeId}
+                  episodeTitle={currentEpisode?.name}
+                />
+              </div>
+            )}
           </div>
 
           <Comments mediaType={media_type} mediaId={String(detail?.id)} />
@@ -319,6 +437,16 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
               isLoading={!recommendations}
               className="md:mt-24"
             />
+          )}
+          {media_type === "tv" && (
+            <div className="md:mt-24">
+              <p className="text-white font-medium text-lg mb-3">Seasons & Episodes</p>
+              <SeasonSelection
+                detailSeasons={detailSeasons}
+                seasonId={seasonId}
+                episodeId={episodeId}
+              />
+            </div>
           )}
         </div>
       </div>

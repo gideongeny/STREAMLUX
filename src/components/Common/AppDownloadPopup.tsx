@@ -24,8 +24,21 @@ const AppDownloadPopup: FC = () => {
         localStorage.setItem("app_popup_dismissed", "true");
     };
 
-    const handleDownload = () => {
-        window.open("https://github.com/gideongeny/STREAMLUX/releases", "_blank");
+    const handleDownload = async () => {
+        // Optimistic UI: Try to open direct download immediately if cached or known
+        // For now, we fetch on click to ensure freshness or redirect to releases if fetch fails
+        try {
+            const { updaterService } = await import("../../services/updater");
+            const release = await updaterService.getLatestRelease();
+
+            if (release && release.downloadUrl) {
+                window.location.href = release.downloadUrl;
+            } else {
+                window.open("https://github.com/gideongeny/STREAMLUX/releases", "_blank");
+            }
+        } catch (e) {
+            window.open("https://github.com/gideongeny/STREAMLUX/releases", "_blank");
+        }
         handleDismiss();
     };
 

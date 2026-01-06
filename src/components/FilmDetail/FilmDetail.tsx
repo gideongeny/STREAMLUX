@@ -27,6 +27,8 @@ import Title from "../Common/Title";
 import Footer from "../Footer/Footer";
 import FilmTabInfo from "./FilmTabInfo";
 import DownloadButton from "../Common/DownloadButton";
+import HeroTrailer from "../Home/HeroTrailer";
+import { getVideo } from "../../services/home";
 import { downloadService } from "../../services/download";
 
 const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
@@ -34,6 +36,8 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { isMobile } = useCurrentViewportView();
   const [isSidebarActive, setIsSidebarActive] = useState(false);
+  const [videoKey, setVideoKey] = useState<string | null>(null);
+
   useEffect(() => {
     if (!currentUser) {
       return;
@@ -47,6 +51,16 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
 
     return () => unsubDoc();
   }, [currentUser, detail?.id]);
+
+  useEffect(() => {
+    if (detail && !isMobile) {
+      getVideo(detail.media_type as "movie" | "tv", detail.id).then((key) => {
+        if (key) {
+          setVideoKey(key);
+        }
+      });
+    }
+  }, [detail, isMobile]);
 
   const bookmarkedHandler = async () => {
     if (!detail) return;
@@ -148,9 +162,16 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
               style={{
                 backgroundImage: `url(${resizeImage(detail.backdrop_path)})`,
               }}
-              className="bg-cover bg-center bg-no-repeat md:h-[400px] h-[300px] rounded-bl-2xl relative"
+              className="bg-cover bg-center bg-no-repeat md:h-[400px] h-[300px] rounded-bl-2xl relative overflow-hidden"
             >
-              <div className="bg-gradient-to-br from-transparent to-black/70 h-full rounded-bl-2xl">
+              {!isMobile && videoKey && (
+                <HeroTrailer
+                  mediaId={detail.id}
+                  mediaType={detail.media_type as "movie" | "tv"}
+                  isActive={true}
+                />
+              )}
+              <div className="bg-gradient-to-br from-transparent to-black/70 h-full rounded-bl-2xl relative z-[5]">
                 <div className="flex flex-col md:flex-row bottom-[-40%] md:bottom-[-20%]  items-start tw-absolute-center-horizontal w-full max-w-[1000px]">
                   {/* POSTER */}
                   <div className="flex flex-col md:flex-row gap-5 items-start md:items-center">

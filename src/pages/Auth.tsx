@@ -25,17 +25,20 @@ const Auth: FunctionComponent<AuthProps> = () => {
 
       {!isMobile && (
         <div className="fixed top-0 left-0 w-full h-full -z-10 bg-black overflow-hidden pointer-events-none">
-          <iframe
-            className="w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-60 scale-110"
-            src="https://www.youtube.com/embed/_-Hsa9ROvZY?autoplay=1&mute=1&controls=0&loop=1&playlist=_-Hsa9ROvZY&rel=0&showinfo=0&iv_load_policy=3&disablekb=1&modestbranding=1"
-            title="Background"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          ></iframe>
+          <video
+            className="w-full h-full object-cover opacity-60 scale-105"
+            autoPlay
+            loop
+            muted
+            playsInline
+            src="/auth-background.mp4"
+          />
+          {/* Gradient Overlay for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
         </div>
       )}
 
-      <div className="md:bg-black/80 bg-dark min-h-screen">
+      <div className="md:bg-black/40 bg-dark/90 min-h-screen flex flex-col justify-center relative z-10">
         {!isShowSignInBox && <SignUp setIsShowSignInBox={setIsShowSignInBox} />}
         {isShowSignInBox && <SignIn setIsShowSignInBox={setIsShowSignInBox} />}
       </div>

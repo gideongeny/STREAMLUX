@@ -1,5 +1,6 @@
 import axiosClient from '../shared/axios';
 import { Item } from '../shared/types';
+import { logger } from '../utils/logger';
 
 interface ScrapedItem {
     title: string;
@@ -37,7 +38,7 @@ async function searchTMDB(title: string, mediaType: 'movie' | 'tv'): Promise<Ite
 
         return null;
     } catch (error) {
-        console.warn(`Failed to search TMDB for "${title}":`, error);
+        logger.warn(`Failed to search TMDB for "${title}":`, error);
         return null;
     }
 }
@@ -96,7 +97,7 @@ export async function enrichScrapedContent(
         }
     }
 
-    console.log(`Enriched ${enrichedItems.length} scraped items with TMDB data`);
+    logger.log(`Enriched ${enrichedItems.length} scraped items with TMDB data`);
     return enrichedItems;
 }
 
@@ -118,8 +119,8 @@ export async function getEnrichedScrapedContent(): Promise<Item[]> {
         const scrapedData = await import('../data/downloads.json');
         const items = (scrapedData.default || scrapedData) as ScrapedItem[];
 
-        // Enrich with TMDB data
-        const enriched = await enrichScrapedContent(items, 100);
+        // Enrich with TMDB data - increased limit for better coverage
+        const enriched = await enrichScrapedContent(items, 200);
 
         // Cache results
         cachedEnrichedContent = enriched;
@@ -127,7 +128,7 @@ export async function getEnrichedScrapedContent(): Promise<Item[]> {
 
         return enriched;
     } catch (error) {
-        console.error('Failed to load/enrich scraped content:', error);
+        logger.error('Failed to load/enrich scraped content:', error);
         return [];
     }
 }

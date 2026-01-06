@@ -1,4 +1,11 @@
 {
+    "functions": {
+        "source": "functions",
+        "runtime": "nodejs18",
+        "predeploy": [
+            "npm --prefix \"$RESOURCE_DIR\" run build"
+        ]
+    },
     "hosting": {
         "public": "build",
         "ignore": [
@@ -30,7 +37,27 @@
                         "value": "max-age=60"
                     }
                 ]
+            },
+            {
+                "source": "**/*.@(mp4|webm|m3u8|ts)",
+                "headers": [
+                    {
+                        "key": "Access-Control-Allow-Origin",
+                        "value": "*"
+                    },
+                    {
+                        "key": "Access-Control-Allow-Methods",
+                        "value": "GET, HEAD, OPTIONS"
+                    },
+                    {
+                        "key": "Cache-Control",
+                        "value": "max-age=3600"
+                    }
+                ]
             }
         ]
+    },
+    "storage": {
+        "rules": "storage.rules"
     }
 }

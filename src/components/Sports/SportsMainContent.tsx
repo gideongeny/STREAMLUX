@@ -371,14 +371,27 @@ const SportsMainContent: FC = () => {
                         (item) => item.id === fixture.leagueId
                     );
 
+                    // Check if this is a soccer/football match (sportlive.run supports these)
+                    const isSoccerFootball = ['epl', 'ucl', 'laliga', 'ligue1', 'seriea', 'bundesliga', 'afcon', 'world-cup'].includes(fixture.leagueId?.toLowerCase());
+                    
+                    // For live soccer/football matches with matchId, go directly to sportlive.run
+                    const targetUrl = (fixture.status === 'live' && isSoccerFootball && fixture.matchId)
+                        ? `https://sportslive.run/matches/${fixture.matchId}?utm_source=StreamLux`
+                        : fixture.matchId && isSoccerFootball
+                            ? `https://sportslive.run/matches/${fixture.matchId}?utm_source=StreamLux`
+                            : fixture.streamSources && fixture.streamSources.length > 0
+                                ? fixture.streamSources[0]
+                                : `/sports/${fixture.leagueId}/${fixture.id}/watch`;
+
+                    const isExternal = !!(fixture.matchId || (fixture.streamSources && fixture.streamSources.length > 0));
+
                     return (
-                        <Link
+                        <a
                             key={fixture.id}
-                            to={fixture.matchId
-                                ? `/sports/${fixture.leagueId}/${fixture.id}/watch`
-                                : `/sports/${fixture.leagueId}/${fixture.id}/watch`
-                            }
-                            className="group rounded-xl bg-dark-lighten border border-gray-800 hover:border-primary/70 hover:shadow-xl hover:shadow-primary/20 transition overflow-hidden"
+                            href={targetUrl}
+                            target={isExternal ? "_blank" : "_self"}
+                            rel={isExternal ? "noopener noreferrer" : ""}
+                            className="group rounded-xl bg-dark-lighten border border-gray-800 hover:border-primary/70 hover:shadow-xl hover:shadow-primary/20 transition overflow-hidden cursor-pointer"
                         >
                             <div className="p-4 flex items-start gap-3">
                                 <div className="mt-1">
@@ -504,14 +517,14 @@ const SportsMainContent: FC = () => {
                             <div className="px-4 pb-4 flex items-center justify-between text-xs text-gray-400 border-t border-gray-800">
                                 <span className="py-2">
                                     <span className="text-primary font-medium">
-                                        View Details & Streams
+                                        {isExternal ? "Watch Live on SportsRun" : "View Details & Streams"}
                                     </span>
                                 </span>
                                 <span className="py-2 text-primary opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
-                                    Watch now →
+                                    {isExternal ? "Open Stream ↗" : "Watch now →"}
                                 </span>
                             </div>
-                        </Link>
+                        </a>
                     );
                 })}
             </div>

@@ -135,40 +135,67 @@ const Home: FC = () => {
     if (!tmdbData || !scrapedItems || scrapedItems.length === 0) return tmdbData;
 
     const merged = { ...tmdbData };
+    const usedItems = new Set<string>(); // Track items already used to avoid duplicates across categories
 
-    // 1. Distribute into specific categories
-    Object.keys(merged).forEach(category => {
+    // 1. Distribute scraped content into ALL categories (not just relevant ones)
+    Object.keys(merged).forEach((category, categoryIndex) => {
       if (!Array.isArray(merged[category])) return;
 
       const catLower = category.toLowerCase();
-
-      // Filter appropriate items for this category
-      const relevantScraped = scrapedItems.filter((item: any) => {
-        // Trending/Hot/Top: Take high-rated items
+      
+      // Filter relevant items first, but also include general items if not enough
+      let relevantScraped = scrapedItems.filter((item: any) => {
+        const itemKey = `${item.id}-${(item.title || item.name || '').toLowerCase()}`;
+        if (usedItems.has(itemKey)) return false; // Skip already used items
+        
+        // Trending/Hot/Top/Popular: Take high-rated items
         if (['trending', 'hot', 'top', 'popular'].some(k => catLower.includes(k))) {
-          return item.vote_average > 6.0;
+          return (item.vote_average || 0) > 6.0;
         }
         // Genre matching
-        return item.genres?.some((g: any) => catLower.includes(g.name.toLowerCase()));
+        if (item.genres?.some((g: any) => catLower.includes(g.name.toLowerCase()))) {
+          return true;
+        }
+        return false;
       });
 
-      // 2. Aggressive Injection: Interleave or Prepend
-      if (relevantScraped.length > 0) {
-        // Strategy: Add relevant scraped items to the BEGINNING of the list to ensure visibility
-        // But keep the very first item as TMDB for banner consistency if needed, or just mix top 5.
+      // If not enough relevant items, fill with any unused scraped items
+      if (relevantScraped.length < 25) {
+        const additionalItems = scrapedItems.filter((item: any) => {
+          const itemKey = `${item.id}-${(item.title || item.name || '').toLowerCase()}`;
+          return !usedItems.has(itemKey) && !relevantScraped.includes(item);
+        });
+        relevantScraped = [...relevantScraped, ...additionalItems.slice(0, 25 - relevantScraped.length)];
+      }
 
-        // Take up to 10 relevant scraped items
-        const itemsToInject = relevantScraped.slice(0, 15);
+      // Take up to 25 items per category for extensive filling
+      const itemsToInject = relevantScraped.slice(0, 25);
 
-        // Remove duplicates based on ID or Title
-        const existingIds = new Set(merged[category].map((i: any) => i.id));
-        const uniqueInjects = itemsToInject.filter((i: any) => !existingIds.has(i.id));
+      // Remove duplicates based on ID or Title
+      const existingIds = new Set(merged[category].map((i: any) => i.id));
+      const existingTitles = new Set(merged[category].map((i: any) => (i.title || i.name || '').toLowerCase()));
+      const uniqueInjects = itemsToInject.filter((i: any) => {
+        const itemId = i.id;
+        const itemTitle = (i.title || i.name || '').toLowerCase();
+        const itemKey = `${itemId}-${itemTitle}`;
+        const isUnique = !existingIds.has(itemId) && !existingTitles.has(itemTitle);
+        if (isUnique) {
+          usedItems.add(itemKey); // Mark as used
+        }
+        return isUnique;
+      });
 
-        // SPLICE them in at varied positions for "filling" effect
-        // Inject 2 scraped items for every 3 existing items
-        uniqueInjects.forEach((item: any, idx: number) => {
-          // Insert at index 1, 3, 5, etc.
-          const insertPos = Math.min((idx * 2) + 1, merged[category].length);
+      if (uniqueInjects.length > 0) {
+        // Aggressive filling: Prepend 7 items at the start, then interleave the rest
+        const prependItems = uniqueInjects.slice(0, 7);
+        const interleaveItems = uniqueInjects.slice(7);
+
+        // Prepend first 7 items
+        merged[category] = [...prependItems, ...merged[category]];
+
+        // Interleave remaining items more densely (every 2 items)
+        interleaveItems.forEach((item: any, idx: number) => {
+          const insertPos = Math.min(10 + (idx * 2), merged[category].length);
           merged[category].splice(insertPos, 0, item);
         });
       }

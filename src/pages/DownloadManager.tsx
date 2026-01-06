@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect } from 'react';
-import { offlineDownloadService, DownloadItem } from '../../services/offlineDownload';
+import { offlineDownloadService, DownloadItem } from '../services/offlineDownload';
 import { Link } from 'react-router-dom';
 
 const DownloadManager: FC = () => {

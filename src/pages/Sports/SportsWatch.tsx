@@ -67,18 +67,31 @@ const SportsWatch: FC = () => {
   const fixture = staticFixture || dynamicFixture;
   const league = SPORTS_LEAGUES.find((item) => item.id === leagueId);
 
-  const sources = useMemo(() => {
+    const sources = useMemo(() => {
     if (fixture?.streamSources) return fixture.streamSources;
 
     // Use matchId from URL params or fixture as fallback
     const targetMatchId = matchId || fixture?.matchId;
 
-    if (targetMatchId) {
-      // Prioritize sportslive.run with better parameters for instant play
+    // Check if this is a soccer/football match (sportlive.run primarily supports these)
+    const isSoccerFootball = fixture?.leagueId && ['epl', 'ucl', 'laliga', 'ligue1', 'seriea', 'bundesliga', 'afcon', 'world-cup'].includes(fixture.leagueId.toLowerCase());
+
+    if (targetMatchId && isSoccerFootball) {
+      // For soccer/football, prioritize sportslive.run
       return [
         `https://sportslive.run/matches/${targetMatchId}?utm_source=StreamLux`,
         `https://strmd.link/watch/${targetMatchId}`,
         `https://streamed.pk/watch/${targetMatchId}`
+      ];
+    } else if (targetMatchId) {
+      // For non-soccer sports (NBA, NFL, etc.), use alternative sources
+      const sportType = fixture?.leagueId?.toLowerCase() || '';
+      const searchQuery = fixture ? `${fixture.homeTeam} vs ${fixture.awayTeam}` : '';
+      
+      return [
+        `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(`${searchQuery} live stream`)}`,
+        `https://strmd.link/watch/${targetMatchId}`,
+        `https://dlhd.so/search/${encodeURIComponent(searchQuery)}`
       ];
     }
 
