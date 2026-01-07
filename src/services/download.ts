@@ -440,7 +440,7 @@ export class DownloadService {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      return true;
+      return false; // Return false to indicate it's not a tracked blob download
     } catch (e) {
       console.warn("Direct download link trigger failed", e);
       return false;

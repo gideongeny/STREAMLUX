@@ -3,10 +3,23 @@
  * Handles AdMob integration for banners, interstitials, and rewarded ads
  */
 
-import { AdMob, AdOptions, BannerAdOptions, BannerAdSize, BannerAdPosition, AdLoadInfo, RewardAdOptions, AdMobRewardItem } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 import { userStatsService } from './userStats'; // To unlock premium features
 import { logger } from '../utils/logger';
+
+let AdMob: any = null;
+/*
+try {
+    // Dynamic import to avoid crash if plugin is missing from package.json
+    import('@capacitor-community/admob').then(m => {
+        AdMob = m.AdMob;
+    }).catch(e => {
+        logger.warn('AdMob plugin not found in project');
+    });
+} catch (e) {
+    logger.warn('Failed to import AdMob:', e);
+}
+*/
 
 export type RewardType = 'download' | 'premium_unlock' | 'remove_watermark';
 
@@ -57,6 +70,11 @@ class AdManager {
 
         if (this.isInitialized) return;
 
+        if (!AdMob) {
+            logger.warn('AdMob not available for initialization');
+            return;
+        }
+
         try {
             await AdMob.initialize();
             this.isInitialized = true;
@@ -70,13 +88,13 @@ class AdManager {
      * Show Banner Ad
      */
     async showBanner(): Promise<void> {
-        if (!this.isInitialized) return;
+        if (!this.isInitialized || !AdMob) return;
 
         try {
-            const options: BannerAdOptions = {
+            const options: any = {
                 adId: this.BANNER_ID,
-                adSize: BannerAdSize.ADAPTIVE_BANNER,
-                position: BannerAdPosition.BOTTOM_CENTER,
+                adSize: 'ADAPTIVE_BANNER',
+                position: 'BOTTOM_CENTER',
                 margin: 0,
                 isTesting: true
             };
@@ -90,7 +108,7 @@ class AdManager {
      * Hide Banner Ad
      */
     async hideBanner(): Promise<void> {
-        if (!this.isInitialized) return;
+        if (!this.isInitialized || !AdMob) return;
         try {
             await AdMob.hideBanner();
         } catch (error) {
@@ -102,10 +120,10 @@ class AdManager {
      * Show Interstitial Ad (e.g., before playing video)
      */
     async showInterstitial(): Promise<void> {
-        if (!this.isInitialized) return;
+        if (!this.isInitialized || !AdMob) return;
 
         try {
-            const options: AdOptions = {
+            const options: any = {
                 adId: this.INTERSTITIAL_ID,
                 isTesting: true
             };
@@ -120,14 +138,14 @@ class AdManager {
      * Show Rewarded Ad (e.g., to unlock downloads)
      */
     async showRewardedAd(): Promise<boolean> {
-        if (!this.isInitialized) return false;
+        if (!this.isInitialized || !AdMob) return false;
 
         return new Promise(async (resolve) => {
             let rewardHandler: any = null;
             let closeHandler: any = null;
 
             try {
-                const options: RewardAdOptions = {
+                const options: any = {
                     adId: this.REWARDED_ID,
                     isTesting: true
                 };
@@ -136,7 +154,7 @@ class AdManager {
 
                 // Use type assertion for event names as they may not be fully typed in the library
                 // addListener returns a Promise, so we need to await it
-                rewardHandler = await AdMob.addListener('onRewardVideoReward' as any, (reward: AdMobRewardItem) => {
+                rewardHandler = await AdMob.addListener('onRewardVideoReward' as any, (reward: any) => {
                     logger.log('User rewarded:', reward);
                     // Grant premium access for 24h as a reward example
                     // In a real app, update user status in DB

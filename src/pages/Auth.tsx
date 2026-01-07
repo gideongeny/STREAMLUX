@@ -26,19 +26,19 @@ const Auth: FunctionComponent<AuthProps> = () => {
       {!isMobile && (
         <div className="fixed top-0 left-0 w-full h-full -z-10 bg-black overflow-hidden pointer-events-none">
           <video
-            className="w-full h-full object-cover opacity-60 scale-105"
+            className="w-full h-full object-cover opacity-100 scale-105"
             autoPlay
             loop
             muted
             playsInline
             src="/auth-background.mp4"
           />
-          {/* Gradient Overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
+          {/* Subtle overlay instead of heavy dark gradient */}
+          <div className="absolute inset-0 bg-black/20"></div>
         </div>
       )}
 
-      <div className="md:bg-black/40 bg-dark/90 min-h-screen flex flex-col justify-center relative z-10">
+      <div className="bg-transparent min-h-screen flex flex-col justify-center relative z-10">
         {!isShowSignInBox && <SignUp setIsShowSignInBox={setIsShowSignInBox} />}
         {isShowSignInBox && <SignIn setIsShowSignInBox={setIsShowSignInBox} />}
       </div>

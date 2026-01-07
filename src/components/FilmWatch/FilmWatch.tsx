@@ -67,9 +67,24 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const [isManualSelection, setIsManualSelection] = useState(false);
   const [currentSubtitle, setCurrentSubtitle] = useState<Subtitle | null>(null);
   const [failoverCountdown, setFailoverCountdown] = useState<number | null>(null);
-  const [isTheaterMode, setIsTheaterMode] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const failoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle Full Screen UX
+  useEffect(() => {
+    if (isFullScreen) {
+      document.body.style.overflow = 'hidden';
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setIsFullScreen(false);
+      };
+      window.addEventListener('keydown', handleEsc);
+      return () => {
+        document.body.style.overflow = 'unset';
+        window.removeEventListener('keydown', handleEsc);
+      };
+    }
+  }, [isFullScreen]);
 
   // Fetch resolved sources
   useEffect(() => {
@@ -220,29 +235,34 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
         />
       )}
 
-      <div className="flex md:hidden justify-between items-center px-5 my-5">
-        <Link to="/" className="flex gap-2 items-center">
-          <img src="/logo.svg" alt="StreamLux Logo" className="h-10 w-10" />
-          <p className="text-xl text-white font-medium tracking-wider uppercase">
-            Stream<span className="text-primary">Lux</span>
-          </p>
-        </Link>
-        <button onClick={() => setIsSidebarActive((prev) => !prev)}>
-          <GiHamburgerMenu size={25} />
-        </button>
-      </div>
+      {!isFullScreen && (
+        <div className="flex md:hidden justify-between items-center px-5 my-5">
+          <Link to="/" className="flex gap-2 items-center">
+            <img src="/logo.svg" alt="StreamLux Logo" className="h-10 w-10" />
+            <p className="text-xl text-white font-medium tracking-wider uppercase">
+              Stream<span className="text-primary">Lux</span>
+            </p>
+          </Link>
+          <button onClick={() => setIsSidebarActive((prev) => !prev)}>
+            <GiHamburgerMenu size={25} />
+          </button>
+        </div>
+      )}
 
-      <div className={`flex flex-col md:flex-row ${isTheaterMode ? 'md:flex-col' : ''}`}>
-        {!isMobile && !isTheaterMode && <SidebarMini />}
-        {isMobile && !isTheaterMode && (
+      <div className={`flex flex-col md:flex-row ${isFullScreen ? 'md:flex-col' : ''}`}>
+        {!isMobile && !isFullScreen && <SidebarMini />}
+        {isMobile && !isFullScreen && (
           <Sidebar
             onCloseSidebar={() => setIsSidebarActive(false)}
             isSidebarActive={isSidebarActive}
           />
         )}
 
-        <div className={`flex-grow px-[2vw] md:pt-11 pt-0 transition-all duration-300 ${isTheaterMode ? 'md:px-0 md:pt-0' : ''}`}>
-          <div className={`relative h-0 pb-[56.25%] ${isTheaterMode ? 'md:pb-[45%]' : ''}`}>
+        <div className={`flex-grow transition-all duration-300 ${isFullScreen
+          ? 'fixed inset-0 z-[100] bg-black animate-fadeIn'
+          : 'px-[2vw] md:pt-11 pt-0'
+          }`}>
+          <div className={`relative w-full ${isFullScreen ? 'h-full' : 'h-0 pb-[56.25%]'}`}>
             {!detail && (
               <Skeleton className="absolute top-0 left-0 w-full h-full rounded-sm" />
             )}
@@ -269,11 +289,11 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                       onPopOut={() => { }}
                     />
                     <button
-                      onClick={() => setIsTheaterMode(!isTheaterMode)}
-                      className={`hidden md:flex bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs font-bold text-white hover:bg-primary/80 transition items-center gap-2 ${isTheaterMode ? 'bg-primary/80 border-primary' : ''}`}
-                      title={isTheaterMode ? "Exit Theater Mode" : "Theater Mode"}
+                      onClick={() => setIsFullScreen(!isFullScreen)}
+                      className={`${isFullScreen ? 'flex' : 'hidden md:flex'} bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs font-bold text-white hover:bg-primary/80 transition items-center gap-2 ${isFullScreen ? 'bg-primary/80 border-primary' : ''}`}
+                      title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
                     >
-                      {isTheaterMode ? 'NORMAL' : 'THEATER'}
+                      {isFullScreen ? 'EXIT FULL' : 'FULL SCREEN'}
                     </button>
                     <button
                       onClick={() => {
@@ -435,30 +455,32 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
           <Comments mediaType={media_type} mediaId={String(detail?.id)} />
         </div>
 
-        <div className="shrink-0 md:max-w-[400px] w-full relative px-6">
-          {!isMobile && <SearchBox />}
-          {media_type === "movie" && (
-            <RightbarFilms
-              name="Recommendations"
-              films={recommendations?.filter((item) => item.id !== detail?.id)}
-              limitNumber={4}
-              isLoading={!recommendations}
-              className="md:mt-24"
-            />
-          )}
-          {media_type === "tv" && (
-            <div className="md:mt-24">
-              <p className="text-white font-medium text-lg mb-3">Seasons & Episodes</p>
-              <SeasonSelection
-                detailSeasons={detailSeasons}
-                seasonId={seasonId}
-                episodeId={episodeId}
+        {!isFullScreen && (
+          <div className="shrink-0 md:max-w-[400px] w-full relative px-6">
+            {!isMobile && <SearchBox />}
+            {media_type === "movie" && (
+              <RightbarFilms
+                name="Recommendations"
+                films={recommendations?.filter((item) => item.id !== detail?.id)}
+                limitNumber={4}
+                isLoading={!recommendations}
+                className="md:mt-24"
               />
-            </div>
-          )}
-        </div>
+            )}
+            {media_type === "tv" && (
+              <div className="md:mt-24">
+                <p className="text-white font-medium text-lg mb-3">Seasons & Episodes</p>
+                <SeasonSelection
+                  detailSeasons={detailSeasons}
+                  seasonId={seasonId}
+                  episodeId={episodeId}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      <Footer />
+      {!isFullScreen && <Footer />}
     </>
   );
 };

@@ -88,17 +88,16 @@ const Download: FC = () => {
                 </div>
 
                 <a
-                  href="https://github.com/gideongeny/STREAMLUX/releases/download/v1.1.0/streamlux.apk"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/streamlux.apk"
+                  download="streamlux.apk"
                   className="bg-gradient-to-r from-primary to-orange-600 hover:from-primary/90 hover:to-orange-600/90 text-white font-bold py-4 px-8 rounded-xl text-lg md:text-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-primary/50 flex items-center gap-3 mx-auto cursor-pointer inline-block"
                 >
                   <FaDownload className="text-2xl" />
-                  <span>Download APK (v1.1.0)</span>
+                  <span>Download APK (Direct)</span>
                 </a>
 
                 <p className="text-gray-400 text-sm mt-4">
-                  Download from GitHub Releases
+                  StreamLux Official APK
                 </p>
 
                 <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400">

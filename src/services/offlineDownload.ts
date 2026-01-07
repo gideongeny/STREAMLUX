@@ -3,8 +3,7 @@
  * Handles downloading movies/shows for offline viewing
  */
 
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { Http, HttpDownloadFileResult } from '@capacitor-community/http';
+import { Filesystem, Directory, Encoding, DownloadFileResult } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
 import { logger } from '../utils/logger';
 
@@ -82,13 +81,12 @@ class OfflineDownloadService {
             const filePath = `downloads/${filename}`;
 
             // Download file with progress tracking
-            const result: HttpDownloadFileResult = await Http.downloadFile({
+            const result: DownloadFileResult = await Filesystem.downloadFile({
                 url: item.url,
-                filePath: filePath,
-                fileDirectory: Directory.Data,
-                progress: true,
-                // Progress callback would be handled via events in native code
-            } as any);
+                path: filePath,
+                directory: Directory.Data,
+                // Filesystem.downloadFile automatically handles progress in native core
+            });
 
             if (result.path) {
                 item.status = 'completed';

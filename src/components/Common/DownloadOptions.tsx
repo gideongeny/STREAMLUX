@@ -90,8 +90,21 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
           toast.success(`${downloadInfo.title} (${source.quality}) download started!`);
         } else if (progressUpdate.status === 'error') {
           if (progressUpdate.message === 'CORS_RESTRICTION') {
-            setResolvedManualUrl((progressUpdate as any).resolvedUrl);
-            setShowQualityModal(true); // Re-open with the manual option
+            const resolvedUrl = (progressUpdate as any).resolvedUrl;
+            setResolvedManualUrl(resolvedUrl);
+            setShowQualityModal(true);
+
+            // Try to auto-trigger the native download
+            // Note: browsers might block this if too much time has passed
+            const link = document.createElement('a');
+            link.href = resolvedUrl;
+            link.download = `${downloadInfo.title.replace(/[^a-z0-9]/gi, '_')}.mp4`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            toast.info("Browser download triggered.");
           } else {
             toast.error(progressUpdate.message);
           }
@@ -231,7 +244,7 @@ const DownloadOptions: React.FC<DownloadOptionsProps> = ({
                 <div className="mt-8 pt-6 border-t border-white/5 animate-slideUp">
                   <div className="p-5 bg-green-500/10 rounded-2xl border border-green-500/20 text-center">
                     <h4 className="text-green-500 font-bold text-lg mb-2">Direct Link Ready!</h4>
-                    <p className="text-gray-400 text-xs mb-4">Browser security prevents automatic background download. Click the button below to save directly to your device.</p>
+                    <p className="text-gray-400 text-xs mb-4">Your download should have started. If not, click the button below to save directly to your Chrome downloads.</p>
                     <a
                       href={resolvedManualUrl}
                       download={`${downloadInfo.title.replace(/[^a-z0-9]/gi, '_')}.mp4`}

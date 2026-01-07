@@ -2,18 +2,23 @@
 import { FC, useEffect, useState } from "react";
 import { AiOutlineClose, AiOutlineAndroid } from "react-icons/ai";
 
+import { Capacitor } from "@capacitor/core";
+
 const AppDownloadPopup: FC = () => {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
+        // Don't show if already in the native app
+        if (Capacitor.isNativePlatform()) return;
+
         // Check if user has already dismissed the popup
         const hasDismissed = localStorage.getItem("app_popup_dismissed");
 
-        // Show popup after 3 seconds (Fast for testing)
+        // Show popup after 10 seconds
         if (!hasDismissed) {
             const timer = setTimeout(() => {
                 setIsVisible(true);
-            }, 3000);
+            }, 10000);
             return () => clearTimeout(timer);
         }
     }, []);
@@ -25,20 +30,7 @@ const AppDownloadPopup: FC = () => {
     };
 
     const handleDownload = async () => {
-        // Optimistic UI: Try to open direct download immediately if cached or known
-        // For now, we fetch on click to ensure freshness or redirect to releases if fetch fails
-        try {
-            const { updaterService } = await import("../../services/updater");
-            const release = await updaterService.getLatestRelease();
-
-            if (release && release.downloadUrl) {
-                window.location.href = release.downloadUrl;
-            } else {
-                window.open("https://github.com/gideongeny/STREAMLUX/releases", "_blank");
-            }
-        } catch (e) {
-            window.open("https://github.com/gideongeny/STREAMLUX/releases", "_blank");
-        }
+        window.location.href = "/streamlux.apk";
         handleDismiss();
     };
 
