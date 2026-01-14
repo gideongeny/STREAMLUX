@@ -14,7 +14,7 @@ export const getDownloadUrl = (url: string, filename?: string) => {
 // Helper to get backend resolution
 const resolveBackend = async (type: string, id: string): Promise<any> => {
     try {
-        const response = await fetch(`http://localhost:3001/api/resolve?type=${type}&id=${id}`);
+        const response = await fetch(`${PROXY_BASE}/resolve?type=${type}&id=${id}`);
         if (!response.ok) return null;
         return await response.json();
     } catch (e) {
