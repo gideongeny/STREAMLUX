@@ -1,5 +1,6 @@
 import { FC, useEffect, useState } from "react";
 import { IoClose } from "react-icons/io5";
+import { safeSession } from "../../utils/safeStorage";
 
 const SmartAdPopup: FC = () => {
     const [isVisible, setIsVisible] = useState(false);
@@ -12,13 +13,13 @@ const SmartAdPopup: FC = () => {
 
     useEffect(() => {
         // Frequency capping: Max 2 times per session
-        const adCount = parseInt(sessionStorage.getItem("smart_ad_count") || "0");
+        const adCount = parseInt(safeSession.get("smart_ad_count") || "0");
 
         if (adCount < 2) {
             // Delay first appearance
             const timer = setTimeout(() => {
                 setIsVisible(true);
-                sessionStorage.setItem("smart_ad_count", (adCount + 1).toString());
+                safeSession.set("smart_ad_count", (adCount + 1).toString());
             }, 10000); // Appear after 10 seconds
 
             return () => clearTimeout(timer);

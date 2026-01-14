@@ -21,14 +21,7 @@ import { auth } from "../shared/firebase";
 import { convertErrorCodeToMessage } from "../shared/utils";
 import { ToastContainer, toast } from "react-toastify";
 import BlackBackdrop from "../components/Common/BlackBackdrop";
-import ProfileStats from "../components/Profile/ProfileStats";
-import AchievementBadges from "../components/Profile/AchievementBadges";
-import AdBanner from "../components/Common/AdBanner";
-import { userStatsService } from "../services/userStats";
-import { continueWatchingService } from "../services/continueWatching";
-import { useEffect } from "react";
-import { logger } from "../utils/logger";
-interface ProfileProps { }
+interface ProfileProps {}
 
 const Profile: FunctionComponent<ProfileProps> = () => {
   const [isSidebarActive, setIsSidebarActive] = useState(false);
@@ -45,14 +38,6 @@ const Profile: FunctionComponent<ProfileProps> = () => {
     string | undefined
   >();
   const firebaseUser = auth.currentUser;
-
-  // Initialize services with user ID
-  useEffect(() => {
-    if (firebaseUser?.uid) {
-      userStatsService.setUserId(firebaseUser.uid);
-      continueWatchingService.setUserId(firebaseUser.uid);
-    }
-  }, [firebaseUser?.uid]);
 
   const reAuthentication = async (type: string) => {
     const oldPassword = oldPasswordValueRef.current.value;
@@ -71,20 +56,14 @@ const Profile: FunctionComponent<ProfileProps> = () => {
       return;
     }
 
-    if (!firebaseUser || !firebaseUser.email) {
-      toast.error("User not authenticated", {
-        position: "top-right",
-        autoClose: 2000,
-      });
-      return;
-    }
-
     const credential = EmailAuthProvider.credential(
+      // @ts-ignore
       firebaseUser.email,
       oldPassword
     );
 
     reauthenticateWithCredential(
+      // @ts-ignore
       firebaseUser,
       credential
     )
@@ -100,7 +79,7 @@ const Profile: FunctionComponent<ProfileProps> = () => {
         setIsShowPromptReAuthFor(undefined);
       })
       .catch((error) => {
-        logger.error(error);
+        console.log(error);
         // alert(convertErrorCodeToMessage(error.code));
         toast.error(convertErrorCodeToMessage(error.code), {
           position: "top-right",
@@ -117,22 +96,15 @@ const Profile: FunctionComponent<ProfileProps> = () => {
   const changeEmail = () => {
     const emailValue = emailValueRef.current.value;
 
-    if (!firebaseUser) {
-      toast.error("User not authenticated", {
-        position: "top-right",
-        autoClose: 2000,
-      });
-      return;
-    }
-
     setIsUpdating(true);
+    // @ts-ignore
     updateEmail(firebaseUser, emailValue)
       .then(() => {
         setIsUpdatingEmail(false);
         // window.location.reload();
       })
       .catch((error) => {
-        logger.error(error);
+        console.log(error);
         toast.error(convertErrorCodeToMessage(error.code), {
           position: "top-right",
           autoClose: 2000,
@@ -149,22 +121,15 @@ const Profile: FunctionComponent<ProfileProps> = () => {
   const changePassword = () => {
     const newPassword = newPasswordValueRef.current.value;
 
-    if (!firebaseUser) {
-      toast.error("User not authenticated", {
-        position: "top-right",
-        autoClose: 2000,
-      });
-      return;
-    }
-
     setIsUpdating(true);
+    // @ts-ignore
     updatePassword(firebaseUser, newPassword)
       .then(() => {
         setIsUpdatedPassword(true);
         newPasswordValueRef.current.value = "";
       })
       .catch((error) => {
-        logger.error(error);
+        console.log(error);
         toast.error(convertErrorCodeToMessage(error.code), {
           position: "top-right",
           autoClose: 2000,
@@ -179,15 +144,8 @@ const Profile: FunctionComponent<ProfileProps> = () => {
   };
 
   const deleteAccount = () => {
-    if (!firebaseUser) {
-      toast.error("User not authenticated", {
-        position: "top-right",
-        autoClose: 2000,
-      });
-      return;
-    }
-
     setIsUpdating(true);
+    // @ts-ignore
     deleteUser(firebaseUser).finally(() => {
       setIsUpdating(false);
     });
@@ -262,13 +220,6 @@ const Profile: FunctionComponent<ProfileProps> = () => {
               Account settings
             </h1>
           </div>
-
-          {/* Profile Stats & Achievements (MovieBox Style) */}
-          <div className="mb-8">
-            <ProfileStats />
-            <AchievementBadges />
-          </div>
-
           <div className="flex flex-col-reverse md:flex-row gap-8 md:gap-0 ">
             <div className="flex-grow">
               <p className="text-white mt-5 text-xl font-medium mb-3">
@@ -310,11 +261,6 @@ const Profile: FunctionComponent<ProfileProps> = () => {
               />
             </div>
             <ProfileImage />
-          </div>
-
-          {/* Ad Banner (MovieBox Style - Bottom of Profile) */}
-          <div className="mt-8 mb-6 max-w-[728px]">
-            <AdBanner />
           </div>
         </div>
       </div>

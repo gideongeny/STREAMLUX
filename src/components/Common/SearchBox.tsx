@@ -61,8 +61,9 @@ const SearchBox: FC<SearchBoxProps> = ({ autoFocus = false, relative = false }) 
 
   return (
     <div
-      className={`${relative ? "relative" : "absolute z-30 left-6 right-6 top-7"} shadow-md group bg-dark-lighten/80 backdrop-blur-md rounded-full ${suggestions.length > 0 && "!rounded-3xl"
-        }`}
+      className={`${relative ? "relative" : "absolute z-30 left-6 right-6 top-7"} shadow-md group bg-dark-lighten rounded-full ${
+        suggestions.length > 0 && "!rounded-3xl"
+      }`}
     >
       <form className="relative" onSubmit={searchSubmitHandler}>
         <button className="absolute top-1/2 -translate-y-1/2 left-5">
@@ -86,8 +87,8 @@ const SearchBox: FC<SearchBoxProps> = ({ autoFocus = false, relative = false }) 
           {suggestions.map((suggestion, index) => (
             <li
               key={index}
-            // className="focus:bg-red-500 outline-none"
-            // tabIndex={index - 1}
+              // className="focus:bg-red-500 outline-none"
+              // tabIndex={index - 1}
             >
               <button
                 onClick={() => {

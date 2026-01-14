@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Item } from "../../shared/types";
+import { safeStorage } from "../../utils/safeStorage";
 
 export interface DownloadItem extends Omit<Item, 'id'> {
     id: number | string;
@@ -18,15 +19,7 @@ interface DownloadState {
 
 // Load initial state from localStorage
 const loadState = (): DownloadItem[] => {
-    try {
-        const serializedState = localStorage.getItem("downloads");
-        if (serializedState === null) {
-            return [];
-        }
-        return JSON.parse(serializedState);
-    } catch (err) {
-        return [];
-    }
+    return safeStorage.getParsed<DownloadItem[]>("downloads", []);
 };
 
 const initialState: DownloadState = {

@@ -1,6 +1,7 @@
 import { FC, useState, useEffect } from 'react';
 import { MdSpeed, MdShare, MdReplay10, MdOpenInNew, MdSkipNext } from 'react-icons/md';
 import ShareModal from './ShareModal';
+import { safeStorage } from '../../utils/safeStorage';
 
 interface PlayerControlsProps {
     onSpeedChange: (speed: number) => void;
@@ -18,7 +19,7 @@ const PlayerControls: FC<PlayerControlsProps> = ({ onSpeedChange, onSeek, onPopO
 
     useEffect(() => {
         // Load saved speed preference
-        const savedSpeed = localStorage.getItem('streamlux_playback_speed');
+        const savedSpeed = safeStorage.get('streamlux_playback_speed');
         if (savedSpeed) {
             const speed = parseFloat(savedSpeed);
             if (SPEEDS.includes(speed)) {
@@ -30,7 +31,7 @@ const PlayerControls: FC<PlayerControlsProps> = ({ onSpeedChange, onSeek, onPopO
 
     const handleSpeedChange = (speed: number) => {
         setCurrentSpeed(speed);
-        localStorage.setItem('streamlux_playback_speed', speed.toString());
+        safeStorage.set('streamlux_playback_speed', speed.toString());
         onSpeedChange(speed);
         setIsOpen(false);
     };

@@ -28,13 +28,17 @@ export function useYouTubeVideos(options: UseYouTubeOptions) {
                     setLoading(false);
                     return;
                 }
-                const result = await fetchByRegion(query, pageToken, type);
+                const result = await fetchByRegion(query, pageToken);
                 if (!cancelled) {
-                    setVideos(result.videos);
+                    // Filter videos by type if specified
+                    const filteredVideos = type
+                        ? result.videos.filter(v =>
+                            type === "movie" ? v.type !== "tv" : v.type === "tv"
+                        )
+                        : result.videos;
+
+                    setVideos(filteredVideos);
                     setNextPageToken(result.nextPageToken);
-                    if (result.error) {
-                        setError(result.error);
-                    }
                 }
             } catch (e: any) {
                 if (!cancelled) {

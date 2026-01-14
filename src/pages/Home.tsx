@@ -1,87 +1,66 @@
-import { FC, useState, useEffect, useMemo, lazy, Suspense, useCallback } from "react";
+import { FC, useState, useEffect } from "react";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import SearchBox from "../components/Common/SearchBox";
 import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
+import Footer from "../components/Footer/Footer";
 import MainHomeFilm from "../components/Home/MainHomeFilm";
+import RecommendGenres from "../components/Home/RecommendGenres";
+import TrendingNow from "../components/Home/TrendingNow";
+import DiverseNavigation from "../components/Common/DiverseNavigation";
+import DiverseContent from "../components/Home/DiverseContent";
+import LiveSports from "../components/Home/LiveSports";
+import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
 import ErrorBoundary from "../components/Common/ErrorBoundary";
-import SectionErrorBoundary from "../components/Common/SectionErrorBoundary";
 import { useHomeData } from "../hooks/useHomeData";
 import { useAppSelector } from "../store/hooks";
-import { useWatchProgress } from "../hooks/useWatchProgress";
-import { useQuery } from "@tanstack/react-query";
-import { getTop10Movies, getTop10TVs, getEnhancedKenyanContent } from "../services/home";
-import { getEnrichedScrapedContent } from "../services/scrapedContent";
-// Lazy load non-critical components for performance (Android TV & Slow Web optimization)
-const AdBanner = lazy(() => import("../components/Common/AdBanner"));
-const ContinueWatching = lazy(() => import("../components/Home/ContinueWatching"));
-const ContinueWatchingRail = lazy(() => import("../components/Home/ContinueWatchingRail"));
-const Top10Slider = lazy(() => import("../components/Home/Top10Slider"));
-const TrendingNow = lazy(() => import("../components/Home/TrendingNow"));
-const BecauseYouWatched = lazy(() => import("../components/Home/BecauseYouWatched"));
-const NewReleases = lazy(() => import("../components/Home/NewReleases"));
-const UpcomingCalendar = lazy(() => import("../components/Home/UpcomingCalendar"));
-const SectionSlider = lazy(() => import("../components/Slider/SectionSlider"));
-const VerticalShorts = lazy(() => import("../components/Home/VerticalShorts"));
-const DiverseNavigation = lazy(() => import("../components/Common/DiverseNavigation"));
-const DiverseContent = lazy(() => import("../components/Home/DiverseContent"));
-const Footer = lazy(() => import("../components/Footer/Footer"));
-const LiveSportsAlert = lazy(() => import("../components/Sports/LiveSportsAlert"));
-const SearchBox = lazy(() => import("../components/Common/SearchBox"));
-const RecommendGenres = lazy(() => import("../components/Home/RecommendGenres"));
-const SportsMainContent = lazy(() => import("../components/Sports/SportsMainContent"));
 
 const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
-  const currentProfile = useAppSelector((state) => state.auth.currentProfile);
-  const { watchHistory, clearProgress } = useWatchProgress();
-  const navigate = useNavigate();
-
-  // Kid Mode Filter Logic
-  const filterContent = useCallback((items: any[]) => {
-    if (!items) return [];
-    if (!currentProfile?.isKid) return items;
-    // Allow Animation (16) and Family (10751)
-    return items.filter(item =>
-      item?.genre_ids?.includes(16) ||
-      item?.genre_ids?.includes(10751) ||
-      item?.genres?.some((g: any) => g.id === 16 || g.id === 10751)
-    );
-  }, [currentProfile?.isKid]);
-
 
   const [isSidebarActive, setIsSidebarActive] = useState(false);
-  const [showLowerSections, setShowLowerSections] = useState(false);
+  
 
-  useEffect(() => {
-    // Delay non-critical components to speed up initial mount and interaction
-    const timer = setTimeout(() => {
-      setShowLowerSections(true);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+  ///////////////////////////////////////////////////////////////////////////////////
+  // WAY 1: MANUALLY SET UP LOCAL STORAGE
 
+  // const [currentTab, setCurrentTab] = useState(
+  //   localStorage.getItem("currentTab") || "tv"
+  // );
+  // useEffect(() => {
+  //   localStorage.setItem("currentTab", currentTab);
+  // }, [currentTab]);
 
+  ///////////////////////////////////////////////////////////////////////////////////
+  // WAY 2: USE useLocalStorage from @uidotdev/usehooks
+  // Wrap in try-catch to handle invalid JSON in localStorage
   const getInitialTab = () => {
     try {
       const stored = localStorage.getItem("currentTab");
       if (stored) {
+        // Try to parse as JSON first
         try {
           const parsed = JSON.parse(stored);
-          if (parsed === "movie" || parsed === "tv" || parsed === "sports") return parsed;
+          if (parsed === "movie" || parsed === "tv" || parsed === "sports") {
+            return parsed;
+          }
         } catch {
-          if (stored === "movie" || stored === "tv" || stored === "sports") return stored as any;
+          // If not JSON, check if it's a plain string
+          if (stored === "movie" || stored === "tv" || stored === "sports") {
+            return stored;
+          }
         }
       }
     } catch (error) {
       console.warn("Error reading currentTab from localStorage:", error);
     }
-    return "movie";
+    return "tv";
   };
-
+  
   const [currentTab, setCurrentTab] = useState<"movie" | "tv" | "sports">(() => getInitialTab());
-
+  
   // Sync to localStorage when currentTab changes
   useEffect(() => {
     try {
@@ -90,188 +69,38 @@ const Home: FC = () => {
       console.warn("Error saving currentTab to localStorage:", error);
     }
   }, [currentTab]);
-
+  
   const handleTabChange = (tab: "movie" | "tv" | "sports") => {
+    if (tab === "sports") {
+      window.open("https://sportslive.run/live?utm_source=MB_Website&sportType=football", "_blank");
+      return;
+    }
     setCurrentTab(tab);
   };
-
-  const { data: top10Data } = useQuery(["top10", currentTab], () => {
-    if (currentTab === "movie") return getTop10Movies();
-    if (currentTab === "tv") return getTop10TVs();
-    return getTop10Movies(); // Default
-  }, {
-    select: (data: any) => filterContent(data as any[])
-  });
-
-  // Fetch Kenyan content
-  const { data: kenyanContent } = useQuery(["kenyanContent"], getEnhancedKenyanContent, {
-    staleTime: 1000 * 60 * 30, // 30 minutes
-    select: (data: any) => filterContent(data as any[])
-  });
-
-  // Fetch enriched scraped content (with TMDB posters)
-  const { data: scrapedContent } = useQuery(["scrapedContent"], getEnrichedScrapedContent, {
-    staleTime: 1000 * 60 * 60, // 1 hour (expensive operation)
-    select: (data: any) => filterContent(data as any[])
-  });
 
   const {
     data: dataMovie,
     isLoading: isLoadingMovie,
     isError: isErrorMovie,
+    error: errorMovie,
     detailQuery: detailQueryMovie,
-    bannerData: bannerDataMovie,
-  } = useHomeData("movies", currentTab === "movie");
+  } = useHomeData("movies");
   const {
     data: dataTV,
     isLoading: isLoadingTV,
     isError: isErrorTV,
+    error: errorTV,
     detailQuery: detailQueryTV,
-    bannerData: bannerDataTV,
-  } = useHomeData("tvs", currentTab === "tv");
+  } = useHomeData("tvs");
 
-  // Helper to merge scraped content into TMDB sliders
-  const mergeScrapedContent = (tmdbData: any, scrapedItems: any[]) => {
-    if (!tmdbData || !scrapedItems || scrapedItems.length === 0) return tmdbData;
+  if (isErrorMovie) return <p>ERROR: {(errorMovie as Error).message}</p>;
 
-    const merged = { ...tmdbData };
-    const usedItems = new Set<string>(); // Track items already used to avoid duplicates across categories
+  if (detailQueryMovie.isError)
+    return <p>ERROR: {detailQueryMovie.error.message}</p>;
 
-    // 1. Distribute scraped content into ALL categories (not just relevant ones)
-    Object.keys(merged).forEach((category, categoryIndex) => {
-      if (!Array.isArray(merged[category])) return;
+  if (isErrorTV) return <p>ERROR: {(errorTV as Error).message}</p>;
 
-      const catLower = category.toLowerCase();
-      
-      // Filter relevant items first, but also include general items if not enough
-      let relevantScraped = scrapedItems.filter((item: any) => {
-        const itemKey = `${item.id}-${(item.title || item.name || '').toLowerCase()}`;
-        if (usedItems.has(itemKey)) return false; // Skip already used items
-        
-        // Trending/Hot/Top/Popular: Take high-rated items
-        if (['trending', 'hot', 'top', 'popular'].some(k => catLower.includes(k))) {
-          return (item.vote_average || 0) > 6.0;
-        }
-        // Genre matching
-        if (item.genres?.some((g: any) => catLower.includes(g.name.toLowerCase()))) {
-          return true;
-        }
-        return false;
-      });
-
-      // If not enough relevant items, fill with any unused scraped items
-      if (relevantScraped.length < 25) {
-        const additionalItems = scrapedItems.filter((item: any) => {
-          const itemKey = `${item.id}-${(item.title || item.name || '').toLowerCase()}`;
-          return !usedItems.has(itemKey) && !relevantScraped.includes(item);
-        });
-        relevantScraped = [...relevantScraped, ...additionalItems.slice(0, 25 - relevantScraped.length)];
-      }
-
-      // Take up to 25 items per category for extensive filling
-      const itemsToInject = relevantScraped.slice(0, 25);
-
-      // Remove duplicates based on ID or Title
-      const existingIds = new Set(merged[category].map((i: any) => i.id));
-      const existingTitles = new Set(merged[category].map((i: any) => (i.title || i.name || '').toLowerCase()));
-      const uniqueInjects = itemsToInject.filter((i: any) => {
-        const itemId = i.id;
-        const itemTitle = (i.title || i.name || '').toLowerCase();
-        const itemKey = `${itemId}-${itemTitle}`;
-        const isUnique = !existingIds.has(itemId) && !existingTitles.has(itemTitle);
-        if (isUnique) {
-          usedItems.add(itemKey); // Mark as used
-        }
-        return isUnique;
-      });
-
-      if (uniqueInjects.length > 0) {
-        // Aggressive filling: Prepend 7 items at the start, then interleave the rest
-        const prependItems = uniqueInjects.slice(0, 7);
-        const interleaveItems = uniqueInjects.slice(7);
-
-        // Prepend first 7 items
-        merged[category] = [...prependItems, ...merged[category]];
-
-        // Interleave remaining items more densely (every 2 items)
-        interleaveItems.forEach((item: any, idx: number) => {
-          const insertPos = Math.min(10 + (idx * 2), merged[category].length);
-          merged[category].splice(insertPos, 0, item);
-        });
-      }
-    });
-
-    return merged;
-  };
-
-  // Apply filters and merge scraped content
-  const filteredDataMovie = useMemo(() => {
-    if (!dataMovie) return undefined;
-
-    let processed = { ...dataMovie };
-
-    // Merge scraped movies
-    if (scrapedContent) {
-      const scrapedMovies = scrapedContent.filter((item: any) => item.media_type === "movie");
-      processed = mergeScrapedContent(processed, scrapedMovies);
-    }
-
-    const filtered: any = {};
-    Object.entries(processed).forEach(([key, value]) => {
-      filtered[key] = filterContent(value as any[]);
-    });
-
-    const hasAnyData = Object.values(filtered).some(section => Array.isArray(section) && section.length > 0);
-    return hasAnyData ? filtered : processed;
-  }, [dataMovie, filterContent, scrapedContent]);
-
-  const filteredDataTV = useMemo(() => {
-    if (!dataTV) return undefined;
-
-    let processed = { ...dataTV };
-
-    // Merge scraped TV shows
-    if (scrapedContent) {
-      const scrapedTV = scrapedContent.filter((item: any) => item.media_type === "tv");
-      processed = mergeScrapedContent(processed, scrapedTV);
-    }
-
-    const filtered: any = {};
-    Object.entries(processed).forEach(([key, value]) => {
-      filtered[key] = filterContent(value as any[]);
-    });
-
-    const hasAnyData = Object.values(filtered).some(section => Array.isArray(section) && section.length > 0);
-    return hasAnyData ? filtered : processed;
-  }, [dataTV, filterContent, scrapedContent]);
-
-  const filteredBannerMovie = useMemo(() => {
-    // Also inject into banner if popular
-    let banners = bannerDataMovie ? [...bannerDataMovie] : [];
-    if (scrapedContent && banners.length > 0) {
-      const topScraped = scrapedContent
-        .filter((item: any) => item.media_type === 'movie' && item.vote_average > 7.5)
-        .slice(0, 3);
-      banners = [...topScraped, ...banners];
-    }
-    return filterContent(banners);
-  }, [bannerDataMovie, filterContent, scrapedContent]);
-
-  const filteredBannerTV = useMemo(() => {
-    let banners = bannerDataTV ? [...bannerDataTV] : [];
-    if (scrapedContent && banners.length > 0) {
-      const topScraped = scrapedContent
-        .filter((item: any) => item.media_type === 'tv' && item.vote_average > 7.5)
-        .slice(0, 3);
-      banners = [...topScraped, ...banners];
-    }
-    return filterContent(banners);
-  }, [bannerDataTV, filterContent, scrapedContent]);
-
-  // Debug state monitoring
-  useEffect(() => {
-    console.log(`%c[StreamLux] %cActive Tab: ${currentTab}`, "color:#10b981;font-weight:bold", "color:gray");
-  }, [currentTab]);
+  if (detailQueryTV.isError) return <p>ERROR: {detailQueryTV.error.message}</p>;
 
   return (
     <>
@@ -280,7 +109,7 @@ const Home: FC = () => {
       <div className="flex md:hidden justify-between items-center px-5 my-5">
         <Link to="/" className="flex gap-2 items-center">
           <img
-            src="/logo.png"
+            src="/logo.svg"
             alt="StreamLux Logo"
             className="h-10 w-10"
           />
@@ -300,7 +129,7 @@ const Home: FC = () => {
         />
 
         <div
-          className="flex-grow md:pt-7 pt-0 pb-7 border-x md:px-[2vw] px-[4vw] border-gray-darken min-h-screen bg-dark relative z-0 min-w-0"
+          className="flex-grow md:pt-7 pt-0 pb-7 border-x md:px-[2vw] px-[4vw] border-gray-darken min-h-screen bg-dark relative z-0"
         >
           <div className="flex justify-between md:items-end items-center">
             <div className="inline-flex gap-[40px] pb-[14px] border-b border-gray-darken relative">
@@ -321,7 +150,7 @@ const Home: FC = () => {
               />
             </div>
             <div className="flex gap-6 items-center">
-              <p>{(currentUser?.displayName?.trim() && currentUser.displayName.trim() !== "undefined undefined") ? currentUser.displayName.trim() : "Anonymous"}</p>
+              <p>{currentUser?.displayName || "Anonymous"}</p>
               <LazyLoadImage
                 src={
                   currentUser
@@ -337,196 +166,46 @@ const Home: FC = () => {
           </div>
 
           {currentTab === "movie" && (
-            <ErrorBoundary fallback={<div className="text-red-500 p-10 text-center">Failed to load movie section.</div>}>
-              {isErrorMovie ? (
-                <div className="text-red-500 p-10 text-center">Failed to load movies. Please check your connection.</div>
-              ) : (
-                <MainHomeFilm
-                  data={filteredDataMovie}
-                  bannerData={filteredBannerMovie}
-                  dataDetail={detailQueryMovie.data}
-                  isLoadingBanner={detailQueryMovie.isLoading}
-                  isLoadingSection={isLoadingMovie}
-                />
-              )}
-            </ErrorBoundary>
+            <MainHomeFilm
+              data={dataMovie}
+              dataDetail={detailQueryMovie.data}
+              isLoadingBanner={detailQueryMovie.isLoading}
+              isLoadingSection={isLoadingMovie}
+            />
           )}
           {currentTab === "tv" && (
-            <ErrorBoundary fallback={<div className="text-red-500 p-10 text-center">Failed to load TV section.</div>}>
-              {isErrorTV ? (
-                <div className="text-red-500 p-10 text-center">Failed to load TV shows. Please check your connection.</div>
-              ) : (
-                <MainHomeFilm
-                  data={filteredDataTV}
-                  bannerData={filteredBannerTV}
-                  dataDetail={detailQueryTV.data}
-                  isLoadingBanner={detailQueryTV.isLoading}
-                  isLoadingSection={isLoadingTV}
-                />
-              )}
-            </ErrorBoundary>
+            <MainHomeFilm
+              data={dataTV}
+              dataDetail={detailQueryTV.data}
+              isLoadingBanner={detailQueryTV.isLoading}
+              isLoadingSection={isLoadingTV}
+            />
           )}
 
-          {/* Conditionally show sections based on tab */}
-          {currentTab !== "sports" ? (
-            <>
-              {/* Continue Watching Rail (MovieBox Style) */}
-              {currentUser && (
-                <Suspense fallback={<div className="h-[200px]" />}>
-                  <div className="mt-8">
-                    <ContinueWatchingRail />
-                  </div>
-                </Suspense>
-              )}
+          {/* Live Sports Ticker (MovieBox.ph style) - Wrapped in ErrorBoundary */}
+          <ErrorBoundary fallback={null}>
+            <LiveSportsTicker />
+          </ErrorBoundary>
 
-              {/* Ad Banner (MovieBox Style) - Lazy loaded for Android TV performance */}
-              <Suspense fallback={<div className="h-[90px]" />}>
-                <div className="px-4 md:px-8 mb-6 mt-4">
-                  <AdBanner />
-                </div>
-              </Suspense>
+          {/* Live & Upcoming Sports Section (MovieBox-style) - Already has ErrorBoundary */}
+          <LiveSports />
 
+          {/* Discover World navigation (moved from sidebar) */}
+          <DiverseNavigation />
 
-
-              {/* Continue Watching Section */}
-              <div className="px-4 md:px-8">
-                <Suspense fallback={<div className="h-20" />}>
-                  <SectionErrorBoundary>
-                    <ContinueWatching watchHistory={watchHistory} onClearProgress={clearProgress} />
-                  </SectionErrorBoundary>
-                </Suspense>
-              </div>
-
-              {/* Top 10 Section */}
-              {showLowerSections && (
-                <Suspense fallback={<div className="h-40" />}>
-                  <SectionErrorBoundary>
-                    <Top10Slider films={top10Data || []} />
-                  </SectionErrorBoundary>
-                </Suspense>
-              )}
-
-              {/* Trending Section (Horizontal) */}
-              {showLowerSections && (
-                <div className="mt-12">
-                  <Suspense fallback={<div className="h-40" />}>
-                    <SectionErrorBoundary>
-                      <TrendingNow isMainFlow={true} />
-                    </SectionErrorBoundary>
-                  </Suspense>
-                </div>
-              )}
-
-              {/* HOT Section (Horizontal) */}
-              {showLowerSections && dataMovie?.Hot && (
-                <div className="mt-12 px-4 md:px-8">
-                  <Suspense fallback={<div className="h-40" />}>
-                    <SectionErrorBoundary>
-                      <SectionSlider
-                        films={dataMovie.Hot}
-                        title="🔥 HOT & Trending"
-                        seeMoreParams={{ sort_by: "popularity.desc", page: 2 }}
-                      />
-                    </SectionErrorBoundary>
-                  </Suspense>
-                </div>
-              )}
-
-              {/* Upcoming Calendar Section (MovieBox Style) */}
-              <div className="px-4 md:px-8">
-                <Suspense fallback={<div className="h-40" />}>
-                  <SectionErrorBoundary>
-                    <UpcomingCalendar
-                      title={currentTab === "movie" ? "Upcoming Movies" : "Upcoming TV Releases"}
-                      contentType={currentTab as "movie" | "tv"}
-                    />
-                  </SectionErrorBoundary>
-                </Suspense>
-              </div>
-
-              {/* Horizontal Shorts Section (Discovery Mode) */}
-              {!currentProfile?.isKid && showLowerSections && (
-                <div className="px-4 md:px-8 mt-12">
-                  <Suspense fallback={<div className="h-40" />}>
-                    <SectionErrorBoundary>
-                      <VerticalShorts variant="horizontal" />
-                    </SectionErrorBoundary>
-                  </Suspense>
-                </div>
-              )}
-
-              {/* Because You Watched Section */}
-              {showLowerSections && (
-                <Suspense fallback={<div className="h-40" />}>
-                  <SectionErrorBoundary>
-                    <BecauseYouWatched />
-                  </SectionErrorBoundary>
-                </Suspense>
-              )}
-
-              {/* Kenyan Content Section */}
-              {showLowerSections && kenyanContent && kenyanContent.length > 0 && (
-                <div className="px-4 md:px-8 mt-12">
-                  <Suspense fallback={<div className="h-40" />}>
-                    <SectionErrorBoundary>
-                      <SectionSlider
-                        films={kenyanContent.filter((item: any) => item.media_type === currentTab)}
-                        title={currentTab === "movie" ? "🇰🇪 Kenyan Movies" : "🇰🇪 Kenyan TV Shows"}
-                        seeMoreParams={{ region: "kenya" }}
-                      />
-                    </SectionErrorBoundary>
-                  </Suspense>
-                </div>
-              )}
-
-
-
-              {showLowerSections && (
-                <Suspense fallback={<div className="h-40" />}>
-                  <SectionErrorBoundary>
-                    <NewReleases />
-                  </SectionErrorBoundary>
-                </Suspense>
-              )}
-
-              {/* Discover World navigation */}
-              <DiverseNavigation currentTab={currentTab as "movie" | "tv" | "sports"} />
-
-              {/* Discover World content */}
-              <SectionErrorBoundary>
-                {showLowerSections && <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />}
-              </SectionErrorBoundary>
-            </>
-          ) : (
-            <div className="mt-4">
-              <Suspense fallback={<div className="h-40 bg-gray-800/20 rounded-xl animate-pulse" />}>
-                <SectionErrorBoundary>
-                  <SportsMainContent />
-                </SectionErrorBoundary>
-              </Suspense>
-            </div>
-          )}
+          {/* Discover World content */}
+          <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />
         </div>
 
-
         <div className="shrink-0 max-w-[310px] w-full hidden lg:block px-6 top-0 sticky ">
-          <ErrorBoundary fallback={null}>
-            <Suspense fallback={<div className="w-full h-10 bg-gray-800 animate-pulse rounded" />}>
-              <SearchBox />
-            </Suspense>
-            <Suspense fallback={<div className="w-full h-40 bg-gray-800 animate-pulse rounded mt-6" />}>
-              <RecommendGenres currentTab={currentTab} />
-            </Suspense>
-          </ErrorBoundary>
+          <SearchBox />
+          <RecommendGenres currentTab={currentTab} />
+          <TrendingNow />
+          {/* DiverseNavigation removed from sidebar */}
         </div>
       </div>
 
-      <Suspense fallback={null}>
-        <Footer />
-      </Suspense>
-      <Suspense fallback={null}>
-        <LiveSportsAlert />
-      </Suspense>
+      <Footer />
     </>
   );
 };
@@ -554,8 +233,9 @@ const FilmTypeButton: FC<FilmTypeButtonProps> = ({
       onClick={() => {
         onSetCurrentTab(buttonType);
       }}
-      className={`relative transition duration-300 hover:text-white ${isActive ? "text-white font-medium" : ""
-        }`}
+      className={`relative transition duration-300 hover:text-white ${
+        isActive ? "text-white font-medium" : ""
+      }`}
     >
       {getButtonText()}
       {isActive && (

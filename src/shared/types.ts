@@ -10,9 +10,7 @@ export interface Item {
   vote_average: number;
 
   // Additional props
-  media_type: "movie" | "tv" | "person" | "sports";
-  homeLogo?: string;
-  awayLogo?: string;
+  media_type: "movie" | "tv" | "person";
 
   // Movie items
   release_date?: string;
@@ -29,9 +27,6 @@ export interface Item {
 
   // Person
   profile_path?: string;
-
-  // YouTube integration
-  youtubeId?: string;
 }
 
 export interface DetailMovie {
@@ -231,14 +226,6 @@ export interface DetailSeason {
   season_number: number;
 }
 
-export interface UserProfile {
-  id: string;
-  name: string;
-  avatar: string;
-  isKid: boolean;
-  language: string;
-}
-
 export interface User {
   displayName: string | null;
   email: string | null;
@@ -293,7 +280,7 @@ export interface getWatchReturnedType {
 }
 
 export interface ConfigType {
-  [key: string]: string | number | boolean;
+  [key: string]: string | number;
 }
 
 export interface ItemsPage {

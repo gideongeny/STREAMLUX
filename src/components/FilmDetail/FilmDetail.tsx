@@ -27,8 +27,6 @@ import Title from "../Common/Title";
 import Footer from "../Footer/Footer";
 import FilmTabInfo from "./FilmTabInfo";
 import DownloadButton from "../Common/DownloadButton";
-import HeroTrailer from "../Home/HeroTrailer";
-import { getVideo } from "../../services/home";
 import { downloadService } from "../../services/download";
 
 const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
@@ -36,8 +34,6 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { isMobile } = useCurrentViewportView();
   const [isSidebarActive, setIsSidebarActive] = useState(false);
-  const [videoKey, setVideoKey] = useState<string | null>(null);
-
   useEffect(() => {
     if (!currentUser) {
       return;
@@ -51,16 +47,6 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
 
     return () => unsubDoc();
   }, [currentUser, detail?.id]);
-
-  useEffect(() => {
-    if (detail && !isMobile) {
-      getVideo(detail.media_type as "movie" | "tv", detail.id).then((key) => {
-        if (key) {
-          setVideoKey(key);
-        }
-      });
-    }
-  }, [detail, isMobile]);
 
   const bookmarkedHandler = async () => {
     if (!detail) return;
@@ -82,27 +68,28 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
     await updateDoc(doc(db, "users", currentUser.uid), {
       bookmarks: !isBookmarked
         ? arrayUnion({
-          poster_path: detail?.poster_path,
-          id: detail?.id,
-          vote_average: detail?.vote_average,
-          media_type: detail?.media_type,
-          ...(detail?.media_type === "movie" && { title: detail?.title }),
-          ...(detail?.media_type === "tv" && { name: detail?.name }),
-        })
+            poster_path: detail?.poster_path,
+            id: detail?.id,
+            vote_average: detail?.vote_average,
+            media_type: detail?.media_type,
+            ...(detail?.media_type === "movie" && { title: detail?.title }),
+            ...(detail?.media_type === "tv" && { name: detail?.name }),
+          })
         : arrayRemove({
-          poster_path: detail?.poster_path,
-          id: detail?.id,
-          vote_average: detail?.vote_average,
-          media_type: detail?.media_type,
-          ...(detail?.media_type === "movie" && { title: detail?.title }),
-          ...(detail?.media_type === "tv" && { name: detail?.name }),
-        }),
+            poster_path: detail?.poster_path,
+            id: detail?.id,
+            vote_average: detail?.vote_average,
+            media_type: detail?.media_type,
+            ...(detail?.media_type === "movie" && { title: detail?.title }),
+            ...(detail?.media_type === "tv" && { name: detail?.name }),
+          }),
     });
 
     toast.success(
-      `${!isBookmarked
-        ? "This film is now bookmarked"
-        : "This film is removed from your bookmarks"
+      `${
+        !isBookmarked
+          ? "This film is now bookmarked"
+          : "This film is removed from your bookmarks"
       }`,
       {
         position: "top-right",
@@ -120,8 +107,9 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
     <>
       {detail && (
         <Title
-          value={`${(detail as DetailMovie).title || (detail as DetailTV).name
-            } | StreamLux`}
+          value={`${
+            (detail as DetailMovie).title || (detail as DetailTV).name
+          } | StreamLux`}
         />
       )}
 
@@ -162,16 +150,9 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
               style={{
                 backgroundImage: `url(${resizeImage(detail.backdrop_path)})`,
               }}
-              className="bg-cover bg-center bg-no-repeat md:h-[400px] h-[300px] rounded-bl-2xl relative overflow-hidden"
+              className="bg-cover bg-center bg-no-repeat md:h-[400px] h-[300px] rounded-bl-2xl relative"
             >
-              {!isMobile && videoKey && (
-                <HeroTrailer
-                  mediaId={detail.id}
-                  mediaType={detail.media_type as "movie" | "tv"}
-                  isActive={true}
-                />
-              )}
-              <div className="bg-gradient-to-br from-transparent to-black/70 h-full rounded-bl-2xl relative z-[5]">
+              <div className="bg-gradient-to-br from-transparent to-black/70 h-full rounded-bl-2xl">
                 <div className="flex flex-col md:flex-row bottom-[-40%] md:bottom-[-20%]  items-start tw-absolute-center-horizontal w-full max-w-[1000px]">
                   {/* POSTER */}
                   <div className="flex flex-col md:flex-row gap-5 items-start md:items-center">
@@ -192,7 +173,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                           <BsFillPlayFill size={18} />
                           <span className="text-sm font-medium">WATCH</span>
                         </Link>
-
+                        
                         {detail && (
                           <DownloadButton
                             downloadInfo={downloadService.generateDownloadInfo(
@@ -217,15 +198,15 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                       </h1>
                     </div>
                     {/* Show release date for unreleased movies */}
-                    {detail.media_type === "movie" && (detail as DetailMovie).release_date &&
-                      new Date((detail as DetailMovie).release_date) > new Date() && (
-                        <div className="md:mt-4 mt-2">
-                          <span className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 border border-amber-500/50 rounded-full text-amber-300 text-sm font-semibold">
-                            <span>📅</span>
-                            <span>Releases: {new Date((detail as DetailMovie).release_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                          </span>
-                        </div>
-                      )}
+                    {detail.media_type === "movie" && (detail as DetailMovie).release_date && 
+                     new Date((detail as DetailMovie).release_date) > new Date() && (
+                      <div className="md:mt-4 mt-2">
+                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 border border-amber-500/50 rounded-full text-amber-300 text-sm font-semibold">
+                          <span>📅</span>
+                          <span>Releases: {new Date((detail as DetailMovie).release_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                        </span>
+                      </div>
+                    )}
                     <ul className="flex gap-3 flex-wrap md:mt-7 mt-3">
                       {detail.genres.slice(0, 3).map((genre) => (
                         <li key={genre.id} className="mb-3">
@@ -250,7 +231,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                         <BsFillPlayFill size={25} />
                         <span className="text-lg font-medium">WATCH</span>
                       </Link>
-
+                      
                       {detail && (
                         <DownloadButton
                           downloadInfo={downloadService.generateDownloadInfo(
@@ -269,13 +250,15 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                 <div className="flex gap-3 absolute top-[5%] right-[3%]">
                   <button
                     onClick={bookmarkedHandler}
-                    className={`tw-flex-center h-12 w-12 rounded-full border-[3px] border-white shadow-lg hover:border-primary transition duration-300 group ${isBookmarked && "!border-primary"
-                      }`}
+                    className={`tw-flex-center h-12 w-12 rounded-full border-[3px] border-white shadow-lg hover:border-primary transition duration-300 group ${
+                      isBookmarked && "!border-primary"
+                    }`}
                   >
                     <AiFillHeart
                       size={20}
-                      className={`text-white group-hover:text-primary transition duration-300 ${isBookmarked && "!text-primary"
-                        }`}
+                      className={`text-white group-hover:text-primary transition duration-300 ${
+                        isBookmarked && "!text-primary"
+                      }`}
                     />
                   </button>
                   {!isMobile && (
@@ -314,8 +297,9 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                           text={`${detail.vote_average.toFixed(1)}`}
                           styles={buildStyles({
                             textSize: "25px",
-                            pathColor: `rgba(81, 121, 255, ${(detail.vote_average * 10) / 100
-                              })`,
+                            pathColor: `rgba(81, 121, 255, ${
+                              (detail.vote_average * 10) / 100
+                            })`,
                             textColor: "#fff",
                             trailColor: "transparent",
                             backgroundColor: "#5179ff",
@@ -425,8 +409,9 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                           text={`${detail.vote_average.toFixed(1)}`}
                           styles={buildStyles({
                             textSize: "25px",
-                            pathColor: `rgba(81, 121, 255, ${(detail.vote_average * 10) / 100
-                              })`,
+                            pathColor: `rgba(81, 121, 255, ${
+                              (detail.vote_average * 10) / 100
+                            })`,
                             textColor: "#fff",
                             trailColor: "transparent",
                             backgroundColor: "#5179ff",

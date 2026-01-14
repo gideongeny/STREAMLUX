@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { MdSportsSoccer } from "react-icons/md";
 import { SportsFixtureConfig } from "../../shared/constants";
 import { subscribeToLiveScores } from "../../services/sportsAPI";
+import { safeSession } from "../../utils/safeStorage";
 
 const LiveSportsAlert: FC = () => {
     const [liveMatches, setLiveMatches] = useState<SportsFixtureConfig[]>([]);
@@ -15,7 +16,7 @@ const LiveSportsAlert: FC = () => {
                 const live = fixtures.filter(f => f.status === "live");
                 setLiveMatches(live);
                 // Only show if there are live matches and we haven't dismissed it this session
-                if (live.length > 0 && !sessionStorage.getItem("dismissedSportsAlert")) {
+                if (live.length > 0 && !safeSession.get("dismissedSportsAlert")) {
                     setIsVisible(true);
                 } else {
                     setIsVisible(false);
@@ -31,7 +32,7 @@ const LiveSportsAlert: FC = () => {
 
     const dismissAlert = () => {
         setIsVisible(false);
-        sessionStorage.setItem("dismissedSportsAlert", "true");
+        safeSession.set("dismissedSportsAlert", "true");
     };
 
     if (!isVisible || liveMatches.length === 0) return null;

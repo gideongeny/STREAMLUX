@@ -5,6 +5,7 @@
 
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
+import { safeStorage } from '../utils/safeStorage';
 
 export type NotificationType =
     | 'new_episode'
@@ -146,7 +147,7 @@ class PushNotificationService {
         ];
 
         // Store channel configuration for native implementation
-        localStorage.setItem('notification_channels', JSON.stringify(channels));
+        safeStorage.set('notification_channels', JSON.stringify(channels));
     }
 
     /**
@@ -197,7 +198,7 @@ class PushNotificationService {
     private async saveFCMToken(token: string): Promise<void> {
         try {
             // Save to localStorage
-            localStorage.setItem('fcm_token', token);
+            safeStorage.set('fcm_token', token);
 
             // TODO: Send to backend for targeted notifications
             // await fetch('/api/save-fcm-token', {
@@ -213,9 +214,13 @@ class PushNotificationService {
      * Get notification preferences
      */
     getPreferences(): NotificationPreferences {
-        const stored = localStorage.getItem('notification_preferences');
+        const stored = safeStorage.get('notification_preferences');
         if (stored) {
-            return JSON.parse(stored);
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                safeStorage.remove('notification_preferences');
+            }
         }
 
         // Default: all enabled
@@ -235,7 +240,7 @@ class PushNotificationService {
     updatePreferences(preferences: Partial<NotificationPreferences>): void {
         const current = this.getPreferences();
         const updated = { ...current, ...preferences };
-        localStorage.setItem('notification_preferences', JSON.stringify(updated));
+        safeStorage.set('notification_preferences', JSON.stringify(updated));
     }
 
     /**
@@ -256,7 +261,7 @@ class PushNotificationService {
      * Get FCM token
      */
     getFCMToken(): string | null {
-        return this.fcmToken || localStorage.getItem('fcm_token');
+        return this.fcmToken || safeStorage.get('fcm_token');
     }
 
     /**

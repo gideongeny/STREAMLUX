@@ -24,21 +24,21 @@ const Auth: FunctionComponent<AuthProps> = () => {
       <Title value={"Sign In | StreamLux"} />
 
       {!isMobile && (
-        <div className="fixed top-0 left-0 w-full h-full -z-10 bg-black overflow-hidden pointer-events-none">
-          <video
-            className="w-full h-full object-cover opacity-100 scale-105"
-            autoPlay
-            loop
-            muted
-            playsInline
-            src="/auth-background.mp4"
+        <video
+          autoPlay
+          muted
+          loop
+          id="myVideo"
+          className="fixed md:-top-[130px] -top-[155px] object-cover left-0 h-[135vh] w-full -z-10"
+        >
+          <source
+            src="/trailer/trailer.mp4"
+            type="video/mp4"
           />
-          {/* Subtle overlay instead of heavy dark gradient */}
-          <div className="absolute inset-0 bg-black/20"></div>
-        </div>
+        </video>
       )}
 
-      <div className="bg-transparent min-h-screen flex flex-col justify-center relative z-10">
+      <div className="md:bg-black/80 bg-dark min-h-screen">
         {!isShowSignInBox && <SignUp setIsShowSignInBox={setIsShowSignInBox} />}
         {isShowSignInBox && <SignIn setIsShowSignInBox={setIsShowSignInBox} />}
       </div>

@@ -1,111 +1,166 @@
-import { FunctionComponent, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FunctionComponent, useState } from "react";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
-import { DetailSeason, Episode } from "../../shared/types";
+import { DetailSeason } from "../../shared/types";
+import { resizeImage } from "../../shared/utils";
 import Skeleton from "../Common/Skeleton";
-
 interface SeasonSelectionProps {
   detailSeasons?: DetailSeason[];
   seasonId?: number;
   episodeId?: number;
 }
 
+interface SeasonProps {
+  season: DetailSeason;
+  seasonId?: number;
+  episodeId?: number;
+}
+
+const Season: FunctionComponent<SeasonProps> = ({
+  season,
+  seasonId,
+  episodeId,
+}) => {
+  const [isSeasonExpanded, setIsSeasonExpanded] = useState<boolean>(
+    season.season_number === 1
+  );
+  
+  return (
+    <motion.li
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <button
+        onClick={() => setIsSeasonExpanded((prev) => !prev)}
+        className="inline-flex items-center w-full gap-7 hover:bg-dark-lighten transiton duration-300 rounded-md px-2 pt-2 pb-1"
+      >
+        <div className="shrink-0 max-w-[100px] w-full">
+          <LazyLoadImage
+            src={resizeImage(season.poster_path, "w154")}
+            effect="opacity"
+            alt=""
+            className="object-cover rounded-md w-[100px] h-[100px] "
+          />
+        </div>
+        <div className="flex-grow text-left">
+          <p
+            className={`text-white text-lg mb-2 transition duration-300 ${
+              season.season_number === seasonId && "!text-primary"
+            }`}
+          >
+            {season.name}
+          </p>
+          <p
+            className={` transition duration-300 ${
+              season.season_number === seasonId && "text-white"
+            }`}
+          >
+            Episode: {season.episodes.length}
+          </p>
+        </div>
+      </button>
+
+      <AnimatePresence>
+        {isSeasonExpanded && (
+          <motion.ul 
+            className="flex flex-col gap-4 pl-6 mt-2"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {season.episodes.map((episode) => (
+              <motion.li 
+                key={episode.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Link
+                  to={{
+                    pathname: "",
+                    search: `?season=${season.season_number}&episode=${episode.episode_number}`,
+                  }}
+                  className="flex items-center gap-3 hover:bg-dark-lighten transiton duration-300 rounded-md pl-2"
+                >
+                  <div className="shrink-0 max-w-[15px] w-full">
+                    <p
+                      className={`text-white font-medium transition duration-300 ${
+                        episode.episode_number === episodeId &&
+                        season.season_number === seasonId &&
+                        "!text-primary"
+                      }`}
+                    >
+                      {episode.episode_number}
+                    </p>
+                  </div>
+                  <div className="shrink-0 max-w-[120px] w-full pt-2">
+                    <LazyLoadImage
+                      src={resizeImage(episode.still_path, "w185")}
+                      alt=""
+                      effect="opacity"
+                      className="object-cover w-[120px] rounded-md"
+                    />
+                  </div>
+                  <div className="flex-grow">
+                    <p
+                      className={`transition duration-300 text-sm ${
+                        episode.episode_number === episodeId &&
+                        season.season_number === seasonId &&
+                        "text-white"
+                      }`}
+                    >
+                      {episode.name}
+                    </p>
+                  </div>
+                </Link>
+              </motion.li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </motion.li>
+  );
+};
+
 const SeasonSelection: FunctionComponent<SeasonSelectionProps> = ({
   detailSeasons,
   seasonId,
   episodeId,
 }) => {
-  const [activeSeason, setActiveSeason] = useState<number>(seasonId || 1);
-
-  // Sync active season if props change (e.g. user navigates via URL)
-  useEffect(() => {
-    if (seasonId) {
-      setActiveSeason(seasonId);
-    }
-  }, [seasonId]);
-
-  const currentSeasonData = detailSeasons?.find(
-    (season) => season.season_number === activeSeason
-  );
-
-  if (!detailSeasons) {
-    return (
-      <div className="animate-pulse">
-        <Skeleton className="h-10 w-full mb-4 rounded-md" />
-        <div className="grid grid-cols-5 gap-2">
-          {new Array(10).fill("").map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full rounded-md" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  // const [parent] = useAutoAnimate();
 
   return (
-    <div className="bg-black/20 p-4 rounded-xl border border-white/5">
-      {/* Header/Resources Info - mimicking MovieBox style */}
-      <div className="mb-4">
-        <h3 className="text-white font-bold text-lg mb-1">Episodes</h3>
-        <p className="text-gray-400 text-xs">
-          Select a season and episode to watch.
-        </p>
-      </div>
+    <ul
+      // @ts-ignore
+      // ref={parent}
+      className="flex flex-col gap-4 max-h-[750px] overflow-y-auto"
+    >
+      {detailSeasons &&
+        (detailSeasons as DetailSeason[]).map((season) => (
+          <Season
+            key={season.id}
+            season={season}
+            seasonId={seasonId}
+            episodeId={episodeId}
+          />
+        ))}
+      {!detailSeasons && (
+        <div>
+          <Skeleton className="h-[118px] mb-6" />
 
-      {/* Season Tabs */}
-      <div className="mb-6">
-        <div className="flex flex-wrap gap-2">
-          {detailSeasons.filter(s => s.season_number > 0).map((season) => (
-            <button
-              key={season.id}
-              onClick={() => setActiveSeason(season.season_number)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${activeSeason === season.season_number
-                ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105"
-                : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
-                }`}
-            >
-              S{season.season_number < 10 ? `0${season.season_number}` : season.season_number}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Episode Grid */}
-      {currentSeasonData ? (
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-          {currentSeasonData.episodes.map((episode: Episode) => {
-            const isActive =
-              episode.episode_number === episodeId &&
-              currentSeasonData.season_number === seasonId;
-
-            return (
-              <Link
-                key={episode.id}
-                to={{
-                  pathname: "",
-                  search: `?season=${currentSeasonData.season_number}&episode=${episode.episode_number}`,
-                }}
-                className={`aspect-square flex items-center justify-center rounded-lg font-bold text-sm transition-all duration-300 relative group ${isActive
-                  ? "bg-primary text-white shadow-lg shadow-primary/20"
-                  : "bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white hover:scale-105"
-                  }`}
-                title={episode.name}
-              >
-                {/* Episode Number */}
-                <span>{episode.episode_number}</span>
-
-                {/* Tooltip on hover */}
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block w-32 bg-black/90 text-white text-[10px] p-2 rounded border border-white/10 z-50 text-center pointer-events-none whitespace-normal">
-                  {episode.name}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="text-center text-gray-500 py-10">
-          No episodes found for this season.
+          <ul className="flex flex-col gap-4 pl-10">
+            {new Array(6).fill("").map((_, index) => (
+              <li key={index}>
+                <Skeleton className="h-[81px]" />
+              </li>
+            ))}
+          </ul>
         </div>
       )}
-    </div>
+    </ul>
   );
 };
 

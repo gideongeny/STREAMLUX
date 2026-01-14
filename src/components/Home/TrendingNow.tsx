@@ -3,32 +3,15 @@ import { FC } from "react";
 import { getTrendingNow } from "../../services/home";
 import { Item } from "../../shared/types";
 import RightbarFilms from "../Common/RightbarFilms";
-import SectionSlider from "../Slider/SectionSlider";
 
-interface TrendingNowProps {
-  isMainFlow?: boolean;
-}
-
-const TrendingNow: FC<TrendingNowProps> = ({ isMainFlow = false }) => {
+const TrendingNow: FC = () => {
   const { isLoading, data, isError, error } = useQuery<Item[], Error>(
     ["trending"],
     getTrendingNow
   );
 
-  if (isError) return null;
-
-  if (isMainFlow) {
-    return (
-      <div className="px-4 md:px-8">
-        <SectionSlider
-          films={data}
-          title="📈 Trending Today"
-          isLoading={isLoading}
-        />
-      </div>
-    );
-  }
-
+  if (isError) return <div>ERROR: {error.message}</div>;
+  // if (isLoading) return <div>Loading...</div>;
   return (
     <RightbarFilms
       className="mt-7"

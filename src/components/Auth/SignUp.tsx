@@ -31,11 +31,11 @@ const SignUp: FunctionComponent<SignUpProps> = ({ setIsShowSignInBox }) => {
     try {
       setIsLoading(true);
       setError("");
-
+      
       if (!auth || !db) {
         throw new Error("Authentication service is not available. Please refresh the page.");
       }
-
+      
       const user = (
         await createUserWithEmailAndPassword(
           auth,
@@ -72,13 +72,11 @@ const SignUp: FunctionComponent<SignUpProps> = ({ setIsShowSignInBox }) => {
 
   return (
     <>
-      {/* Background video is handled by parent Auth component */}
-
       {currentUser && (
         <ModalNotification type="success" message={"Sign up successfully"} />
       )}
       {isLoading && (
-        <div className="z-20 tw-flex-center h-screen relative">
+        <div className="z-10 tw-flex-center h-screen relative">
           <div className="w-28 h-28 border-[10px] rounded-full border-primary border-t-transparent animate-spin "></div>
           <p className="absolute top-[60%] text-white text-lg">Creating your account...</p>
         </div>
@@ -102,7 +100,7 @@ const SignUp: FunctionComponent<SignUpProps> = ({ setIsShowSignInBox }) => {
           </div>
         </>
       )}
-      <div className="px-4 py-2 rounded-xl max-w-xl w-full min-h-[500px] text-white/90 absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 z-10">
+      <div className="px-4 py-2 rounded-xl max-w-xl w-full min-h-[500px] text-white/70 absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2">
         <div className="flex flex-col items-center mb-5">
           <div className="text-[50px] font-semibold mb-1 mx-auto text-center md:text-left">
             <div className="uppercase tracking-wider text-xl font-medium mb-2">

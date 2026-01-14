@@ -87,21 +87,6 @@ export const EMBED_ALTERNATIVES = {
   FZMOVIES_ALT1: "https://fzmovies.net",
   FZMOVIES_ALT2: "https://fzmovies.watch",
   FZMOVIES_ALT3: "https://fzmovies.to",
-
-  // ========== MOVIEBOX-SPECIFIC SOURCES ==========
-  // Premium sources used by MovieBox for high-quality streams
-  CRAZYMAPLESTUDIOS: "https://v-mps.crazymaplestudios.com",
-  CRAZYMAPLESTUDIOS_EMBED: "https://v-mps.crazymaplestudios.com/embed",
-  NINJAROCKS: "https://9jarocks.net",
-  NINJAROCKS_EMBED: "https://9jarocks.net/embed",
-  NINJAROCKS_PLAYER: "https://9jarocks.net/player",
-
-  // MovieBox additional premium sources
-  MOVIEBOX_VIDSRC: "https://vidsrc.xyz/embed",
-  MOVIEBOX_EMBED_SU: "https://embed.su",
-  MOVIEBOX_AUTOEMBED: "https://autoembed.cc",
-  MOVIEBOX_SMASHYSTREAM: "https://player.smashy.stream",
-  MOVIEBOX_MULTIEMBED: "https://multiembed.mov",
   // New video sources - using proper embed formats
   YOUTUBE_EMBED: "https://www.youtube.com/embed",
   KISSKH: "https://kisskh.com",
@@ -143,13 +128,6 @@ export const EMBED_ALTERNATIVES = {
   STREAMWISH: "https://streamwish.com",
   FILEMOON: "https://filemoon.com",
   DOODSTREAM: "https://doodstream.com",
-  // Top-tier providers for Moviebox-style scraping
-  VIDSRC_PRO: "https://vidsrc.pro/embed",
-  VIDSRC_XYZ: "https://vidsrc.xyz/embed",
-  EMBED_SU: "https://embed.su/embed",
-  AUTOEMBED: "https://autoembed.to",
-  SMASHY: "https://smashy.stream",
-  VIREMBED: "https://virembed.pro",
   // Regional-specific working sources
   ZEE5: "https://zee5.com", // Indian content
   HOTSTAR: "https://hotstar.com", // Indian content
@@ -157,138 +135,6 @@ export const EMBED_ALTERNATIVES = {
   IWANTTFC: "https://iwanttfc.com", // Filipino content
   ABS_CBN: "https://abs-cbn.com", // Filipino content
 };
-
-export interface SportsChannelConfig {
-  id: string;
-  name: string;
-  logo: string;
-  category: string;
-  country?: string;
-  streamUrl: string;
-}
-
-export const SPORTS_CHANNELS: SportsChannelConfig[] = [
-  {
-    id: "ss-pl",
-    name: "SuperSport Premier League",
-    logo: "/images/sports/supersports logo.png",
-    category: "Football",
-    country: "Africa",
-    streamUrl: "https://sportslive.run/supersport-premier-league"
-  },
-  {
-    id: "ss-laliga",
-    name: "SuperSport La Liga",
-    logo: "/images/sports/supersports logo.png",
-    category: "Football",
-    country: "Africa",
-    streamUrl: "https://sportslive.run/supersport-la-liga"
-  },
-  {
-    id: "ss-footy",
-    name: "SuperSport Football",
-    logo: "/images/sports/supersports logo.png",
-    category: "Football",
-    country: "Africa",
-    streamUrl: "https://sportslive.run/supersport-football"
-  },
-  {
-    id: "ss-grand",
-    name: "SuperSport Grandstand",
-    logo: "/images/sports/supersports logo.png",
-    category: "General",
-    country: "Africa",
-    streamUrl: "https://sportslive.run/supersport-grandstand"
-  },
-  {
-    id: "ss-act",
-    name: "SuperSport Action",
-    logo: "/images/sports/supersports logo.png",
-    category: "General",
-    country: "Africa",
-    streamUrl: "https://sportslive.run/supersport-action"
-  },
-  {
-    id: "ss-var1",
-    name: "SuperSport Variety 1",
-    logo: "/images/sports/supersports logo.png",
-    category: "General",
-    country: "Africa",
-    streamUrl: "https://sportslive.run/supersport-variety-1"
-  },
-  {
-    id: "sky-main",
-    name: "Sky Sports Main Event",
-    logo: "/images/sports/sky sports.jpg",
-    category: "General",
-    country: "UK",
-    streamUrl: "https://sportslive.run/sky-sports-main-event"
-  },
-  {
-    id: "sky-pl",
-    name: "Sky Sports Premier League",
-    logo: "/images/sports/sky sports.jpg",
-    category: "Football",
-    country: "UK",
-    streamUrl: "https://sportslive.run/sky-sports-premier-league"
-  },
-  {
-    id: "sky-f1",
-    name: "Sky Sports F1",
-    logo: "/images/sports/sky sports.jpg",
-    category: "Motorsport",
-    country: "UK",
-    streamUrl: "https://sportslive.run/sky-sports-f1"
-  },
-  {
-    id: "tnt-1",
-    name: "TNT Sports 1",
-    logo: "/images/sports/tnt logo.jpg",
-    category: "General",
-    country: "UK",
-    streamUrl: "https://sportslive.run/channels/tnt-sports-1"
-  },
-  {
-    id: "tnt-2",
-    name: "TNT Sports 2",
-    logo: "/images/sports/tnt logo.jpg",
-    category: "General",
-    country: "UK",
-    streamUrl: "https://sportslive.run/channels/tnt-sports-2"
-  },
-  {
-    id: "bein-1",
-    name: "beIN Sports 1",
-    logo: "/images/sports/bein-sport.png",
-    category: "General",
-    country: "Global",
-    streamUrl: "https://sportslive.run/channels/bein-sports-1"
-  },
-  {
-    id: "bein-2",
-    name: "beIN Sports 2",
-    logo: "/images/sports/bein-sport.png",
-    category: "General",
-    country: "Global",
-    streamUrl: "https://sportslive.run/channels/bein-sports-2"
-  },
-  {
-    id: "espn-1",
-    name: "ESPN",
-    logo: "/images/sports/espn.jpg",
-    category: "General",
-    country: "Global",
-    streamUrl: "https://sportslive.run/channels/espn"
-  },
-  {
-    id: "espn-2",
-    name: "ESPN 2",
-    logo: "/images/sports/espn.jpg",
-    category: "General",
-    country: "Global",
-    streamUrl: "https://sportslive.run/channels/espn-2"
-  }
-];
 
 export interface SportsLeagueConfig {
   id: string;
@@ -319,10 +165,6 @@ export interface SportsFixtureConfig {
   minute?: string;
   isLive?: boolean;
   matchId?: string; // For linking to sportslive.run
-  channelId?: string; // For linked channels
-  thumb?: string; // Event thumbnail
-  banner?: string; // Event banner
-  fanart?: string; // Event fanart
 }
 
 export const SPORTS_LEAGUES: SportsLeagueConfig[] = [
@@ -416,7 +258,174 @@ export const SPORTS_LEAGUES: SportsLeagueConfig[] = [
   },
 ];
 
-// [Static data removed in v3.2 in favor of real-time API sync]
+export const SPORTS_FIXTURES: SportsFixtureConfig[] = [
+  {
+    id: "ucl-final-mci-rma",
+    leagueId: "ucl",
+    homeTeam: "Manchester City",
+    awayTeam: "Real Madrid",
+    homeTeamLogo: "https://www.thesportsdb.com/images/media/team/badge/manchester-city.png",
+    awayTeamLogo: "https://www.thesportsdb.com/images/media/team/badge/real-madrid.png",
+    status: "live",
+    kickoffTimeFormatted: "Tonight · 21:00 (Your local time)",
+    venue: "Wembley Stadium, London",
+    round: "Final",
+    referee: "UEFA Elite Referee",
+    broadcast: ["DStv SuperSport", "beIN Sports", "Canal+"],
+    streamSources: [
+      "https://sportslive.run/", // general Champions League aggregator
+      "https://streamed.pk/", // multi-sport live index (football category)
+    ],
+    extraInfo:
+      "Multi‑angle camera support recommended. For the best experience, use a stable broadband connection.",
+    homeScore: 2,
+    awayScore: 1,
+    minute: "67'",
+    isLive: true,
+  },
+  {
+    id: "epl-ars-che",
+    leagueId: "epl",
+    homeTeam: "Arsenal",
+    awayTeam: "Chelsea",
+    homeTeamLogo: "https://www.thesportsdb.com/images/media/team/badge/arsenal.png",
+    awayTeamLogo: "https://www.thesportsdb.com/images/media/team/badge/chelsea.png",
+    status: "live",
+    kickoffTimeFormatted: "Saturday · 18:30 (Your local time)",
+    venue: "Emirates Stadium, London",
+    round: "Matchweek 12",
+    broadcast: ["Sky Sports", "DStv SuperSport"],
+    streamSources: [
+      "https://sportslive.run/", // EPL live matches
+      "https://streamed.pk/", // football section
+    ],
+    extraInfo:
+      "Stream will unlock 15 minutes before kick‑off once the broadcaster feed is configured.",
+    homeScore: 1,
+    awayScore: 0,
+    minute: "23'",
+    isLive: true,
+  },
+  {
+    id: "laliga-elclasico",
+    leagueId: "laliga",
+    homeTeam: "Barcelona",
+    awayTeam: "Real Madrid",
+    homeTeamLogo: "https://www.thesportsdb.com/images/media/team/badge/barcelona.png",
+    awayTeamLogo: "https://www.thesportsdb.com/images/media/team/badge/real-madrid.png",
+    status: "live",
+    kickoffTimeFormatted: "Live Now",
+    venue: "Spotify Camp Nou, Barcelona",
+    round: "Matchweek 27",
+    broadcast: ["LaLigaTV", "beIN Sports"],
+    streamSources: ["https://sportslive.run/", "https://streamed.pk/"],
+    homeScore: 0,
+    awayScore: 2,
+    minute: "45'",
+    isLive: true,
+  },
+  {
+    id: "afcon-final",
+    leagueId: "afcon",
+    homeTeam: "Nigeria",
+    awayTeam: "Senegal",
+    homeTeamLogo: "https://www.thesportsdb.com/images/media/team/badge/nigeria.png",
+    awayTeamLogo: "https://www.thesportsdb.com/images/media/team/badge/senegal.png",
+    status: "live",
+    kickoffTimeFormatted: "Live Now",
+    venue: "Abidjan, Côte d'Ivoire",
+    round: "Final",
+    broadcast: ["DStv SuperSport", "StarTimes"],
+    streamSources: ["https://sportslive.run/", "https://streamed.pk/"],
+    extraInfo:
+      "Celebrating African football. Add your AFCON streams, highlights and analysis shows here.",
+    homeScore: 1,
+    awayScore: 1,
+    minute: "78'",
+    isLive: true,
+  },
+  {
+    id: "rugby-wc-final",
+    leagueId: "rugby-world-cup",
+    homeTeam: "South Africa",
+    awayTeam: "New Zealand",
+    status: "replay",
+    kickoffTimeFormatted: "Replay • Full match",
+    venue: "Stade de France, Paris",
+    round: "Final",
+    broadcast: ["SuperSport Rugby", "ITV"],
+    streamSources: [
+      "https://sportslive.run/", // rugby matches
+      "https://streamed.pk/", // rugby category
+    ],
+    extraInfo:
+      "Rugby fans can enjoy full‑match replays and highlights here once streams are configured.",
+  },
+  {
+    id: "six-nations-eng-ire",
+    leagueId: "six-nations",
+    homeTeam: "England",
+    awayTeam: "Ireland",
+    status: "upcoming",
+    kickoffTimeFormatted: "Next weekend · 17:00 (Your local time)",
+    venue: "Twickenham Stadium, London",
+    round: "Round 3",
+    broadcast: ["ITV", "SuperSport Rugby"],
+    streamSources: [
+      "https://sportslive.run/", // rugby matches
+      "https://streamed.pk/", // rugby category
+    ],
+  },
+  {
+    id: "ufc-ppv-main",
+    leagueId: "ufc",
+    homeTeam: "Champion",
+    awayTeam: "Challenger",
+    status: "upcoming",
+    kickoffTimeFormatted: "Saturday night · Main card",
+    venue: "T-Mobile Arena, Las Vegas",
+    round: "Main Event",
+    broadcast: ["ESPN+", "UFC Fight Pass"],
+    streamSources: [
+      "https://sportslive.run/", // UFC/MMA events
+      "https://streamed.pk/", // fight/UFC section
+    ],
+    extraInfo:
+      "Add your official UFC Pay‑Per‑View or Fight Pass embeds here. Respect all regional and licensing restrictions.",
+  },
+  {
+    id: "wwe-ppv-main",
+    leagueId: "wwe",
+    homeTeam: "Superstar A",
+    awayTeam: "Superstar B",
+    status: "replay",
+    kickoffTimeFormatted: "Replay • Main event",
+    venue: "AT&T Stadium, Texas",
+    round: "Main Event",
+    broadcast: ["WWE Network", "Peacock"],
+    streamSources: [
+      "https://sportslive.run/", // WWE events
+      "https://streamed.pk/", // wrestling section
+    ],
+  },
+  {
+    id: "athletics-diamond-100m",
+    leagueId: "athletics",
+    homeTeam: "Men's 100m Final",
+    awayTeam: "World’s fastest sprinters",
+    status: "replay",
+    kickoffTimeFormatted: "Replay • Finals",
+    venue: "Diamond League Meeting",
+    round: "Final",
+    broadcast: ["World Athletics", "SuperSport"],
+    streamSources: [
+      "https://sportslive.run/", // athletics events
+      "https://streamed.pk/", // athletics/other
+    ],
+    extraInfo:
+      "Use this slot for live track & field, marathons or Diamond League meets with your official streams.",
+  },
+];
 export const reactionColorForTailwindCSS = {
   haha: "text-yellow-500",
   like: "text-primary",

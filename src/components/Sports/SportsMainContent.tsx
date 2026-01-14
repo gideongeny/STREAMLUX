@@ -1,4 +1,3 @@
-
 import { FC, useMemo, useState, useEffect, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { MdSportsSoccer } from "react-icons/md";
@@ -9,6 +8,7 @@ import { SPORTS_LEAGUES, SPORTS_CHANNELS, SportsFixtureConfig } from "../../shar
 import { getLiveFixturesAPI, getUpcomingFixturesAPI, subscribeToLiveScores } from "../../services/sportsAPI";
 import BannerSlider from "../Slider/BannerSlider";
 import { Item } from "../../shared/types";
+import { safeStorage } from "../../utils/safeStorage";
 
 // Unified calendar row
 const UpcomingCalendar = lazy(() => import("../Home/UpcomingCalendar"));
@@ -26,9 +26,9 @@ const SportsMainContent: FC = () => {
     useEffect(() => {
         const fetchRealData = async () => {
             // 1. Check Cache
-            const cachedLive = localStorage.getItem("sports_live_fixtures");
-            const cachedUpcoming = localStorage.getItem("sports_upcoming_fixtures");
-            const cachedTime = localStorage.getItem("sports_cache_time");
+            const cachedLive = safeStorage.get("sports_live_fixtures");
+            const cachedUpcoming = safeStorage.get("sports_upcoming_fixtures");
+            const cachedTime = safeStorage.get("sports_cache_time");
             const now = Date.now();
             const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -52,9 +52,9 @@ const SportsMainContent: FC = () => {
                 setUpcomingFixtures(upcoming);
 
                 // 3. Update Cache
-                localStorage.setItem("sports_live_fixtures", JSON.stringify(live));
-                localStorage.setItem("sports_upcoming_fixtures", JSON.stringify(upcoming));
-                localStorage.setItem("sports_cache_time", String(now));
+                safeStorage.set("sports_live_fixtures", JSON.stringify(live));
+                safeStorage.set("sports_upcoming_fixtures", JSON.stringify(upcoming));
+                safeStorage.set("sports_cache_time", String(now));
 
             } catch (error) {
                 console.error("Error fetching real sports data:", error);
@@ -373,7 +373,7 @@ const SportsMainContent: FC = () => {
 
                     // Check if this is a soccer/football match (sportlive.run supports these)
                     const isSoccerFootball = ['epl', 'ucl', 'laliga', 'ligue1', 'seriea', 'bundesliga', 'afcon', 'world-cup'].includes(fixture.leagueId?.toLowerCase());
-                    
+
                     // For live soccer/football matches with matchId, go directly to sportlive.run
                     const targetUrl = (fixture.status === 'live' && isSoccerFootball && fixture.matchId)
                         ? `https://sportslive.run/matches/${fixture.matchId}?utm_source=StreamLux`

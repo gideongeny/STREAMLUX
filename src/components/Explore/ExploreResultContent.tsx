@@ -1,6 +1,7 @@
 import { FunctionComponent } from "react";
 import { Item, ItemsPage } from "../../shared/types";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+import InfiniteScroll from "react-infinite-scroll-component";
 import FilmItem from "../Common/FilmItem";
 import Skeleton from "../Common/Skeleton";
 
@@ -22,11 +23,11 @@ const ExploreResultContent: FunctionComponent<ExploreResultContentProps> = ({
     (acc: Item[], current: ItemsPage) => [...acc, ...current.results],
     [] as Item[]
   ) || [];
-
-  const filteredItems = currentTab
-    ? allItems.filter((item) => !item.media_type || item.media_type === currentTab || item.youtubeId)
+  
+  const filteredItems = currentTab 
+    ? allItems.filter((item) => item.media_type === currentTab)
     : allItems;
-
+  
   return (
     <>
       {filteredItems.length === 0 ? (
@@ -40,19 +41,27 @@ const ExploreResultContent: FunctionComponent<ExploreResultContentProps> = ({
           <p className="text-white text-3xl mt-5">There is no such films</p>
         </div>
       ) : (
-        <ul className="grid grid-cols-sm lg:grid-cols-lg gap-x-8 gap-y-10 pt-2 px-2">
-          {filteredItems.map((item) => (
-            <li key={item.youtubeId || item.id}>
-              <FilmItem item={item} />
-            </li>
-          ))}
-          {!data &&
-            [...new Array(15)].map((_, index) => (
-              <li key={index}>
-                <Skeleton className="h-0 pb-[160%]" />
+        <InfiniteScroll
+          dataLength={data?.length || 0}
+          next={() => fetchNext()}
+          hasMore={!!hasMore}
+          loader={<div>Loading...</div>}
+          endMessage={<></>}
+        >
+          <ul className="grid grid-cols-sm lg:grid-cols-lg gap-x-8 gap-y-10 pt-2 px-2">
+            {filteredItems.map((item) => (
+              <li key={item.id}>
+                <FilmItem item={item} />
               </li>
             ))}
-        </ul>
+            {!data &&
+              [...new Array(15)].map((_, index) => (
+                <li key={index}>
+                  <Skeleton className="h-0 pb-[160%]" />
+                </li>
+              ))}
+          </ul>
+        </InfiniteScroll>
       )}
     </>
   );

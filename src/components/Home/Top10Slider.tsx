@@ -22,6 +22,9 @@ const Top10Slider: FC<Top10SliderProps> = ({ films }) => {
             <Swiper
                 spaceBetween={16}
                 slidesPerView={1.1}
+                observer={true}
+                observeParents={true}
+                watchSlidesProgress={true}
                 breakpoints={{
                     400: { slidesPerView: 1.2 },
                     500: { slidesPerView: 1.8 },

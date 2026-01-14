@@ -14,77 +14,68 @@ interface NavigationItem {
   fetchQuery?: { region?: string; with_origin_country?: string; with_genres?: string };
 }
 
-interface DiverseNavigationProps {
-  currentTab?: "movie" | "tv" | "sports";
-}
-
-const DiverseNavigation: React.FC<DiverseNavigationProps> = ({ currentTab = "movie" }) => {
+const DiverseNavigation: React.FC = () => {
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
-  const [lastTab, setLastTab] = useState<string>("");
 
   useEffect(() => {
     const fetchImages = async () => {
-      // Use the provided currentTab or fallback to localStorage/default
-      const effectiveTab = (currentTab === "sports" ? "movie" : currentTab) as "movie" | "tv";
-
-      // Prevent redundant fetches if tab hasn't actually changed (unless it's the first run)
-      if (lastTab === effectiveTab && navigationItems.length > 0) return;
-      setLastTab(effectiveTab);
-
+      // Get current tab from localStorage to determine default type
+      const currentTab = (localStorage.getItem("currentTab") || "movie") as "movie" | "tv";
+      
       const baseItems: NavigationItem[] = [
         {
           title: "African Cinema",
           description: "Nollywood, South African, Kenyan & more",
-          path: `/explore?region=africa&type=${effectiveTab}`,
+          path: `/explore?region=africa&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "NG|ZA|KE|GH|TZ|UG|ET|RW|ZM|EG" }
         },
         {
           title: "Asian Cinema",
           description: "Bollywood, Korean, Japanese, Chinese",
-          path: `/explore?region=asia&type=${effectiveTab}`,
+          path: `/explore?region=asia&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "IN|KR|JP|CN" }
         },
         {
           title: "Latin American",
           description: "Mexican, Brazilian, Argentine cinema",
-          path: `/explore?region=latin&type=${effectiveTab}`,
+          path: `/explore?region=latin&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "MX|BR|AR" }
         },
         {
           title: "Middle Eastern",
           description: "Turkish, Egyptian, Saudi cinema",
-          path: `/explore?region=middleeast&type=${effectiveTab}`,
+          path: `/explore?region=middleeast&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "TR|EG|SA" }
         },
         {
           title: "Nollywood",
           description: "Movies from the Nollywood industry (Nigeria)",
-          path: `/explore?region=nollywood&type=${effectiveTab}`,
+          path: `/explore?region=nollywood&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "NG" }
         },
         {
           title: "Bollywood",
           description: "Indian movies & TV shows",
-          path: `/explore?region=bollywood&type=${effectiveTab}`,
+          path: `/explore?region=bollywood&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "IN" }
         },
         {
           title: "Filipino",
           description: "ABS-CBN, iWantTFC shows & films",
-          path: `/explore?region=philippines&type=${effectiveTab}`,
+          path: `/explore?region=philippines&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "PH" }
         },
         {
           title: "Kenyan",
           description: "Citizen, NTV, KTN, Showmax",
-          path: `/explore?region=kenya&type=${effectiveTab}`,
+          path: `/explore?region=kenya&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "KE" }
         }
@@ -93,68 +84,178 @@ const DiverseNavigation: React.FC<DiverseNavigationProps> = ({ currentTab = "mov
       const updatedItems = await Promise.all(
         baseItems.map(async (item) => {
           if (!item.fetchQuery) return item;
-
+          
           let foundImage: string | null = null;
+          
+          // Try multiple sources with fallbacks - fetch popular content from the region/genre
+          const sources = [
+            // Source 1: Primary TMDB discover - get most popular from region (movies)
+            async () => {
+              try {
+                const response = await axios.get('/discover/movie', {
+                  params: {
+                    with_origin_country: item.fetchQuery?.with_origin_country,
+                    sort_by: 'popularity.desc',
+                    page: 1,
+                    'vote_count.gte': 5,
+                    'vote_average.gte': 4.0
+                  },
+                  timeout: 8000
+                });
+                const movies: Item[] = response.data.results || [];
+                // Filter to ensure origin_country matches - be strict about this
+                const queryCountries = item.fetchQuery?.with_origin_country?.split('|') || [];
+                const filteredMovies = movies.filter((movie: any) => {
+                  const countries = movie.origin_country || [];
+                  return countries.some((c: string) => queryCountries.includes(c));
+                });
+                // Try first 20 movies to find one with backdrop
+                const moviesToCheck = filteredMovies.length > 0 ? filteredMovies : movies;
+                for (const movie of moviesToCheck.slice(0, 20)) {
+                  if (movie.backdrop_path && movie.backdrop_path !== 'null') {
+                    const imageUrl = `${IMAGE_URL}/w1280${movie.backdrop_path}`;
+                    // Verify image exists by checking if it's a valid URL
+                    if (imageUrl.includes('image.tmdb.org')) {
+                      return imageUrl;
+                    }
+                  }
+                }
+              } catch (e) {
+                console.warn(`Error fetching movie image for ${item.title}:`, e);
+                return null;
+              }
+              return null;
+            },
+            // Source 2: Try TV shows from same region
+            async () => {
+              try {
+                const response = await axios.get('/discover/tv', {
+                  params: {
+                    with_origin_country: item.fetchQuery?.with_origin_country,
+                    sort_by: 'popularity.desc',
+                    page: 1,
+                    'vote_count.gte': 5,
+                    'vote_average.gte': 4.0
+                  },
+                  timeout: 8000
+                });
+                const shows: Item[] = response.data.results || [];
+                // Filter to ensure origin_country matches
+                const queryCountries = item.fetchQuery?.with_origin_country?.split('|') || [];
+                const filteredShows = shows.filter((show: any) => {
+                  const countries = show.origin_country || [];
+                  return countries.some((c: string) => queryCountries.includes(c));
+                });
+                const showsToCheck = filteredShows.length > 0 ? filteredShows : shows;
+                for (const show of showsToCheck.slice(0, 20)) {
+                  if (show.backdrop_path && show.backdrop_path !== 'null') {
+                    const imageUrl = `${IMAGE_URL}/w1280${show.backdrop_path}`;
+                    if (imageUrl.includes('image.tmdb.org')) {
+                      return imageUrl;
+                    }
+                  }
+                }
+              } catch (e) {
+                console.warn(`Error fetching TV image for ${item.title}:`, e);
+                return null;
+              }
+              return null;
+            },
+            // Source 3: Try trending from region
+            async () => {
+              try {
+                const response = await axios.get('/trending/movie/day', {
+                  params: { page: 1 },
+                  timeout: 5000
+                });
+                const movies: Item[] = response.data.results || [];
+                const queryCountries = item.fetchQuery?.with_origin_country?.split('|') || [];
+                const filteredMovies = movies.filter((movie: any) => {
+                  const countries = movie.origin_country || [];
+                  return countries.some((c: string) => queryCountries.includes(c));
+                });
+                for (const movie of (filteredMovies.length > 0 ? filteredMovies : movies).slice(0, 10)) {
+                  if (movie.backdrop_path && movie.backdrop_path !== 'null') {
+                    const imageUrl = `${IMAGE_URL}/w1280${movie.backdrop_path}`;
+                    if (imageUrl.includes('image.tmdb.org')) {
+                      return imageUrl;
+                    }
+                  }
+                }
+              } catch (e) {
+                return null;
+              }
+              return null;
+            },
+          ];
 
-          // Primary Source: TMDB Discover based on Current Tab
-          const tryFetch = async (mediaType: "movie" | "tv") => {
+          // Try each source sequentially until we find a valid image
+          for (const source of sources) {
             try {
-              const response = await axios.get(`/discover/${mediaType}`, {
+              const imageUrl = await source();
+              if (imageUrl && imageUrl !== 'undefined' && imageUrl.startsWith('http')) {
+                // Verify the image URL is valid
+                if (imageUrl.includes('image.tmdb.org') || imageUrl.includes('unsplash.com')) {
+                  foundImage = imageUrl;
+                  break; // Found a valid image, stop searching
+                }
+              }
+            } catch (error) {
+              // Continue to next source on error
+              console.warn(`Error fetching image from source for ${item.title}:`, error);
+            }
+          }
+          
+          // If no image found from API, try to use a poster from a popular item
+          if (!foundImage) {
+            try {
+              // Try to get at least one popular item to use its poster/backdrop
+              const response = await axios.get('/discover/movie', {
                 params: {
                   with_origin_country: item.fetchQuery?.with_origin_country,
                   sort_by: 'popularity.desc',
                   page: 1,
-                  'vote_count.gte': 5
                 },
                 timeout: 5000
               });
-              const results: Item[] = response.data.results || [];
-              const queryCountries = item.fetchQuery?.with_origin_country?.split('|') || [];
-
-              // Filter strictly by country
-              const filtered = results.filter((res: any) => {
-                const countries = res.origin_country || [];
-                return countries.some((c: string) => queryCountries.includes(c));
-              });
-
-              const itemsToCheck = filtered.length > 0 ? filtered : results;
-              for (const res of itemsToCheck.slice(0, 10)) {
-                if (res.backdrop_path) return `${IMAGE_URL}/w1280${res.backdrop_path}`;
-                if (res.poster_path) return `${IMAGE_URL}/w500${res.poster_path}`;
+              const movies = response.data.results || [];
+              if (movies.length > 0) {
+                const firstMovie = movies[0];
+                if (firstMovie.backdrop_path) {
+                  foundImage = `${IMAGE_URL}/w1280${firstMovie.backdrop_path}`;
+                } else if (firstMovie.poster_path) {
+                  foundImage = `${IMAGE_URL}/w500${firstMovie.poster_path}`;
+                }
               }
             } catch (e) {
-              return null;
+              // Ignore errors, will use fallback
             }
-            return null;
-          };
-
-          // 1. Try current tab type
-          foundImage = await tryFetch(effectiveTab);
-
-          // 2. Try opposite type if current fails
-          if (!foundImage) {
-            foundImage = await tryFetch(effectiveTab === "movie" ? "tv" : "movie");
           }
-
+          
+          // If all sources fail, use category-specific default images
           const defaultImages: { [key: string]: string } = {
             'African Cinema': 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop&q=80',
             'Asian Cinema': 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1280&h=720&fit=crop&q=80',
-            'Nollywood': 'https://images.unsplash.com/photo-1533488765986-df82625ee3fb?w=1280&h=720&fit=crop&q=80',
-            'Bollywood': 'https://images.unsplash.com/photo-1514533212735-5df27d970db0?w=1280&h=720&fit=crop&q=80',
+            'Latin American': 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop&q=80',
+            'Middle Eastern': 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop&q=80',
+            'Nollywood': 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop&q=80',
+            'Bollywood': 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1280&h=720&fit=crop&q=80',
+            'Filipino': 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop&q=80',
+            'Kenyan': 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop&q=80',
           };
-
-          return {
-            ...item,
-            image: foundImage || defaultImages[item.title] || item.fallbackImage
+          
+          return { 
+            ...item, 
+            image: foundImage || defaultImages[item.title] || item.fallbackImage 
           };
         })
       );
-
+      
       setNavigationItems(updatedItems);
     };
 
     fetchImages();
-  }, [currentTab, lastTab, navigationItems.length]); // Re-fetch when tab changes
+  }, []); // Only run once on mount
 
   return (
     <div className="py-8">
@@ -166,7 +267,7 @@ const DiverseNavigation: React.FC<DiverseNavigationProps> = ({ currentTab = "mov
           Explore movies and TV shows from around the world
         </p>
       </div>
-
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
         {navigationItems.map((item) => (
           <Link
@@ -196,7 +297,7 @@ const DiverseNavigation: React.FC<DiverseNavigationProps> = ({ currentTab = "mov
                     }}
                   />
                   {/* Fallback background in case image fails */}
-                  <div
+                  <div 
                     className="absolute inset-0 w-full h-full bg-gradient-to-br from-primary/20 to-primary/40"
                     style={{
                       backgroundImage: `url(${item.fallbackImage})`,
@@ -207,7 +308,7 @@ const DiverseNavigation: React.FC<DiverseNavigationProps> = ({ currentTab = "mov
                   />
                 </>
               ) : (
-                <div
+                <div 
                   className="absolute inset-0 w-full h-full bg-gradient-to-br from-primary/20 to-primary/40"
                   style={{
                     backgroundImage: item.fallbackImage ? `url(${item.fallbackImage})` : 'none',
@@ -239,7 +340,7 @@ const DiverseNavigation: React.FC<DiverseNavigationProps> = ({ currentTab = "mov
           </Link>
         ))}
       </div>
-
+      
       <div className="text-center mt-8">
         <p className="text-gray-500 text-sm">
           Click on any category above to explore movies and TV shows from that region

@@ -6,31 +6,67 @@ const config: CapacitorConfig = {
   webDir: 'build',
   server: {
     androidScheme: 'https',
-    cleartext: true
-  },
-  plugins: {
-    PushNotifications: {
-      presentationOptions: ['badge', 'sound', 'alert']
-    },
-    SplashScreen: {
-      launchShowDuration: 2000,
-      backgroundColor: '#1a1a1a',
-      showSpinner: false,
-      androidSpinnerStyle: 'small',
-      iosSpinnerStyle: 'small',
-      spinnerColor: '#ff6b35'
-    },
-    LocalNotifications: {
-      smallIcon: 'ic_stat_icon_config_sample',
-      iconColor: '#ff6b35'
-    }
+    allowNavigation: [
+      'https://vidsrc.me',
+      'https://2embed.org',
+      'https://www.2embed.to',
+      'https://vidembed.cc',
+      'https://moviebox.live',
+      'https://watchmovieshd.ru',
+      'https://streamsb.net',
+      'https://vidstream.pro',
+      'https://fsapi.xyz',
+      'https://curtstream.com',
+      'https://moviewp.com',
+      'https://v2.apimdb.net',
+      'https://gomo.to',
+      'https://vidcloud.stream',
+      'https://getsuperembed.link',
+      'https://databasegdriveplayer.co',
+      'https://123movies.com',
+      'https://fmovies.to',
+      'https://yesmovies.to',
+      'https://gomovies.sx',
+      'https://sportslive.run',
+      'https://streamlux.vercel.app',
+      'https://moonlight-films-five.vercel.app',
+    ],
   },
   android: {
     allowMixedContent: true,
     captureInput: true,
     webContentsDebuggingEnabled: true,
-    backgroundColor: '#1a1a1a'
-  }
+    backgroundColor: '#1a1a1a',
+    buildOptions: {
+      keystorePath: undefined,
+      keystorePassword: undefined,
+      keystoreAlias: undefined,
+      keystoreAliasPassword: undefined,
+      releaseType: 'AAB',
+    },
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2000,
+      launchAutoHide: true,
+      backgroundColor: '#1a1a1a',
+      androidSplashResourceName: 'splash',
+      androidScaleType: 'CENTER_CROP',
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
+    StatusBar: {
+      style: 'dark',
+      backgroundColor: '#1a1a1a',
+    },
+    Keyboard: {
+      resize: 'body',
+      style: 'dark',
+      resizeOnFullScreen: true,
+    },
+  },
 };
 
 export default config;
+

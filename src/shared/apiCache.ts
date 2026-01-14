@@ -13,23 +13,16 @@ interface RateLimitEntry {
 }
 
 class APICache {
-  // Rate limits can stay in memory as they are short-lived (1 minute)
+  private cache: Map<string, CacheEntry> = new Map();
   private rateLimits: Map<string, RateLimitEntry> = new Map();
   private readonly DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes default cache
-  private readonly MAX_REQUESTS_PER_MINUTE = 60; // Increased limit (assuming key rotation)
-  private readonly REQUEST_DELAY = 100; // Reduced delay
-  private readonly CACHE_PREFIX = "tmdb_cache_";
+  private readonly MAX_REQUESTS_PER_MINUTE = 30; // Limit to 30 requests per minute per endpoint
+  private readonly REQUEST_DELAY = 200; // 200ms delay between requests
 
   // Get cache key from URL and params
   private getCacheKey(url: string, params?: any): string {
-    // Sort params to ensure consistency
-    const sortedParams = params ? Object.keys(params).sort().reduce((acc: any, key) => {
-      acc[key] = params[key];
-      return acc;
-    }, {}) : {};
-
-    const paramStr = JSON.stringify(sortedParams);
-    return `${this.CACHE_PREFIX}${url}${paramStr}`;
+    const paramStr = params ? JSON.stringify(params) : '';
+    return `${url}${paramStr}`;
   }
 
   // Check if request should be rate limited
@@ -66,53 +59,46 @@ class APICache {
 
   // Get cached data if available and not expired
   get(url: string, params?: any): any | null {
-    try {
-      const key = this.getCacheKey(url, params);
-      const stored = localStorage.getItem(key);
+    const key = this.getCacheKey(url, params);
+    const entry = this.cache.get(key);
 
-      if (!stored) {
-        return null;
-      }
-
-      const entry: CacheEntry = JSON.parse(stored);
-      const now = Date.now();
-
-      if (now > entry.expiresAt) {
-        localStorage.removeItem(key);
-        return null;
-      }
-
-      return entry.data;
-    } catch (e) {
+    if (!entry) {
       return null;
     }
+
+    const now = Date.now();
+    if (now > entry.expiresAt) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return entry.data;
   }
 
   // Set cache entry
   set(url: string, params: any, data: any, ttl: number = this.DEFAULT_TTL): void {
-    try {
-      const key = this.getCacheKey(url, params);
-      const now = Date.now();
+    const key = this.getCacheKey(url, params);
+    const now = Date.now();
 
-      const entry: CacheEntry = {
-        data,
-        timestamp: now,
-        expiresAt: now + ttl,
-      };
+    this.cache.set(key, {
+      data,
+      timestamp: now,
+      expiresAt: now + ttl,
+    });
 
-      localStorage.setItem(key, JSON.stringify(entry));
-
-      // Cleanup if storage gets too full (simple check)
-      // In a real app we might want LRU, but for now just rely on clearExpired
-    } catch (e) {
-      console.warn("LocalStorage failed (quota exceeded?):", e);
+    // Clean up old cache entries (keep cache size manageable)
+    if (this.cache.size > 100) {
+      const entries = Array.from(this.cache.entries());
+      entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+      // Remove oldest 20 entries
+      entries.slice(0, 20).forEach(([key]) => this.cache.delete(key));
     }
   }
 
   // Check if request should be delayed due to rate limiting
   async checkRateLimit(url: string): Promise<void> {
-    const key = url; // Rate limit by URL, not params
-
+    const key = this.getCacheKey(url);
+    
     if (this.shouldRateLimit(key)) {
       // Wait until rate limit resets
       const limit = this.rateLimits.get(key);
@@ -125,41 +111,24 @@ class APICache {
       }
     }
 
-    // Add small delay between requests
+    // Add small delay between requests to prevent burst
     await new Promise(resolve => setTimeout(resolve, this.REQUEST_DELAY));
   }
 
   // Clear cache
   clear(): void {
-    try {
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith(this.CACHE_PREFIX)) {
-          localStorage.removeItem(key);
-        }
-      });
-      this.rateLimits.clear();
-    } catch (e) {
-      console.warn("Clear cache failed", e);
-    }
+    this.cache.clear();
+    this.rateLimits.clear();
   }
 
   // Clear expired entries
   clearExpired(): void {
-    try {
-      const now = Date.now();
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith(this.CACHE_PREFIX)) {
-          const stored = localStorage.getItem(key);
-          if (stored) {
-            const entry: CacheEntry = JSON.parse(stored);
-            if (now > entry.expiresAt) {
-              localStorage.removeItem(key);
-            }
-          }
-        }
-      });
-    } catch (e) {
-      console.warn("Clear expired failed", e);
+    const now = Date.now();
+    const entries = Array.from(this.cache.entries());
+    for (const [key, entry] of entries) {
+      if (now > entry.expiresAt) {
+        this.cache.delete(key);
+      }
     }
   }
 }
@@ -173,3 +142,4 @@ if (globalThis.window !== undefined) {
     apiCache.clearExpired();
   }, 5 * 60 * 1000);
 }
+

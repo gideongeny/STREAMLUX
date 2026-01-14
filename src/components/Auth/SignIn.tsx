@@ -29,7 +29,7 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get("redirect");
-
+  
   // Redirect after successful sign in
   useEffect(() => {
     if (currentUser) {
@@ -48,7 +48,7 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
     const password = passwordRef.current.value;
 
     if (!email.trim() || !password.trim()) return;
-
+    
     if (!auth) {
       setError("Authentication service is not available. Please refresh the page.");
       toast.error("Authentication service is not available. Please refresh the page.");
@@ -77,13 +77,11 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
 
   return (
     <>
-      {/* Background video is handled by parent Auth component */}
-
       {currentUser && (
         <ModalNotification type="success" message={"Sign in successfully"} />
       )}
       {isLoading && (
-        <div className="z-20 tw-flex-center h-screen relative">
+        <div className="z-10 tw-flex-center h-screen relative">
           <div className="w-28 h-28 border-[10px] rounded-full border-primary border-t-transparent animate-spin "></div>
         </div>
       )}
@@ -107,7 +105,7 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
         </>
       )}
 
-      <div className="px-4 py-2 rounded-xl max-w-xl w-full min-h-[500px] text-white/90 tw-absolute-center z-10">
+      <div className="px-4 py-2 rounded-xl max-w-xl w-full min-h-[500px] text-white/70 tw-absolute-center">
         <div className="flex flex-col items-center mb-5">
           <div className="text-[50px] font-semibold mb-1 mx-auto">
             <div className="text-primary leading-none mb-4 text-center">

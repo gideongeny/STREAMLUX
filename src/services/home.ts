@@ -5,77 +5,115 @@ import {
   getFZPopular,
   getFZTopRated,
   getFZLatest,
+  getFZContentByGenre,
   getFZContentByCountry,
 } from "./fzmovies";
 import { getAllSourceContent } from "./contentSources";
-import { getAllAPIContent } from "./movieAPIs";
-import { getNinjarocksTrending, getNinjarocksNollywood } from "./ninjarocks";
+import { getAllAPIContent, getAllAPIContentByGenre } from "./movieAPIs";
 
 // MOVIE TAB
 ///////////////////////////////////////////////////////////////
-export const getTrendingMovies = async (): Promise<Item[]> => {
-  const response = await axios.get("/trending/movie/day");
-  return (response.data.results || []).map((item: Item) => ({
-    ...item,
-    media_type: "movie" as const,
-  })).filter((item: Item) => item.poster_path);
-};
+export const getHomeMovies = async (): Promise<HomeFilms> => {
+  const endpoints: { [key: string]: string } = {
+    Trending: "/trending/movie/day",
+    Popular: "/movie/popular",
+    "Top Rated": "/movie/top_rated",
+    Hot: "/trending/movie/day?page=2",
+    Upcoming: "/movie/upcoming",
+  };
 
-export const getTop10Trending = async (): Promise<Item[]> => {
-  const response = await axios.get("/trending/all/week");
-  return response.data.results.slice(0, 10);
-};
+  // Priority 1: Fetch TMDB first (fast and reliable)
+  const tmdbResponses = await Promise.all(
+    Object.entries(endpoints).map((endpoint) => axios.get(endpoint[1]))
+  );
 
-export const getTop10Movies = async (): Promise<Item[]> => {
-  const response = await axios.get("/trending/movie/week");
-  return response.data.results.slice(0, 10).map((item: any) => ({
-    ...item,
-    media_type: "movie"
+  // Priority 2: Load additional sources in background (with timeout to prevent blocking)
+  const additionalSourcesPromise = Promise.allSettled([
+    getFZTrending("movie"),
+    getFZPopular("movie", 1),
+    getFZTopRated("movie", 1),
+    getFZLatest("movie", 1),
+  ]).then((results) => ({
+    fzTrending: results[0].status === "fulfilled" ? results[0].value : [],
+    fzPopular: results[1].status === "fulfilled" ? results[1].value : [],
+    fzTopRated: results[2].status === "fulfilled" ? results[2].value : [],
+    fzLatest: results[3].status === "fulfilled" ? results[3].value : [],
   }));
+
+  // Start loading additional sources but don't wait for them initially
+  const additionalSources = await Promise.race([
+    additionalSourcesPromise,
+    new Promise((resolve) => setTimeout(() => resolve({
+      fzTrending: [],
+      fzPopular: [],
+      fzTopRated: [],
+      fzLatest: [],
+    }), 1500)), // 1.5 second timeout for faster loading
+  ]) as { fzTrending: Item[], fzPopular: Item[], fzTopRated: Item[], fzLatest: Item[] };
+
+  // Load other sources in background (non-blocking) - these will be available later if needed
+  // Now includes Letterboxd, Rotten Tomatoes, and enhanced TMDB via getAllAPIContent
+  Promise.allSettled([
+    getAllSourceContent("movie", 1),
+    getAllAPIContent("movie", "popular"), // Includes IMDB -> Letterboxd -> Rotten Tomatoes -> TMDB fallback
+  ]).catch(() => {}); // Silently fail for background loading
+
+  // Helper function to merge and deduplicate items from all sources
+  const mergeAndDedupe = (tmdbItems: Item[], fzItems: Item[], otherItems: Item[] = []): Item[] => {
+    const combined = [...tmdbItems, ...fzItems, ...otherItems];
+    const seen = new Set<number>();
+    return combined.filter((item) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return item.poster_path; // Only include items with posters
+    });
+  };
+
+  const data = tmdbResponses.reduce((final, current, index) => {
+    const key = Object.entries(endpoints)[index][0];
+    const tmdbItems = current.data.results.map((item: Item) => ({
+      ...item,
+      media_type: "movie" as const,
+    }));
+
+    // Merge with FZMovies content based on category
+    let fzItems: Item[] = [];
+    if (key === "Trending" || key === "Hot") {
+      fzItems = additionalSources.fzTrending;
+    } else if (key === "Popular") {
+      fzItems = additionalSources.fzPopular;
+    } else if (key === "Top Rated") {
+      fzItems = additionalSources.fzTopRated;
+    } else if (key === "Upcoming") {
+      fzItems = additionalSources.fzLatest;
+    }
+
+    // Use only TMDB + FZMovies for initial fast load
+    final[key] = mergeAndDedupe(tmdbItems, fzItems, []);
+
+    return final;
+  }, {} as HomeFilms);
+
+  return data;
 };
-
-export const getTop10TVs = async (): Promise<Item[]> => {
-  const response = await axios.get("/trending/tv/week");
-  return response.data.results.slice(0, 10).map((item: any) => ({
-    ...item,
-    media_type: "tv"
-  }));
-};
-
-
-// getHomeMovies is deprecated. Use useHomeData granularly.
 
 export const getMovieBannerInfo = async (
   movies: Item[]
 ): Promise<BannerInfo[]> => {
   const detailRes = await Promise.all(
-    movies.map(async (movie) => {
-      try {
-        return await axios.get(`/movie/${movie.id}`);
-      } catch (e) {
-        console.error(`Error fetching movie details for ${movie.id}:`, e);
-        return { data: { genres: [] } };
-      }
-    })
+    movies.map((movie) => axios.get(`/movie/${movie.id}`))
   );
 
   const translationRes = await Promise.all(
-    movies.map(async (movie) => {
-      try {
-        return await axios.get(`/movie/${movie.id}/translations`);
-      } catch (e) {
-        console.error(`Error fetching movie translations for ${movie.id}:`, e);
-        return { data: { translations: [] } };
-      }
-    })
+    movies.map((movie) => axios.get(`/movie/${movie.id}/translations`))
   );
 
   const translations: string[][] = translationRes.map((item: any) =>
-    item?.data?.translations
-      ?.filter((translation: any) =>
+    item.data.translations
+      .filter((translation: any) =>
         ["en", "sw", "fr", "es", "pt", "de", "it", "ru", "ja", "ko", "zh", "ar", "hi"].includes(translation.iso_639_1)
       )
-      ?.reduce((acc: any, element: any) => {
+      .reduce((acc: any, element: any) => {
         if (element.iso_639_1 === "en") {
           return [element, ...acc];
         } else if (element.iso_639_1 === "sw") {
@@ -83,13 +121,13 @@ export const getMovieBannerInfo = async (
         }
         return [...acc, element];
       }, [] as any)
-      ?.map((translation: any) => translation.data.title) || []
+      .map((translation: any) => translation.data.title)
   );
 
   // translations will look like: [["Doctor Strange", "Daktari Strange", "Doctor Strange", "Dr. Strange"],["Spider Man Far From Home", "Spider Man Mbali na Nyumbani", "Spider-Man Lejos de Casa"],...]
 
   const genres: { name: string; id: number }[][] = detailRes.map((item: any) =>
-    item?.data?.genres?.filter((_: any, index: number) => index < 3) || []
+    item.data.genres.filter((_: any, index: number) => index < 3)
   );
 
   // genres will look like: [[{name: "action", id: 14}, {name: "wild", id: 19}, {name: "love", ket: 23}],[{name: "fantasy", id: 22}, {name: "science", id: 99}],...]
@@ -103,48 +141,108 @@ export const getMovieBannerInfo = async (
   // yeah I admit that it's hard to understand my code :)
 };
 
-export const getTrendingTVs = async (): Promise<Item[]> => {
-  const response = await axios.get("/trending/tv/day");
-  return (response.data.results || []).map((item: Item) => ({
-    ...item,
-    media_type: "tv" as const,
-  })).filter((item: Item) => item.poster_path);
-};
-
 // TV TAB
 ///////////////////////////////////////////////////////////////
 
-// getHomeTVs is deprecated. Use useHomeData granularly.
+export const getHomeTVs = async (): Promise<HomeFilms> => {
+  const endpoints: { [key: string]: string } = {
+    Trending: "/trending/tv/day",
+    Popular: "/tv/popular",
+    "Top Rated": "/tv/top_rated",
+    Hot: "/trending/tv/day?page=2",
+    "On the air": "/tv/on_the_air",
+  };
+
+  // Priority 1: Fetch TMDB first (fast and reliable)
+  const tmdbResponses = await Promise.all(
+    Object.entries(endpoints).map((endpoint) => axios.get(endpoint[1]))
+  );
+
+  // Priority 2: Load additional sources in background (with timeout to prevent blocking)
+  const additionalSourcesPromise = Promise.allSettled([
+    getFZTrending("tv"),
+    getFZPopular("tv", 1),
+    getFZTopRated("tv", 1),
+    getFZLatest("tv", 1),
+  ]).then((results) => ({
+    fzTrending: results[0].status === "fulfilled" ? results[0].value : [],
+    fzPopular: results[1].status === "fulfilled" ? results[1].value : [],
+    fzTopRated: results[2].status === "fulfilled" ? results[2].value : [],
+    fzLatest: results[3].status === "fulfilled" ? results[3].value : [],
+  }));
+
+  // Start loading additional sources but don't wait for them initially
+  const additionalSources = await Promise.race([
+    additionalSourcesPromise,
+    new Promise((resolve) => setTimeout(() => resolve({
+      fzTrending: [],
+      fzPopular: [],
+      fzTopRated: [],
+      fzLatest: [],
+    }), 1500)), // 1.5 second timeout for faster loading
+  ]) as { fzTrending: Item[], fzPopular: Item[], fzTopRated: Item[], fzLatest: Item[] };
+
+  // Load other sources in background (non-blocking) - these will be available later if needed
+  // Now includes Letterboxd, Rotten Tomatoes, and enhanced TMDB via getAllAPIContent
+  Promise.allSettled([
+    getAllSourceContent("tv", 1),
+    getAllAPIContent("tv", "popular"), // Includes IMDB -> Letterboxd -> Rotten Tomatoes -> TMDB fallback
+  ]).catch(() => {}); // Silently fail for background loading
+
+  // Helper function to merge and deduplicate items from all sources
+  const mergeAndDedupe = (tmdbItems: Item[], fzItems: Item[], otherItems: Item[] = []): Item[] => {
+    const combined = [...tmdbItems, ...fzItems, ...otherItems];
+    const seen = new Set<number>();
+    return combined.filter((item) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return item.poster_path; // Only include items with posters
+    });
+  };
+
+  const data = tmdbResponses.reduce((final, current, index) => {
+    const key = Object.entries(endpoints)[index][0];
+    const tmdbItems = current.data.results.map((item: Item) => ({
+      ...item,
+      media_type: "tv" as const,
+    }));
+
+    // Merge with FZMovies content based on category
+    let fzItems: Item[] = [];
+    if (key === "Trending" || key === "Hot") {
+      fzItems = additionalSources.fzTrending;
+    } else if (key === "Popular") {
+      fzItems = additionalSources.fzPopular;
+    } else if (key === "Top Rated") {
+      fzItems = additionalSources.fzTopRated;
+    } else if (key === "On the air") {
+      fzItems = additionalSources.fzLatest;
+    }
+
+    // Use only TMDB + FZMovies for initial fast load
+    final[key] = mergeAndDedupe(tmdbItems, fzItems, []);
+
+    return final;
+  }, {} as HomeFilms);
+
+  return data;
+};
 
 export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
   const detailRes = await Promise.all(
-    tvs.map(async (tv) => {
-      try {
-        return await axios.get(`/tv/${tv.id}`);
-      } catch (e) {
-        console.error(`Error fetching TV details for ${tv.id}:`, e);
-        return { data: { genres: [] } };
-      }
-    })
+    tvs.map((tv) => axios.get(`/tv/${tv.id}`))
   );
 
   const translationRes = await Promise.all(
-    tvs.map(async (tv) => {
-      try {
-        return await axios.get(`/tv/${tv.id}/translations`);
-      } catch (e) {
-        console.error(`Error fetching TV translations for ${tv.id}:`, e);
-        return { data: { translations: [] } };
-      }
-    })
+    tvs.map((tv) => axios.get(`/tv/${tv.id}/translations`))
   );
 
   const translations = translationRes.map((item: any) =>
-    item?.data?.translations
-      ?.filter((translation: any) =>
+    item.data.translations
+      .filter((translation: any) =>
         ["en", "sw", "fr", "es", "pt", "de", "it", "ru", "ja", "ko", "zh", "ar", "hi"].includes(translation.iso_639_1)
       )
-      ?.reduce((acc: any, element: any) => {
+      .reduce((acc: any, element: any) => {
         if (element.iso_639_1 === "en") {
           return [element, ...acc];
         } else if (element.iso_639_1 === "sw") {
@@ -152,11 +250,11 @@ export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
         }
         return [...acc, element];
       }, [] as any)
-      ?.map((translation: any) => translation.data.name) || []
+      .map((translation: any) => translation.data.name)
   );
 
   const genres = detailRes.map((item: any) =>
-    item?.data?.genres?.filter((_: any, index: number) => index < 3) || []
+    item.data.genres.filter((_: any, index: number) => index < 3)
   );
 
   return genres.map((genre, index) => ({
@@ -167,98 +265,35 @@ export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
 
 // GENERAL
 ///////////////////////////////////////////////////////////////
-// Recommendations based on specific item
-export const getRecommendations = async (
-  mediaType: "movie" | "tv",
-  mediaId: number
-): Promise<Item[]> => {
-  try {
-    const res = await axios.get(`/${mediaType}/${mediaId}/recommendations`);
-    const items = res.data.results as Item[];
-    return items
-      .map((item) => ({ ...item, media_type: mediaType }))
-      .filter((item) => item.poster_path);
-  } catch (error) {
-    console.error("Error fetching recommendations:", error);
-    return [];
-  }
-};
-
-// New Releases (Last 30 Days)
-export const getNewReleases = async (mediaType: "movie" | "tv"): Promise<Item[]> => {
-  try {
-    const today = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(today.getDate() - 45); // Extended to 45 days for better variety
-
-    const formatDate = (date: Date) => date.toISOString().split('T')[0];
-
-    const res = await axios.get(`/discover/${mediaType}`, {
-      params: {
-        [mediaType === "movie" ? "primary_release_date.gte" : "first_air_date.gte"]: formatDate(thirtyDaysAgo),
-        [mediaType === "movie" ? "primary_release_date.lte" : "first_air_date.lte"]: formatDate(today),
-        sort_by: "popularity.desc",
-        page: 1,
-        "vote_count.gte": 50, // Filter out low quality entries
-      },
-    });
-
-    const items = res.data.results as Item[];
-    return items
-      .map((item) => ({ ...item, media_type: mediaType }))
-      .filter((item) => item.poster_path);
-  } catch (error) {
-    console.error("Error fetching new releases:", error);
-    return [];
-  }
-};
-
-// Video Trailer
-export const getVideo = async (
-  mediaType: "movie" | "tv",
-  mediaId: number
-): Promise<string | null> => {
-  try {
-    const res = await axios.get(`/${mediaType}/${mediaId}/videos`);
-    const results = res.data.results;
-    // Find Trailer from YouTube
-    const trailer = results.find(
-      (vid: any) =>
-        vid.site === "YouTube" &&
-        (vid.type === "Trailer" || vid.type === "Teaser")
-    );
-    return trailer ? trailer.key : null;
-  } catch (error) {
-    console.error("Error fetching video:", error);
-    return null;
-  }
-};
-
 export const getTrendingNow = async (): Promise<Item[]> => {
+  // Optimized: Only use TMDB for fast loading, load others in background
   try {
-    // Fetch page 1 for best content. Using a short timeout to prevent hanging.
-    const response = await axios.get("/trending/all/day?page=1", { timeout: 8000 });
+    const tmdbResults = await Promise.race([
+      axios.get("/trending/all/day?page=2"),
+      new Promise((resolve) => setTimeout(() => resolve({ data: { results: [] } }), 3000)),
+    ]) as { data: { results: Item[] } };
 
-    // Validate and filter results
-    const results = (response.data?.results || []).filter((item: Item) =>
-      item && item.poster_path && item.backdrop_path // Ensure images exist
-    );
+    const tmdbItems = tmdbResults.data.results || [];
+    
+    // Load additional sources in background (non-blocking)
+    Promise.allSettled([
+      getFZTrending("all").catch(() => []),
+    ]).then((results) => {
+      // Background update - doesn't block initial render
+      if (results[0].status === "fulfilled") {
+        // Could update cache here if needed
+      }
+    }).catch(() => {});
 
-    // If API returns empty, try fallback to movies only
-    if (results.length === 0) {
-      console.warn("Trending All returned empty, falling back to Trending Movies");
-      return getTrendingMovies();
-    }
-
-    return results;
+    const seen = new Set<number>();
+    return tmdbItems.filter((item) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return item.poster_path;
+    }).slice(0, 20); // Limit to 20 for faster loading
   } catch (error) {
-    console.warn("getTrendingNow failed, using fallback:", error);
-    // Fallback to simpler endpoint if the main one fails
-    try {
-      return await getTrendingMovies();
-    } catch (e) {
-      return []; // Return empty array as last resort to prevent crash
-    }
+    console.error("Error fetching trending:", error);
+    return [];
   }
 };
 
@@ -306,12 +341,12 @@ export const getActionMovies = async (): Promise<Item[]> => {
       }),
       new Promise((resolve) => setTimeout(() => resolve({ data: { results: [] } }), 3000)),
     ]) as { data: { results: any[] } };
-
+    
     const tmdbItems = (tmdbResponse.data.results || []).map((item: any) => ({
       ...item,
       media_type: "movie" as const,
     }));
-
+    
     const seen = new Set<number>();
     return tmdbItems.filter((item) => {
       if (seen.has(item.id)) return false;
@@ -334,12 +369,12 @@ export const getComedyMovies = async (): Promise<Item[]> => {
       }),
       new Promise((resolve) => setTimeout(() => resolve({ data: { results: [] } }), 3000)),
     ]) as { data: { results: any[] } };
-
+    
     const tmdbItems = (tmdbResponse.data.results || []).map((item: any) => ({
       ...item,
       media_type: "movie" as const,
     }));
-
+    
     const seen = new Set<number>();
     return tmdbItems.filter((item) => {
       if (seen.has(item.id)) return false;
@@ -361,12 +396,12 @@ export const getDramaMovies = async (): Promise<Item[]> => {
       }),
       new Promise((resolve) => setTimeout(() => resolve({ data: { results: [] } }), 3000)),
     ]) as { data: { results: any[] } };
-
+    
     const tmdbItems = (tmdbResponse.data.results || []).map((item: any) => ({
       ...item,
       media_type: "movie" as const,
     }));
-
+    
     const seen = new Set<number>();
     return tmdbItems.filter((item) => {
       if (seen.has(item.id)) return false;
@@ -389,12 +424,12 @@ const getGenreMoviesOptimized = async (genreId: number): Promise<Item[]> => {
       }),
       new Promise((resolve) => setTimeout(() => resolve({ data: { results: [] } }), 3000)),
     ]) as { data: { results: any[] } };
-
+    
     const tmdbItems = (tmdbResponse.data.results || []).map((item: any) => ({
       ...item,
       media_type: "movie" as const,
     }));
-
+    
     const seen = new Set<number>();
     return tmdbItems.filter((item) => {
       if (seen.has(item.id)) return false;
@@ -572,58 +607,6 @@ export const getAfricanContent = async (): Promise<Item[]> => {
 };
 
 // Separate function for East African content
-// Separate function for East African content
-export const getAfricanHits = async (): Promise<Item[]> => {
-  try {
-    // 1. Fetch African content directly from TMDB to ensure valid playback (valid IDs)
-    const nollywood = await axios.get(`/discover/movie`, {
-      params: {
-        with_origin_country: "NG|GH",
-        sort_by: "popularity.desc",
-        page: 1
-      }
-    });
-
-    const africanTV = await axios.get(`/discover/tv`, {
-      params: {
-        with_origin_country: "NG|KE|ZA|GH",
-        sort_by: "popularity.desc",
-        page: 1
-      }
-    });
-
-    // 2. Search for specific popular Nollywood/African titles
-    const searchTerms = [
-      "Anikulapo", "King of Boys", "Blood Sisters", "Shanty Town",
-      "Gangs of Lagos", "The Black Book", "Jagun Jagun", "Brotherhood",
-      "Far From Home", "Young, Famous & African"
-    ];
-
-    const searchResults = await Promise.all(
-      searchTerms.map(term => axios.get(`/search/multi?query=${encodeURIComponent(term)}&page=1`))
-    );
-
-    const searchedItems = searchResults.flatMap(res => res.data.results || []);
-
-    const movies = (nollywood.data.results || []).map((i: any) => ({ ...i, media_type: "movie" }));
-    const tvs = (africanTV.data.results || []).map((i: any) => ({ ...i, media_type: "tv" }));
-
-    const combined = [...movies, ...tvs, ...searchedItems];
-
-    // Deduplicate
-    const seen = new Set<string | number>();
-    return combined.filter(item => {
-      if (!item.poster_path || seen.has(item.id)) return false;
-      seen.add(item.id);
-      return true;
-    }).slice(0, 30); // Return top 30 hits
-
-  } catch (error) {
-    console.error("Error fetching African hits:", error);
-    return [];
-  }
-};
-
 export const getEastAfricanContent = async (): Promise<Item[]> => {
   try {
     const eastAfricanCountries = ["KE", "TZ", "UG", "ET", "RW", "ZM"].join("|");
@@ -676,13 +659,13 @@ export const getSouthAfricanContent = async (): Promise<Item[]> => {
         `/discover/tv?with_origin_country=ZA&sort_by=popularity.desc&page=1`
       )
     ]);
-
+    
     const movieResults = movieResponse.data.results || [];
     const tvResults = tvResponse.data.results || [];
-
+    
     const movies = movieResults.map((item: any) => ({ ...item, media_type: "movie" }));
     const tvs = tvResults.map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return [...movies, ...tvs];
   } catch (error) {
     console.error("Error fetching South African content:", error);
@@ -720,10 +703,10 @@ export const getKenyanTVShows = async (): Promise<Item[]> => {
         sort_by: "popularity.desc",
         page: 1,
       },
-    }).catch(() => ({ data: { results: [] } }));
+    });
 
     const searchPromises = curatedTitles.map((title) =>
-      axios.get(`/search/tv?query=${encodeURIComponent(title)}&page=1`).catch(() => ({ data: { results: [] } }))
+      axios.get(`/search/tv?query=${encodeURIComponent(title)}&page=1`)
     );
 
     const [discoverResponse, ...searchResponses] = await Promise.all([
@@ -751,8 +734,8 @@ export const getKenyanTVShows = async (): Promise<Item[]> => {
     const unique = combined
       .filter((i: any) => i.poster_path)
       .filter(
-        (item, index, self) => index === self.findIndex((t) => t.id === item.id)
-      );
+      (item, index, self) => index === self.findIndex((t) => t.id === item.id)
+    );
 
     return unique;
   } catch (error) {
@@ -773,23 +756,23 @@ export const getNigerianTVShows = async (): Promise<Item[]> => {
       "Nigerian reality show",
       "Nigerian news"
     ];
-
-    const searchPromises = searchTerms.map(term =>
+    
+    const searchPromises = searchTerms.map(term => 
       axios.get(`/search/tv?query=${encodeURIComponent(term)}&page=1`)
     );
-
+    
     const searchResults = await Promise.all(searchPromises);
-
-    const allResults = searchResults.flatMap(response =>
+    
+    const allResults = searchResults.flatMap(response => 
       response.data.results || []
     );
-
+    
     const uniqueResults = allResults
-      .filter((item: any, index: number, self: any[]) =>
+      .filter((item: any, index: number, self: any[]) => 
         index === self.findIndex((t: any) => t.id === item.id)
       )
       .map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return uniqueResults;
   } catch (error) {
     console.error("Error fetching Nigerian TV shows:", error);
@@ -808,13 +791,13 @@ export const getAsianContent = async (): Promise<Item[]> => {
         `/discover/tv?with_origin_country=KR&with_origin_country=JP&with_origin_country=CN&with_origin_country=IN&with_origin_country=PH&with_origin_country=TH&with_origin_country=VN&with_origin_country=MY&with_origin_country=SG&with_origin_country=ID&sort_by=popularity.desc&page=1`
       )
     ]);
-
+    
     const movieResults = movieResponse.data.results || [];
     const tvResults = tvResponse.data.results || [];
-
+    
     const movies = movieResults.map((item: any) => ({ ...item, media_type: "movie" }));
     const tvs = tvResults.map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return [...movies, ...tvs];
   } catch (error) {
     console.error("Error fetching Asian content:", error);
@@ -833,13 +816,13 @@ export const getSoutheastAsianContent = async (): Promise<Item[]> => {
         `/discover/tv?with_origin_country=PH&with_origin_country=TH&with_origin_country=VN&with_origin_country=MY&with_origin_country=SG&with_origin_country=ID&sort_by=popularity.desc&page=1`
       )
     ]);
-
+    
     const movieResults = movieResponse.data.results || [];
     const tvResults = tvResponse.data.results || [];
-
+    
     const movies = movieResults.map((item: any) => ({ ...item, media_type: "movie" }));
     const tvs = tvResults.map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return [...movies, ...tvs];
   } catch (error) {
     console.error("Error fetching Southeast Asian content:", error);
@@ -900,13 +883,13 @@ export const getFilipinoContent = async (): Promise<Item[]> => {
     const [absTvByNetwork, absMoviesByCompany] = await Promise.all([
       networkParam
         ? axios.get(`/discover/tv`, {
-          params: { with_networks: networkParam, with_origin_country: "PH", page: 1, sort_by: "popularity.desc" },
-        })
+            params: { with_networks: networkParam, with_origin_country: "PH", page: 1, sort_by: "popularity.desc" },
+          })
         : Promise.resolve({ data: { results: [] } } as any),
       companyParam
         ? axios.get(`/discover/movie`, {
-          params: { with_companies: companyParam, with_origin_country: "PH", page: 1, sort_by: "popularity.desc" },
-        })
+            params: { with_companies: companyParam, with_origin_country: "PH", page: 1, sort_by: "popularity.desc" },
+          })
         : Promise.resolve({ data: { results: [] } } as any),
     ]);
     const brandResults = [
@@ -935,13 +918,13 @@ export const getLatinAmericanContent = async (): Promise<Item[]> => {
         `/discover/tv?with_origin_country=MX&with_origin_country=BR&with_origin_country=AR&with_origin_country=CO&with_origin_country=PE&with_origin_country=CL&with_origin_country=VE&with_origin_country=EC&sort_by=popularity.desc&page=1`
       )
     ]);
-
+    
     const movieResults = movieResponse.data.results || [];
     const tvResults = tvResponse.data.results || [];
-
+    
     const movies = movieResults.map((item: any) => ({ ...item, media_type: "movie" }));
     const tvs = tvResults.map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return [...movies, ...tvs];
   } catch (error) {
     console.error("Error fetching Latin American content:", error);
@@ -960,13 +943,13 @@ export const getBrazilianContent = async (): Promise<Item[]> => {
         `/discover/tv?with_origin_country=BR&sort_by=popularity.desc&page=1`
       )
     ]);
-
+    
     const movieResults = movieResponse.data.results || [];
     const tvResults = tvResponse.data.results || [];
-
+    
     const movies = movieResults.map((item: any) => ({ ...item, media_type: "movie" }));
     const tvs = tvResults.map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return [...movies, ...tvs];
   } catch (error) {
     console.error("Error fetching Brazilian content:", error);
@@ -985,13 +968,13 @@ export const getMexicanContent = async (): Promise<Item[]> => {
         `/discover/tv?with_origin_country=MX&sort_by=popularity.desc&page=1`
       )
     ]);
-
+    
     const movieResults = movieResponse.data.results || [];
     const tvResults = tvResponse.data.results || [];
-
+    
     const movies = movieResults.map((item: any) => ({ ...item, media_type: "movie" }));
     const tvs = tvResults.map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return [...movies, ...tvs];
   } catch (error) {
     console.error("Error fetching Mexican content:", error);
@@ -1010,13 +993,13 @@ export const getMiddleEasternContent = async (): Promise<Item[]> => {
         `/discover/tv?with_origin_country=TR&with_origin_country=EG&with_origin_country=SA&with_origin_country=AE&sort_by=popularity.desc&page=1`
       )
     ]);
-
+    
     const movieResults = movieResponse.data.results || [];
     const tvResults = tvResponse.data.results || [];
-
+    
     const movies = movieResults.map((item: any) => ({ ...item, media_type: "movie" }));
     const tvs = tvResults.map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return [...movies, ...tvs];
   } catch (error) {
     console.error("Error fetching Middle Eastern content:", error);
@@ -1063,13 +1046,13 @@ export const getNollywoodContent = async (): Promise<Item[]> => {
     const [tvByNetwork, movieByCompany] = await Promise.all([
       ngNetworks.length
         ? axios.get(`/discover/tv`, {
-          params: { with_networks: ngNetworks.join("|"), with_origin_country: "NG", sort_by: "popularity.desc", page: 1 },
-        })
+            params: { with_networks: ngNetworks.join("|"), with_origin_country: "NG", sort_by: "popularity.desc", page: 1 },
+          })
         : Promise.resolve({ data: { results: [] } } as any),
       ngCompanies.length
         ? axios.get(`/discover/movie`, {
-          params: { with_companies: ngCompanies.join("|"), with_origin_country: "NG", sort_by: "popularity.desc", page: 1 },
-        })
+            params: { with_companies: ngCompanies.join("|"), with_origin_country: "NG", sort_by: "popularity.desc", page: 1 },
+          })
         : Promise.resolve({ data: { results: [] } } as any),
     ]);
 
@@ -1084,7 +1067,7 @@ export const getNollywoodContent = async (): Promise<Item[]> => {
     const tvs = [...tvResults, ...tvFromNetwork]
       .filter((i: any) => i.poster_path)
       .map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     const combined = [...movies, ...tvs];
     return combined.filter((item, idx, self) => idx === self.findIndex((t) => t.id === item.id));
   } catch (error) {
@@ -1104,13 +1087,13 @@ export const getBollywoodContent = async (): Promise<Item[]> => {
         `/discover/tv?with_origin_country=IN&sort_by=popularity.desc&page=1`
       )
     ]);
-
+    
     const movieResults = movieResponse.data.results || [];
     const tvResults = tvResponse.data.results || [];
-
+    
     const movies = movieResults.map((item: any) => ({ ...item, media_type: "movie" }));
     const tvs = tvResults.map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return [...movies, ...tvs];
   } catch (error) {
     console.error("Error fetching Bollywood content:", error);
@@ -1129,13 +1112,13 @@ export const getKoreanContent = async (): Promise<Item[]> => {
         `/discover/tv?with_origin_country=KR&sort_by=popularity.desc&page=1`
       )
     ]);
-
+    
     const movieResults = movieResponse.data.results || [];
     const tvResults = tvResponse.data.results || [];
-
+    
     const movies = movieResults.map((item: any) => ({ ...item, media_type: "movie" }));
     const tvs = tvResults.map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return [...movies, ...tvs];
   } catch (error) {
     console.error("Error fetching Korean content:", error);
@@ -1154,13 +1137,13 @@ export const getJapaneseContent = async (): Promise<Item[]> => {
         `/discover/tv?with_origin_country=JP&sort_by=popularity.desc&page=1`
       )
     ]);
-
+    
     const movieResults = movieResponse.data.results || [];
     const tvResults = tvResponse.data.results || [];
-
+    
     const movies = movieResults.map((item: any) => ({ ...item, media_type: "movie" }));
     const tvs = tvResults.map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return [...movies, ...tvs];
   } catch (error) {
     console.error("Error fetching Japanese content:", error);
@@ -1179,13 +1162,13 @@ export const getChineseContent = async (): Promise<Item[]> => {
         `/discover/tv?with_origin_country=CN&sort_by=popularity.desc&page=1`
       )
     ]);
-
+    
     const movieResults = movieResponse.data.results || [];
     const tvResults = tvResponse.data.results || [];
-
+    
     const movies = movieResults.map((item: any) => ({ ...item, media_type: "movie" }));
     const tvs = tvResults.map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return [...movies, ...tvs];
   } catch (error) {
     console.error("Error fetching Chinese content:", error);
@@ -1223,7 +1206,7 @@ export const getAfricanTVContent = async (): Promise<Item[]> => {
     const searchTerms = [
       // Kenyan TV shows - Specific titles
       "Citizen TV",
-      "NTV Kenya",
+      "NTV Kenya", 
       "KTN Kenya",
       "Kenyan TV",
       "Kenyan drama",
@@ -1313,25 +1296,25 @@ export const getAfricanTVContent = async (): Promise<Item[]> => {
       "African news",
       "African documentary"
     ];
-
+    
     // Search with multiple pages for better results
-    const searchPromises = searchTerms.flatMap(term =>
-      [1, 2].map(page =>
+    const searchPromises = searchTerms.flatMap(term => 
+      [1, 2].map(page => 
         axios.get(`/search/tv?query=${encodeURIComponent(term)}&page=${page}`)
           .catch(() => ({ data: { results: [] } }))
       )
     );
-
+    
     const searchResults = await Promise.all(searchPromises);
 
-    const africanCountrySet = new Set(["NG", "KE", "TZ", "UG", "ET", "RW", "ZM", "GH", "ZA", "EG"]);
+    const africanCountrySet = new Set(["NG","KE","TZ","UG","ET","RW","ZM","GH","ZA","EG"]);
     // Combine all results and filter for African content by origin country
     const allResults = searchResults.flatMap(response => response.data.results || []);
 
     const filtered = allResults
       .filter((item: any) => {
         // Check if it's from an African country OR has African-related keywords in title/overview
-        const isAfricanCountry = Array.isArray(item.origin_country) &&
+        const isAfricanCountry = Array.isArray(item.origin_country) && 
           item.origin_country.some((c: string) => africanCountrySet.has(c));
         const title = (item.name || item.title || "").toLowerCase();
         const overview = (item.overview || "").toLowerCase();
@@ -1340,7 +1323,7 @@ export const getAfricanTVContent = async (): Promise<Item[]> => {
           "tanzanian", "ugandan", "ethiopian", "rwandan", "zambian",
           "african", "lagos", "nairobi", "johannesburg", "accra", "dar es salaam"
         ].some(keyword => title.includes(keyword) || overview.includes(keyword));
-
+        
         return (isAfricanCountry || hasAfricanKeywords) && item.poster_path && item.vote_count > 0;
       });
 
@@ -1384,7 +1367,7 @@ export const getAfricanTVContent = async (): Promise<Item[]> => {
         )
       )
     );
-
+    
     const genreResults = genrePages
       .flatMap((pages: any) => {
         if (Array.isArray(pages)) {
@@ -1406,7 +1389,7 @@ export const getAfricanTVContent = async (): Promise<Item[]> => {
       .filter((item: any) => item.poster_path) // Ensure all have posters
       .sort((a: any, b: any) => (b.popularity || 0) - (a.popularity || 0))
       .slice(0, 100); // Increased limit to get more diverse content
-
+    
     return final;
   } catch (error) {
     console.error("Error fetching African TV content:", error);
@@ -1438,39 +1421,39 @@ export const getEnhancedNollywoodContent = async (): Promise<Item[]> => {
       "Nigerian news",
       "Nigerian entertainment"
     ];
-
+    
     const [moviePromises, tvPromises] = await Promise.all([
-      searchTerms.map(term =>
-        axios.get(`/search/movie?query=${encodeURIComponent(term)}&page=1`).catch(() => ({ data: { results: [] } }))
+      searchTerms.map(term => 
+        axios.get(`/search/movie?query=${encodeURIComponent(term)}&page=1`)
       ),
-      searchTerms.map(term =>
-        axios.get(`/search/tv?query=${encodeURIComponent(term)}&page=1`).catch(() => ({ data: { results: [] } }))
+      searchTerms.map(term => 
+        axios.get(`/search/tv?query=${encodeURIComponent(term)}&page=1`)
       )
     ]);
-
+    
     const movieResults = await Promise.all(moviePromises);
     const tvResults = await Promise.all(tvPromises);
-
-    const allMovieResults = movieResults.flatMap(response =>
+    
+    const allMovieResults = movieResults.flatMap(response => 
       response.data.results || []
     );
-    const allTVResults = tvResults.flatMap(response =>
+    const allTVResults = tvResults.flatMap(response => 
       response.data.results || []
     );
-
+    
     // Remove duplicates and set media_type
     const uniqueMovieResults = allMovieResults
-      .filter((item: any, index: number, self: any[]) =>
+      .filter((item: any, index: number, self: any[]) => 
         index === self.findIndex((t: any) => t.id === item.id)
       )
       .map((item: any) => ({ ...item, media_type: "movie" }));
-
+    
     const uniqueTVResults = allTVResults
-      .filter((item: any, index: number, self: any[]) =>
+      .filter((item: any, index: number, self: any[]) => 
         index === self.findIndex((t: any) => t.id === item.id)
       )
       .map((item: any) => ({ ...item, media_type: "tv" }));
-
+    
     return [...uniqueMovieResults, ...uniqueTVResults];
   } catch (error) {
     console.error("Error fetching enhanced Nollywood content:", error);
@@ -1522,10 +1505,10 @@ export const getEnhancedKenyanContent = async (): Promise<Item[]> => {
     });
 
     const tvSearchPromises = curatedTvTitles.map((t) =>
-      axios.get(`/search/tv?query=${encodeURIComponent(t)}&page=1`).catch(() => ({ data: { results: [] } }))
+      axios.get(`/search/tv?query=${encodeURIComponent(t)}&page=1`)
     );
     const movieSearchPromises = curatedMovieTitles.map((t) =>
-      axios.get(`/search/movie?query=${encodeURIComponent(t)}&page=1`).catch(() => ({ data: { results: [] } }))
+      axios.get(`/search/movie?query=${encodeURIComponent(t)}&page=1`)
     );
 
     const [discMovieRes, discTvRes, tvSearchResList, movieSearchResList] = await Promise.all([
@@ -1568,249 +1551,4 @@ export const getEnhancedKenyanContent = async (): Promise<Item[]> => {
     console.error("Error fetching enhanced Kenyan content:", error);
     return [];
   }
-};
-
-export const getBlackStories = async (): Promise<Item[]> => {
-  try {
-    const searchTerms = [
-      "African American",
-      "Black Excellence",
-      "Tyler Perry",
-      "Madea",
-      "Black Panther",
-      "The Woman King",
-      "Creed",
-      "Jordan Peele",
-      "Spike Lee",
-      "Viola Davis",
-      "Denzel Washington"
-    ];
-
-    const responses = await Promise.all(
-      searchTerms.map(term => axios.get(`/search/movie?query=${encodeURIComponent(term)}&page=1`).catch(() => ({ data: { results: [] } })))
-    );
-
-    const results = responses.flatMap(res => res.data.results || []).map((item: any) => ({
-      ...item,
-      media_type: "movie" as const
-    }));
-
-    // Deduplicate
-    const unique = results.filter((item, index, self) =>
-      index === self.findIndex((t) => t.id === item.id) && item.poster_path
-    );
-
-    return unique;
-  } catch (error) {
-    console.warn("getBlackStories failed", error);
-    return [];
-  }
-};
-
-export const getTurkishDrama = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/tv`, {
-      params: {
-        with_original_language: "tr",
-        with_genres: 18, // Drama
-        sort_by: "popularity.desc",
-        "vote_count.gte": 50 // Filter out very obscure ones
-      }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "tv" as const }));
-  } catch (error) {
-    return [];
-  }
-};
-
-export const getTeenRomance = async (): Promise<Item[]> => {
-  try {
-    // Keywords: 10683 (teenager), 6270 (high school), 11800 (coming of age)
-    const response = await axios.get(`/discover/movie`, {
-      params: {
-        with_genres: 10749, // Romance
-        with_keywords: "10683|6270|11800",
-        sort_by: "popularity.desc"
-      }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) {
-    return [];
-  }
-};
-
-
-export const getPremiumVIP = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: {
-        sort_by: "revenue.desc", // High grossing = usually "Premium" feel
-        "vote_average.gte": 7.5, // High quality only
-        "vote_count.gte": 1000, // Established movies
-        with_release_type: "2|3", // Theatrical releases
-        page: 1
-      }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) {
-    console.warn("getPremiumVIP failed", error);
-    return [];
-  }
-};
-
-// Fetch mega-upcoming content (2026 and later) for fans
-export const getFutureUpcoming = async (mediaType: "movie" | "tv"): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/${mediaType}`, {
-      params: {
-        [mediaType === "movie" ? "primary_release_date.gte" : "first_air_date.gte"]: "2026-01-01",
-        sort_by: "popularity.desc",
-        page: 1,
-        include_adult: false,
-      },
-    });
-    return (response?.data?.results || []).map((item: any) => ({
-      ...item,
-      media_type: mediaType,
-    })).filter((item: Item) => item.poster_path);
-  } catch (error) {
-    console.error(`Error fetching future ${mediaType} content:`, error);
-    return [];
-  }
-};
-
-// Fetch specialized genre combinations (Moviebox Style)
-export const getSciFiFantasy = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: { with_genres: "878|14", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) { return []; }
-};
-
-export const getMysteryThriller = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: { with_genres: "9648|53", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) { return []; }
-};
-
-export const getHistoryWar = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: { with_genres: "36|10752", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) { return []; }
-};
-
-export const getMusicalDance = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: { with_genres: "10402", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) { return []; }
-};
-
-export const getWesternAdventure = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: { with_genres: "37|12", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) { return []; }
-};
-
-export const getKidsAnimation = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: { with_genres: "10751|16", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) { return []; }
-};
-
-export const getAwardWinning = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: { "vote_average.gte": 8, "vote_count.gte": 1000, sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) { return []; }
-};
-
-export const getSupernatural = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: { with_genres: "27", with_keywords: "6152|3713", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) { return []; }
-};
-
-export const getCyberpunk = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: { with_genres: "878", with_keywords: "207399|4565", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) { return []; }
-};
-
-export const getSpace = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: { with_genres: "878", with_keywords: "15486|3801", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) { return []; }
-};
-
-export const getBritish = async (mediaType: "movie" | "tv"): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/${mediaType}`, {
-      params: { with_origin_country: "GB", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: mediaType }));
-  } catch (error) { return []; }
-};
-
-export const getFrench = async (mediaType: "movie" | "tv"): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/${mediaType}`, {
-      params: { with_origin_country: "FR", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: mediaType }));
-  } catch (error) { return []; }
-};
-
-export const getSpanish = async (mediaType: "movie" | "tv"): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/${mediaType}`, {
-      params: { with_origin_country: "ES", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: mediaType }));
-  } catch (error) { return []; }
-};
-
-export const getTrueCrime = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: { with_genres: "80|99", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) { return []; }
-};
-
-export const getSuperheroes = async (): Promise<Item[]> => {
-  try {
-    const response = await axios.get(`/discover/movie`, {
-      params: { with_genres: "28|878", with_keywords: "9715|180547", sort_by: "popularity.desc", page: 1 }
-    });
-    return (response.data.results || []).map((item: any) => ({ ...item, media_type: "movie" as const }));
-  } catch (error) { return []; }
 };

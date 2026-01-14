@@ -1,13 +1,14 @@
+import { motion, AnimatePresence } from "framer-motion";
 import { FunctionComponent, useState } from "react";
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 import { useSearchParams } from "react-router-dom";
 import Select from "react-select";
 
-interface SortByProps { }
+interface SortByProps {}
 
 const SortBy: FunctionComponent<SortByProps> = () => {
   const [openSort, setOpenSort] = useState(true);
-
+  
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -56,7 +57,7 @@ const SortBy: FunctionComponent<SortByProps> = () => {
   return (
     <div
       // @ts-ignore
-
+      
       className="bg-dark-lighten rounded-md shadow-md px-4 pt-3"
     >
       <div className="flex justify-between items-center text-white pb-3">

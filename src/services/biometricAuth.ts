@@ -4,6 +4,7 @@
  */
 
 import { Capacitor } from '@capacitor/core';
+import { safeStorage } from '../utils/safeStorage';
 
 export type BiometricType = 'fingerprint' | 'face' | 'iris' | 'none';
 
@@ -88,14 +89,14 @@ class BiometricAuthService {
      * Lock profile with biometric
      */
     async lockProfile(profileId: string): Promise<void> {
-        localStorage.setItem(`profile_locked_${profileId}`, 'true');
+        safeStorage.set(`profile_locked_${profileId}`, 'true');
     }
 
     /**
      * Unlock profile with biometric
      */
     async unlockProfile(profileId: string): Promise<boolean> {
-        const isLocked = localStorage.getItem(`profile_locked_${profileId}`) === 'true';
+        const isLocked = safeStorage.get(`profile_locked_${profileId}`) === 'true';
 
         if (!isLocked) {
             return true; // Already unlocked
@@ -108,7 +109,7 @@ class BiometricAuthService {
         });
 
         if (authenticated) {
-            localStorage.removeItem(`profile_locked_${profileId}`);
+            safeStorage.remove(`profile_locked_${profileId}`);
             return true;
         }
 
@@ -119,7 +120,7 @@ class BiometricAuthService {
      * Check if profile is locked
      */
     isProfileLocked(profileId: string): boolean {
-        return localStorage.getItem(`profile_locked_${profileId}`) === 'true';
+        return safeStorage.get(`profile_locked_${profileId}`) === 'true';
     }
 
     /**
@@ -128,7 +129,7 @@ class BiometricAuthService {
     async enableBiometric(): Promise<boolean> {
         const available = await this.checkAvailability();
         if (available) {
-            localStorage.setItem('biometric_enabled', 'true');
+            safeStorage.set('biometric_enabled', 'true');
             return true;
         }
         return false;
@@ -138,14 +139,14 @@ class BiometricAuthService {
      * Disable biometric for app
      */
     disableBiometric(): void {
-        localStorage.removeItem('biometric_enabled');
+        safeStorage.remove('biometric_enabled');
     }
 
     /**
      * Check if biometric is enabled
      */
     isBiometricEnabled(): boolean {
-        return localStorage.getItem('biometric_enabled') === 'true';
+        return safeStorage.get('biometric_enabled') === 'true';
     }
 }
 

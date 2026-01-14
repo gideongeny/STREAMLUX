@@ -20,12 +20,11 @@ interface FilmListViewForBookmarkAndHistoryProps {
   films: Item[];
   isLoading: boolean;
   pageType: string;
-  onRemove?: (ids: number[]) => void;
 }
 
 const FilmListViewForBookmarkAndHistory: FunctionComponent<
   FilmListViewForBookmarkAndHistoryProps
-> = ({ films, isLoading, pageType, onRemove }) => {
+> = ({ films, isLoading, pageType }) => {
   const currentUser = useAppSelector((state) => state.auth.user);
   const [isSidebarActive, setIsSidebarActive] = useState(false);
 
@@ -38,9 +37,9 @@ const FilmListViewForBookmarkAndHistory: FunctionComponent<
     "all"
   );
 
-
-
-
+  
+  
+  
 
   const tabs = [
     { label: "All", value: "all", id: 1 },
@@ -73,14 +72,6 @@ const FilmListViewForBookmarkAndHistory: FunctionComponent<
   };
 
   const clearSelection = () => {
-    if (onRemove) {
-      onRemove(selections);
-      setSelections([]);
-      setIsSelectAll(false);
-      setIsShowPrompt(false);
-      return;
-    }
-
     if (!currentUser) return;
 
     const editedFilms = films.filter(
@@ -100,8 +91,8 @@ const FilmListViewForBookmarkAndHistory: FunctionComponent<
   return (
     <>
       <div
-      // @ts-ignore
-
+        // @ts-ignore
+        
       >
         {isShowPrompt && (
           <>
@@ -197,36 +188,38 @@ const FilmListViewForBookmarkAndHistory: FunctionComponent<
 
           <div
             // @ts-ignore
-
+            
             className="flex flex-col md:flex-row items-start md:items-end gap-5 md:justify-between m mb-8"
           >
             <ul className="inline-flex gap-[30px] pb-[14px] border-b border-gray-darken relative">
-              <AnimatePresence>
-                {tabs.map((tab) => (
-                  <motion.li
-                    key={tab.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}>
-                    <button
-                      onClick={() => {
-                        setCurrentTab(tab.value);
-                      }}
-                      className={`${currentTab === tab.value &&
-                        `text-white font-medium after:absolute after:bottom-0 ${tab.value === "all"
+        <AnimatePresence>
+              {tabs.map((tab) => (
+                <motion.li
+              key={tab.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}>
+                  <button
+                    onClick={() => {
+                      setCurrentTab(tab.value);
+                    }}
+                    className={`${
+                      currentTab === tab.value &&
+                      `text-white font-medium after:absolute after:bottom-0 ${
+                        tab.value === "all"
                           ? "after:left-0"
                           : tab.value === "tv"
-                            ? "after:left-[38%]"
-                            : "after:right-[5%]"
-                        } after:bg-white after:h-[3px] after:w-5`
-                        } transition duration-300 hover:text-white`}
-                    >
-                      {tab.label}
-                    </button>
-                  </motion.li>
-                ))}
-              </AnimatePresence>
-            </ul>
+                          ? "after:left-[38%]"
+                          : "after:right-[5%]"
+                      } after:bg-white after:h-[3px] after:w-5`
+                    } transition duration-300 hover:text-white`}
+                  >
+                    {tab.label}
+                  </button>
+                </motion.li>
+              ))}
+                    </AnimatePresence>
+      </ul>
 
             {!isEditing && (
               <button
@@ -242,8 +235,9 @@ const FilmListViewForBookmarkAndHistory: FunctionComponent<
               <div className="flex gap-5 self-end">
                 <button
                   onClick={selectAllHandler}
-                  className={`text-lg hover:!text-primary transition duration-300 flex gap-2 items-center ${isSelectAll ? "text-primary" : "text-gray-lighten"
-                    }`}
+                  className={`text-lg hover:!text-primary transition duration-300 flex gap-2 items-center ${
+                    isSelectAll ? "text-primary" : "text-gray-lighten"
+                  }`}
                 >
                   <BiSelectMultiple size={25} />
                   <p>Select all</p>
@@ -269,53 +263,54 @@ const FilmListViewForBookmarkAndHistory: FunctionComponent<
 
           <ul
             // @ts-ignore
-
-            className={`grid grid-cols-sm md:grid-cols-lg gap-x-8 gap-y-10 ${isEditing && "!gap-y-16"
-              }`}
+            
+            className={`grid grid-cols-sm md:grid-cols-lg gap-x-8 gap-y-10 ${
+              isEditing && "!gap-y-16"
+            }`}
           >
-            <AnimatePresence>
-              {isLoading &&
-                [...new Array(12)].map((_, index) => (
-                  <motion.li
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}>
-                    <Skeleton className="h-0 pb-[160%]" />
-                  </motion.li>
-                ))}
-              {currentTab === "all" && (
-                <BookmarkResult
-                  films={films}
-                  isEditing={isEditing}
-                  selections={selections}
-                  setSelections={setSelections}
-                  isLoading={isLoading}
-                  pageType={pageType}
-                />
-              )}
-              {currentTab === "tv" && (
-                <BookmarkResult
-                  films={films.filter((film) => film.media_type === "tv")}
-                  isEditing={isEditing}
-                  selections={selections}
-                  setSelections={setSelections}
-                  isLoading={isLoading}
-                  pageType={pageType}
-                />
-              )}
-              {currentTab === "movie" && (
-                <BookmarkResult
-                  films={films.filter((film) => film.media_type === "movie")}
-                  isEditing={isEditing}
-                  selections={selections}
-                  setSelections={setSelections}
-                  isLoading={isLoading}
-                  pageType={pageType}
-                />
-              )}
-            </AnimatePresence>
-          </ul>
+        <AnimatePresence>
+            {isLoading &&
+              [...new Array(12)].map((_, index) => (
+                <motion.li
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}>
+                  <Skeleton className="h-0 pb-[160%]" />
+                </motion.li>
+              ))}
+            {currentTab === "all" && (
+              <BookmarkResult
+                films={films}
+                isEditing={isEditing}
+                selections={selections}
+                setSelections={setSelections}
+                isLoading={isLoading}
+                pageType={pageType}
+              />
+            )}
+            {currentTab === "tv" && (
+              <BookmarkResult
+                films={films.filter((film) => film.media_type === "tv")}
+                isEditing={isEditing}
+                selections={selections}
+                setSelections={setSelections}
+                isLoading={isLoading}
+                pageType={pageType}
+              />
+            )}
+            {currentTab === "movie" && (
+              <BookmarkResult
+                films={films.filter((film) => film.media_type === "movie")}
+                isEditing={isEditing}
+                selections={selections}
+                setSelections={setSelections}
+                isLoading={isLoading}
+                pageType={pageType}
+              />
+            )}
+                  </AnimatePresence>
+      </ul>
         </div>
       </div>
     </>

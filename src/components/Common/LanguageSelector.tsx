@@ -1,6 +1,7 @@
 import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { MdLanguage } from "react-icons/md";
+import { safeStorage } from "../../utils/safeStorage";
 
 const LANGUAGES = [
     { code: "en", label: "English", flag: "🇺🇸" },
@@ -25,7 +26,7 @@ const LanguageSelector: FC<LanguageSelectorProps> = ({ className = "" }) => {
 
     const handleLanguageChange = (code: string) => {
         i18n.changeLanguage(code);
-        localStorage.setItem("streamlux_language", code);
+        safeStorage.set("streamlux_language", code);
     };
 
     return (

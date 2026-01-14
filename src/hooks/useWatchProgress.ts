@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { safeStorage } from '../utils/safeStorage';
 
 export interface WatchProgress {
     mediaId: number;
@@ -25,14 +26,17 @@ export const useWatchProgress = () => {
     const loadWatchHistory = useCallback(async () => {
         try {
             // Load from localStorage first (instant)
-            const localData = localStorage.getItem(STORAGE_KEY);
+            const localData = safeStorage.get(STORAGE_KEY);
             if (localData) {
-                const parsed = JSON.parse(localData);
-                if (Array.isArray(parsed)) {
-                    setWatchHistory(parsed);
-                } else {
-                    console.warn("Corrupt watch history in localStorage, resetting.");
-                    localStorage.removeItem(STORAGE_KEY);
+                try {
+                    const parsed = JSON.parse(localData);
+                    if (Array.isArray(parsed)) {
+                        setWatchHistory(parsed);
+                    } else {
+                        throw new Error("Invalid structure");
+                    }
+                } catch (e) {
+                    safeStorage.remove(STORAGE_KEY);
                     setWatchHistory([]);
                 }
             }
@@ -50,7 +54,7 @@ export const useWatchProgress = () => {
 
                 if (firebaseData.length > 0) {
                     setWatchHistory(firebaseData);
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(firebaseData));
+                    safeStorage.set(STORAGE_KEY, JSON.stringify(firebaseData));
                 }
             }
         } catch (error) {
@@ -71,7 +75,7 @@ export const useWatchProgress = () => {
             )].slice(0, 20); // Keep max 20 items
 
             setWatchHistory(updated);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            safeStorage.set(STORAGE_KEY, JSON.stringify(updated));
 
             // Sync to Firebase if logged in
             if (auth.currentUser) {
@@ -111,7 +115,7 @@ export const useWatchProgress = () => {
                 !(item.mediaId === mediaId && item.mediaType === mediaType)
             );
             setWatchHistory(updated);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            safeStorage.set(STORAGE_KEY, JSON.stringify(updated));
         } catch (error) {
             console.error('Error clearing progress:', error);
         }

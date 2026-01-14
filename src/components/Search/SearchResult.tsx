@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { FunctionComponent } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+
 import { getSearchResult } from "../../services/search";
 import { ItemsPage } from "../../shared/types";
 import FilmItem from "../Common/FilmItem";
@@ -26,7 +27,7 @@ const SearchResult: FunctionComponent<SearchResultProps> = ({
     }
   );
 
-  if (error) return <div>ERROR: {error.message}</div>;
+  if (error) return <div>ERROR: ${error.message}</div>;
 
   const changePageHandler = (page: number): string => {
     if (isPreviousData) return "";
@@ -52,7 +53,7 @@ const SearchResult: FunctionComponent<SearchResultProps> = ({
       <ul className="grid grid-cols-sm md:grid-cols-lg gap-x-8 gap-y-10">
         {data &&
           data.results.map((item) => (
-            <li key={item.youtubeId || item.id}>
+            <li key={item.id}>
               <FilmItem item={item} />
             </li>
           ))}

@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { setCurrentProfile } from "../store/slice/authSlice";
 import { updateProfile } from "../services/user";
 import { UserProfile } from "../shared/types";
+import { safeStorage } from "../utils/safeStorage";
 
 interface SettingsProps { }
 
@@ -34,9 +35,14 @@ const Settings: FunctionComponent<SettingsProps> = () => {
     const currentUser = useAppSelector((state) => state.auth.user);
     const currentProfile = useAppSelector((state) => state.auth.currentProfile);
 
+    // Initial load from safeStorage
+    const [isAutoplayEnabled, setIsAutoplayEnabled] = useState(() =>
+        safeStorage.get("autoplay_enabled") === "true"
+    );
+
     useEffect(() => {
         // Load saved key on mount
-        const savedKey = localStorage.getItem("user_youtube_api_key");
+        const savedKey = safeStorage.get("user_youtube_api_key");
         if (savedKey) {
             setApiKey(savedKey);
         }
@@ -46,7 +52,7 @@ const Settings: FunctionComponent<SettingsProps> = () => {
         const newKey = keyInputRef.current?.value.trim();
 
         if (!newKey) {
-            localStorage.removeItem("user_youtube_api_key");
+            safeStorage.remove("user_youtube_api_key");
             setApiKey("");
             toast.info("API Key removed. Reverting to default quota.", { position: "top-right" });
             return;
@@ -57,7 +63,7 @@ const Settings: FunctionComponent<SettingsProps> = () => {
         setIsValidating(false);
 
         if (isValid) {
-            localStorage.setItem("user_youtube_api_key", newKey);
+            safeStorage.set("user_youtube_api_key", newKey);
             setApiKey(newKey);
             toast.success("API Key verified and saved! Custom quota active.", { position: "top-right" });
         } else {
@@ -67,7 +73,7 @@ const Settings: FunctionComponent<SettingsProps> = () => {
 
     const handleThemeChange = (color: string) => {
         document.documentElement.style.setProperty("--color-primary", color);
-        localStorage.setItem("theme_primary_color", color);
+        safeStorage.set("theme_primary_color", color);
         toast.success("Theme updated!", { position: "top-right", autoClose: 1000 });
     };
 
@@ -91,6 +97,24 @@ const Settings: FunctionComponent<SettingsProps> = () => {
         } else {
             toast.warn("Settings updated locally, but failed to save to cloud.", { position: "top-right" });
         }
+    };
+
+    const handleAutoplayToggle = () => {
+        const newState = !isAutoplayEnabled;
+        setIsAutoplayEnabled(newState);
+        safeStorage.set("autoplay_enabled", String(newState));
+        toast.info(`Auto-Play ${newState ? "Enabled" : "Disabled"}`, { position: "bottom-right", autoClose: 1000 });
+    };
+
+    const handleClearCache = () => {
+        const keysToRemove = safeStorage.keys().filter(key =>
+            key.startsWith("search_") ||
+            key.startsWith("video_detail_") ||
+            key.startsWith("tmdb_cache_") ||
+            key.startsWith("yt_cache_")
+        );
+        keysToRemove.forEach(key => safeStorage.remove(key));
+        toast.success(`Cleared ${keysToRemove.length} cached items!`, { position: "top-right" });
     };
 
     return (
@@ -204,7 +228,6 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                             </div>
                         </div>
 
-                        {/* Other Settings Placeholders */}
                         {/* Playback Preferences */}
                         <div className="bg-dark p-6 rounded-xl border border-white/5 shadow-lg mb-8">
                             <h2 className="text-xl text-white font-bold mb-4">Playback & Experience</h2>
@@ -243,16 +266,10 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                                         </p>
                                     </div>
                                     <button
-                                        onClick={() => {
-                                            const newState = !(localStorage.getItem("autoplay_enabled") === "true");
-                                            localStorage.setItem("autoplay_enabled", String(newState));
-                                            toast.info(`Auto-Play ${newState ? "Enabled" : "Disabled"}`, { position: "bottom-right", autoClose: 1000 });
-                                            // Force re-render if needed
-                                            setApiKey(apiKey);
-                                        }}
-                                        className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${localStorage.getItem("autoplay_enabled") === "true" ? "bg-primary" : "bg-gray-700"}`}
+                                        onClick={handleAutoplayToggle}
+                                        className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${isAutoplayEnabled ? "bg-primary" : "bg-gray-700"}`}
                                     >
-                                        <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${localStorage.getItem("autoplay_enabled") === "true" ? "translate-x-6" : ""}`} />
+                                        <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${isAutoplayEnabled ? "translate-x-6" : ""}`} />
                                     </button>
                                 </div>
 
@@ -270,17 +287,7 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                                         </p>
                                     </div>
                                     <button
-                                        onClick={() => {
-                                            const keysToRemove = [];
-                                            for (let i = 0; i < localStorage.length; i++) {
-                                                const key = localStorage.key(i);
-                                                if (key && (key.startsWith("search_") || key.startsWith("video_detail_") || key.startsWith("cache_"))) {
-                                                    keysToRemove.push(key);
-                                                }
-                                            }
-                                            keysToRemove.forEach(key => localStorage.removeItem(key));
-                                            toast.success(`Cleared ${keysToRemove.length} cached items!`, { position: "top-right" });
-                                        }}
+                                        onClick={handleClearCache}
                                         className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-lg transition-colors border border-white/10"
                                     >
                                         Clear Cache

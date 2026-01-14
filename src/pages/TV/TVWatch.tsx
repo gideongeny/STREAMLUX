@@ -10,8 +10,7 @@ const TVWatch: FC = () => {
   const { id } = useParams();
   const { data, error } = useQuery<getWatchReturnedType, Error>(
     ["watchTV", id],
-    () => getWatchTV(Number(id as string)),
-    { refetchOnWindowFocus: false }
+    () => getWatchTV(Number(id as string))
   );
 
   const [queryParams] = useSearchParams();
@@ -22,11 +21,7 @@ const TVWatch: FC = () => {
   // if (error) return <div>ERROR: {error.message}</div>;
   if (error) return <Error />;
 
-  if (!data) return (
-    <div className="flex justify-center items-center h-screen bg-dark text-white">
-      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-    </div>
-  );
+  // if (!data) return <div>Loading...</div>;
 
   const currentSeason = data?.detailSeasons?.find(
     (season) => season.season_number === seasonId

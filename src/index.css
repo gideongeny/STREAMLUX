@@ -5,10 +5,6 @@
 /* Optimized Google Fonts loading - using font-display: swap to prevent render blocking */
 @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap");
 
-:root {
-  --color-primary: #ff6b35;
-}
-
 html {
   @apply bg-dark;
   -webkit-text-size-adjust: 100%;
@@ -61,15 +57,17 @@ body,
 }
 
 .tw-black-backdrop {
-  background: linear-gradient(to left, transparent, rgba(0, 0, 0, 0.7) 65%);
+  background: linear-gradient(to left, transparent, rgba(0, 0, 0, 0.85) 65%);
 }
 
 .tw-black-backdrop-2 {
-  background: linear-gradient(90deg,
-      rgba(0, 0, 0, 0.6) 0%,
-      rgba(179, 179, 193, 0) 7%,
-      rgba(107, 107, 115, 0) 93%,
-      rgba(0, 0, 0, 0.6) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(179, 179, 193, 0) 7%,
+    rgba(107, 107, 115, 0) 93%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
 }
 
 .tw-black-backdrop-3 {
@@ -126,7 +124,7 @@ body,
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-dark;
+  @apply bg-transparent;
 }
 
 ::-webkit-scrollbar-button {
@@ -134,7 +132,7 @@ body,
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-600 rounded-full hover:bg-gray-500 transition duration-300;
+  @apply bg-[#121212] rounded-full hover:bg-[#0e0d0d] transition duration-300;
 }
 
 select:focus {
@@ -161,49 +159,4 @@ input:-webkit-autofill:active {
 /* CUSTOM SELECTION TEXT COLOR */
 ::selection {
   @apply text-black bg-primary;
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes scale-up {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
-}
-
-.animate-scale-up {
-  animation: scale-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Shimmer animation for skeleton loaders */
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.shimmer {
-  animation: shimmer 2s infinite;
 }

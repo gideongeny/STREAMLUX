@@ -1,52 +1,36 @@
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
-import { lazy, Suspense, useEffect, useState } from "react";
-import { Route, Routes, useLocation, useNavigationType, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { Analytics } from '@vercel/analytics/react';
-import { ToastContainer } from "react-toastify";
-import AppDownloadPopup from "./components/Common/AppDownloadPopup";
-import MiniPlayer from "./components/FilmWatch/MiniPlayer";
-import { auth, db } from "./shared/firebase";
-import { useAppDispatch, useAppSelector } from "./store/hooks";
-import { setCurrentUser, setCurrentProfile } from "./store/slice/authSlice";
-import { getProfiles } from "./services/user";
-import SmartAdPopup from "./components/Common/SmartAdPopup";
-import { adService } from "./services/adService";
-import { logger } from "./utils/logger";
 
 import Protected from "./components/Common/Protected";
-
-// Lazy load pages
-const Auth = lazy(() => import("./pages/Auth"));
-const Bookmarked = lazy(() => import("./pages/Bookmarked"));
-const Copyright = lazy(() => import("./pages/Copyright"));
-const Explore = lazy(() => import("./pages/Explore"));
-const History = lazy(() => import("./pages/History"));
-const Home = lazy(() => import("./pages/Home"));
-const MovieInfo = lazy(() => import("./pages/Movie/MovieInfo"));
-const MovieWatch = lazy(() => import("./pages/Movie/MovieWatch"));
-const SportsHome = lazy(() => import("./pages/Sports/SportsHome"));
-const SportsWatch = lazy(() => import("./pages/Sports/SportsWatch"));
-const Profile = lazy(() => import("./pages/Profile"));
-const ProfileGate = lazy(() => import("./components/Profile/ProfileGate"));
-const Search = lazy(() => import("./pages/Search"));
-const TVInfo = lazy(() => import("./pages/TV/TVInfo"));
-const TVWatch = lazy(() => import("./pages/TV/TVWatch"));
-const YouTubeInfo = lazy(() => import("./pages/YouTube/YouTubeInfo"));
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const UserAgreement = lazy(() => import("./pages/UserAgreement"));
-const Disclaimer = lazy(() => import("./pages/Disclaimer"));
-const Download = lazy(() => import("./pages/Download"));
-const DownloadsPage = lazy(() => import("./pages/DownloadsPage"));
-const CalendarPage = lazy(() => import("./pages/CalendarPage"));
-const Settings = lazy(() => import("./pages/Settings"));
-const MyDownloads = lazy(() => import("./pages/MyDownloads"));
+import Auth from "./pages/Auth";
+import Bookmarked from "./pages/Bookmarked";
+import Copyright from "./pages/Copyright";
+import Error from "./pages/Error";
+import Explore from "./pages/Explore";
+import History from "./pages/History";
+import Home from "./pages/Home";
+import MovieInfo from "./pages/Movie/MovieInfo";
+import MovieWatch from "./pages/Movie/MovieWatch";
+import SportsHome from "./pages/Sports/SportsHome";
+import SportsWatch from "./pages/Sports/SportsWatch";
+import Profile from "./pages/Profile";
+import Search from "./pages/Search";
+import TVInfo from "./pages/TV/TVInfo";
+import TVWatch from "./pages/TV/TVWatch";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import UserAgreement from "./pages/UserAgreement";
+import Disclaimer from "./pages/Disclaimer";
+import Download from "./pages/Download";
+import { auth, db } from "./shared/firebase";
+import { useAppDispatch } from "./store/hooks";
+import { setCurrentUser } from "./store/slice/authSlice";
 
 function App() {
   const location = useLocation();
   const dispatch = useAppDispatch();
-  const currentProfile = useAppSelector((state) => state.auth.currentProfile);
-  const navigate = useNavigate();
 
   // Custom localStorage hook that handles JSON parsing errors gracefully
   const getInitialSignedIn = (): boolean => {
@@ -54,7 +38,7 @@ function App() {
       if (typeof window === "undefined") return false;
       const stored = localStorage.getItem("isSignedIn");
       if (!stored) return false;
-
+      
       // Try to parse as JSON first
       try {
         return JSON.parse(stored) === true;
@@ -66,96 +50,16 @@ function App() {
         localStorage.removeItem("isSignedIn");
       }
     } catch (error) {
-      logger.warn("Error reading isSignedIn from localStorage:", error);
+      console.warn("Error reading isSignedIn from localStorage:", error);
       try {
         localStorage.removeItem("isSignedIn");
-      } catch { }
+      } catch {}
     }
     return false;
   };
-
+  
   const [isSignedIn, setIsSignedIn] = useState<boolean>(() => getInitialSignedIn());
-  const [isAuthReady, setIsAuthReady] = useState(false);
-
-  // Performance logging for boot time
-  useEffect(() => {
-    if (window.BOOT_START) {
-      const bootTime = Date.now() - window.BOOT_START;
-      logger.log(`%c[StreamLux] %cEngine Ready in ${bootTime}ms`, "color:#10b981;font-weight:bold", "color:gray");
-    }
-  }, []);
-
-  // Load saved theme color on mount
-  useEffect(() => {
-    const savedColor = localStorage.getItem("theme_primary_color");
-    if (savedColor) {
-      document.documentElement.style.setProperty("--color-primary", savedColor);
-    }
-  }, []);
-
-  // Initialize ad service
-  useEffect(() => {
-    try {
-      // Configure Monetag IDs from environment or constants
-      adService.init({
-        multiTagId: process.env.REACT_APP_MONETAG_MULTITAG_ID || '',
-        pushNotificationId: process.env.REACT_APP_MONETAG_PUSH_ID || '',
-        interstitialFrequency: 5, // 5 minutes between ads
-      });
-    } catch (e) {
-      logger.warn("AdService init failed in App:", e);
-    }
-  }, []);
-
-  // Trigger interstitial ads on multiple pages
-  useEffect(() => {
-    try {
-      // Show interstitial when navigating to eligible pages
-      if (adService.shouldTriggerOnPage(location.pathname) && adService.shouldShowAd()) {
-        const timer = setTimeout(() => {
-          try {
-            adService.showInterstitial();
-          } catch (e) {
-            logger.warn("Ad interstitial failed:", e);
-          }
-        }, 500); // Small delay for better UX
-
-        return () => clearTimeout(timer);
-      }
-    } catch (error) {
-      logger.warn("Error in ad trigger effect:", error);
-    }
-  }, [location.pathname]);
-
-  // Quick-restore profile from localStorage to avoid flashes
-  useEffect(() => {
-    const savedProfile = localStorage.getItem("current_profile");
-    if (savedProfile) {
-      try {
-        const parsed = JSON.parse(savedProfile);
-        if (parsed && !currentProfile) {
-          dispatch(setCurrentProfile(parsed));
-        }
-      } catch (e) {
-        localStorage.removeItem("current_profile");
-      }
-    }
-  }, [dispatch, currentProfile]);
-
-  // Priority Data Prefetching (Parallel with Auth)
-  useEffect(() => {
-    const activeTab = localStorage.getItem("currentTab")?.replace(/"/g, '') || "movie";
-    const endpoint = activeTab === "tv" ? "/trending/tv/day" : "/trending/movie/day";
-
-    // Import prefetchData dynamically or ensure it's available
-    import("./shared/axios").then(({ prefetchData }) => {
-      prefetchData(endpoint);
-      // Pre-fetch the first page of popular too
-      const popularEndpoint = activeTab === "tv" ? "/tv/popular" : "/movie/popular";
-      prefetchData(popularEndpoint);
-    });
-  }, []);
-
+  
   // Sync to localStorage when isSignedIn changes
   useEffect(() => {
     try {
@@ -165,60 +69,18 @@ function App() {
     }
   }, [isSignedIn]);
 
-  const downloads = useAppSelector((state) => state.download.downloads);
-  // Persist downloads to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem("downloads", JSON.stringify(downloads));
-    } catch (error) {
-      console.warn("Error saving downloads to localStorage:", error);
-    }
-  }, [downloads]);
-
-  // Profile Persistence & Redirect
-  useEffect(() => {
-    // Only run redirect logic if auth is initialized AND we have a signed in user
-    if (!isAuthReady) return;
-
-    if (isSignedIn && !currentProfile) {
-      // Don't redirect if already on a page that doesn't require a profile
-      if (location.pathname === "/profiles" || location.pathname === "/auth" || location.pathname === "/profile" || location.pathname === "/settings") {
-        return;
-      }
-
-      const savedProfileId = localStorage.getItem("current_profile_id");
-      if (savedProfileId && auth.currentUser) {
-        getProfiles(auth.currentUser.uid).then(profiles => {
-          const found = profiles.find(p => p.id === savedProfileId);
-          if (found) {
-            dispatch(setCurrentProfile(found));
-          } else {
-            navigate("/profiles");
-          }
-        }).catch(() => {
-          navigate("/profiles");
-        });
-      } else {
-        // No saved profile ID but signed in - must select a profile
-        navigate("/profiles");
-      }
-    }
-  }, [isSignedIn, currentProfile, location.pathname, dispatch, navigate, isAuthReady]);
-
   useEffect(() => {
     let unSubDoc: (() => void) | undefined;
-
+    
+    // This listener automatically restores the user session when the app loads
+    // Firebase Auth persistence ensures the user stays logged in across app restarts
     const unSubAuth: () => void = onAuthStateChanged(
       auth,
       (user) => {
-        setIsAuthReady(true);
         try {
           if (!user) {
             dispatch(setCurrentUser(null));
             setIsSignedIn(false);
-            // Clear profile on logout
-            localStorage.removeItem("current_profile");
-            localStorage.removeItem("current_profile_id");
             return;
           }
 
@@ -227,21 +89,16 @@ function App() {
 
           if (user.providerData && user.providerData.length > 0) {
             const providerId = user.providerData[0].providerId;
-
+            
             if (providerId === "google.com") {
               unSubDoc = onSnapshot(
                 doc(db, "users", user.uid),
                 (docSnapshot) => {
                   try {
-                    const lastName = docSnapshot.data()?.lastName;
-                    const firstName = docSnapshot.data()?.firstName;
-                    const fullName = (lastName || firstName)
-                      ? `${lastName || ""} ${firstName || ""}`.trim()
-                      : "";
                     dispatch(
                       setCurrentUser({
                         displayName:
-                          fullName || user.displayName || user.email?.split("@")[0] || "User",
+                          docSnapshot.data()?.lastName + " " + docSnapshot.data()?.firstName || "",
                         email: user.email || "",
                         emailVerified: user.emailVerified,
                         photoURL: docSnapshot.data()?.photoUrl || "",
@@ -261,15 +118,10 @@ function App() {
                 doc(db, "users", user.uid),
                 (docSnapshot) => {
                   try {
-                    const lastName = docSnapshot.data()?.lastName;
-                    const firstName = docSnapshot.data()?.firstName;
-                    const fullName = (lastName || firstName)
-                      ? `${lastName || ""} ${firstName || ""}`.trim()
-                      : "";
                     dispatch(
                       setCurrentUser({
                         displayName:
-                          fullName || user.displayName || user.email?.split("@")[0] || "User",
+                          docSnapshot.data()?.lastName + " " + docSnapshot.data()?.firstName || "",
                         email: user.email || "",
                         emailVerified: user.emailVerified,
                         photoURL: docSnapshot.data()?.photoUrl || "",
@@ -292,9 +144,7 @@ function App() {
                     dispatch(
                       setCurrentUser({
                         displayName:
-                          (docSnapshot.data()?.lastName || docSnapshot.data()?.firstName)
-                            ? `${docSnapshot.data()?.lastName || ""} ${docSnapshot.data()?.firstName || ""}`.trim()
-                            : user.displayName || user.email?.split("@")[0] || "User",
+                          docSnapshot.data()?.lastName + " " + docSnapshot.data()?.firstName || "",
                         photoURL: docSnapshot.data()?.photoUrl || "",
                         email: user.email || "",
                         emailVerified: user.emailVerified,
@@ -318,7 +168,7 @@ function App() {
                 try {
                   dispatch(
                     setCurrentUser({
-                      displayName: user.displayName || user.email?.split("@")[0] || "User",
+                      displayName: user.displayName || "",
                       photoURL: user.photoURL || "",
                       email: user.email || "",
                       emailVerified: user.emailVerified,
@@ -358,157 +208,63 @@ function App() {
     };
   }, [dispatch]);
 
-  const navType = useNavigationType();
-
   useEffect(() => {
-    if (navType !== "POP") {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
-    }
-  }, [location.pathname, location.search, navType]);
-
-  const [showTimeoutMessage, setShowTimeoutMessage] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowTimeoutMessage(true);
-    }, 30000); // 30 seconds threshold
-
-    return () => clearTimeout(timer);
-  }, []);
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, [location.pathname, location.search]);
 
   return (
     <>
       <Analytics />
-      <Suspense fallback={
-        <div className="skeleton-shell">
-          <div className="skeleton-sidebar"></div>
-          <div className="skeleton-main">
-            <div className="skeleton-header">
-              <div className="skeleton-tabs">
-                <div className="skeleton-tab"></div>
-                <div className="skeleton-tab"></div>
-                <div className="skeleton-tab"></div>
-              </div>
-              <div className="skeleton-avatar"></div>
-            </div>
-            <div className="skeleton-banner"></div>
-            <div className="skeleton-row-title"></div>
-            <div className="skeleton-row">
-              <div className="skeleton-card"></div>
-              <div className="skeleton-card"></div>
-              <div className="skeleton-card"></div>
-              <div className="skeleton-card"></div>
-            </div>
-
-            {showTimeoutMessage && (
-              <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 text-center">
-                <div className="bg-gray-900/90 p-8 rounded-3xl border border-white/10 max-w-sm shadow-2xl animate-fade-in">
-                  <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-                  <h3 className="text-xl font-bold text-white mb-2">Connection slow?</h3>
-                  <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                    StreamLux is taking a while to load. This seems to be a network issue.
-                  </p>
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="w-full bg-primary text-black font-black py-3 rounded-full hover:brightness-110 active:scale-95 transition-all text-sm mb-4"
-                  >
-                    RELOAD PAGE
-                  </button>
-                  <button
-                    onClick={() => setShowTimeoutMessage(false)}
-                    className="w-full bg-gray-800 text-white font-bold py-3 rounded-full hover:bg-gray-700 active:scale-95 transition-all text-sm"
-                  >
-                    KEEP WAITING
-                  </button>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-widest pt-4 border-t border-white/5">
-                    StreamLux Engine v6.1
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      }>
-        <Routes>
-          <Route index element={<Home />} />
-          <Route path="movie/:id" element={<MovieInfo />} />
-          <Route path="tv/:id" element={<TVInfo />} />
-          <Route path="movie/:id/watch" element={<MovieWatch />} />
-          <Route path="tv/:id/watch" element={<TVWatch />} />
-          <Route path="youtube/:id" element={<YouTubeInfo />} />
-          <Route path="sports" element={<SportsHome />} />
-          <Route
-            path="sports/:leagueId/:matchId/watch"
-            element={<SportsWatch />}
-          />
-          <Route path="explore" element={<Explore />} />
-          <Route path="search" element={<Search />} />
-          <Route path="auth" element={<Auth />} />
-          <Route path="copyright" element={<Copyright />} />
-          <Route path="privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="user-agreement" element={<UserAgreement />} />
-          <Route path="disclaimer" element={<Disclaimer />} />
-          <Route path="download" element={<Download />} />
-          <Route path="downloads" element={<DownloadsPage />} />
-          <Route path="calendar" element={<CalendarPage />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="my-downloads" element={<MyDownloads />} />
-          <Route
-            path="bookmarked"
-            element={
-              <Protected isSignedIn={isSignedIn}>
-                <Bookmarked />
-              </Protected>
-            }
-          />
-          <Route
-            path="history"
-            element={
-              <Protected isSignedIn={isSignedIn}>
-                <History />
-              </Protected>
-            }
-          />
-          <Route
-            path="profiles"
-            element={
-              <Protected isSignedIn={isSignedIn}>
-                <ProfileGate />
-              </Protected>
-            }
-          />
-          <Route
-            path="profile"
-            element={
-              <Protected isSignedIn={isSignedIn}>
-                <Profile />
-              </Protected>
-            }
-          />
-          <Route path="*" element={<Home />} />
-        </Routes>
-      </Suspense>
-      <ToastContainer
-        position="top-right"
-        autoClose={2000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss={false}
-        draggable
-        pauseOnHover
-      />
-      <AppDownloadPopup />
-      <MiniPlayer />
-      <SmartAdPopup />
-      {/* <Footer /> */}
+      <Routes>
+        <Route index element={<Home />} />
+        <Route path="movie/:id" element={<MovieInfo />} />
+        <Route path="tv/:id" element={<TVInfo />} />
+        <Route path="movie/:id/watch" element={<MovieWatch />} />
+        <Route path="tv/:id/watch" element={<TVWatch />} />
+        <Route path="sports" element={<SportsHome />} />
+        <Route
+          path="sports/:leagueId/:matchId/watch"
+          element={<SportsWatch />}
+        />
+        <Route path="explore" element={<Explore />} />
+        <Route path="search" element={<Search />} />
+        <Route path="auth" element={<Auth />} />
+        <Route path="copyright" element={<Copyright />} />
+        <Route path="privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="user-agreement" element={<UserAgreement />} />
+        <Route path="disclaimer" element={<Disclaimer />} />
+        <Route path="download" element={<Download />} />
+        <Route
+          path="bookmarked"
+          element={
+            <Protected isSignedIn={isSignedIn}>
+              <Bookmarked />
+            </Protected>
+          }
+        />
+        <Route
+          path="history"
+          element={
+            <Protected isSignedIn={isSignedIn}>
+              <History />
+            </Protected>
+          }
+        />
+        <Route
+          path="profile"
+          element={
+            <Protected isSignedIn={isSignedIn}>
+              <Profile />
+            </Protected>
+          }
+        />
+        <Route path="*" element={<Error />} />
+      </Routes>
     </>
   );
 }
-
 
 export default App;

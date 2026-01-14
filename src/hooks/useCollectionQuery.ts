@@ -8,9 +8,15 @@ import {
   Query,
   QuerySnapshot,
 } from "firebase/firestore";
-import { getAfricanHits, getBlackStories, getTurkishDrama, getTeenRomance, getAdventureMovies, getPremiumVIP, getSciFiFantasy, getMysteryThriller, getHistoryWar, getMusicalDance, getWesternAdventure, getKidsAnimation, getAwardWinning, getSupernatural, getCyberpunk, getSpace, getBritish, getFrench, getSpanish, getTrueCrime, getSuperheroes } from "../services/home";
 
-
+interface TMDBCollectionQueryParams {
+  mediaType: "movie" | "tv";
+  sortBy: string;
+  genres: number[];
+  year: string;
+  runtime: string;
+  region: string;
+}
 
 interface TMDBCollectionQueryResult {
   data: Item[];
@@ -24,10 +30,7 @@ export const useTMDBCollectionQuery = (
   genres: number[] = [],
   year: string = "",
   runtime: string = "",
-  region: string = "",
-  voteAverageGte: string = "0",
-  withOriginalLanguage: string = "",
-  category: string = ""
+  region: string = ""
 ): TMDBCollectionQueryResult => {
   const [data, setData] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,19 +47,19 @@ export const useTMDBCollectionQuery = (
         if (region) {
           switch (region) {
             case "africa": {
-              targetCountries = ["NG", "KE", "TZ", "UG", "ET", "RW", "ZM", "GH", "ZA", "EG", "MA", "SN"];
+              targetCountries = ["NG", "KE", "TZ", "UG", "ET", "RW", "ZM", "GH", "ZA", "EG"];
               break;
             }
             case "asia": {
-              targetCountries = ["KR", "JP", "CN", "IN", "TH", "VN", "ID", "PH", "TW", "HK", "MY", "SG"];
+              targetCountries = ["KR", "JP", "CN", "IN"];
               break;
             }
             case "latin": {
-              targetCountries = ["MX", "BR", "AR", "CO", "CL", "PE", "VE", "EC", "GT", "CU"];
+              targetCountries = ["MX", "BR", "AR", "CO"];
               break;
             }
             case "middleeast": {
-              targetCountries = ["TR", "EG", "SA", "AE", "IR", "LB", "QA", "KW", "JO"];
+              targetCountries = ["TR", "EG", "SA", "AE"];
               break;
             }
             case "nollywood":
@@ -72,7 +75,7 @@ export const useTMDBCollectionQuery = (
               targetCountries = ["JP"];
               break;
             case "china":
-              targetCountries = ["CN", "HK", "TW"];
+              targetCountries = ["CN"];
               break;
             case "philippines":
               targetCountries = ["PH"];
@@ -88,112 +91,19 @@ export const useTMDBCollectionQuery = (
         const exploreConfig: any = {
           sort_by: sortBy,
           ...(genres.length > 0 && { with_genres: genres.join(",") }),
-          ...(region && targetCountries.length > 0 && {
+          ...(region && targetCountries.length > 0 && { 
             with_origin_country: targetCountries.join("|"),
-            // Only pass 'region' param if it's a valid ISO-3166-1 2-letter code
-            // Prevents API errors when passing "africa", "asia" etc.
-            ...(region.length === 2 && { region: region })
+            region: region 
           }),
-          ...(voteAverageGte !== "0" && { "vote_average.gte": voteAverageGte }),
-          ...(withOriginalLanguage && { with_original_language: withOriginalLanguage }),
-          // CRITICAL: Skip external sources (FZMovies) for World Cinema to prevent network congestion
-          // We only want TMDB data here to ensure fast loading and avoid 200+ pending requests
-          skipExternalSources: true,
         };
 
         // Use enhanced explore functions that fetch from all sources
-        let exploreResult: { results: Item[] };
-
-        if (region === "nollywood" || (category && category.toLowerCase() === "nollywood")) {
-          const hits = await getAfricanHits();
-          // Filter by mediaType to avoid showing TV shows in Movie tab and vice versa
-          exploreResult = {
-            results: hits.filter(item => item.media_type === mediaType)
-          };
-        } else if (category === "black_stories") {
-          const hits = await getBlackStories();
-          exploreResult = { results: hits };
-        } else if (category === "turkish_drama") {
-          const hits = await getTurkishDrama();
-          exploreResult = { results: hits };
-        } else if (category === "teen_romance") {
-          const hits = await getTeenRomance();
-          exploreResult = { results: hits };
-        } else if (category === "adventure") {
-          const hits = await getAdventureMovies();
-          exploreResult = { results: hits };
-        } else if (category === "premium_vip") {
-          const hits = await getPremiumVIP();
-          exploreResult = { results: hits };
-        } else if (category === "scifi_fantasy") {
-          const hits = await getSciFiFantasy();
-          exploreResult = { results: hits };
-        } else if (category === "mystery_thriller") {
-          const hits = await getMysteryThriller();
-          exploreResult = { results: hits };
-        } else if (category === "history_war") {
-          const hits = await getHistoryWar();
-          exploreResult = { results: hits };
-        } else if (category === "musical") {
-          const hits = await getMusicalDance();
-          exploreResult = { results: hits };
-        } else if (category === "western") {
-          const hits = await getWesternAdventure();
-          exploreResult = { results: hits };
-        } else if (category === "kids_animation") {
-          const hits = await getKidsAnimation();
-          exploreResult = { results: hits };
-        } else if (category === "award_winning") {
-          const hits = await getAwardWinning();
-          exploreResult = { results: hits };
-        } else if (category === "supernatural") {
-          const hits = await getSupernatural();
-          exploreResult = { results: hits };
-        } else if (category === "cyberpunk") {
-          const hits = await getCyberpunk();
-          exploreResult = { results: hits };
-        } else if (category === "space") {
-          const hits = await getSpace();
-          exploreResult = { results: hits };
-        } else if (category === "british") {
-          const hits = await getBritish(mediaType);
-          exploreResult = { results: hits };
-        } else if (category === "french") {
-          const hits = await getFrench(mediaType);
-          exploreResult = { results: hits };
-        } else if (category === "spanish") {
-          const hits = await getSpanish(mediaType);
-          exploreResult = { results: hits };
-        } else if (category === "true_crime") {
-          const hits = await getTrueCrime();
-          exploreResult = { results: hits };
-        } else if (category === "superheroes") {
-          const hits = await getSuperheroes();
-          exploreResult = { results: hits };
-        } else {
-          exploreResult = mediaType === "movie"
-            ? await getExploreMovie(1, exploreConfig).catch(() => ({ results: [] }))
-            : await getExploreTV(1, exploreConfig).catch(() => ({ results: [] }));
-        }
-
-        let resultsPage1 = exploreResult.results || [];
-
-        // ENHANCED FALLBACK: If regional search, also fetch Page 2 to ensure coverage
-        if (region && resultsPage1.length < 40) {
-          try {
-            const page2Result = mediaType === "movie"
-              ? await getExploreMovie(2, exploreConfig).catch(() => ({ results: [] }))
-              : await getExploreTV(2, exploreConfig).catch(() => ({ results: [] }));
-            if (page2Result.results) {
-              resultsPage1 = [...resultsPage1, ...page2Result.results];
-            }
-          } catch (e) {
-            console.warn("Regional Page 2 fetch failed", e);
-          }
-        }
+        const exploreResult = mediaType === "movie" 
+          ? await getExploreMovie(1, exploreConfig).catch(() => ({ results: [] }))
+          : await getExploreTV(1, exploreConfig).catch(() => ({ results: [] }));
 
         // Get results from explore (already includes multiple sources)
-        let uniqueResults = resultsPage1;
+        let uniqueResults = exploreResult.results || [];
 
         // Apply client-side filters (like MovieBox does)
         let filteredResults = uniqueResults;
@@ -210,7 +120,7 @@ export const useTMDBCollectionQuery = (
           const currentYear = new Date().getFullYear();
           let startYear = 0;
           let endYear = currentYear;
-
+          
           if (year === "2020s") {
             startYear = 2020;
             endYear = currentYear;
@@ -224,10 +134,10 @@ export const useTMDBCollectionQuery = (
             startYear = 1990;
             endYear = 1999;
           }
-
+          
           filteredResults = filteredResults.filter((item) => {
-            const releaseDate = mediaType === "movie"
-              ? item.release_date
+            const releaseDate = mediaType === "movie" 
+              ? item.release_date 
               : item.first_air_date;
             if (!releaseDate) return false;
             const itemYear = Number.parseInt(releaseDate.split("-")[0], 10);
@@ -246,12 +156,13 @@ export const useTMDBCollectionQuery = (
           });
         }
 
-        // Filter by region (client-side) - RELAXED
-        // We already use 'with_origin_country' in the API call, so we trust the API results.
-        // Strict client-side filtering often removes valid movies that lack the 'origin_country' field in list responses.
+        // Filter by region (client-side) - STRICT FILTERING
         if (targetCountries.length > 0) {
-          // Optional: You could check item.original_language as a secondary heuristic if needed
-          // But for now, we trust the API to return the correct region content.
+          filteredResults = filteredResults.filter((item) => {
+            const countries = item.origin_country || [];
+            // Only include if at least one country matches
+            return countries.some((c: string) => targetCountries.includes(c));
+          });
         }
 
         // Sort results
@@ -272,19 +183,41 @@ export const useTMDBCollectionQuery = (
           .filter((item) => Boolean(item.poster_path))
           .slice(0, 100); // Limit to 100 items
 
+        // Fallback: If no results after filtering, get popular content instead
+        if (filteredResults.length === 0) {
+          console.log("No results after filtering, falling back to popular content");
+          try {
+            const fallbackResult = mediaType === "movie" 
+              ? await getExploreMovie(1, {}).catch(() => ({ results: [] }))
+              : await getExploreTV(1, {}).catch(() => ({ results: [] }));
+            
+            const fallbackItems = (fallbackResult.results || [])
+              .filter((item: Item) => item.media_type === mediaType && Boolean(item.poster_path))
+              .slice(0, 20);
+            
+            if (fallbackItems.length > 0) {
+              setData(fallbackItems);
+              setIsLoading(false);
+              return;
+            }
+          } catch (fallbackErr) {
+            console.warn("Fallback to popular content failed:", fallbackErr);
+          }
+        }
+
         setData(filteredResults);
       } catch (err) {
         console.error("Error fetching collection data:", err);
         // Try fallback on error too
         try {
-          const fallbackResult = mediaType === "movie"
+          const fallbackResult = mediaType === "movie" 
             ? await getExploreMovie(1, {}).catch(() => ({ results: [] }))
             : await getExploreTV(1, {}).catch(() => ({ results: [] }));
-
+          
           const fallbackItems = (fallbackResult.results || [])
             .filter((item: Item) => item.media_type === mediaType && Boolean(item.poster_path))
             .slice(0, 20);
-
+          
           if (fallbackItems.length > 0) {
             setData(fallbackItems);
             setError(null); // Clear error if fallback succeeds
@@ -302,7 +235,7 @@ export const useTMDBCollectionQuery = (
     };
 
     fetchData();
-  }, [mediaType, sortBy, genres, year, runtime, region, voteAverageGte, withOriginalLanguage, category]);
+  }, [mediaType, sortBy, genres, year, runtime, region]);
 
   return { data, isLoading, error };
 };
@@ -337,7 +270,7 @@ export const useCollectionQuery: (
     );
 
     return () => unsubscribe();
-  }, [id, collection]);
+  }, [id]);
 
   return { isLoading, isError, data };
 };

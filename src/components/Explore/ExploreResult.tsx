@@ -1,9 +1,10 @@
-import { FunctionComponent, useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FunctionComponent, useState, useEffect } from "react";
 import { Item, ItemsPage } from "../../shared/types";
 import ExploreResultContent from "./ExploreResultContent";
 import { getExploreMovie, getExploreTV } from "../../services/explore";
 import { useSearchParams } from "react-router-dom";
-import InfiniteScroll from "react-infinite-scroll-component";
+import axios from "../../shared/axios";
 
 interface ExploreResultProps {
   currentTab: "movie" | "tv";
@@ -25,14 +26,14 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Build config from search params
-  const buildConfig = useCallback(() => {
+  const buildConfig = () => {
     const config: any = {};
     const genre = searchParams.get("genre");
     const sortBy = searchParams.get("sort_by");
     const year = searchParams.get("year");
     const runtime = searchParams.get("runtime");
     const region = searchParams.get("region");
-
+    
     if (genre) config.with_genres = genre;
     if (sortBy) config.sort_by = sortBy;
     if (year) {
@@ -52,7 +53,9 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
         config["with_runtime.lte"] = 150;
       } else if (runtime === "long") config["with_runtime.gte"] = 150;
     }
+    // Add region/origin_country filter
     if (region) {
+      // Map region to origin_country codes
       const regionMap: Record<string, string> = {
         "africa": "NG|ZA|KE|GH|TZ|UG|ET|RW|ZM|EG",
         "asia": "KR|JP|CN|IN",
@@ -71,50 +74,119 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
       }
     }
     return config;
-  }, [searchParams]);
+  };
 
+  // Use the filtered data from useTMDBCollectionQuery, with fallback to explore functions
   useEffect(() => {
-    if (data && data.length > 0) {
-      const itemsPage: ItemsPage = {
-        page: 1,
-        results: data,
-        total_pages: 1,
-        total_results: data.length,
-      };
-      setPages([itemsPage]);
-      setHasMore(false);
-      return;
-    }
-
     const loadData = async () => {
-      try {
-        setPages([]);
-        setCurrentPage(1);
-        setHasMore(true);
-        const config = buildConfig();
-
-        let result = currentTab === "movie"
-          ? await getExploreMovie(1, config)
-          : await getExploreTV(1, config);
-
-        if (result && result.results && result.results.length > 0) {
+      // First try to use the filtered data from useTMDBCollectionQuery
+      if (!isLoading && !error && data && data.length > 0) {
+        // Convert the filtered data array to ItemsPage format
+        const filteredByType = data.filter((item) => item.media_type === currentTab);
+        if (filteredByType.length > 0) {
+          const result: ItemsPage = {
+            page: 1,
+            results: filteredByType,
+            total_pages: 1,
+            total_results: filteredByType.length,
+          };
           setPages([result]);
-          setHasMore((result?.page || 1) < (result?.total_pages || 1));
-        } else {
-          setPages([]);
           setHasMore(false);
+          return;
         }
-      } catch (err) {
-        console.error("Error loading explore data:", err);
-        setPages([]);
-        setHasMore(false);
+      }
+      
+      // Fallback: If no data or error, use explore functions
+      if (!isLoading) {
+        try {
+          setPages([]);
+          setCurrentPage(1);
+          setHasMore(true);
+          const config = buildConfig();
+          
+          // Try with config first
+          let result = currentTab === "movie" 
+            ? await getExploreMovie(1, config)
+            : await getExploreTV(1, config);
+          
+          // If no results, try popular content immediately (explore.ts should handle this, but double-check)
+          if (!result || !result.results || result.results.length === 0) {
+            console.log("No results from explore, trying popular content directly");
+            result = currentTab === "movie" 
+              ? await getExploreMovie(1, {}) // Empty config = popular
+              : await getExploreTV(1, {});
+          }
+          
+          if (result && result.results && result.results.length > 0) {
+            setPages([result]);
+            setHasMore(result.page < result.total_pages);
+          } else {
+            // Last resort: Try TMDB popular directly
+            try {
+              const popularResponse = await axios.get(
+                currentTab === "movie" ? "/movie/popular" : "/tv/popular",
+                { params: { page: 1 }, timeout: 5000 }
+              ).catch(() => ({ data: { results: [] } }));
+              
+              const popularItems = (popularResponse.data?.results || []).slice(0, 20).map((item: any) => ({
+                ...item,
+                media_type: currentTab,
+              })).filter((item: Item) => item.poster_path);
+              
+              if (popularItems.length > 0) {
+                setPages([{
+                  page: 1,
+                  total_pages: 1,
+                  results: popularItems,
+                  total_results: popularItems.length,
+                }]);
+                setHasMore(false);
+              } else {
+                setPages([]);
+                setHasMore(false);
+              }
+            } catch (err) {
+              console.error("Final fallback failed:", err);
+              setPages([]);
+              setHasMore(false);
+            }
+          }
+        } catch (err) {
+          console.error("Error loading explore data:", err);
+          // Try final fallback even on error
+          try {
+            const popularResponse = await axios.get(
+              currentTab === "movie" ? "/movie/popular" : "/tv/popular",
+              { params: { page: 1 }, timeout: 5000 }
+            ).catch(() => ({ data: { results: [] } }));
+            
+            const popularItems = (popularResponse.data?.results || []).slice(0, 20).map((item: any) => ({
+              ...item,
+              media_type: currentTab,
+            })).filter((item: Item) => item.poster_path);
+            
+            if (popularItems.length > 0) {
+              setPages([{
+                page: 1,
+                total_pages: 1,
+                results: popularItems,
+                total_results: popularItems.length,
+              }]);
+              setHasMore(false);
+            } else {
+              setPages([]);
+              setHasMore(false);
+            }
+          } catch (fallbackErr) {
+            setPages([]);
+            setHasMore(false);
+          }
+        }
       }
     };
-
-    if (!isLoading) {
-      loadData();
-    }
-  }, [currentTab, data, isLoading, buildConfig]);
+    
+    loadData();
+  }, [currentTab, data, isLoading, error, searchParams.toString()]);
 
   const fetchNext = async () => {
     if (isLoadingMore || !hasMore) return;
@@ -127,7 +199,7 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
         : await getExploreTV(nextPage, config);
       setPages(prev => [...prev, result]);
       setCurrentPage(nextPage);
-      setHasMore((result?.page || 0) < (result?.total_pages || 0));
+      setHasMore(result.page < result.total_pages);
     } catch (err) {
       console.error("Error loading more:", err);
     } finally {
@@ -135,16 +207,13 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
     }
   };
 
-  const allItems = pages.flatMap(page => page.results);
-
-  if (error) return <div className="text-red-500 text-center mt-10">ERROR: {error}</div>;
-
+  if (error) return <div className="text-red-500">ERROR: {error}</div>;
   if (isLoading && pages.length === 0) {
     return (
       <div className="text-white">
         <div className="grid grid-cols-sm lg:grid-cols-lg gap-x-8 gap-y-10 pt-2 px-2">
           {[...new Array(15)].map((_, index) => (
-            <div key={index} className="h-0 pb-[160%] bg-gray-800 animate-pulse rounded-xl" />
+            <div key={index} className="h-0 pb-[160%] bg-gray-800 animate-pulse rounded" />
           ))}
         </div>
       </div>
@@ -152,31 +221,14 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
   }
 
   return (
-    <InfiniteScroll
-      dataLength={allItems.length}
-      next={fetchNext}
-      hasMore={hasMore}
-      loader={
-        <div className="grid grid-cols-sm lg:grid-cols-lg gap-x-8 gap-y-10 pt-10 px-2 overflow-hidden">
-          {[...new Array(5)].map((_, index) => (
-            <div key={index} className="h-0 pb-[160%] bg-gray-800 animate-pulse rounded-xl" />
-          ))}
-        </div>
-      }
-      endMessage={
-        <p className="text-center mt-10 text-gray-400 font-medium">
-          You have seen it all! 🎬
-        </p>
-      }
-      style={{ overflow: 'hidden' }}
-    >
+    <div>
       <ExploreResultContent
         data={pages}
         fetchNext={fetchNext}
-        hasMore={false}
+        hasMore={hasMore}
         currentTab={currentTab}
       />
-    </InfiniteScroll>
+    </div>
   );
 };
 

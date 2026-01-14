@@ -1,11 +1,7 @@
-/**
- * Offline Download Manager Service
- * Handles downloading movies/shows for offline viewing
- */
-
 import { Filesystem, Directory, Encoding, DownloadFileResult } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
 import { logger } from '../utils/logger';
+import { safeStorage } from '../utils/safeStorage';
 
 export interface DownloadItem {
     id: string;
@@ -245,7 +241,7 @@ class OfflineDownloadService {
      */
     private saveDownloads(): void {
         const data = Array.from(this.downloads.values());
-        localStorage.setItem('offline_downloads', JSON.stringify(data));
+        safeStorage.set('offline_downloads', JSON.stringify(data));
     }
 
     /**
@@ -253,7 +249,7 @@ class OfflineDownloadService {
      */
     private loadDownloads(): void {
         try {
-            const stored = localStorage.getItem('offline_downloads');
+            const stored = safeStorage.get('offline_downloads');
             if (stored) {
                 const items: DownloadItem[] = JSON.parse(stored);
                 items.forEach(item => {

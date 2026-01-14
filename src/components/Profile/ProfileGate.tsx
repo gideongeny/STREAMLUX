@@ -6,6 +6,7 @@ import { createProfile, getProfiles, deleteProfile, PROFILE_AVATARS } from "../.
 import { useNavigate } from "react-router-dom";
 import { AiOutlinePlus } from "react-icons/ai";
 import Skeleton from "../Common/Skeleton";
+import { safeStorage } from "../../utils/safeStorage";
 
 const ProfileGate: FC = () => {
     const currentUser = useAppSelector((state) => state.auth.user);
@@ -25,7 +26,7 @@ const ProfileGate: FC = () => {
         if (!currentUser) return;
 
         // Try to load from cache first for instant UI
-        const cached = localStorage.getItem(`profiles_${currentUser.uid}`);
+        const cached = safeStorage.get(`profiles_${currentUser.uid}`);
         if (cached) {
             try {
                 const parsed = JSON.parse(cached);
@@ -63,18 +64,18 @@ const ProfileGate: FC = () => {
                 if (mainProfile) {
                     const freshProfiles = [mainProfile];
                     setProfiles(freshProfiles);
-                    localStorage.setItem(`profiles_${currentUser.uid}`, JSON.stringify(freshProfiles));
+                    safeStorage.set(`profiles_${currentUser.uid}`, JSON.stringify(freshProfiles));
 
                     // Instant auto-select if it's the only one
                     handleSelectProfile(mainProfile);
                 }
             } else {
                 setProfiles(data);
-                localStorage.setItem(`profiles_${currentUser.uid}`, JSON.stringify(data));
+                safeStorage.set(`profiles_${currentUser.uid}`, JSON.stringify(data));
 
                 // If only one profile and not editing, auto-select for speed
                 if (data.length === 1 && !isEditing) {
-                    const lastUsed = localStorage.getItem("current_profile_id");
+                    const lastUsed = safeStorage.get("current_profile_id");
                     if (!lastUsed || lastUsed === data[0].id) {
                         // Small delay to allow component to mount cleanly
                         setTimeout(() => handleSelectProfile(data[0]), 100);
@@ -94,8 +95,8 @@ const ProfileGate: FC = () => {
 
     const handleSelectProfile = (profile: UserProfile) => {
         dispatch(setCurrentProfile(profile));
-        localStorage.setItem("current_profile_id", profile.id);
-        localStorage.setItem("current_profile", JSON.stringify(profile));
+        safeStorage.set("current_profile_id", profile.id);
+        safeStorage.set("current_profile", JSON.stringify(profile));
         navigate("/");
     };
 
@@ -107,7 +108,7 @@ const ProfileGate: FC = () => {
         if (success) {
             const updated = profiles.filter(p => p.id !== profileId);
             setProfiles(updated);
-            localStorage.setItem(`profiles_${currentUser.uid}`, JSON.stringify(updated));
+            safeStorage.set(`profiles_${currentUser.uid}`, JSON.stringify(updated));
         }
     };
 
@@ -125,7 +126,7 @@ const ProfileGate: FC = () => {
         if (newProfile) {
             const updated = [...profiles, newProfile];
             setProfiles(updated);
-            localStorage.setItem(`profiles_${currentUser.uid}`, JSON.stringify(updated));
+            safeStorage.set(`profiles_${currentUser.uid}`, JSON.stringify(updated));
             setIsCreating(false);
             setNewProfileName("");
             setIsKid(false);
@@ -150,9 +151,9 @@ const ProfileGate: FC = () => {
 
     const handleClearCache = () => {
         if (currentUser) {
-            localStorage.removeItem(`profiles_${currentUser.uid}`);
-            localStorage.removeItem("current_profile_id");
-            localStorage.removeItem("current_profile");
+            safeStorage.remove(`profiles_${currentUser.uid}`);
+            safeStorage.remove("current_profile_id");
+            safeStorage.remove("current_profile");
             window.location.reload();
         }
     };

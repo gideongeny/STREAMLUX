@@ -40,7 +40,7 @@ export class VideoExtractorService {
       }
 
       // Try to get direct URL from VidSrc's API endpoint
-      const apiUrl = mediaType === "movie"
+      const apiUrl = mediaType === "movie" 
         ? `https://vidsrc.pro/vidsrc.php?id=${tmdbId}`
         : `https://vidsrc.pro/vidsrc.php?id=${tmdbId}&s=${seasonId}&e=${episodeId}`;
 
@@ -48,6 +48,7 @@ export class VideoExtractorService {
         const response = await axios.get(apiUrl, {
           headers: {
             Accept: "application/json",
+            Referer: "https://vidsrc.me/",
           },
           timeout: 10000,
         });
@@ -295,53 +296,6 @@ export class VideoExtractorService {
     } catch (error) {
       console.error("Fetch download failed:", error);
       throw new Error("Failed to download video. Please try a different source.");
-    }
-  }
-  /**
-   * Search and extract from KissKH (Simulated/Placeholder for now as it requires complex scraping)
-   */
-  async extractKissKH(title: string, episode?: number): Promise<DirectVideoURL[]> {
-    // In a real implementation, this would:
-    // 1. Search KissKH for the title
-    // 2. Parsed the result page for the episode
-    // 3. Extract the video player URL
-    // For this demo, we return an empty array or a simulated result if valid
-    return [];
-  }
-
-  /**
-   * Universal extractor for generic embed sources
-   */
-  async extractGenericEmbed(url: string): Promise<DirectVideoURL[]> {
-    try {
-      const response = await axios.get(url, { headers: { Accept: "text/html" }, timeout: 5000 });
-      const html = response.data;
-      const videoURLs: DirectVideoURL[] = [];
-
-      // Basic regex for mp4/m3u8 inside typical player patterns
-      const patterns = [
-        /(https?:\/\/[^\s"']+\.mp4)/g,
-        /(https?:\/\/[^\s"']+\.m3u8)/g,
-        /source\s*src=["']([^"']+)["']/g
-      ];
-
-      patterns.forEach(pattern => {
-        let match;
-        while ((match = pattern.exec(html)) !== null) {
-          const foundUrl = match[1] || match[0];
-          if (!videoURLs.find(v => v.url === foundUrl)) {
-            videoURLs.push({
-              url: foundUrl,
-              quality: "auto",
-              format: foundUrl.includes(".m3u8") ? "m3u8" : "mp4"
-            });
-          }
-        }
-      });
-
-      return videoURLs;
-    } catch (e) {
-      return [];
     }
   }
 }

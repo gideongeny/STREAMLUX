@@ -3,12 +3,7 @@ import { EMBED_TO, IMAGE_URL } from "./constants";
 export const resizeImage = (
   imageUrl: string,
   width: string = "original"
-): string => {
-  if (!imageUrl) return "/no-image.png";
-  const trimmedUrl = imageUrl.trim();
-  if (trimmedUrl.startsWith("http") || trimmedUrl.startsWith("https") || trimmedUrl.startsWith("//") || trimmedUrl.startsWith("data:")) return trimmedUrl;
-  return `${IMAGE_URL}/${width}${trimmedUrl}`;
-};
+): string => `${IMAGE_URL}/${width}${imageUrl}`;
 
 // export const embedMovie = (id: number): string =>
 //   `${EMBED_URL}/movie?tmdb=${id}`;
@@ -65,7 +60,7 @@ export const convertErrorCodeToMessage = (errorCode: string): string => {
     "auth/invalid-credential": "Invalid credentials. Please check your email and password.",
     "auth/requires-recent-login": "Please sign out and sign in again to continue.",
   };
-
+  
   return errorMessages[errorCode] || `Authentication error: ${errorCode}. Please try again or contact support.`;
 };
 

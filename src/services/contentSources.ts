@@ -36,16 +36,17 @@ export const getKissKHContent = async (page: number = 1, type: "movie" | "tv" = 
       `https://kisskh.com/api/DramaList/List?page=${page}`,
       `https://kisskh.com/api/DramaList?page=${page}`,
     ];
-
+    
     for (const endpoint of endpoints) {
       try {
         const response = await axios.get(endpoint, {
           timeout: 10000,
           headers: {
             'Accept': 'application/json',
+            'Referer': 'https://kisskh.com/',
           },
         });
-
+        
         const results = response.data?.data || response.data?.results || response.data?.list || response.data || [];
         if (Array.isArray(results) && results.length > 0) {
           return results
@@ -56,7 +57,7 @@ export const getKissKHContent = async (page: number = 1, type: "movie" | "tv" = 
         continue; // Try next endpoint
       }
     }
-
+    
     return [];
   } catch (error) {
     console.warn("KissKH API error:", error);
@@ -72,7 +73,7 @@ export const getUGCAnimeContent = async (page: number = 1): Promise<Item[]> => {
       `https://ugc-anime.com/api/v1/anime?page=${page}`,
       `https://ugc-anime.com/api/list?page=${page}`,
     ];
-
+    
     for (const endpoint of endpoints) {
       try {
         const response = await axios.get(endpoint, {
@@ -81,7 +82,7 @@ export const getUGCAnimeContent = async (page: number = 1): Promise<Item[]> => {
             'Accept': 'application/json',
           },
         });
-
+        
         const results = response.data?.data || response.data?.results || response.data?.anime || response.data || [];
         if (Array.isArray(results) && results.length > 0) {
           return results
@@ -92,7 +93,7 @@ export const getUGCAnimeContent = async (page: number = 1): Promise<Item[]> => {
         continue;
       }
     }
-
+    
     return [];
   } catch (error) {
     console.warn("UGC-Anime API error:", error);
@@ -108,7 +109,7 @@ export const getAilokContent = async (page: number = 1, type: "movie" | "tv" = "
       `https://ailok.pe/api/v1/${type}?page=${page}`,
       `https://ailok.pe/api/list/${type}?page=${page}`,
     ];
-
+    
     for (const endpoint of endpoints) {
       try {
         const response = await axios.get(endpoint, {
@@ -117,7 +118,7 @@ export const getAilokContent = async (page: number = 1, type: "movie" | "tv" = "
             'Accept': 'application/json',
           },
         });
-
+        
         const results = response.data?.data || response.data?.results || response.data?.list || response.data || [];
         if (Array.isArray(results) && results.length > 0) {
           return results
@@ -128,7 +129,7 @@ export const getAilokContent = async (page: number = 1, type: "movie" | "tv" = "
         continue;
       }
     }
-
+    
     return [];
   } catch (error) {
     console.warn("Ailok API error:", error);
@@ -144,7 +145,7 @@ export const getGoogotvContent = async (page: number = 1, type: "movie" | "tv" =
       `https://sz.googotv.com/api/v1/${type}?page=${page}`,
       `https://sz.googotv.com/api/list/${type}?page=${page}`,
     ];
-
+    
     for (const endpoint of endpoints) {
       try {
         const response = await axios.get(endpoint, {
@@ -153,7 +154,7 @@ export const getGoogotvContent = async (page: number = 1, type: "movie" | "tv" =
             'Accept': 'application/json',
           },
         });
-
+        
         const results = response.data?.data || response.data?.results || response.data?.list || response.data || [];
         if (Array.isArray(results) && results.length > 0) {
           return results
@@ -164,7 +165,7 @@ export const getGoogotvContent = async (page: number = 1, type: "movie" | "tv" =
         continue;
       }
     }
-
+    
     return [];
   } catch (error) {
     console.warn("Googotv API error:", error);
@@ -182,14 +183,14 @@ export const getFZMoviesContent = async (page: number = 1, type: "movie" | "tv" 
       "https://fzmovies.watch",
       "https://fzmovies.to",
     ];
-
+    
     const endpoints = [
       `/api/${type}?page=${page}`,
       `/api/v1/${type}?page=${page}`,
       `/api/${type}s?page=${page}`,
       `/api/list/${type}?page=${page}`,
     ];
-
+    
     for (const baseUrl of baseUrls) {
       for (const endpoint of endpoints) {
         try {
@@ -197,9 +198,10 @@ export const getFZMoviesContent = async (page: number = 1, type: "movie" | "tv" 
             timeout: 10000,
             headers: {
               'Accept': 'application/json',
+              'Referer': baseUrl,
             },
           });
-
+          
           const results = response.data?.data || response.data?.results || response.data?.movies || response.data?.tvshows || response.data || [];
           if (Array.isArray(results) && results.length > 0) {
             return results
@@ -211,7 +213,7 @@ export const getFZMoviesContent = async (page: number = 1, type: "movie" | "tv" 
         }
       }
     }
-
+    
     return [];
   } catch (error) {
     console.warn("FZMovies API error:", error);
@@ -225,20 +227,20 @@ export const mergeContentSources = async (
   additionalSources: Item[][]
 ): Promise<Item[]> => {
   const allContent = [...tmdbContent];
-
+  
   // Add content from additional sources
   additionalSources.forEach((sourceContent) => {
     allContent.push(...sourceContent);
   });
-
+  
   // Remove duplicates by ID and title
   const uniqueContent = allContent.filter((item, index, self) =>
-    index === self.findIndex((i) =>
-      i.id === item.id ||
+    index === self.findIndex((i) => 
+      i.id === item.id || 
       (i.title?.toLowerCase() === item.title?.toLowerCase() && i.release_date === item.release_date)
     )
   );
-
+  
   return uniqueContent;
 };
 
@@ -255,7 +257,7 @@ export const getAllSourceContent = async (
       getGoogotvContent(page, type),
       getFZMoviesContent(page, type),
     ]);
-
+    
     return mergeContentSources([], [kisskh, ugcAnime, ailok, googotv, fzmovies]);
   } catch (error) {
     console.error("Error fetching all source content:", error);

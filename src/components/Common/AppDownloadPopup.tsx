@@ -1,8 +1,7 @@
-
 import { FC, useEffect, useState } from "react";
 import { AiOutlineClose, AiOutlineAndroid } from "react-icons/ai";
-
 import { Capacitor } from "@capacitor/core";
+import { safeStorage } from "../../utils/safeStorage";
 
 const AppDownloadPopup: FC = () => {
     const [isVisible, setIsVisible] = useState(false);
@@ -12,7 +11,7 @@ const AppDownloadPopup: FC = () => {
         if (Capacitor.isNativePlatform()) return;
 
         // Check if user has already dismissed the popup
-        const hasDismissed = localStorage.getItem("app_popup_dismissed");
+        const hasDismissed = safeStorage.get("app_popup_dismissed");
 
         // Show popup after 10 seconds
         if (!hasDismissed) {
@@ -26,7 +25,7 @@ const AppDownloadPopup: FC = () => {
     const handleDismiss = () => {
         setIsVisible(false);
         // Don't show again in this session (or persist longer if desired)
-        localStorage.setItem("app_popup_dismissed", "true");
+        safeStorage.set("app_popup_dismissed", "true");
     };
 
     const handleDownload = async () => {

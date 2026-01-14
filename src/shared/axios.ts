@@ -1,61 +1,28 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { API_URL } from "./constants";
 import { apiCache } from "./apiCache";
-import { logger } from "../utils/logger";
-
-// =================================================================================
-// 🚀 HYPER-SCALE ARCHITECTURE: API KEY POOL
-// =================================================================================
-// This pool allows the app to handle millions of users by rotating keys when quotas are hit.
-// Each key acts as a separate "pipeline" for data.
-const getApiKeyPool = (): string[] => {
-  const primaryKey = process.env.REACT_APP_API_KEY;
-  const fallbackKeys = process.env.REACT_APP_TMDB_FALLBACK_KEYS 
-    ? process.env.REACT_APP_TMDB_FALLBACK_KEYS.split(',').map(k => k.trim()).filter(Boolean)
-    : [
-        "8c247ea0b4b56ed2ff7d41c9a833aa77",               // Fallback Key 1
-        "df082717906d217997384ea69a1b021d",               // Fallback Key 2
-        "18265886ed20904f41050a4ad6871a31",               // Fallback Key 3
-        "4f56f35836934c9c612399d3d95180ce",               // Fallback Key 4 (High Capacity)
-      ];
-  
-  return [primaryKey, ...fallbackKeys].filter(Boolean) as string[];
-};
-
-const API_KEY_POOL = getApiKeyPool();
-
-let currentKeyIndex = 0;
-
-// Rotate to the next key in the pool
-const rotateApiKey = () => {
-  currentKeyIndex = (currentKeyIndex + 1) % API_KEY_POOL.length;
-  logger.warn(`[TMDB] 429 Quota Exceeded. Rotating to Key Index: ${currentKeyIndex}`);
-};
-
-// Get the current active key
-const getApiKey = () => API_KEY_POOL[currentKeyIndex];
 
 const instance = axios.create({
   baseURL: API_URL,
+  params: {
+    api_key: process.env.REACT_APP_API_KEY || "8c247ea0b4b56ed2ff7d41c9a833aa77", // TMDB API key
+  },
 });
 
-// Request interceptor - Add caching, rate limiting, and DYNAMIC KEY INJECTION
+// Request interceptor - Add caching and rate limiting
 instance.interceptors.request.use(
   async (config: AxiosRequestConfig) => {
-    // 1. Inject the Current Active API Key
-    if (!config.params) config.params = {};
-    config.params.api_key = getApiKey();
-
-    // 2. Check Persistent Disk Cache
+    // Check cache first
     const cacheKey = config.url || '';
     const cachedData = apiCache.get(cacheKey, config.params);
-
+    
     if (cachedData) {
-      // Return cached data immediately (Zero Network Cost)
+      // Return cached data by throwing a special error that will be caught
+      // This is a workaround since we can't return data directly from interceptor
       return Promise.reject({ __cached: true, data: cachedData, config });
     }
 
-    // 3. Rate Limit Protection
+    // Check rate limiting
     await apiCache.checkRateLimit(cacheKey);
 
     return config;
@@ -65,33 +32,33 @@ instance.interceptors.request.use(
   }
 );
 
-// Response interceptor - Cache successful responses and handle 429 ROTATION
+// Response interceptor - Cache successful responses and handle errors
 instance.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Cache successful responses to Disk
+    // Cache successful responses
     const config = response.config;
     const url = config.url || '';
     const params = config.params;
-
-    // Smart TTL (Time-To-Live) Strategies
-    let ttl = 10 * 60 * 1000; // 10 minutes default
-
+    
+    // Different TTL for different endpoints
+    let ttl = 5 * 60 * 1000; // 5 minutes default
+    
     if (url.includes('/trending')) {
-      ttl = 30 * 60 * 1000; // 30 mins for trending
+      ttl = 10 * 60 * 1000; // 10 minutes for trending (changes less frequently)
     } else if (url.includes('/popular') || url.includes('/top_rated')) {
-      ttl = 60 * 60 * 1000; // 1 hour for static lists
+      ttl = 15 * 60 * 1000; // 15 minutes for popular/top rated
     } else if (url.includes('/discover')) {
-      ttl = 15 * 60 * 1000; // 15 mins for discover
+      ttl = 5 * 60 * 1000; // 5 minutes for discover
     } else if (url.includes('/search')) {
-      ttl = 60 * 60 * 1000; // 1 hour for searches (High Reuse)
+      ttl = 2 * 60 * 1000; // 2 minutes for search (more dynamic)
     }
 
     apiCache.set(url, params, response.data, ttl);
-
+    
     return response;
   },
-  async (error) => {
-    // Handle cached data (Happy Path)
+  (error) => {
+    // Handle cached data
     if (error.__cached) {
       return Promise.resolve({
         data: error.data,
@@ -102,38 +69,39 @@ instance.interceptors.response.use(
       });
     }
 
-    // =================================================================================
-    // 🔄 AUTOMATIC FAILOVER & RETRY
-    // =================================================================================
-    if (error.response?.status === 429 ||
-      error.message?.includes('quota') ||
-      error.message?.includes('Quota Exceeded')) {
-
-      logger.error('[TMDB] Quota Hit! Initiating Failover Rotation...');
-
-      // 1. Rotate the Key
-      rotateApiKey();
-
-      // 2. Retry the original request with the new key
+    // Handle quota exceeded errors
+    if (error.response?.status === 429 || 
+        error.message?.includes('quota') || 
+        error.message?.includes('Quota Exceeded')) {
+      console.error('API quota exceeded. Using cached data if available.');
+      
+      // Try to get cached data as fallback
       const config = error.config;
-      config.params.api_key = getApiKey(); // Update key
-
-      // Add a small backoff delay to let the pool settle
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      return instance.request(config);
+      const url = config?.url || '';
+      const cachedData = apiCache.get(url, config?.params);
+      
+      if (cachedData) {
+        return Promise.resolve({
+          data: cachedData,
+          status: 200,
+          statusText: 'OK (Cached)',
+          headers: {},
+          config: config,
+        });
+      }
+      
+      // If no cache, return empty results to prevent app crash
+      return Promise.resolve({
+        data: { results: [], page: 1, total_pages: 1, total_results: 0 },
+        status: 200,
+        statusText: 'OK (Fallback)',
+        headers: {},
+        config: config,
+      });
     }
 
     return Promise.reject(error);
   }
 );
-
-// Add prefetch capability for speed optimization
-export const prefetchData = (url: string, params?: any) => {
-  // Use the instance to trigger a request and populate cache
-  instance.get(url, { params }).catch(() => {
-    // Silently ignore prefetch errors to prevent UI noise
-  });
-};
 
 export default instance;
