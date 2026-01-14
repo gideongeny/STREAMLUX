@@ -80,14 +80,15 @@ export { db, auth };
 
 // Set persistence to LOCAL (persists across browser sessions and app restarts)
 // This ensures users stay logged in even after closing the app or restarting their phone
+// Persistence temporarily disabled to prevent "Client is offline" errors during development
 // browserLocalPersistence: Auth state persists in localStorage and persists across browser sessions
 // IMPORTANT: Set persistence BEFORE any auth operations
 // Use setTimeout to ensure auth is initialized before setting persistence
 setTimeout(async () => {
   try {
     if (auth) {
-      await setPersistence(auth, browserLocalPersistence);
-      console.log("Auth persistence set to browserLocalPersistence");
+      // await setPersistence(auth, browserLocalPersistence);
+      console.log("Auth persistence set to default (browserLocalPersistence)");
     }
   } catch (error) {
     console.error("Error setting auth persistence:", error);
@@ -103,7 +104,7 @@ if (globalThis.window !== undefined) {
     // Only initialize analytics if not in development and user hasn't opted out
     const isDevelopment = process.env.NODE_ENV === 'development';
     const analyticsDisabled = localStorage.getItem('analytics_disabled') === 'true';
-    
+
     if (!isDevelopment && !analyticsDisabled && app) {
       // getAnalytics only accepts the app instance as argument
       // Analytics configuration is done via Firebase Console, not in code

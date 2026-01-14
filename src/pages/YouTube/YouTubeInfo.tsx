@@ -2,13 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { FC } from "react";
 import { useParams } from "react-router-dom";
 import YouTubeDetail from "../../components/YouTube/YouTubeDetail";
-import { getYouTubeVideoDetail, getRelatedVideos, getYouTubeComments, getYouTubeSeriesEpisodes, YouTubeVideo } from "../../services/youtube";
+import { getYouTubeVideoDetail, getRelatedVideos, getYouTubeComments, getYouTubeSeriesEpisodes, YouTubeVideo, YouTubeVideoExtended } from "../../services/youtube";
 import Error from "../Error";
 
 const YouTubeInfo: FC = () => {
     const { id } = useParams();
 
-    const { data: video, isLoading: isVideoLoading, isError: isVideoError } = useQuery<YouTubeVideo | null, Error>(
+    const { data: video, isLoading: isVideoLoading, isError: isVideoError } = useQuery<YouTubeVideoExtended | null, Error>(
         ["youtubeDetail", id],
         () => getYouTubeVideoDetail(id as string)
     );

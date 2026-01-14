@@ -234,6 +234,15 @@ export interface User {
   uid: string;
 }
 
+export interface UserProfile {
+  id: string;
+  name: string;
+  avatar: string;
+  isKid?: boolean;
+  language?: string;
+  createdAt?: any;
+}
+
 export interface CommentDataType {
   user: User;
   value: string;

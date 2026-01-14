@@ -58,10 +58,7 @@ const HybridSectionSlider: FC<HybridSectionSliderProps> = ({
         tmdbGenres,
         "",
         "",
-        tmdbRegion || "", // Always fetch for parallelization
-        "0",
-        "",
-        category || ""
+        tmdbRegion || "" // Always fetch for parallelization
     );
 
     const hasYtVideos = ytVideos && ytVideos.length > 0;

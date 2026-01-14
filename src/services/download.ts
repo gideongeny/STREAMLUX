@@ -36,13 +36,13 @@ export class DownloadService {
     episodeId?: number,
     currentEpisode?: Episode
   ): DownloadInfo {
-    const title = mediaType === "movie" 
-      ? (detail as DetailMovie).title 
+    const title = mediaType === "movie"
+      ? (detail as DetailMovie).title
       : (detail as DetailTV).name;
 
     // Get IMDB ID for movies, use undefined for TV shows (will use TMDB ID)
-    const imdbId = mediaType === "movie" 
-      ? (detail as DetailMovie).imdb_id 
+    const imdbId = mediaType === "movie"
+      ? (detail as DetailMovie).imdb_id
       : undefined;
 
     const sources = this.generateVideoSources(detail.id, mediaType, seasonId, episodeId, imdbId);
@@ -55,8 +55,8 @@ export class DownloadService {
       episodeName: currentEpisode?.name,
       sources,
       posterPath: detail.poster_path,
-      overview: mediaType === "movie" 
-        ? detail.overview 
+      overview: mediaType === "movie"
+        ? detail.overview
         : currentEpisode?.overview || detail.overview,
     };
   }
@@ -70,7 +70,7 @@ export class DownloadService {
   ): string[] {
     const tmdbId = id.toString();
     const imdb = imdbId || tmdbId; // Use IMDB ID if available, otherwise TMDB ID
-    
+
     if (mediaType === "movie") {
       return [
         `${EMBED_ALTERNATIVES.VIDSRC}/${id}`,
@@ -297,99 +297,65 @@ export class DownloadService {
     }
   }
 
-  // Main download method - Direct download like MovieBox.ph
+  // Main download method - Robust "Open & Save" approach
   async downloadMovie(
     downloadInfo: DownloadInfo,
     onProgress?: (progress: DownloadProgress) => void
   ): Promise<void> {
     const downloadId = this.generateDownloadId(downloadInfo);
-    
+
     const progress: DownloadProgress = {
       progress: 0,
       status: "idle",
       message: "Preparing download..."
     };
-    
+
     this.downloads.set(downloadId, progress);
     onProgress?.(progress);
 
     try {
-      // Extract TMDB ID from sources
-      const firstSource = downloadInfo.sources[0];
-      const tmdbIdMatch = firstSource.match(/\/(\d+)(?:\/|\?|$)/);
-      if (!tmdbIdMatch) {
-        throw new Error("Could not extract video ID from sources");
-      }
-      const tmdbId = parseInt(tmdbIdMatch[1], 10);
-
       progress.status = "downloading";
-      progress.message = "Preparing download...";
-      progress.progress = 20;
+      progress.message = "Finding best stream...";
+      progress.progress = 30;
       onProgress?.(progress);
 
-      // Try to use VidSrc download API or direct link
-      // VidSrc provides download links via their API
-      let downloadURL = null;
-      
-      try {
-        // Try VidSrc download endpoint
-        const vidSrcDownloadUrl = downloadInfo.mediaType === "movie"
-          ? `https://vidsrc.me/vidsrc/${tmdbId}`
-          : `https://vidsrc.me/vidsrc/${tmdbId}/${downloadInfo.seasonId}-${downloadInfo.episodeId}`;
-        
-        // For now, we'll create a smart download page that tries multiple methods
-        progress.message = "Opening download interface...";
-        progress.progress = 50;
-        onProgress?.(progress);
-        
-        // Create an improved download page that tries to auto-download
-        const downloadPage = this.createSmartDownloadPage(downloadInfo, tmdbId);
-        const newTab = window.open(downloadPage, '_blank');
-        
-        if (newTab) {
-          progress.status = "completed";
-          progress.progress = 100;
-          progress.message = "Download interface opened!";
-          onProgress?.(progress);
-        } else {
-          throw new Error("Popup blocked. Please allow popups for this site.");
+      const tmdbIdMatch = downloadInfo.sources[0].match(/\/(\d+)(?:\/|\?|$)/);
+      const tmdbId = tmdbIdMatch ? tmdbIdMatch[1] : null;
+      let targetUrl = downloadInfo.sources[0];
+
+      if (tmdbId) {
+        // Try to resolve via backend to get the active Vidsrc link
+        try {
+          const backendBase = process.env.REACT_APP_BACKEND_URL ? process.env.REACT_APP_BACKEND_URL.replace('/api', '') : 'http://localhost:3001';
+          const response = await fetch(`${backendBase}/api/resolve?type=${downloadInfo.mediaType}&id=${tmdbId}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.directUrl) {
+              targetUrl = data.directUrl;
+            }
+          }
+        } catch (e) {
+          console.warn("Backend resolution failed:", e);
         }
-        return;
-        
-      } catch (apiError) {
-        console.warn("Direct download API failed, using fallback");
       }
-      
-      // Fallback: Create download page
-      progress.message = "Creating download page...";
-      progress.progress = 60;
+
+      progress.message = "Opening player (Use Browser Save)...";
+      progress.progress = 100;
+      progress.status = "completed";
       onProgress?.(progress);
-      
-      const downloadPage = this.createSmartDownloadPage(downloadInfo, tmdbId);
-      const newTab = window.open(downloadPage, '_blank');
-      if (newTab) {
-        progress.status = "completed";
-        progress.progress = 100;
-        progress.message = "Download page opened!";
-        onProgress?.(progress);
-      } else {
-        throw new Error("Popup blocked. Please allow popups for this site.");
+
+      // Open the target URL (Embed/Stream) in a new tab
+      // This allows the user to watch or use "Save Video As" depending on the source
+      const newTab = window.open(targetUrl, '_blank');
+
+      if (!newTab) {
+        throw new Error("Popup blocked. Please allow popups to open the download player.");
       }
-      
+
     } catch (error) {
       progress.status = "error";
       progress.message = `Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
       onProgress?.(progress);
-      
-      // Final fallback
-      try {
-        const downloadPage = this.createWorkingDownloadPage(downloadInfo);
-        window.open(downloadPage, '_blank');
-        progress.message = "Opened download page as fallback";
-        onProgress?.(progress);
-      } catch (fallbackError) {
-      throw error;
-      }
     }
   }
 
@@ -408,7 +374,7 @@ export class DownloadService {
     const title = downloadInfo.title;
     const mediaType = downloadInfo.mediaType;
     const filename = this.generateFilename(downloadInfo);
-    
+
     const html = `
       <!DOCTYPE html>
       <html lang="en">
@@ -703,7 +669,7 @@ export class DownloadService {
       </body>
       </html>
     `;
-    
+
     const blob = new Blob([html], { type: 'text/html' });
     return URL.createObjectURL(blob);
   }
@@ -713,7 +679,7 @@ export class DownloadService {
     const sources = downloadInfo.sources;
     const title = downloadInfo.title;
     const mediaType = downloadInfo.mediaType;
-    
+
     const html = `
       <!DOCTYPE html>
       <html lang="en">
@@ -941,7 +907,7 @@ export class DownloadService {
       </body>
       </html>
     `;
-    
+
     const blob = new Blob([html], { type: 'text/html' });
     return URL.createObjectURL(blob);
   }
@@ -969,7 +935,7 @@ export class DownloadService {
     if (source.includes('watchmovieshd.ru')) return 'WatchMovies';
     if (source.includes('streamsb.net')) return 'StreamSB';
     if (source.includes('vidstream.pro')) return 'VidStream';
-    
+
     // African and non-Western content
     if (source.includes('afrikan.tv')) return 'Afrikan TV';
     if (source.includes('nollywood.tv')) return 'Nollywood TV';
@@ -977,7 +943,7 @@ export class DownloadService {
     if (source.includes('asian.tv')) return 'Asian TV';
     if (source.includes('latino.tv')) return 'Latino TV';
     if (source.includes('arabic.tv')) return 'Arabic TV';
-    
+
     // New African content sources
     if (source.includes('afrikanflix.com')) return 'AfrikanFlix';
     if (source.includes('nollywoodplus.com')) return 'NollywoodPlus';
@@ -988,13 +954,13 @@ export class DownloadService {
     if (source.includes('nollywoodtv.com')) return 'Nollywood TV';
     if (source.includes('kenyanflix.com')) return 'KenyanFlix';
     if (source.includes('nigerianflix.com')) return 'NigerianFlix';
-    
+
     // Regional African streaming services
     if (source.includes('showmax.com')) return 'ShowMax';
     if (source.includes('irokotv.com')) return 'Iroko TV';
     if (source.includes('bongotv.com')) return 'Bongo TV';
     if (source.includes('kwese.iflix.com')) return 'Kwese iFlix';
-    
+
     // Asian content sources
     if (source.includes('dramacool.com')) return 'DramaCool';
     if (source.includes('kissasian.com')) return 'KissAsian';
@@ -1003,17 +969,17 @@ export class DownloadService {
     if (source.includes('viki.com')) return 'Viki';
     if (source.includes('kisskh.com')) return 'KissKH';
     if (source.includes('ugc-anime.com')) return 'UGC Anime';
-    
+
     // Latin American content
     if (source.includes('cuevana.com')) return 'Cuevana';
     if (source.includes('pelisplus.com')) return 'PelisPlus';
     if (source.includes('repelis.com')) return 'Repelis';
     if (source.includes('latinomovies.com')) return 'Latino Movies';
-    
+
     // Middle Eastern content
     if (source.includes('shahid.mbc.net')) return 'Shahid MBC';
     if (source.includes('osn.com')) return 'OSN';
-    
+
     // Universal working sources
     if (source.includes('superembed.com')) return 'SuperEmbed';
     if (source.includes('embedmovie.com')) return 'EmbedMovie';
@@ -1024,14 +990,14 @@ export class DownloadService {
     if (source.includes('streamwish.com')) return 'StreamWish';
     if (source.includes('filemoon.com')) return 'FileMoon';
     if (source.includes('doodstream.com')) return 'DoodStream';
-    
+
     // Regional-specific sources
     if (source.includes('zee5.com')) return 'ZEE5';
     if (source.includes('hotstar.com')) return 'Disney+ Hotstar';
     if (source.includes('viu.com')) return 'Viu';
     if (source.includes('iwanttfc.com')) return 'iWantTFC';
     if (source.includes('abs-cbn.com')) return 'ABS-CBN';
-    
+
     // Additional sources
     if (source.includes('ailok.pe')) return 'Ailok';
     if (source.includes('sz.googotv.com')) return 'GoogoTV';
@@ -1042,7 +1008,7 @@ export class DownloadService {
     if (source.includes('solarmovie.to')) return 'SolarMovie';
     if (source.includes('fmovies.to')) return 'FMovies';
     if (source.includes('drive.google.com')) return 'Google Drive';
-    
+
     // Major streaming platforms
     if (source.includes('netflix.com')) return 'Netflix';
     if (source.includes('amazon.com')) return 'Amazon Prime Video';
@@ -1050,18 +1016,18 @@ export class DownloadService {
     if (source.includes('hbomax.com')) return 'HBO Max';
     if (source.includes('hulu.com')) return 'Hulu';
     if (source.includes('tv.apple.com')) return 'Apple TV+';
-    
+
     // Video platforms
     if (source.includes('youtube.com')) return 'YouTube';
     if (source.includes('vimeo.com')) return 'Vimeo';
     if (source.includes('dailymotion.com')) return 'Dailymotion';
-    
+
     // FZMovies CMS sources
     if (source.includes('fzmovies.cms')) return 'FZMovies';
     if (source.includes('fzmovies.net')) return 'FZMovies (Alt)';
     if (source.includes('fzmovies.watch')) return 'FZMovies Watch';
     if (source.includes('fzmovies.to')) return 'FZMovies To';
-    
+
     // Extract domain name as fallback
     try {
       const url = new URL(source);

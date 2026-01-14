@@ -1,5 +1,27 @@
 import { EMBED_ALTERNATIVES } from "../shared/constants";
 
+// Proxy Helpers
+const PROXY_BASE = process.env.REACT_APP_BACKEND_URL || "http://localhost:3001/api";
+
+export const getProxyUrl = (url: string, referer?: string) => {
+    return `${PROXY_BASE}/proxy?url=${encodeURIComponent(url)}${referer ? `&referer=${encodeURIComponent(referer)}` : ''}`;
+};
+
+export const getDownloadUrl = (url: string, filename?: string) => {
+    return `${PROXY_BASE}/download?url=${encodeURIComponent(url)}${filename ? `&filename=${encodeURIComponent(filename)}` : ''}`;
+};
+
+// Helper to get backend resolution
+const resolveBackend = async (type: string, id: string): Promise<any> => {
+    try {
+        const response = await fetch(`http://localhost:3001/api/resolve?type=${type}&id=${id}`);
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (e) {
+        return null;
+    }
+};
+
 export interface ResolvedSource {
     name: string;
     url: string;
@@ -199,6 +221,25 @@ export class ResolverService {
                 priority: 8
             }
         ];
+
+        // NEW: Check backend resolution for VidSrc
+        try {
+            const backendData = await resolveBackend(mediaType, tmdbId);
+            if (backendData && backendData.status === 'active' && backendData.proxiedUrl) {
+                // Prepend the backend resolved source as Priority 0 (Highest)
+                sources.unshift({
+                    name: "StreamLux Proxy (VidSrc)",
+                    url: backendData.proxiedUrl,
+                    quality: "1080p",
+                    speed: "fast",
+                    status: "active",
+                    type: "embed",
+                    priority: 0
+                });
+            }
+        } catch (e) {
+            console.warn("Backend resolution failed, falling back to client sources");
+        }
 
         // Simulate network delay for "Resolving" feel
         await new Promise(resolve => setTimeout(resolve, 800));

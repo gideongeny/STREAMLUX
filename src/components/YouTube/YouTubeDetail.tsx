@@ -9,7 +9,8 @@ import { toast, ToastContainer } from "react-toastify";
 import { doc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "../../shared/firebase";
 import { useAppSelector } from "../../store/hooks";
-import { calculateRating, YouTubeVideo } from "../../services/youtube";
+import { calculateRating, YouTubeVideo, YouTubeVideoExtended } from "../../services/youtube";
+import { getDownloadUrl } from "../../services/resolver";
 import { Item, Reviews } from "../../shared/types";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import Sidebar from "../Common/Sidebar";
@@ -22,7 +23,7 @@ import ReadMore from "../Common/ReadMore";
 import ReviewTab from "../FilmDetail/ReviewTab";
 
 interface YouTubeDetailProps {
-    video: YouTubeVideo;
+    video: YouTubeVideoExtended;
     similar?: YouTubeVideo[];
     reviews?: Reviews[];
     episodes?: YouTubeVideo[];
@@ -244,6 +245,15 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews, episod
                                                             >
                                                                 <span className="text-[10px] font-bold">ALT</span>
                                                             </a>
+                                                            <a
+                                                                href={getDownloadUrl(video.thumbnail, `${video.title.replace(/[^a-z0-9]/gi, '_')}_cover.jpg`)}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all text-white"
+                                                                title="Download Cover (Proxy Test)"
+                                                            >
+                                                                <AiOutlineDownload size={18} />
+                                                            </a>
                                                         </div>
 
                                                         <button
@@ -301,29 +311,47 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews, episod
                             {/* TABBED CONTENT */}
                             <div className="flex-grow min-h-[600px] md:border-r border-white/5 md:px-16 px-6 md:py-12 pt-40">
                                 <div className="flex gap-10 text-gray-400 text-lg justify-center mb-12 border-b border-white/5">
-                                    {["overall", "episodes", "creator", "reviews"].filter(tab => tab !== "episodes" || video.type === "tv").map((tab) => (
+                                    <button
+                                        onClick={() => setCurrentTab("overall")}
+                                        className={`pb-4 text-lg font-medium transition-all relative ${currentTab === "overall" ? "text-primary" : "text-white/60 hover:text-white"}`}
+                                    >
+                                        OVERALL
+                                        {currentTab === "overall" && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full" />}
+                                    </button>
+
+                                    {episodes && episodes.length > 0 && (
                                         <button
-                                            key={tab}
-                                            onClick={() => setCurrentTab(tab)}
-                                            className={`hover:text-white transition duration-300 pb-4 uppercase text-sm font-bold tracking-[0.2em] ${currentTab === tab ? "text-primary border-b-2 border-primary" : ""
-                                                }`}
+                                            onClick={() => setCurrentTab("episodes")}
+                                            className={`pb-4 text-lg font-medium transition-all relative ${currentTab === "episodes" ? "text-primary" : "text-white/60 hover:text-white"}`}
                                         >
-                                            {tab}
+                                            EPISODES
+                                            {currentTab === "episodes" && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full" />}
                                         </button>
-                                    ))}
+                                    )}
+
+                                    <button
+                                        onClick={() => setCurrentTab("creator")}
+                                        className={`pb-4 text-lg font-medium transition-all relative ${currentTab === "creator" ? "text-primary" : "text-white/60 hover:text-white"}`}
+                                    >
+                                        CREATOR
+                                        {currentTab === "creator" && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full" />}
+                                    </button>
+
+                                    <button
+                                        onClick={() => setCurrentTab("reviews")}
+                                        className={`pb-4 text-lg font-medium transition-all relative ${currentTab === "reviews" ? "text-primary" : "text-white/60 hover:text-white"}`}
+                                    >
+                                        REVIEWS
+                                        {currentTab === "reviews" && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full" />}
+                                    </button>
                                 </div>
 
                                 <div className="max-max-w-[900px]">
                                     {currentTab === "overall" && (
-                                        <>
-                                            <p className="text-2xl italic mb-10 text-white/80 font-light text-center border-l-4 border-primary pl-6 py-2">
-                                                "This official production from {video.channelTitle} is now available in high-definition on StreamLux."
+                                        <div className="animate-fade-in">
+                                            <p className="text-gray-300 leading-relaxed text-lg mb-8">
+                                                {video.description}
                                             </p>
-                                            <h3 className="text-white font-bold mb-4 uppercase text-xs tracking-widest text-primary">Story</h3>
-                                            <div className="text-white/80 text-lg leading-relaxed font-light mb-12">
-                                                <ReadMore limitTextLength={350}>{video.description}</ReadMore>
-                                            </div>
-
                                             <h3 className="text-white font-bold mb-6 uppercase text-xs tracking-widest text-primary">Details</h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                                 <div className="bg-white/5 p-4 rounded-xl border border-white/5">
@@ -349,56 +377,43 @@ const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews, episod
                                                     <p className="text-white font-medium text-sm">English / International</p>
                                                 </div>
                                             </div>
-                                        </>
+                                        </div>
                                     )}
 
-                                    {currentTab === "episodes" && video.type === "tv" && (
+                                    {currentTab === "episodes" && episodes && (
                                         <div className="animate-fade-in">
-                                            <div className="flex items-center gap-4 mb-8">
-                                                <select className="bg-white/10 text-white border border-white/20 rounded-md px-4 py-2 font-bold focus:outline-none focus:border-primary">
-                                                    <option>Season 1</option>
-                                                </select>
-                                                <span className="text-gray-400 text-sm">{episodes?.length || 0} Episodes</span>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 gap-4">
-                                                {episodes?.map((item, index) => (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                {episodes.map((ep) => (
                                                     <Link
-                                                        key={item.id}
-                                                        to={`/youtube/${item.id}`} // Corrected route to match App.tsx
-                                                        className="flex gap-4 p-4 hover:bg-white/5 rounded-xl transition-all group border border-transparent hover:border-white/10"
+                                                        to={`/youtube/${ep.id}`}
+                                                        key={ep.id}
+                                                        className={`flex gap-4 p-3 rounded-xl transition-all group ${ep.id === video.id ? "bg-primary/20 border-primary/50" : "bg-white/5 hover:bg-white/10 border-white/5"}`}
                                                     >
-                                                        <div className="shrink-0 w-[160px] aspect-video relative rounded-lg overflow-hidden">
+                                                        <div className="relative shrink-0 w-32 aspect-video rounded-lg overflow-hidden">
                                                             <LazyLoadImage
-                                                                src={item.thumbnail}
+                                                                src={ep.thumbnail}
+                                                                alt={ep.title}
+                                                                effect="opacity"
                                                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                                             />
-                                                            <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-all" />
-                                                            <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/80 rounded text-[10px] font-bold">
-                                                                {item.duration ? `${Math.floor(item.duration / 60)}:${(item.duration % 60).toString().padStart(2, '0')}` : 'Full'}
-                                                            </div>
-                                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <BsFillPlayFill size={32} className="text-white drop-shadow-lg" />
-                                                            </div>
+                                                            {ep.id === video.id && (
+                                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                                                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center animate-pulse">
+                                                                        <BsFillPlayFill className="text-white text-lg" />
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                        <div className="flex-grow flex flex-col justify-center">
-                                                            <h4 className="text-white font-bold text-lg mb-1 group-hover:text-primary transition-colors line-clamp-1">
-                                                                {index + 1}. {item.title}
+                                                        <div className="flex flex-col justify-center min-w-0">
+                                                            <h4 className={`font-medium line-clamp-2 mb-1 group-hover:text-primary transition-colors ${ep.id === video.id ? "text-primary" : "text-white"}`}>
+                                                                {ep.title}
                                                             </h4>
-                                                            <p className="text-gray-400 text-sm line-clamp-2 mb-2">
-                                                                {item.description || "No description available for this episode."}
-                                                            </p>
-                                                            <p className="text-xs text-gray-500">
-                                                                Released: {item.publishedAt ? new Date(item.publishedAt).toLocaleDateString() : 'N/A'}
+                                                            <p className="text-xs text-gray-400">
+                                                                {ep.publishedAt ? new Date(ep.publishedAt).toLocaleDateString() : "Unknown Date"}
                                                             </p>
                                                         </div>
                                                     </Link>
                                                 ))}
-                                                {(!episodes || episodes.length === 0) && (
-                                                    <div className="text-center py-10 opacity-50">
-                                                        <p>No episodes found for this season.</p>
-                                                    </div>
-                                                )}
                                             </div>
                                         </div>
                                     )}

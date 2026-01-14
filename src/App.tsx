@@ -24,6 +24,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import UserAgreement from "./pages/UserAgreement";
 import Disclaimer from "./pages/Disclaimer";
 import Download from "./pages/Download";
+import CalendarPage from "./pages/CalendarPage";
+import Settings from "./pages/Settings";
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
@@ -38,7 +40,7 @@ function App() {
       if (typeof window === "undefined") return false;
       const stored = localStorage.getItem("isSignedIn");
       if (!stored) return false;
-      
+
       // Try to parse as JSON first
       try {
         return JSON.parse(stored) === true;
@@ -53,13 +55,13 @@ function App() {
       console.warn("Error reading isSignedIn from localStorage:", error);
       try {
         localStorage.removeItem("isSignedIn");
-      } catch {}
+      } catch { }
     }
     return false;
   };
-  
+
   const [isSignedIn, setIsSignedIn] = useState<boolean>(() => getInitialSignedIn());
-  
+
   // Sync to localStorage when isSignedIn changes
   useEffect(() => {
     try {
@@ -71,7 +73,7 @@ function App() {
 
   useEffect(() => {
     let unSubDoc: (() => void) | undefined;
-    
+
     // This listener automatically restores the user session when the app loads
     // Firebase Auth persistence ensures the user stays logged in across app restarts
     const unSubAuth: () => void = onAuthStateChanged(
@@ -89,7 +91,7 @@ function App() {
 
           if (user.providerData && user.providerData.length > 0) {
             const providerId = user.providerData[0].providerId;
-            
+
             if (providerId === "google.com") {
               unSubDoc = onSnapshot(
                 doc(db, "users", user.uid),
@@ -110,7 +112,8 @@ function App() {
                   }
                 },
                 (error) => {
-                  console.error("Firestore snapshot error (Google):", error);
+                  console.warn("Firestore snapshot error (Google):", error.message);
+                  // Don't crash or show user-facing error for offline issues
                 }
               );
             } else if (providerId === "facebook.com") {
@@ -133,7 +136,7 @@ function App() {
                   }
                 },
                 (error) => {
-                  console.error("Firestore snapshot error (Facebook):", error);
+                  console.warn("Firestore snapshot error (Facebook):", error.message);
                 }
               );
             } else {
@@ -156,7 +159,7 @@ function App() {
                   }
                 },
                 (error) => {
-                  console.error("Firestore snapshot error (Other):", error);
+                  console.warn("Firestore snapshot error (Other):", error.message);
                 }
               );
             }
@@ -180,7 +183,7 @@ function App() {
                 }
               },
               (error) => {
-                console.error("Firestore snapshot error (Fallback):", error);
+                console.warn("Firestore snapshot error (Fallback):", error.message);
               }
             );
           }
@@ -230,6 +233,8 @@ function App() {
           element={<SportsWatch />}
         />
         <Route path="explore" element={<Explore />} />
+        <Route path="calendar" element={<CalendarPage />} />
+        <Route path="settings" element={<Settings />} />
         <Route path="search" element={<Search />} />
         <Route path="auth" element={<Auth />} />
         <Route path="copyright" element={<Copyright />} />

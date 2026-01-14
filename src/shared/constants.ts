@@ -14,7 +14,11 @@ export const EMBED_ALTERNATIVES = {
   MOVIEWP: "https://moviewp.com",
   APIMDB: "https://v2.apimdb.net/e",
   GOMO: "https://gomo.to",
-  VIDCLOUD: "https://vidcloud.stream",
+  VIDSRC_TO: "https://vidsrc.to/embed",
+  VIDSRC_PRO: "https://vidsrc.pro/embed",
+  EMBED_SU: "https://embed.su/embed",
+  AUTOEMBED: "https://autoembed.to",
+  SMASHYSTREAM: "https://player.smashy.stream",
   GETSUPEREMBED: "https://getsuperembed.link",
   GODRIVEPLAYER: "https://databasegdriveplayer.co",
   ONETWOTHREEMOVIES: "https://123movies.com",
@@ -165,7 +169,16 @@ export interface SportsFixtureConfig {
   minute?: string;
   isLive?: boolean;
   matchId?: string; // For linking to sportslive.run
+  banner?: string;
+  thumb?: string;
+  fanart?: string;
 }
+
+export const SPORTS_CHANNELS = [
+  { id: "bein1", name: "beIN Sports 1", logo: "https://i.ibb.co/logo1.png", country: "Qatar" },
+  { id: "bein2", name: "beIN Sports 2", logo: "https://i.ibb.co/logo2.png", country: "Qatar" },
+  { id: "skysports", name: "Sky Sports", logo: "https://i.ibb.co/logo3.png", country: "UK" },
+];
 
 export const SPORTS_LEAGUES: SportsLeagueConfig[] = [
   {

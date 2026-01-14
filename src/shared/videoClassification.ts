@@ -5,7 +5,7 @@
 
 export type VideoType = "movie" | "tv" | "other";
 
-export function classifyVideo(title: string, description: string): VideoType {
+export function classifyVideo(title: string, description: string, duration?: number): VideoType {
     const combined = (title + " " + description).toLowerCase();
 
     // Keywords for TV shows/Episodes
@@ -27,6 +27,12 @@ export function classifyVideo(title: string, description: string): VideoType {
         "film complete",
         "movie 2024", "movie 2025"
     ];
+
+    // Heuristic: If duration is long (> 3600s / 1 hour), it's more likely a movie or full show
+    if (duration && duration > 3600) {
+        if (tvKeywords.some(keyword => combined.includes(keyword))) return "tv";
+        return "movie";
+    }
 
     if (tvKeywords.some(keyword => combined.includes(keyword))) {
         return "tv";
