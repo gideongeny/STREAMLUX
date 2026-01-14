@@ -13,6 +13,8 @@ import { setCurrentProfile } from "../store/slice/authSlice";
 import { updateProfile } from "../services/user";
 import { UserProfile } from "../shared/types";
 import { safeStorage } from "../utils/safeStorage";
+import { biometricAuthService } from "../services/biometricAuth";
+import { backgroundAudioService } from "../services/backgroundAudio";
 
 interface SettingsProps { }
 
@@ -38,6 +40,14 @@ const Settings: FunctionComponent<SettingsProps> = () => {
     // Initial load from safeStorage
     const [isAutoplayEnabled, setIsAutoplayEnabled] = useState(() =>
         safeStorage.get("autoplay_enabled") === "true"
+    );
+
+    const [isBiometricEnabled, setIsBiometricEnabled] = useState(() =>
+        biometricAuthService.isBiometricEnabled()
+    );
+
+    const [isBackgroundAudioEnabled, setIsBackgroundAudioEnabled] = useState(() =>
+        safeStorage.get("background_audio_enabled") === "true"
     );
 
     useEffect(() => {
@@ -115,6 +125,29 @@ const Settings: FunctionComponent<SettingsProps> = () => {
         );
         keysToRemove.forEach(key => safeStorage.remove(key));
         toast.success(`Cleared ${keysToRemove.length} cached items!`, { position: "top-right" });
+    };
+
+    const handleBiometricToggle = async () => {
+        if (!isBiometricEnabled) {
+            const success = await biometricAuthService.enableBiometric();
+            if (success) {
+                setIsBiometricEnabled(true);
+                toast.success("Biometric Authentication Enabled", { position: "top-right", autoClose: 1000 });
+            } else {
+                toast.error("Biometric not supported or permission denied", { position: "top-right" });
+            }
+        } else {
+            biometricAuthService.disableBiometric();
+            setIsBiometricEnabled(false);
+            toast.info("Biometric Authentication Disabled", { position: "top-right", autoClose: 1000 });
+        }
+    };
+
+    const handleBackgroundAudioToggle = () => {
+        const newState = !isBackgroundAudioEnabled;
+        setIsBackgroundAudioEnabled(newState);
+        safeStorage.set("background_audio_enabled", String(newState));
+        toast.info(`Background Audio ${newState ? "Enabled" : "Disabled"}`, { position: "top-right", autoClose: 1000 });
     };
 
     return (
@@ -307,6 +340,48 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                                     </div>
                                     <div className="w-48">
                                         <LanguageSelector />
+                                    </div>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="h-px bg-white/5" />
+
+                                {/* Native Features Section */}
+                                <div className="pb-2">
+                                    <p className="text-primary text-[10px] font-bold uppercase tracking-widest mb-4">Native Experience (App only)</p>
+
+                                    <div className="space-y-6">
+                                        {/* Biometric Toggle */}
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-white font-medium">Biometric Unlock</p>
+                                                <p className="text-gray-500 text-xs mt-1">
+                                                    Use Fingerprint or Face ID to quickly unlock your profile.
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={handleBiometricToggle}
+                                                className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${isBiometricEnabled ? "bg-primary" : "bg-gray-700"}`}
+                                            >
+                                                <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${isBiometricEnabled ? "translate-x-6" : ""}`} />
+                                            </button>
+                                        </div>
+
+                                        {/* Background Audio Toggle */}
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-white font-medium">Background Playback</p>
+                                                <p className="text-gray-500 text-xs mt-1">
+                                                    Keep audio playing when the app is minimized or the screen is off.
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={handleBackgroundAudioToggle}
+                                                className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${isBackgroundAudioEnabled ? "bg-primary" : "bg-gray-700"}`}
+                                            >
+                                                <div className={`w-4 h-4 bg-white rounded-full transition-transform duration-300 ${isBackgroundAudioEnabled ? "translate-x-6" : ""}`} />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

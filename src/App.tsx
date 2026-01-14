@@ -26,6 +26,7 @@ import Disclaimer from "./pages/Disclaimer";
 import Download from "./pages/Download";
 import CalendarPage from "./pages/CalendarPage";
 import Settings from "./pages/Settings";
+import MiniPlayer from "./components/FilmWatch/MiniPlayer";
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
@@ -268,6 +269,7 @@ function App() {
         />
         <Route path="*" element={<Error />} />
       </Routes>
+      <MiniPlayer />
     </>
   );
 }

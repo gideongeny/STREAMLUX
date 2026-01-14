@@ -22,9 +22,9 @@ const SportsHome: FC = () => {
   const [liveFixtures, setLiveFixtures] = useState<SportsFixtureConfig[]>([]);
   const [upcomingFixtures, setUpcomingFixtures] = useState<SportsFixtureConfig[]>([]);
 
-  // Redirect to sportslive.run when component mounts (like MovieBox)
+  // Redirect to sportslive.run when component mounts (removed to keep experience internal)
   useEffect(() => {
-    window.location.href = "https://sportslive.run/live?utm_source=MB_Website&sportType=football";
+    // window.location.href = "https://sportslive.run/live?utm_source=MB_Website&sportType=football";
   }, []);
 
 
@@ -59,16 +59,16 @@ const SportsHome: FC = () => {
   const allFixtures = useMemo(() => {
     // Always include static data as base
     const combined = [...SPORTS_FIXTURES];
-    
+
     // Add real API data if available
     if (liveFixtures.length > 0 || upcomingFixtures.length > 0) {
       combined.push(...liveFixtures, ...upcomingFixtures);
     }
-    
+
     // Remove duplicates by id (prioritize API data over static)
     const seen = new Set<string>();
     const unique: SportsFixtureConfig[] = [];
-    
+
     // First add API data
     [...liveFixtures, ...upcomingFixtures].forEach((fixture) => {
       if (!seen.has(fixture.id)) {
@@ -76,7 +76,7 @@ const SportsHome: FC = () => {
         unique.push(fixture);
       }
     });
-    
+
     // Then add static data that's not already included
     SPORTS_FIXTURES.forEach((fixture) => {
       if (!seen.has(fixture.id)) {
@@ -84,7 +84,7 @@ const SportsHome: FC = () => {
         unique.push(fixture);
       }
     });
-    
+
     return unique;
   }, [liveFixtures, upcomingFixtures]);
 
@@ -153,7 +153,7 @@ const SportsHome: FC = () => {
               partners you configure.
             </p>
           </div>
-          
+
           {!isMobile && (
             <div className="mb-6 max-w-md">
               <SearchBox relative={true} />
@@ -173,31 +173,28 @@ const SportsHome: FC = () => {
           <div className="flex flex-wrap gap-3 mb-6">
             <button
               onClick={() => setActiveStatus("live")}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                activeStatus === "live"
+              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${activeStatus === "live"
                   ? "bg-red-600 text-white border-red-500"
                   : "border-red-600/40 text-red-400 hover:border-red-400"
-              }`}
+                }`}
             >
               Live Now
             </button>
             <button
               onClick={() => setActiveStatus("upcoming")}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                activeStatus === "upcoming"
+              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${activeStatus === "upcoming"
                   ? "bg-amber-500 text-black border-amber-400"
                   : "border-amber-400/40 text-amber-300 hover:border-amber-300"
-              }`}
+                }`}
             >
               Upcoming
             </button>
             <button
               onClick={() => setActiveStatus("replay")}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                activeStatus === "replay"
+              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${activeStatus === "replay"
                   ? "bg-emerald-500 text-black border-emerald-500"
                   : "border-emerald-500/40 text-emerald-300 hover:border-emerald-300"
-              }`}
+                }`}
             >
               Replays
             </button>
@@ -231,11 +228,10 @@ const SportsHome: FC = () => {
           <div className="flex flex-wrap gap-2 mb-8">
             <button
               onClick={() => setActiveLeague("all")}
-              className={`px-3 py-1.5 rounded-full text-xs md:text-sm border transition ${
-                activeLeague === "all"
+              className={`px-3 py-1.5 rounded-full text-xs md:text-sm border transition ${activeLeague === "all"
                   ? "bg-white text-black border-white"
                   : "border-gray-600 text-gray-300 hover:border-gray-300"
-              }`}
+                }`}
             >
               All Competitions
             </button>
@@ -243,11 +239,10 @@ const SportsHome: FC = () => {
               <button
                 key={league.id}
                 onClick={() => setActiveLeague(league.id)}
-                className={`px-3 py-1.5 rounded-full text-xs md:text-sm border transition flex items-center gap-2 ${
-                  activeLeague === league.id
+                className={`px-3 py-1.5 rounded-full text-xs md:text-sm border transition flex items-center gap-2 ${activeLeague === league.id
                     ? "bg-primary text-white border-primary"
                     : "border-gray-700 text-gray-300 hover:border-gray-300"
-                }`}
+                  }`}
               >
                 {league.flag && <span>{league.flag}</span>}
                 <span>{league.shortName}</span>
@@ -302,19 +297,18 @@ const SportsHome: FC = () => {
                           )}
                         </p>
                         <span
-                          className={`text-[10px] px-2 py-1 rounded-full font-semibold tracking-wide ${
-                            fixture.status === "live"
+                          className={`text-[10px] px-2 py-1 rounded-full font-semibold tracking-wide ${fixture.status === "live"
                               ? "bg-red-600/20 text-red-400 border border-red-500/60 animate-pulse"
                               : fixture.status === "upcoming"
-                              ? "bg-amber-500/15 text-amber-300 border border-amber-400/60"
-                              : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/60"
-                          }`}
+                                ? "bg-amber-500/15 text-amber-300 border border-amber-400/60"
+                                : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/60"
+                            }`}
                         >
                           {fixture.status === "live"
                             ? "🔴 LIVE"
                             : fixture.status === "upcoming"
-                            ? "UPCOMING"
-                            : "REPLAY"}
+                              ? "UPCOMING"
+                              : "REPLAY"}
                         </span>
                       </div>
 

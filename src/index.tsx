@@ -21,6 +21,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { store } from "./store/store";
 import { Provider } from "react-redux";
 import ErrorBoundary from "./components/Common/ErrorBoundary";
+import { PlayerProvider } from "./context/PlayerContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -124,7 +125,9 @@ function initializeApp() {
         <BrowserRouter>
           <QueryClientProvider client={queryClient}>
             <Provider store={store}>
-              <App />
+              <PlayerProvider>
+                <App />
+              </PlayerProvider>
             </Provider>
           </QueryClientProvider>
         </BrowserRouter>

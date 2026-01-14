@@ -16,6 +16,11 @@ import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
 import ContinueWatching from "../components/Home/ContinueWatching";
 import SmartRecommendations from "../components/Home/SmartRecommendations";
 import ErrorBoundary from "../components/Common/ErrorBoundary";
+import Top10Slider from "../components/Home/Top10Slider";
+import VerticalShorts from "../components/Home/VerticalShorts";
+import UpcomingCalendar from "../components/Home/UpcomingCalendar";
+import NewReleases from "../components/Home/NewReleases";
+import SectionErrorBoundary from "../components/Common/SectionErrorBoundary";
 import { useHomeData } from "../hooks/useHomeData";
 import { useWatchProgress } from "../hooks/useWatchProgress";
 import { useAppSelector } from "../store/hooks";
@@ -183,10 +188,16 @@ const Home: FC = () => {
             />
           )}
 
-          {/* Live Sports Ticker (MovieBox.ph style) - Wrapped in ErrorBoundary */}
-          <ErrorBoundary fallback={null}>
+
+          {/* Top 10 Section */}
+          <SectionErrorBoundary fallback={null}>
+            <Top10Slider films={(currentTab === "movie" ? dataMovie?.Trending : dataTV?.Trending) || []} />
+          </SectionErrorBoundary>
+
+          {/* Sports Section */}
+          <SectionErrorBoundary fallback={null}>
             <LiveSportsTicker />
-          </ErrorBoundary>
+          </SectionErrorBoundary>
 
           {/* Continue Watching Shelf - Restored "Superior" Feature */}
           <ErrorBoundary fallback={null}>
@@ -199,6 +210,21 @@ const Home: FC = () => {
           {/* AI-Powered Recommendations - Superior Discovery */}
           <ErrorBoundary fallback={null}>
             <SmartRecommendations />
+          </ErrorBoundary>
+
+          {/* Must-Watch Vertical Shorts (TikTok-style) - Restored Superior Feature */}
+          <ErrorBoundary fallback={null}>
+            <VerticalShorts variant="horizontal" />
+          </ErrorBoundary>
+
+          {/* Upcoming Content Calendar (2026+) - Restored Feature */}
+          <ErrorBoundary fallback={null}>
+            <UpcomingCalendar contentType={currentTab as any} />
+          </ErrorBoundary>
+
+          {/* New Releases & Fast Discovery */}
+          <ErrorBoundary fallback={null}>
+            <NewReleases />
           </ErrorBoundary>
 
           {/* Live & Upcoming Sports Section (MovieBox-style) - Already has ErrorBoundary */}
