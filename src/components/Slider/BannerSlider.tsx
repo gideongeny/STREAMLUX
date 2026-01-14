@@ -23,7 +23,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
   const { isMobile } = useCurrentViewportView();
 
   return (
-    <div className="mt-6 relative h-0 md:pb-[45%] pb-[55%] tw-banner-slider bg-dark-lighten rounded-lg overflow-hidden">
+    <div className="mt-6 relative w-full h-0 md:pb-[35%] pb-[56.25%] tw-banner-slider bg-dark-lighten rounded-lg overflow-hidden max-h-[85vh]">
       {isLoadingBanner ? (
         <Skeleton className="absolute top-0 left-0 w-full h-full !rounded-lg" />
       ) : (

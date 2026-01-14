@@ -26,6 +26,7 @@ import Disclaimer from "./pages/Disclaimer";
 import Download from "./pages/Download";
 import CalendarPage from "./pages/CalendarPage";
 import Settings from "./pages/Settings";
+import YouTubeInfo from "./pages/YouTube/YouTubeInfo";
 import MiniPlayer from "./components/FilmWatch/MiniPlayer";
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch } from "./store/hooks";
@@ -237,6 +238,7 @@ function App() {
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="settings" element={<Settings />} />
         <Route path="search" element={<Search />} />
+        <Route path="youtube/:id" element={<YouTubeInfo />} />
         <Route path="auth" element={<Auth />} />
         <Route path="copyright" element={<Copyright />} />
         <Route path="privacy-policy" element={<PrivacyPolicy />} />
