@@ -32,7 +32,7 @@ const Auth: FunctionComponent<AuthProps> = () => {
           className="fixed md:-top-[130px] -top-[155px] object-cover left-0 h-[135vh] w-full -z-10"
         >
           <source
-            src="/trailer/trailer.mp4"
+            src="/auth-background.mp4"
             type="video/mp4"
           />
         </video>

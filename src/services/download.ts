@@ -297,7 +297,7 @@ export class DownloadService {
     }
   }
 
-  // Main download method - Robust "Open & Save" approach
+  // Main download method - Robust "Scraper First" approach
   async downloadMovie(
     downloadInfo: DownloadInfo,
     onProgress?: (progress: DownloadProgress) => void
@@ -315,19 +315,56 @@ export class DownloadService {
 
     try {
       progress.status = "downloading";
-      progress.message = "Finding best stream...";
-      progress.progress = 30;
+      progress.message = "Searching for high-quality sources...";
+      progress.progress = 20;
+      onProgress?.(progress);
+
+      // STEP 1: Check Scraped Data (Netnaija, Fzmovies, etc.)
+      const { hasDownloads, enrichWithDownloads } = require('./hybridContent');
+      const title = downloadInfo.title;
+
+      if (hasDownloads(title)) {
+        progress.message = "Found direct scraper links!";
+        progress.progress = 40;
+        onProgress?.(progress);
+
+        const hybridItems = enrichWithDownloads([{
+          title,
+          media_type: downloadInfo.mediaType,
+          id: 0 // Placeholder
+        }]);
+
+        if (hybridItems[0]?.downloads && hybridItems[0].downloads.length > 0) {
+          const directUrl = hybridItems[0].downloads[0].url;
+          progress.message = "Opening direct download...";
+          progress.progress = 100;
+          progress.status = "completed";
+          onProgress?.(progress);
+
+          window.open(directUrl, '_blank');
+          return;
+        }
+      }
+
+      // STEP 2: Logic for generic sources (VidSrc Proxy)
+      progress.message = "Resolving streaming backup...";
+      progress.progress = 60;
       onProgress?.(progress);
 
       const tmdbIdMatch = downloadInfo.sources[0].match(/\/(\d+)(?:\/|\?|$)/);
-      const tmdbId = tmdbIdMatch ? tmdbIdMatch[1] : null;
+      const tmdbId = tmdbIdMatch ? parseInt(tmdbIdMatch[1]) : 0;
       let targetUrl = downloadInfo.sources[0];
 
-      if (tmdbId) {
-        // Try to resolve via backend to get the active Vidsrc link
+      if (tmdbId > 0) {
         try {
           const backendBase = process.env.REACT_APP_BACKEND_URL ? process.env.REACT_APP_BACKEND_URL.replace('/api', '') : 'http://localhost:3001';
-          const response = await fetch(`${backendBase}/api/resolve?type=${downloadInfo.mediaType}&id=${tmdbId}`);
+
+          let resolveUrl = `${backendBase}/api/resolve?type=${downloadInfo.mediaType}&id=${tmdbId}`;
+          if (downloadInfo.mediaType === 'tv' && downloadInfo.seasonId && downloadInfo.episodeId) {
+            resolveUrl += `&s=${downloadInfo.seasonId}&e=${downloadInfo.episodeId}`;
+          }
+
+          const response = await fetch(resolveUrl);
           if (response.ok) {
             const data = await response.json();
             if (data.directUrl) {
@@ -335,18 +372,18 @@ export class DownloadService {
             }
           }
         } catch (e) {
-          console.warn("Backend resolution failed:", e);
+          console.warn("Backend resolution fallback failed:", e);
         }
       }
 
-      progress.message = "Opening player (Use Browser Save)...";
+      // STEP 3: Fallback to Smart Download Page
+      progress.message = "Opening Smart Download Page...";
       progress.progress = 100;
       progress.status = "completed";
       onProgress?.(progress);
 
-      // Open the target URL (Embed/Stream) in a new tab
-      // This allows the user to watch or use "Save Video As" depending on the source
-      const newTab = window.open(targetUrl, '_blank');
+      const downloadPage = this.createSmartDownloadPage(downloadInfo, tmdbId);
+      const newTab = window.open(downloadPage, '_blank');
 
       if (!newTab) {
         throw new Error("Popup blocked. Please allow popups to open the download player.");

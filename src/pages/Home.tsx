@@ -13,15 +13,18 @@ import DiverseNavigation from "../components/Common/DiverseNavigation";
 import DiverseContent from "../components/Home/DiverseContent";
 import LiveSports from "../components/Home/LiveSports";
 import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
+import ContinueWatching from "../components/Home/ContinueWatching";
+import SmartRecommendations from "../components/Home/SmartRecommendations";
 import ErrorBoundary from "../components/Common/ErrorBoundary";
 import { useHomeData } from "../hooks/useHomeData";
+import { useWatchProgress } from "../hooks/useWatchProgress";
 import { useAppSelector } from "../store/hooks";
 
 const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
 
   const [isSidebarActive, setIsSidebarActive] = useState(false);
-  
+
 
   ///////////////////////////////////////////////////////////////////////////////////
   // WAY 1: MANUALLY SET UP LOCAL STORAGE
@@ -58,9 +61,9 @@ const Home: FC = () => {
     }
     return "tv";
   };
-  
+
   const [currentTab, setCurrentTab] = useState<"movie" | "tv" | "sports">(() => getInitialTab());
-  
+
   // Sync to localStorage when currentTab changes
   useEffect(() => {
     try {
@@ -69,12 +72,10 @@ const Home: FC = () => {
       console.warn("Error saving currentTab to localStorage:", error);
     }
   }, [currentTab]);
-  
+
+  const { watchHistory, clearProgress } = useWatchProgress();
+
   const handleTabChange = (tab: "movie" | "tv" | "sports") => {
-    if (tab === "sports") {
-      window.open("https://sportslive.run/live?utm_source=MB_Website&sportType=football", "_blank");
-      return;
-    }
     setCurrentTab(tab);
   };
 
@@ -187,14 +188,31 @@ const Home: FC = () => {
             <LiveSportsTicker />
           </ErrorBoundary>
 
+          {/* Continue Watching Shelf - Restored "Superior" Feature */}
+          <ErrorBoundary fallback={null}>
+            <ContinueWatching
+              watchHistory={watchHistory}
+              onClearProgress={clearProgress}
+            />
+          </ErrorBoundary>
+
+          {/* AI-Powered Recommendations - Superior Discovery */}
+          <ErrorBoundary fallback={null}>
+            <SmartRecommendations />
+          </ErrorBoundary>
+
           {/* Live & Upcoming Sports Section (MovieBox-style) - Already has ErrorBoundary */}
-          <LiveSports />
+          {currentTab === "sports" ? (
+            <LiveSports />
+          ) : (
+            <>
+              {/* Discover World navigation (moved from sidebar) */}
+              <DiverseNavigation />
 
-          {/* Discover World navigation (moved from sidebar) */}
-          <DiverseNavigation />
-
-          {/* Discover World content */}
-          <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />
+              {/* Discover World content */}
+              <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />
+            </>
+          )}
         </div>
 
         <div className="shrink-0 max-w-[310px] w-full hidden lg:block px-6 top-0 sticky ">
@@ -233,9 +251,8 @@ const FilmTypeButton: FC<FilmTypeButtonProps> = ({
       onClick={() => {
         onSetCurrentTab(buttonType);
       }}
-      className={`relative transition duration-300 hover:text-white ${
-        isActive ? "text-white font-medium" : ""
-      }`}
+      className={`relative transition duration-300 hover:text-white ${isActive ? "text-white font-medium" : ""
+        }`}
     >
       {getButtonText()}
       {isActive && (

@@ -12,12 +12,16 @@ export const getDownloadUrl = (url: string, filename?: string) => {
 };
 
 // Helper to get backend resolution
-const resolveBackend = async (type: string, id: string): Promise<any> => {
+const resolveBackend = async (type: string, id: string, s?: string, e?: string): Promise<any> => {
     try {
-        const response = await fetch(`${PROXY_BASE}/resolve?type=${type}&id=${id}`);
+        const query = new URLSearchParams({ type, id });
+        if (s) query.append('s', s);
+        if (e) query.append('e', e);
+
+        const response = await fetch(`${PROXY_BASE}/resolve?${query.toString()}`);
         if (!response.ok) return null;
         return await response.json();
-    } catch (e) {
+    } catch (err) {
         return null;
     }
 };
@@ -224,7 +228,12 @@ export class ResolverService {
 
         // NEW: Check backend resolution for VidSrc
         try {
-            const backendData = await resolveBackend(mediaType, tmdbId);
+            const backendData = await resolveBackend(
+                mediaType,
+                tmdbId,
+                season?.toString(),
+                episode?.toString()
+            );
             if (backendData && backendData.status === 'active' && backendData.proxiedUrl) {
                 // Prepend the backend resolved source as Priority 0 (Highest)
                 sources.unshift({
