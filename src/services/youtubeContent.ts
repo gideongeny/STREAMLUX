@@ -12,12 +12,12 @@ export const convertYouTubeToItem = (video: YouTubeVideo, index: number): Item =
         poster_path: video.thumbnail,
         backdrop_path: video.thumbnail,
         media_type: (video.type === 'movie' ? 'movie' : 'tv') as 'movie' | 'tv',
-        vote_average: 7.5,
-        vote_count: parseInt(video.viewCount || '100'),
-        popularity: parseInt(video.viewCount || '1000'),
-        release_date: video.publishedAt,
-        first_air_date: video.publishedAt,
-        genre_ids: [],
+        vote_average: 7.5 + (Math.random() * 2),
+        vote_count: parseInt(video.viewCount || '1000'),
+        popularity: parseInt(video.viewCount || '5000'),
+        release_date: (video.publishedAt || new Date().toISOString()).split('T')[0],
+        first_air_date: (video.publishedAt || new Date().toISOString()).split('T')[0],
+        genre_ids: [18, 10749], // Drama, Romance defaults
         original_language: 'en',
     } as Item;
 };
@@ -111,6 +111,40 @@ export const getYouTubeByGenre = async (genre: string, mediaType: 'movie' | 'tv'
             .map((v, i) => convertYouTubeToItem(v, i));
     } catch (error) {
         console.error(`Error fetching YouTube ${genre}:`, error);
+        return [];
+    }
+};
+// Fetch YouTube Must-Watch Shorts
+export const getYouTubeShorts = async (): Promise<Item[]> => {
+    try {
+        const queries = [
+            'movie trailers shorts',
+            'amazing movie clips shorts',
+            'must watch movie shorts 2024'
+        ];
+
+        const results = await Promise.allSettled(
+            queries.map(q => fetchYouTubeVideos(q))
+        );
+
+        const allVideos: YouTubeVideo[] = [];
+        results.forEach(result => {
+            if (result.status === 'fulfilled') {
+                allVideos.push(...result.value.videos);
+            }
+        });
+
+        const seen = new Set<string>();
+        return allVideos
+            .filter(v => {
+                if (seen.has(v.id)) return false;
+                seen.add(v.id);
+                return true;
+            })
+            .slice(0, 15)
+            .map((v, i) => convertYouTubeToItem(v, i));
+    } catch (error) {
+        console.error('Error fetching YouTube shorts:', error);
         return [];
     }
 };

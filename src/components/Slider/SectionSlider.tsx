@@ -15,10 +15,10 @@ interface SectionSliderProps {
   seeMoreParams?: Record<string, string | number>;
 }
 
-const SectionSlider: FC<SectionSliderProps> = ({ 
-  films, 
-  title, 
-  limitNumber, 
+const SectionSlider: FC<SectionSliderProps> = ({
+  films,
+  title,
+  limitNumber,
   isLoading = false,
   seeMoreLink,
   seeMoreParams
@@ -58,7 +58,7 @@ const SectionSlider: FC<SectionSliderProps> = ({
           )}
         </div>
       )}
-      
+
       {/* Slider */}
       <div className="relative">
         <Swiper
@@ -71,21 +71,21 @@ const SectionSlider: FC<SectionSliderProps> = ({
           // I substracted 17px because the default scrollbar's width is 17px, which I may change later (to 10px now)
           className="md:!w-[calc(100vw_-_260px_-_310px_-_2px_-_4vw_-_10px)] !w-[calc(100vw-8vw-2px)] tw-section-slider !py-2"
         >
-          {displayFilms?.map((film) => (
+          {(displayFilms && displayFilms.length > 0 && displayFilms.map((film) => (
             <SwiperSlide key={film.id} className="!w-[175px]">
               <FilmItem item={film} />
             </SwiperSlide>
-          )) || (
-            <>
-              {new Array(Math.ceil(window.innerWidth / 200))
-                .fill("")
-                .map((_, index) => (
-                  <SwiperSlide key={index} className="!w-[175px]">
-                    <Skeleton className="!w-[175px] !h-[280px] shadow-sm" />
-                  </SwiperSlide>
-                ))}
-            </>
-          )}
+          ))) || (
+              <>
+                {new Array(Math.ceil(window.innerWidth / 200))
+                  .fill("")
+                  .map((_, index) => (
+                    <SwiperSlide key={index} className="!w-[175px]">
+                      <Skeleton className="!w-[175px] !h-[280px] shadow-sm" />
+                    </SwiperSlide>
+                  ))}
+              </>
+            )}
 
           {displayFilms !== undefined && (
             <>

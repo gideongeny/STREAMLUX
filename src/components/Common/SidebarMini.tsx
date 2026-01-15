@@ -1,4 +1,5 @@
 import { FunctionComponent } from "react";
+// Forced update
 import { AiOutlineHistory, AiOutlineHome } from "react-icons/ai";
 import { BiSearch, BiUserCircle } from "react-icons/bi";
 import { BsBookmarkHeart } from "react-icons/bs";
@@ -46,9 +47,8 @@ const SidebarMini: FunctionComponent = () => {
         <div className="flex flex-col gap-7">
           <Link
             to="/"
-            className={`hover:text-primary transition duration-300 ${
-              location.pathname === "/" && "text-primary"
-            }`}
+            className={`hover:text-primary transition duration-300 ${location.pathname === "/" && "text-primary"
+              }`}
           >
             <AiOutlineHome size={25} />
           </Link>
@@ -63,41 +63,36 @@ const SidebarMini: FunctionComponent = () => {
           </a>
           <Link
             to="/explore"
-            className={`hover:text-primary transition duration-300 ${
-              location.pathname === "/explore" && "text-primary"
-            }`}
+            className={`hover:text-primary transition duration-300 ${location.pathname === "/explore" && "text-primary"
+              }`}
           >
             <MdOutlineExplore size={25} />
           </Link>
           <Link
             to="/search"
-            className={`hover:text-primary transition duration-300 ${
-              location.pathname === "/search" && "text-primary"
-            }`}
+            className={`hover:text-primary transition duration-300 ${location.pathname === "/search" && "text-primary"
+              }`}
           >
             <BiSearch size={25} />
           </Link>
           <button
             onClick={() => personalPageHandler("/bookmarked")}
-            className={`hover:text-primary transition duration-300 ${
-              location.pathname === "/bookmarked" && "text-primary"
-            }`}
+            className={`hover:text-primary transition duration-300 ${location.pathname === "/bookmarked" && "text-primary"
+              }`}
           >
             <BsBookmarkHeart size={25} />
           </button>
           <button
             onClick={() => personalPageHandler("/history")}
-            className={`hover:text-primary transition duration-300 ${
-              location.pathname === "/history" && "text-primary"
-            }`}
+            className={`hover:text-primary transition duration-300 ${location.pathname === "/history" && "text-primary"
+              }`}
           >
             <AiOutlineHistory size={25} />
           </button>
           <button
             onClick={() => personalPageHandler("/profile")}
-            className={`hover:text-primary transition duration-300 ${
-              location.pathname === "/profile" && "text-primary"
-            }`}
+            className={`hover:text-primary transition duration-300 ${location.pathname === "/profile" && "text-primary"
+              }`}
           >
             <BiUserCircle size={25} />
           </button>

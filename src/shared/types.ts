@@ -272,6 +272,7 @@ export interface HomeFilms {
 export interface BannerInfo {
   genre: { name: string; id: number }[];
   translation: string[];
+  trailer?: string;
 }
 
 export interface FilmInfo {

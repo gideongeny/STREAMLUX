@@ -1,6 +1,15 @@
 // Import polyfills first for older browser support
 import "./utils/polyfills";
 
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Provider } from "react-redux";
+import App from "./App";
+import { store } from "./store/store";
+import ErrorBoundary from "./components/Common/ErrorBoundary";
+import { PlayerProvider } from "./context/PlayerContext";
+
 // Initialize Capacitor for mobile app
 import { initCapacitor } from "./utils/capacitor";
 import "./i18n";
@@ -14,14 +23,14 @@ import "react-lazy-load-image-component/src/effects/opacity.css";
 import "react-circular-progressbar/dist/styles.css";
 import "react-toastify/dist/ReactToastify.css";
 
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import { BrowserRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { store } from "./store/store";
-import { Provider } from "react-redux";
-import ErrorBoundary from "./components/Common/ErrorBoundary";
-import { PlayerProvider } from "./context/PlayerContext";
+// FORCE UNREGISTER ANY EXISTING SERVICE WORKER to fix caching issues
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function (registrations) {
+    for (let registration of registrations) {
+      registration.unregister();
+    }
+  });
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {

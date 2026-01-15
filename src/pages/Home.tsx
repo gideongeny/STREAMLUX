@@ -11,7 +11,7 @@ import RecommendGenres from "../components/Home/RecommendGenres";
 import TrendingNow from "../components/Home/TrendingNow";
 import DiverseNavigation from "../components/Common/DiverseNavigation";
 import DiverseContent from "../components/Home/DiverseContent";
-import LiveSports from "../components/Home/LiveSports";
+import SportsMainContent from "../components/Sports/SportsMainContent";
 import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
 import ContinueWatching from "../components/Home/ContinueWatching";
 import SmartRecommendations from "../components/Home/SmartRecommendations";
@@ -180,14 +180,14 @@ const Home: FC = () => {
         </button>
       </div>
 
-      <div className="flex items-start relative">
+      <div className="flex items-start relative max-w-full overflow-x-hidden">
         <Sidebar
           onCloseSidebar={() => setIsSidebarActive(false)}
           isSidebarActive={isSidebarActive}
         />
 
         <div
-          className="flex-grow md:pt-7 pt-0 pb-7 border-x md:px-[2vw] px-[4vw] border-gray-darken min-h-screen bg-dark relative z-0"
+          className="flex-grow md:pt-7 pt-0 pb-7 border-x md:px-[2vw] px-[4vw] border-gray-darken min-h-screen bg-dark relative z-0 max-w-full overflow-x-hidden"
         >
           <div className="flex justify-between md:items-end items-center">
             <div className="inline-flex gap-[40px] pb-[14px] border-b border-gray-darken relative">
@@ -223,6 +223,7 @@ const Home: FC = () => {
             </div>
           </div>
 
+          {/* Main Banner Slider for Movies/TV */}
           {currentTab === "movie" && (
             <MainHomeFilm
               data={dataMovie}
@@ -240,51 +241,52 @@ const Home: FC = () => {
             />
           )}
 
-
-          {/* Top 10 Section */}
-          <SectionErrorBoundary fallback={null}>
-            <Top10Slider films={(currentTab === "movie" ? dataMovie?.Trending : dataTV?.Trending) || []} />
-          </SectionErrorBoundary>
-
-          {/* Sports Section */}
-          <SectionErrorBoundary fallback={null}>
-            <LiveSportsTicker />
-          </SectionErrorBoundary>
-
-          {/* Continue Watching Shelf - Restored "Superior" Feature */}
-          <ErrorBoundary fallback={null}>
-            <ContinueWatching
-              watchHistory={watchHistory}
-              onClearProgress={clearProgress}
-            />
-          </ErrorBoundary>
-
-          {/* AI-Powered Recommendations - Superior Discovery */}
-          <ErrorBoundary fallback={null}>
-            <SmartRecommendations />
-          </ErrorBoundary>
-
-          {/* Must-Watch Vertical Shorts (TikTok-style) - Restored Superior Feature */}
-          <ErrorBoundary fallback={null}>
-            <VerticalShorts variant="horizontal" />
-          </ErrorBoundary>
-
-          {/* Upcoming Content Calendar (2026+) - Restored Feature */}
-          <ErrorBoundary fallback={null}>
-            <UpcomingCalendar contentType={currentTab as any} />
-          </ErrorBoundary>
-
-          {/* New Releases & Fast Discovery */}
-          <ErrorBoundary fallback={null}>
-            <NewReleases />
-          </ErrorBoundary>
-
-          {/* Live & Upcoming Sports Section (MovieBox-style) - Already has ErrorBoundary */}
+          {/* Conditional Sections based on Tab */}
           {currentTab === "sports" ? (
-            <LiveSports />
+            <div className="mt-6">
+              <SportsMainContent />
+            </div>
           ) : (
             <>
-              {/* Discover World navigation (moved from sidebar) */}
+              {/* Top 10 Section - Movie/TV Only */}
+              <SectionErrorBoundary fallback={null}>
+                <Top10Slider films={(currentTab === "movie" ? dataMovie?.Trending : dataTV?.Trending) || []} />
+              </SectionErrorBoundary>
+
+              {/* Sports Ticker (Optional for Movie/TV views) */}
+              <SectionErrorBoundary fallback={null}>
+                <LiveSportsTicker />
+              </SectionErrorBoundary>
+
+              {/* Continue Watching Shelf */}
+              <ErrorBoundary fallback={null}>
+                <ContinueWatching
+                  watchHistory={watchHistory}
+                  onClearProgress={clearProgress}
+                />
+              </ErrorBoundary>
+
+              {/* AI-Powered Recommendations */}
+              <ErrorBoundary fallback={null}>
+                <SmartRecommendations />
+              </ErrorBoundary>
+
+              {/* Must-Watch Vertical Shorts */}
+              <ErrorBoundary fallback={null}>
+                <VerticalShorts variant="horizontal" />
+              </ErrorBoundary>
+
+              {/* Upcoming Content Calendar */}
+              <ErrorBoundary fallback={null}>
+                <UpcomingCalendar contentType={currentTab as any} />
+              </ErrorBoundary>
+
+              {/* New Releases & Fast Discovery */}
+              <ErrorBoundary fallback={null}>
+                <NewReleases />
+              </ErrorBoundary>
+
+              {/* Discover World navigation */}
               <DiverseNavigation />
 
               {/* Discover World content */}
@@ -295,8 +297,12 @@ const Home: FC = () => {
 
         <div className="shrink-0 max-w-[310px] w-full hidden lg:block px-6 top-0 sticky ">
           <SearchBox />
-          <RecommendGenres currentTab={currentTab} />
-          <TrendingNow />
+          {currentTab !== "sports" && (
+            <>
+              <RecommendGenres currentTab={currentTab} />
+              <TrendingNow />
+            </>
+          )}
           {/* DiverseNavigation removed from sidebar */}
         </div>
       </div>

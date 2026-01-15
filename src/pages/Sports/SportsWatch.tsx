@@ -1,7 +1,9 @@
-import { FC, useMemo, useState } from "react";
+import { FC, useMemo, useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { MdSportsSoccer } from "react-icons/md";
+import { usePlayer } from "../../context/PlayerContext";
+import { useLocation } from "react-router-dom";
 
 import Sidebar from "../../components/Common/Sidebar";
 import SidebarMini from "../../components/Common/SidebarMini";
@@ -20,10 +22,27 @@ const SportsWatch: FC = () => {
   );
   const league = SPORTS_LEAGUES.find((item) => item.id === leagueId);
 
+  const { setMiniPlayerData } = usePlayer();
+  const location = useLocation();
+
   const sources = useMemo(
     () => fixture?.streamSources ?? [],
     [fixture?.streamSources]
   );
+
+  // Update mini player data
+  useEffect(() => {
+    if (fixture) {
+      setMiniPlayerData({
+        mediaId: Number(fixture.id.replace('live-', '').replace('upcoming-', '')) || 0,
+        mediaType: "movie", // Workaround as PiP expects movie/tv, sports can use movie layout
+        sourceUrl: sources[0] || "",
+        currentTime: 0,
+        title: `${fixture.homeTeam} vs ${fixture.awayTeam}`,
+        posterPath: fixture.homeTeamLogo || "",
+      });
+    }
+  }, [fixture, sources, setMiniPlayerData]);
 
   const getSourceDisplayName = (url: string) => {
     if (url.includes("dstv")) return "DStv";
@@ -124,19 +143,18 @@ const SportsWatch: FC = () => {
                 </div>
                 <div className="flex flex-col items-start md:items-end gap-2">
                   <span
-                    className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[10px] font-semibold tracking-wide ${
-                      fixture.status === "live"
-                        ? "bg-red-600/20 text-red-400 border border-red-500/60"
-                        : fixture.status === "upcoming"
+                    className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[10px] font-semibold tracking-wide ${fixture.status === "live"
+                      ? "bg-red-600/20 text-red-400 border border-red-500/60"
+                      : fixture.status === "upcoming"
                         ? "bg-amber-500/15 text-amber-300 border border-amber-400/60"
                         : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/60"
-                    }`}
+                      }`}
                   >
                     {fixture.status === "live"
                       ? "LIVE"
                       : fixture.status === "upcoming"
-                      ? "UPCOMING"
-                      : "REPLAY"}
+                        ? "UPCOMING"
+                        : "REPLAY"}
                   </span>
                   {fixture.broadcast && (
                     <p className="text-[11px] text-gray-400">

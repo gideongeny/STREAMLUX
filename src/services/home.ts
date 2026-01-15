@@ -10,7 +10,7 @@ import {
 } from "./fzmovies";
 import { getAllSourceContent } from "./contentSources";
 import { getAllAPIContent, getAllAPIContentByGenre } from "./movieAPIs";
-import { getYouTubeMovies, getYouTubeTVShows } from "./youtubeContent";
+import { getYouTubeMovies, getYouTubeTVShows, getYouTubeByGenre, getYouTubeShorts } from "./youtubeContent";
 
 // MOVIE TAB
 ///////////////////////////////////////////////////////////////
@@ -96,6 +96,29 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
     return final;
   }, {} as HomeFilms);
 
+  // Add extra sections from Scrappers and YouTube
+  try {
+    const [scrapperMovies, youtubeMovies, youtubeAction, youtubeHorror, youtubeSciFi, scrapperComedy, youtubeShorts] = await Promise.all([
+      getAllSourceContent("movie", 1).catch(() => []),
+      getYouTubeMovies().catch(() => []),
+      getYouTubeByGenre("Action").catch(() => []),
+      getYouTubeByGenre("Horror").catch(() => []),
+      getYouTubeByGenre("Sci-Fi").catch(() => []),
+      getAllSourceContent("movie", 2).catch(() => []),
+      getYouTubeShorts().catch(() => []),
+    ]);
+
+    if (scrapperMovies.length > 0) data["From Scrappers"] = scrapperMovies;
+    if (youtubeMovies.length > 0) data["YouTube Movies"] = youtubeMovies;
+    if (youtubeAction.length > 0) data["YouTube Action"] = youtubeAction;
+    if (youtubeHorror.length > 0) data["YouTube Horror"] = youtubeHorror;
+    if (youtubeSciFi.length > 0) data["YouTube Sci-Fi"] = youtubeSciFi;
+    if (scrapperComedy.length > 0) data["Scrapper Hits"] = scrapperComedy;
+    if (youtubeShorts.length > 0) data["Must-Watch Shorts"] = youtubeShorts;
+  } catch (error) {
+    console.warn("Home movie extras failed:", error);
+  }
+
   return data;
 };
 
@@ -134,10 +157,15 @@ export const getMovieBannerInfo = async (
 
   // genres will look like: [[{name: "action", id: 14}, {name: "wild", id: 19}, {name: "love", ket: 23}],[{name: "fantasy", id: 22}, {name: "science", id: 99}],...]
 
+  const videoRes = await Promise.all(
+    movies.map((movie) => axios.get(`/movie/${movie.id}/videos`))
+  );
+
   // we have translations.length = genres.length, so let's merge these 2 arrays together
   return genres.map((genre, index) => ({
     genre,
     translation: translations[index],
+    trailer: videoRes[index].data.results.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key,
   })) as BannerInfo[];
 
   // yeah I admit that it's hard to understand my code :)
@@ -228,6 +256,25 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
     return final;
   }, {} as HomeFilms);
 
+  // Add extra sections from Scrappers and YouTube
+  try {
+    const [scrapperTV, youtubeTV, youtubeDrama, youtubeComedy, scrapperAnimation] = await Promise.all([
+      getAllSourceContent("tv", 1).catch(() => []),
+      getYouTubeTVShows().catch(() => []),
+      getYouTubeByGenre("Drama", "tv").catch(() => []),
+      getYouTubeByGenre("Comedy", "tv").catch(() => []),
+      getAllSourceContent("tv", 2).catch(() => []),
+    ]);
+
+    if (scrapperTV.length > 0) data["From Scrappers"] = scrapperTV;
+    if (youtubeTV.length > 0) data["YouTube TV Shows"] = youtubeTV;
+    if (youtubeDrama.length > 0) data["YouTube Drama"] = youtubeDrama;
+    if (youtubeComedy.length > 0) data["YouTube Comedy"] = youtubeComedy;
+    if (scrapperAnimation.length > 0) data["Scrapper Anime"] = scrapperAnimation;
+  } catch (error) {
+    console.warn("Home TV extras failed:", error);
+  }
+
   return data;
 };
 
@@ -260,9 +307,14 @@ export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
     item.data.genres.filter((_: any, index: number) => index < 3)
   );
 
+  const videoRes = await Promise.all(
+    tvs.map((tv) => axios.get(`/tv/${tv.id}/videos`))
+  );
+
   return genres.map((genre, index) => ({
     genre,
     translation: translations[index],
+    trailer: videoRes[index].data.results.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key,
   })) as BannerInfo[];
 };
 

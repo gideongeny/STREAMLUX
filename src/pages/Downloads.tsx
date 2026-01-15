@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { removeDownload } from "../store/slice/downloadSlice";
 import { FaTrash, FaPlay, FaDownload, FaPause, FaFolderOpen } from "react-icons/fa";
-import { AiOutlineInfoCircle, AiOutlineSetting } from "react-icons/ai";
+import { AiOutlineInfoCircle } from "react-icons/ai";
+import { MdSettings } from "react-icons/md";
 import Title from "../components/Common/Title";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 
@@ -40,7 +41,7 @@ const Downloads: FC = () => {
                         <FaFolderOpen size={18} />
                     </button>
                     <button className="flex items-center gap-2 px-5 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl border border-primary/20 transition font-medium">
-                        <AiOutlineSetting size={20} />
+                        <MdSettings size={20} />
                         <span>Settings</span>
                     </button>
                 </div>

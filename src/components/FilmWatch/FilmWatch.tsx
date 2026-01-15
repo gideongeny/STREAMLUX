@@ -15,6 +15,7 @@ import {
 } from "../../shared/types";
 import { EMBED_ALTERNATIVES } from "../../shared/constants";
 import { useAppSelector } from "../../store/hooks";
+import { usePlayer } from "../../context/PlayerContext";
 import { downloadService } from "../../services/download";
 import ReadMore from "../Common/ReadMore";
 import RightbarFilms from "../Common/RightbarFilms";
@@ -266,6 +267,27 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     setVideoError(false);
     setIsLoadingVideo(true);
   }, [detail?.id, seasonId, episodeId]);
+
+  const { setMiniPlayerData } = usePlayer();
+
+  // Update mini player data when detail or episode changes
+  useEffect(() => {
+    if (detail) {
+      setMiniPlayerData({
+        mediaId: detail.id,
+        mediaType: media_type,
+        seasonId: seasonId,
+        episodeId: episodeId,
+        sourceUrl: currentSource,
+        currentTime: 0, // In a real app, track this from the player
+        title: (detail as DetailMovie).title || (detail as DetailTV).name,
+        posterPath: detail.poster_path,
+      });
+    }
+
+    // Optional: Clear mini player when we are actively watching to prevent double display
+    // However, it's better to handle visibility in the MiniPlayer component itself
+  }, [detail, media_type, seasonId, episodeId, currentSource, setMiniPlayerData]);
 
   // Generate download info when detail changes
   useEffect(() => {

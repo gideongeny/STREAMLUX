@@ -1,14 +1,18 @@
 import { FC, useState } from "react";
 import { usePlayer } from "../../context/PlayerContext";
 import { MdClose, MdOpenInFull } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const MiniPlayer: FC = () => {
     const { miniPlayerData, setMiniPlayerData } = usePlayer();
+    const location = useLocation();
     const navigate = useNavigate();
     const [isHovered, setIsHovered] = useState(false);
 
-    if (!miniPlayerData) return null;
+    // Don't show mini player if we are currently on a watch page
+    const isWatchPage = location.pathname.includes("/watch");
+
+    if (!miniPlayerData || isWatchPage) return null;
 
     const handleClose = (e: React.MouseEvent) => {
         e.stopPropagation();

@@ -5,9 +5,9 @@ import SearchBox from "../Common/SearchBox";
 import LiveScoreboard from "./LiveScoreboard";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import { SPORTS_LEAGUES, SPORTS_CHANNELS, SportsFixtureConfig } from "../../shared/constants";
-import { getLiveFixturesAPI, getUpcomingFixturesAPI, subscribeToLiveScores } from "../../services/sportsAPI";
+import { getLiveFixturesAPI, getUpcomingFixturesAPI, subscribeToLiveScores, getMatchLink } from "../../services/sportsAPI";
 import BannerSlider from "../Slider/BannerSlider";
-import { Item } from "../../shared/types";
+import { Item, BannerInfo } from "../../shared/types";
 import { safeStorage } from "../../utils/safeStorage";
 
 // Unified calendar row
@@ -105,7 +105,7 @@ const SportsMainContent: FC = () => {
     const replayCount = allFixtures.filter((fixture) => fixture.status === "replay").length;
 
     // Map sports fixtures to Banner-compatible format
-    const bannerFilms = useMemo(() => {
+    const { bannerFilms, bannerDetail } = useMemo(() => {
         // High-quality generic sports backdrops for more premium look
         const sportsBackdrops: Record<string, string> = {
             soccer: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1280&q=80",
@@ -120,46 +120,35 @@ const SportsMainContent: FC = () => {
             generic: "https://images.unsplash.com/photo-1431324155629-1a6eda1eed2d?auto=format&fit=crop&w=1280&q=80"
         };
 
-        return upcomingFixtures.slice(0, 5).map((f, idx) => {
-            // Determine backdrop based on availability, then fall back to generic sports images
+        const topFixtures = [...liveFixtures, ...upcomingFixtures].slice(0, 10);
+
+        const films = topFixtures.map((f, idx) => {
             let backdrop = f.banner || f.thumb || f.fanart || sportsBackdrops.generic;
 
-            // If we don't have a match-specific image, use our categorical backdrops
             if (!f.banner && !f.thumb && !f.fanart) {
                 const leagueLower = f.leagueId.toLowerCase();
-                const homeLower = f.homeTeam.toLowerCase();
-                const awayLower = f.awayTeam.toLowerCase();
-                const combined = `${leagueLower} ${homeLower} ${awayLower}`;
+                const combined = `${leagueLower} ${f.homeTeam.toLowerCase()} ${f.awayTeam.toLowerCase()}`;
 
-                // 1. Explicit League Mapping
                 if (["epl", "ucl", "laliga", "ligue1", "seriea", "afcon", "bundesliga", "football"].includes(leagueLower)) {
                     backdrop = sportsBackdrops.soccer;
                 } else if (leagueLower === "nba" || combined.includes("basketball")) {
                     backdrop = sportsBackdrops.basketball;
                 } else if (leagueLower === "atp" || leagueLower === "wta" || combined.includes("tennis")) {
                     backdrop = sportsBackdrops.tennis;
-                } else if (leagueLower === "f1" || combined.includes("racing") || combined.includes("formula 1")) {
+                } else if (leagueLower === "f1" || combined.includes("racing")) {
                     backdrop = sportsBackdrops.f1;
-                } else if (leagueLower === "ufc" || combined.includes("mma") || combined.includes("combat") || combined.includes("fight")) {
+                } else if (leagueLower === "ufc" || combined.includes("mma")) {
                     backdrop = sportsBackdrops.ufc;
                 } else if (combined.includes("cricket")) {
                     backdrop = sportsBackdrops.cricket;
-                } else if (leagueLower === "rugby-world-cup" || leagueLower === "six-nations" || combined.includes("rugby")) {
+                } else if (combined.includes("rugby")) {
                     backdrop = sportsBackdrops.rugby;
-                } else if (leagueLower === "mlb" || combined.includes("baseball")) {
+                } else if (combined.includes("baseball")) {
                     backdrop = sportsBackdrops.baseball;
-                } else if (leagueLower === "nhl" || combined.includes("hockey")) {
+                } else if (combined.includes("hockey")) {
                     backdrop = sportsBackdrops.hockey;
-                } else if (combined.includes("nfl") || combined.includes("american football")) {
-                    backdrop = sportsBackdrops.soccer;
                 }
 
-                // 2. Keyword check if still generic
-                if (backdrop === sportsBackdrops.generic) {
-                    if (combined.includes("cup") || combined.includes("league") || combined.includes("fifa")) backdrop = sportsBackdrops.soccer;
-                }
-
-                // Cycle through backdrops if multiple games and still generic
                 if (backdrop === sportsBackdrops.generic) {
                     const genericPool = Object.values(sportsBackdrops);
                     backdrop = genericPool[idx % genericPool.length];
@@ -171,19 +160,31 @@ const SportsMainContent: FC = () => {
                 title: `${f.homeTeam} vs ${f.awayTeam}`,
                 backdrop_path: backdrop,
                 poster_path: f.homeTeamLogo || f.awayTeamLogo || "",
-                overview: `Stream Live: ${f.homeTeam} takes on ${f.awayTeam} in the ${f.leagueId.toUpperCase()} Tournament. Witness every goal, basket, and play in premium 4K quality.`,
-                vote_average: 9.8,
-                release_date: f.kickoffTimeFormatted,
+                overview: f.status === "live"
+                    ? `LIVE NOW: ${f.homeTeam} vs ${f.awayTeam} in the ${f.leagueId.toUpperCase()}. Current Score: ${f.homeScore}-${f.awayScore}. Stream in ultra HD quality.`
+                    : `Upcoming: ${f.homeTeam} takes on ${f.awayTeam} in the ${f.leagueId.toUpperCase()} Tournament. Witness every play in premium 4K quality.`,
+                vote_average: f.status === "live" ? 9.9 : 9.8,
+                release_date: f.status === "live" ? "🔴 LIVE NOW" : f.kickoffTimeFormatted,
                 media_type: "sports",
                 homeLogo: f.homeTeamLogo,
                 awayLogo: f.awayTeamLogo,
-                genre_ids: [],
-                original_language: "en",
-                popularity: 100,
-                vote_count: 1000
+                popularity: 200,
             };
         }) as unknown as Item[];
-    }, [upcomingFixtures]);
+
+        const detail = topFixtures.map(f => ({
+            genre: [
+                { id: 100, name: f.leagueId.toUpperCase() },
+                { id: 101, name: f.status === "live" ? "Live Event" : "Upcoming" }
+            ],
+            translation: [
+                f.status === "live" ? `LIVE: ${f.homeTeam} vs ${f.awayTeam}` : `${f.homeTeam} vs ${f.awayTeam}`,
+                `${f.homeTeam} vs ${f.awayTeam}`
+            ]
+        })) as BannerInfo[];
+
+        return { bannerFilms: films, bannerDetail: detail };
+    }, [liveFixtures, upcomingFixtures]);
 
     return (
         <div className="w-full">
@@ -191,7 +192,7 @@ const SportsMainContent: FC = () => {
             <div className="mb-10">
                 <BannerSlider
                     films={bannerFilms.length > 0 ? bannerFilms : undefined}
-                    dataDetail={undefined}
+                    dataDetail={bannerDetail}
                     isLoadingBanner={liveFixtures.length === 0 && upcomingFixtures.length === 0}
                 />
             </div>
@@ -222,48 +223,7 @@ const SportsMainContent: FC = () => {
             </div>
 
             {/* Live Channels Section */}
-            <div className="mb-10">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <span className="w-2 h-6 bg-primary rounded-full"></span>
-                        Live Sports Channels
-                    </h2>
-                </div>
-                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                    {SPORTS_CHANNELS.map((channel) => (
-                        <Link
-                            key={channel.id}
-                            to={`/sports/channel/${channel.id}/watch`}
-                            className="flex-shrink-0 w-36 md:w-44 group"
-                        >
-                            <div className="aspect-video relative rounded-xl overflow-hidden border border-gray-800 bg-gray-900 group-hover:border-primary/50 transition duration-300 shadow-lg">
-                                <div className="absolute inset-0 flex items-center justify-center p-2">
-                                    <img
-                                        src={channel.logo}
-                                        alt={channel.name}
-                                        className="w-full h-full object-contain p-2 group-hover:scale-110 transition duration-300 drop-shadow-lg"
-                                        onError={(e) => {
-                                            // Fallback to Icon if image fails
-                                            e.currentTarget.style.display = 'none';
-                                            const fallbackDiv = document.createElement('div');
-                                            fallbackDiv.className = "w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary border border-primary/20";
-                                            fallbackDiv.innerHTML = `<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M16.75 2.222a.75.75 0 0 1 .168.805l-1.396 3.14a4.99 4.99 0 0 0-2.81 1.708l-3.264-1.451a.75.75 0 0 1-.29-.117L4.972 3.655a.75.75 0 0 1 .458-1.353h11.32zM21.5 12a9.5 9.5 0 1 1-19 0 9.5 9.5 0 0 1 19 0zM12 4.25a7.75 7.75 0 1 0 0 15.5 7.75 7.75 0 0 0 0-15.5zm0 2a5.75 5.75 0 1 1 0 11.5 5.75 5.75 0 0 1 0-11.5zm0 2.5a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5z"></path></svg>`;
-                                            e.currentTarget.parentElement!.appendChild(fallbackDiv);
-                                        }}
-                                    />
-                                </div>
-                                <div className="absolute top-2 right-2 flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-red-600 animate-pulse text-[8px] font-bold text-white uppercase">
-                                    Live
-                                </div>
-                            </div>
-                            <h3 className="mt-2 text-sm text-gray-200 font-medium group-hover:text-primary transition truncate">
-                                {channel.name}
-                            </h3>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-widest">{channel.country}</p>
-                        </Link>
-                    ))}
-                </div>
-            </div>
+            {/* Live Channels Section - REMOVED per user request */}
 
             {/* Upcoming Calendar Row (Unified Swiper Row) */}
             <div className="mb-12">
@@ -365,16 +325,14 @@ const SportsMainContent: FC = () => {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredFixtures.map((fixture) => {
                     const league = SPORTS_LEAGUES.find(
                         (item) => item.id === fixture.leagueId
                     );
 
-                    // Check if this is a soccer/football match (sportlive.run supports these)
                     const isSoccerFootball = ['epl', 'ucl', 'laliga', 'ligue1', 'seriea', 'bundesliga', 'afcon', 'world-cup'].includes(fixture.leagueId?.toLowerCase());
 
-                    // For live soccer/football matches with matchId, go directly to sportlive.run
                     const targetUrl = (fixture.status === 'live' && isSoccerFootball && fixture.matchId)
                         ? `https://sportslive.run/matches/${fixture.matchId}?utm_source=StreamLux`
                         : fixture.matchId && isSoccerFootball
@@ -388,141 +346,147 @@ const SportsMainContent: FC = () => {
                     return (
                         <a
                             key={fixture.id}
-                            href={targetUrl}
+                            href={getMatchLink(fixture)}
                             target={isExternal ? "_blank" : "_self"}
                             rel={isExternal ? "noopener noreferrer" : ""}
-                            className="group rounded-xl bg-dark-lighten border border-gray-800 hover:border-primary/70 hover:shadow-xl hover:shadow-primary/20 transition overflow-hidden cursor-pointer"
+                            className="group relative rounded-2xl bg-dark-lighten/40 backdrop-blur-md border border-white/5 hover:border-primary/40 hover:bg-dark-lighten/60 transition-all duration-300 overflow-hidden shadow-lg hover:shadow-primary/10"
                         >
-                            <div className="p-4 flex items-start gap-3">
-                                <div className="mt-1">
-                                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary">
-                                        <MdSportsSoccer size={18} />
-                                    </span>
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center justify-between gap-3 mb-3">
-                                        <p className="text-xs uppercase tracking-wide text-gray-400 flex items-center gap-2">
-                                            <span className="inline-flex items-center gap-1">
-                                                {league?.flag && (
-                                                    <span className="text-base">{league.flag}</span>
-                                                )}
-                                                <span>{league?.name || "Other"}</span>
-                                            </span>
-                                            {fixture.round && (
-                                                <>
-                                                    <span>•</span>
-                                                    <span>{fixture.round}</span>
-                                                </>
-                                            )}
-                                        </p>
-                                        <span
-                                            className={`text-[10px] px-2 py-1 rounded-full font-semibold tracking-wide ${fixture.status === "live"
-                                                ? "bg-red-600/20 text-red-400 border border-red-500/60 animate-pulse"
-                                                : fixture.status === "upcoming"
-                                                    ? "bg-amber-500/15 text-amber-300 border border-amber-400/60"
-                                                    : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/60"
-                                                }`}
-                                        >
-                                            {fixture.status === "live"
-                                                ? "🔴 LIVE"
-                                                : fixture.status === "upcoming"
-                                                    ? "UPCOMING"
-                                                    : "REPLAY"}
-                                        </span>
-                                    </div>
+                            {/* Card Background Glow */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                                    {/* Club logos and scores display */}
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center gap-3 flex-1">
+                            <div className="relative p-5">
+                                {/* Header: League & Status */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-primary border border-white/5">
+                                            {league?.flag ? (
+                                                <span className="text-lg leading-none">{league.flag}</span>
+                                            ) : (
+                                                <MdSportsSoccer size={16} />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">
+                                                {league?.name || "Competition"}
+                                            </p>
+                                            {fixture.round && (
+                                                <p className="text-[9px] text-gray-500 font-medium leading-none">
+                                                    {fixture.round}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div
+                                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black tracking-tighter uppercase border ${fixture.status === "live"
+                                            ? "bg-red-500/10 text-red-500 border-red-500/30 animate-pulse"
+                                            : fixture.status === "upcoming"
+                                                ? "bg-amber-500/10 text-amber-500 border-amber-500/30"
+                                                : "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                                            }`}
+                                    >
+                                        {fixture.status === "live" && <span className="w-1.5 h-1.5 rounded-full bg-red-500" />}
+                                        {fixture.status === "live" ? "Live" : fixture.status === "upcoming" ? "Upcoming" : "Replay"}
+                                    </div>
+                                </div>
+
+                                {/* Teams & Score */}
+                                <div className="flex items-center justify-between gap-4 my-6">
+                                    {/* Home Team */}
+                                    <div className="flex flex-col items-center flex-1 text-center group/team">
+                                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/5 p-2 mb-3 border border-white/5 group-hover/team:scale-110 transition-transform duration-300 flex items-center justify-center">
                                             {fixture.homeTeamLogo ? (
                                                 <img
                                                     src={fixture.homeTeamLogo}
                                                     alt={fixture.homeTeam}
-                                                    className="w-10 h-10 object-contain"
+                                                    className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]"
                                                     onError={(e) => {
-                                                        (e.target as HTMLImageElement).style.display = 'none';
+                                                        (e.target as HTMLImageElement).src = `https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/default-team-logo-500.png&w=100&h=100`;
                                                     }}
                                                 />
                                             ) : (
-                                                <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-400">
+                                                <div className="w-full h-full rounded-xl bg-primary/10 flex items-center justify-center text-xl font-black text-primary">
                                                     {fixture.homeTeam.charAt(0)}
                                                 </div>
                                             )}
-                                            <div className="flex-1">
-                                                <p className="text-white font-semibold text-sm md:text-base">
-                                                    {fixture.homeTeam}
-                                                </p>
-                                                {fixture.status === "live" && fixture.homeScore !== undefined && (
-                                                    <p className="text-2xl font-bold text-white mt-1">
-                                                        {fixture.homeScore}
-                                                    </p>
-                                                )}
-                                            </div>
                                         </div>
+                                        <p className="text-xs md:text-sm font-bold text-white line-clamp-1 group-hover/team:text-primary transition-colors">
+                                            {fixture.homeTeam}
+                                        </p>
+                                    </div>
 
-                                        {fixture.status === "live" && (
-                                            <div className="px-3">
-                                                <span className="text-red-500 font-bold text-lg">VS</span>
-                                                {fixture.minute && (
-                                                    <p className="text-xs text-red-400 font-semibold mt-1 text-center">
-                                                        {fixture.minute}
-                                                    </p>
-                                                )}
+                                    {/* Score / VS */}
+                                    <div className="flex flex-col items-center justify-center gap-1 px-2">
+                                        {fixture.status === "live" ? (
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-2xl md:text-3xl font-black text-white tabular-nums tracking-tighter">
+                                                    {fixture.homeScore ?? 0}
+                                                </span>
+                                                <span className="w-1.5 h-1.5 rounded-full bg-gray-600" />
+                                                <span className="text-2xl md:text-3xl font-black text-white tabular-nums tracking-tighter">
+                                                    {fixture.awayScore ?? 0}
+                                                </span>
                                             </div>
+                                        ) : (
+                                            <span className="text-xs font-black text-gray-600 tracking-widest uppercase">VS</span>
                                         )}
+                                        {fixture.minute && (
+                                            <p className="text-[10px] font-black text-red-500 bg-red-500/10 px-2 py-0.5 rounded-md mt-1 italic tracking-tight">
+                                                {fixture.minute}
+                                            </p>
+                                        )}
+                                    </div>
 
-                                        <div className="flex items-center gap-3 flex-1 justify-end">
-                                            <div className="flex-1 text-right">
-                                                <p className="text-white font-semibold text-sm md:text-base">
-                                                    {fixture.awayTeam}
-                                                </p>
-                                                {fixture.status === "live" && fixture.awayScore !== undefined && (
-                                                    <p className="text-2xl font-bold text-white mt-1">
-                                                        {fixture.awayScore}
-                                                    </p>
-                                                )}
-                                            </div>
+                                    {/* Away Team */}
+                                    <div className="flex flex-col items-center flex-1 text-center group/team">
+                                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/5 p-2 mb-3 border border-white/5 group-hover/team:scale-110 transition-transform duration-300 flex items-center justify-center">
                                             {fixture.awayTeamLogo ? (
                                                 <img
                                                     src={fixture.awayTeamLogo}
                                                     alt={fixture.awayTeam}
-                                                    className="w-10 h-10 object-contain"
+                                                    className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]"
                                                     onError={(e) => {
-                                                        (e.target as HTMLImageElement).style.display = 'none';
+                                                        (e.target as HTMLImageElement).src = `https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/default-team-logo-500.png&w=100&h=100`;
                                                     }}
                                                 />
                                             ) : (
-                                                <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-400">
+                                                <div className="w-full h-full rounded-xl bg-primary/10 flex items-center justify-center text-xl font-black text-primary">
                                                     {fixture.awayTeam.charAt(0)}
                                                 </div>
                                             )}
                                         </div>
+                                        <p className="text-xs md:text-sm font-bold text-white line-clamp-1 group-hover/team:text-primary transition-colors">
+                                            {fixture.awayTeam}
+                                        </p>
                                     </div>
+                                </div>
 
-                                    <p className="text-xs text-gray-400 mb-2">
-                                        {fixture.kickoffTimeFormatted} • {fixture.venue}
+                                {/* Footer Info */}
+                                <div className="pt-4 border-t border-white/5 flex flex-col gap-2">
+                                    <p className="text-[10px] text-gray-500 font-medium flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-gray-700" />
+                                        {fixture.kickoffTimeFormatted.includes('T')
+                                            ? new Date(fixture.kickoffTimeFormatted).toLocaleString([], {
+                                                weekday: 'short',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })
+                                            : fixture.kickoffTimeFormatted}
+                                        {fixture.venue && ` • ${fixture.venue}`}
                                     </p>
 
-                                    {fixture.broadcast && (
-                                        <p className="text-[10px] text-gray-400">
-                                            Broadcast:{" "}
-                                            <span className="text-gray-200">
-                                                {fixture.broadcast?.join(" · ")}
-                                            </span>
-                                        </p>
-                                    )}
+                                    <div className="flex items-center justify-between mt-2">
+                                        <div className="flex gap-1.5">
+                                            {fixture.broadcast?.slice(0, 2).map((b, i) => (
+                                                <span key={i} className="text-[8px] font-black text-gray-400 bg-white/5 px-2 py-0.5 rounded border border-white/5 uppercase">
+                                                    {b}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <span className="text-[10px] font-black text-primary flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                            {isExternal ? "StreamNow" : "Watch"} <span className="text-xs">→</span>
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div className="px-4 pb-4 flex items-center justify-between text-xs text-gray-400 border-t border-gray-800">
-                                <span className="py-2">
-                                    <span className="text-primary font-medium">
-                                        {isExternal ? "Watch Live on SportsRun" : "View Details & Streams"}
-                                    </span>
-                                </span>
-                                <span className="py-2 text-primary opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
-                                    {isExternal ? "Open Stream ↗" : "Watch now →"}
-                                </span>
                             </div>
                         </a>
                     );

@@ -12,6 +12,14 @@ import {
   subscribeToLiveScores as subscribeToLiveScoresPublic,
 } from "./publicSportsAPI";
 
+// Sportslive.run link helper
+export const getMatchLink = (fixture: SportsFixtureConfig): string => {
+  if (fixture.matchId) {
+    return `https://sportslive.run/matches/${fixture.matchId}?utm_source=MB_Website&sportType=football`;
+  }
+  return `https://sportslive.run/live?utm_source=MB_Website&sportType=football`;
+};
+
 // API Sports - Fallback (if key is valid)
 const API_SPORTS_BASE = "https://v3.football.api-sports.io";
 const API_SPORTS_KEY = "418210481bfff05ff4c1a61d285a0942";

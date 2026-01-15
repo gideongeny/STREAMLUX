@@ -61,7 +61,7 @@ const UpcomingCalendar: FC<UpcomingCalendarProps> = ({
         staleTime: 3600000 // Cache for 1 hour
     });
 
-    if (isLoading || !data) return null;
+    if (isLoading || !data || data.length === 0) return null;
 
     // Function to generate a random "booked" count to mimic MovieBox style
     const getBookedCount = (id: string | number) => {
