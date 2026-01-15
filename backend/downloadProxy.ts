@@ -2,6 +2,7 @@
 // This should be deployed as a Node.js/Express backend
 
 import express, { Request, Response } from 'express';
+import cors from 'cors';
 import axios from 'axios';
 import crypto from 'crypto';
 
