@@ -99,14 +99,66 @@ const Home: FC = () => {
     detailQuery: detailQueryTV,
   } = useHomeData("tvs");
 
-  if (isErrorMovie) return <p>ERROR: {(errorMovie as Error).message}</p>;
+  if (isErrorMovie) return (
+    <div className="flex items-center justify-center min-h-screen bg-dark text-white">
+      <div className="text-center p-8">
+        <h2 className="text-2xl font-bold mb-4">Error Loading Movies</h2>
+        <p className="text-gray-400">{(errorMovie as Error).message}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-6 py-2 bg-primary rounded-lg hover:bg-primary/80"
+        >
+          Reload Page
+        </button>
+      </div>
+    </div>
+  );
 
   if (detailQueryMovie.isError)
-    return <p>ERROR: {detailQueryMovie.error.message}</p>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-dark text-white">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold mb-4">Error Loading Movie Details</h2>
+          <p className="text-gray-400">{detailQueryMovie.error.message}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-6 py-2 bg-primary rounded-lg hover:bg-primary/80"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
 
-  if (isErrorTV) return <p>ERROR: {(errorTV as Error).message}</p>;
+  if (isErrorTV) return (
+    <div className="flex items-center justify-center min-h-screen bg-dark text-white">
+      <div className="text-center p-8">
+        <h2 className="text-2xl font-bold mb-4">Error Loading TV Shows</h2>
+        <p className="text-gray-400">{(errorTV as Error).message}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-6 py-2 bg-primary rounded-lg hover:bg-primary/80"
+        >
+          Reload Page
+        </button>
+      </div>
+    </div>
+  );
 
-  if (detailQueryTV.isError) return <p>ERROR: {detailQueryTV.error.message}</p>;
+  if (detailQueryTV.isError) return (
+    <div className="flex items-center justify-center min-h-screen bg-dark text-white">
+      <div className="text-center p-8">
+        <h2 className="text-2xl font-bold mb-4">Error Loading TV Details</h2>
+        <p className="text-gray-400">{detailQueryTV.error.message}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-6 py-2 bg-primary rounded-lg hover:bg-primary/80"
+        >
+          Reload Page
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <>
