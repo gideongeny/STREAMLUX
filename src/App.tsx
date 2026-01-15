@@ -31,6 +31,7 @@ import MiniPlayer from "./components/FilmWatch/MiniPlayer";
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
+import { backendHealthService } from "./services/backendHealth";
 
 function App() {
   const location = useLocation();
@@ -72,6 +73,18 @@ function App() {
       console.warn("Error saving isSignedIn to localStorage:", error);
     }
   }, [isSignedIn]);
+
+  // Auto-wake backend on app load and keep it alive
+  useEffect(() => {
+    // Wake backend immediately when app loads
+    backendHealthService.wakeBackend();
+
+    // Set up keep-alive pinging (every 10 minutes)
+    const cleanup = backendHealthService.startKeepAlive();
+
+    // Cleanup on unmount
+    return cleanup;
+  }, []);
 
   useEffect(() => {
     let unSubDoc: (() => void) | undefined;
