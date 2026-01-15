@@ -24,7 +24,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
 
   return (
     <div className="mt-6 relative w-full h-0 md:pb-[35%] pb-[56.25%] tw-banner-slider bg-dark-lighten rounded-lg overflow-hidden max-h-[85vh]">
-      {isLoadingBanner ? (
+      {isLoadingBanner || !films ? (
         <Skeleton className="absolute top-0 left-0 w-full h-full !rounded-lg" />
       ) : (
         <Swiper
@@ -34,7 +34,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
           slidesPerView={1}
           className="!absolute !top-0 !left-0 !w-full !h-full  !rounded-lg"
         >
-          {(films as Item[]).map((film, index) => (
+          {films.map((film, index) => (
             <SwiperSlide key={film.id}>
               <Link
                 to={

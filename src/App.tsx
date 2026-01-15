@@ -91,86 +91,26 @@ function App() {
           // User is authenticated - restore their session
           setIsSignedIn(true);
 
-          if (user.providerData && user.providerData.length > 0) {
-            const providerId = user.providerData[0].providerId;
-
-            if (providerId === "google.com") {
-              unSubDoc = onSnapshot(
-                doc(db, "users", user.uid),
-                (docSnapshot) => {
-                  try {
-                    dispatch(
-                      setCurrentUser({
-                        displayName:
-                          docSnapshot.data()?.lastName + " " + docSnapshot.data()?.firstName || "",
-                        email: user.email || "",
-                        emailVerified: user.emailVerified,
-                        photoURL: docSnapshot.data()?.photoUrl || "",
-                        uid: user.uid,
-                      })
-                    );
-                  } catch (error) {
-                    console.error("Error setting user data (Google):", error);
-                  }
-                },
-                (error) => {
-                  console.warn("Firestore snapshot error (Google):", error.message);
-                  // Don't crash or show user-facing error for offline issues
-                }
-              );
-            } else if (providerId === "facebook.com") {
-              unSubDoc = onSnapshot(
-                doc(db, "users", user.uid),
-                (docSnapshot) => {
-                  try {
-                    dispatch(
-                      setCurrentUser({
-                        displayName:
-                          docSnapshot.data()?.lastName + " " + docSnapshot.data()?.firstName || "",
-                        email: user.email || "",
-                        emailVerified: user.emailVerified,
-                        photoURL: docSnapshot.data()?.photoUrl || "",
-                        uid: user.uid,
-                      })
-                    );
-                  } catch (error) {
-                    console.error("Error setting user data (Facebook):", error);
-                  }
-                },
-                (error) => {
-                  console.warn("Firestore snapshot error (Facebook):", error.message);
-                }
-              );
-            } else {
-              unSubDoc = onSnapshot(
-                doc(db, "users", user.uid),
-                (docSnapshot) => {
-                  try {
-                    dispatch(
-                      setCurrentUser({
-                        displayName:
-                          docSnapshot.data()?.lastName + " " + docSnapshot.data()?.firstName || "",
-                        photoURL: docSnapshot.data()?.photoUrl || "",
-                        email: user.email || "",
-                        emailVerified: user.emailVerified,
-                        uid: user.uid,
-                      })
-                    );
-                  } catch (error) {
-                    console.error("Error setting user data (Other):", error);
-                  }
-                },
-                (error) => {
-                  console.warn("Firestore snapshot error (Other):", error.message);
-                }
-              );
-            }
-          } else {
+          // Add null checks for providerData
+          if (!user.providerData || user.providerData.length === 0) {
             // Fallback for users without provider data
             unSubDoc = onSnapshot(
               doc(db, "users", user.uid),
               (docSnapshot) => {
                 try {
+                  const data = docSnapshot.data();
+                  dispatch(
+                    setCurrentUser({
+                      displayName: user.displayName || data?.firstName + " " + data?.lastName || "",
+                      photoURL: user.photoURL || data?.photoUrl || "",
+                      email: user.email || "",
+                      emailVerified: user.emailVerified,
+                      uid: user.uid,
+                    })
+                  );
+                } catch (error) {
+                  console.error("Error setting user data (No Provider):", error);
+                  // Set basic user data even if Firestore fails
                   dispatch(
                     setCurrentUser({
                       displayName: user.displayName || "",
@@ -180,17 +120,171 @@ function App() {
                       uid: user.uid,
                     })
                   );
-                } catch (error) {
-                  console.error("Error setting user data (Fallback):", error);
                 }
               },
               (error) => {
-                console.warn("Firestore snapshot error (Fallback):", error.message);
+                console.warn("Firestore snapshot error (No Provider):", error.message);
+                // Set basic user data if Firestore fails
+                dispatch(
+                  setCurrentUser({
+                    displayName: user.displayName || "",
+                    photoURL: user.photoURL || "",
+                    email: user.email || "",
+                    emailVerified: user.emailVerified,
+                    uid: user.uid,
+                  })
+                );
+              }
+            );
+            return;
+          }
+
+          const providerId = user.providerData[0]?.providerId;
+
+          if (providerId === "google.com") {
+            unSubDoc = onSnapshot(
+              doc(db, "users", user.uid),
+              (docSnapshot) => {
+                try {
+                  const data = docSnapshot.data();
+                  dispatch(
+                    setCurrentUser({
+                      displayName:
+                        (data?.lastName || "") + " " + (data?.firstName || "") || user.displayName || "",
+                      email: user.email || "",
+                      emailVerified: user.emailVerified,
+                      photoURL: data?.photoUrl || user.photoURL || "",
+                      uid: user.uid,
+                    })
+                  );
+                } catch (error) {
+                  console.error("Error setting user data (Google):", error);
+                  // Fallback to basic user data
+                  dispatch(
+                    setCurrentUser({
+                      displayName: user.displayName || "",
+                      email: user.email || "",
+                      emailVerified: user.emailVerified,
+                      photoURL: user.photoURL || "",
+                      uid: user.uid,
+                    })
+                  );
+                }
+              },
+              (error) => {
+                console.warn("Firestore snapshot error (Google):", error.message);
+                // Don't crash or show user-facing error for offline issues
+                // Set basic user data
+                dispatch(
+                  setCurrentUser({
+                    displayName: user.displayName || "",
+                    email: user.email || "",
+                    emailVerified: user.emailVerified,
+                    photoURL: user.photoURL || "",
+                    uid: user.uid,
+                  })
+                );
+              }
+            );
+          } else if (providerId === "facebook.com") {
+            unSubDoc = onSnapshot(
+              doc(db, "users", user.uid),
+              (docSnapshot) => {
+                try {
+                  const data = docSnapshot.data();
+                  dispatch(
+                    setCurrentUser({
+                      displayName:
+                        (data?.lastName || "") + " " + (data?.firstName || "") || user.displayName || "",
+                      email: user.email || "",
+                      emailVerified: user.emailVerified,
+                      photoURL: data?.photoUrl || user.photoURL || "",
+                      uid: user.uid,
+                    })
+                  );
+                } catch (error) {
+                  console.error("Error setting user data (Facebook):", error);
+                  dispatch(
+                    setCurrentUser({
+                      displayName: user.displayName || "",
+                      email: user.email || "",
+                      emailVerified: user.emailVerified,
+                      photoURL: user.photoURL || "",
+                      uid: user.uid,
+                    })
+                  );
+                }
+              },
+              (error) => {
+                console.warn("Firestore snapshot error (Facebook):", error.message);
+                dispatch(
+                  setCurrentUser({
+                    displayName: user.displayName || "",
+                    email: user.email || "",
+                    emailVerified: user.emailVerified,
+                    photoURL: user.photoURL || "",
+                    uid: user.uid,
+                  })
+                );
+              }
+            );
+          } else {
+            unSubDoc = onSnapshot(
+              doc(db, "users", user.uid),
+              (docSnapshot) => {
+                try {
+                  const data = docSnapshot.data();
+                  dispatch(
+                    setCurrentUser({
+                      displayName:
+                        (data?.lastName || "") + " " + (data?.firstName || "") || user.displayName || "",
+                      photoURL: data?.photoUrl || user.photoURL || "",
+                      email: user.email || "",
+                      emailVerified: user.emailVerified,
+                      uid: user.uid,
+                    })
+                  );
+                } catch (error) {
+                  console.error("Error setting user data (Other):", error);
+                  dispatch(
+                    setCurrentUser({
+                      displayName: user.displayName || "",
+                      photoURL: user.photoURL || "",
+                      email: user.email || "",
+                      emailVerified: user.emailVerified,
+                      uid: user.uid,
+                    })
+                  );
+                }
+              },
+              (error) => {
+                console.warn("Firestore snapshot error (Other):", error.message);
+                dispatch(
+                  setCurrentUser({
+                    displayName: user.displayName || "",
+                    photoURL: user.photoURL || "",
+                    email: user.email || "",
+                    emailVerified: user.emailVerified,
+                    uid: user.uid,
+                  })
+                );
               }
             );
           }
         } catch (error) {
           console.error("Error in auth state change handler:", error);
+          // Don't crash the app - set basic user data if available
+          if (user) {
+            dispatch(
+              setCurrentUser({
+                displayName: user.displayName || "",
+                photoURL: user.photoURL || "",
+                email: user.email || "",
+                emailVerified: user.emailVerified,
+                uid: user.uid,
+              })
+            );
+          }
         }
       },
       (error) => {

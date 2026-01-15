@@ -15,7 +15,7 @@ export const useHomeData = (type: "movies" | "tvs") => {
   );
 
   const detailQuery = useQuery<BannerInfo[], Error>(
-    [`detail${type.charAt(0).toUpperCase + type.slice(1)}`, data?.Trending],
+    [`detail${type.charAt(0).toUpperCase() + type.slice(1)}`, data?.Trending],
     () =>
       type === "movies"
         ? getMovieBannerInfo(data?.Trending as Item[])
