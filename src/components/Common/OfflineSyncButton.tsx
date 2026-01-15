@@ -1,5 +1,6 @@
 import { FC, useState, useEffect } from 'react';
-import { AiOutlineDownload, AiOutlineCheck, AiOutlineClose } from 'react-icons/ai';
+import { AiOutlineCheck, AiOutlineClose } from 'react-icons/ai';
+import { FaDownload } from 'react-icons/fa';
 import { BiLoaderAlt } from 'react-icons/bi';
 import { offlineSyncService, SyncProgress } from '../../services/offlineSync';
 import { DetailMovie, DetailTV } from '../../shared/types';
@@ -94,7 +95,7 @@ const OfflineSyncButton: FC<OfflineSyncButtonProps> = ({
         <div className="bg-dark-lighten rounded-xl p-4 border border-gray-800">
             <div className="flex items-center justify-between mb-3">
                 <h3 className="text-white font-medium flex items-center gap-2">
-                    <AiOutlineDownload className="text-primary" size={20} />
+                    <FaDownload className="text-primary" size={20} />
                     Offline Sync
                 </h3>
                 {storageInfo && (
@@ -110,7 +111,7 @@ const OfflineSyncButton: FC<OfflineSyncButtonProps> = ({
                     <div className="w-full bg-dark-darken rounded-full h-2">
                         <div
                             className={`h-2 rounded-full transition-all ${getStoragePercentage() > 90 ? 'bg-red-500' :
-                                    getStoragePercentage() > 70 ? 'bg-yellow-500' : 'bg-primary'
+                                getStoragePercentage() > 70 ? 'bg-yellow-500' : 'bg-primary'
                                 }`}
                             style={{ width: `${Math.min(getStoragePercentage(), 100)}%` }}
                         />
@@ -123,10 +124,10 @@ const OfflineSyncButton: FC<OfflineSyncButtonProps> = ({
                 onClick={handleSync}
                 disabled={isSynced || isSyncing}
                 className={`w-full py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${isSynced
-                        ? 'bg-green-500/20 text-green-500 border border-green-500/50 cursor-not-allowed'
-                        : isSyncing
-                            ? 'bg-primary/20 text-primary border border-primary/50 cursor-wait'
-                            : 'bg-primary hover:bg-primary/80 text-white border border-primary'
+                    ? 'bg-green-500/20 text-green-500 border border-green-500/50 cursor-not-allowed'
+                    : isSyncing
+                        ? 'bg-primary/20 text-primary border border-primary/50 cursor-wait'
+                        : 'bg-primary hover:bg-primary/80 text-white border border-primary'
                     }`}
             >
                 {isSynced ? (
@@ -143,7 +144,7 @@ const OfflineSyncButton: FC<OfflineSyncButtonProps> = ({
                     </>
                 ) : (
                     <>
-                        <AiOutlineDownload size={20} />
+                        <FaDownload size={20} />
                         Sync for Offline
                     </>
                 )}
