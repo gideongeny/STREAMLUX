@@ -2,11 +2,15 @@
 
 Free Movies, TV Shows & Live Sports Streaming Platform
 
-## Live demo
+## Live Demo
 
-Official website: [https://streamlux.vercel.app/](https://streamlux.vercel.app/)
+**Official Website**: [https://streamlux-67a84.web.app](https://streamlux-67a84.web.app)
+
+**Backend API**: [https://streamlux.onrender.com](https://streamlux.onrender.com)
 
 🔍 **Find us on Google:** Search for "StreamLux" or "StreamLux movies" on Google to discover our platform. The website is indexed and searchable on Google Search.
+
+> **Note**: The backend runs on Render's free tier, which sleeps after 15 minutes of inactivity. The first request may take ~30 seconds to wake up.
 
 **Note:** The website has been rebranded from Moonlight Films to StreamLux. The project uses Firebase for authentication and data storage, and integrates with multiple APIs for content discovery.
 
@@ -134,6 +138,13 @@ StreamLux is now available as a native Android app! Download the APK from [GitHu
 - **Original Development**: July 2, 2024 to August 9, 2025
 - **Rebranded to StreamLux**: 2025
 - **Current Version**: StreamLux v2.0 with enhanced features
+- **Latest Update (January 2026)**:
+  - Fixed persistent build errors (corrupted file cleanup)
+  - Complete environment rebuild for stability
+  - Deployed frontend to Firebase Hosting
+  - Deployed backend to Render.com
+  - Configured production environment variables
+  - Replaced problematic icon imports for build compatibility
 
 ## How to clone this project
 
@@ -163,10 +174,26 @@ REACT_APP_API_KEY = a8a6fa2f944128e971223235bc3cxxxxx
 
 ## Deployment
 
-This project is deployed on Vercel. The build process uses:
-- Node.js 24.x (auto-upgraded from engines requirement)
-- npm with `--force --legacy-peer-deps --no-optional` flags
-- Create React App build system
+### Frontend (Firebase Hosting)
+- **Platform**: Firebase Hosting
+- **URL**: https://streamlux-67a84.web.app
+- **Build Command**: `npm run build`
+- **Deploy Command**: `firebase deploy --only hosting`
+- **Auto-Deploy**: Manual deployment via Firebase CLI
+
+### Backend (Render)
+- **Platform**: Render.com
+- **URL**: https://streamlux.onrender.com
+- **Root Directory**: `backend`
+- **Build Command**: `npm install && npm run build`
+- **Start Command**: `npm start`
+- **Auto-Deploy**: Enabled via GitHub integration (main branch)
+- **Plan**: Free tier (sleeps after 15 min inactivity)
+
+### Environment Configuration
+- **Production Backend URL**: Configured via `.env.production`
+- **Development**: Uses `localhost:3001` for local backend
+- **Build Process**: Create React App with TypeScript
 
 ## Performance & Optimization
 
