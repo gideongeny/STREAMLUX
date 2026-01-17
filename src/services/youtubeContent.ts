@@ -114,37 +114,46 @@ export const getYouTubeByGenre = async (genre: string, mediaType: 'movie' | 'tv'
         return [];
     }
 };
-// Fetch YouTube Must-Watch Shorts (properly filtered for shorts)
+// Fetch YouTube Must-Watch Shorts (properly filtered for actual YouTube Shorts)
 export const getYouTubeShorts = async (): Promise<Item[]> => {
     try {
-        // Use specific queries that target YouTube Shorts
+        // Use YouTube Shorts specific queries - these should return actual Shorts
         const queries = [
-            '#shorts movie trailers',
-            '#shorts movie clips',
-            '#shorts must watch',
-            'movie shorts 2024',
-            'film shorts',
-            'cinema shorts'
+            '#shorts',
+            'movie #shorts',
+            'film #shorts',
+            'cinema #shorts',
+            'trailer #shorts',
+            'movie clips #shorts',
+            'must watch #shorts',
+            'best #shorts',
+            'viral #shorts',
+            'trending #shorts'
         ];
 
         const results = await Promise.allSettled(
-            queries.map(q => fetchYouTubeVideos(q))
+            queries.map(q => fetchYouTubeVideos(q, undefined))
         );
 
         const allVideos: YouTubeVideo[] = [];
         results.forEach(result => {
             if (result.status === 'fulfilled') {
-                // Filter for actual shorts (typically under 60 seconds)
+                // Filter for actual YouTube Shorts
                 allVideos.push(...result.value.videos.filter(v => {
-                    // Check if duration is short (under 60 seconds) or title contains #shorts
-                    const isShort = v.duration ? v.duration < 60 : false;
+                    // Must have #shorts in title or be from Shorts
                     const hasShortsTag = v.title.toLowerCase().includes('#shorts') || 
-                                        v.title.toLowerCase().includes('short');
-                    return isShort || hasShortsTag;
+                                        v.title.toLowerCase().includes('shorts');
+                    // Duration should be under 60 seconds for Shorts
+                    const isShortDuration = v.duration ? v.duration <= 60 : false;
+                    // Description might mention shorts
+                    const hasShortsInDesc = v.description?.toLowerCase().includes('shorts') || false;
+                    
+                    return hasShortsTag || (isShortDuration && hasShortsInDesc);
                 }));
             }
         });
 
+        // Deduplicate and convert
         const seen = new Set<string>();
         return allVideos
             .filter(v => {
@@ -152,8 +161,14 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
                 seen.add(v.id);
                 return true;
             })
-            .slice(0, 20)
-            .map((v, i) => convertYouTubeToItem(v, i));
+            .slice(0, 50) // Get more shorts for infinite scroll
+            .map((v, i) => {
+                const item = convertYouTubeToItem(v, i);
+                // Mark as YouTube Short for direct playback
+                (item as any).youtubeId = v.id;
+                (item as any).isYouTubeShort = true;
+                return item;
+            });
     } catch (error) {
         console.error('Error fetching YouTube shorts:', error);
         return [];

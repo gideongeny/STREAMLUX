@@ -28,13 +28,27 @@ const Auth: FunctionComponent<AuthProps> = () => {
           autoPlay
           muted
           loop
+          playsInline
           id="myVideo"
           className="fixed md:-top-[130px] -top-[155px] object-cover left-0 h-[135vh] w-full -z-10"
+          onLoadedData={(e) => {
+            // Ensure video plays
+            const video = e.target as HTMLVideoElement;
+            video.play().catch(() => {
+              // Auto-play failed, try again
+              setTimeout(() => video.play(), 100);
+            });
+          }}
+          onError={(e) => {
+            // Fallback if video fails to load
+            console.warn('Background video failed to load');
+          }}
         >
           <source
             src="/auth-background.mp4"
             type="video/mp4"
           />
+          Your browser does not support the video tag.
         </video>
       )}
 

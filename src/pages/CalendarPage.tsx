@@ -46,17 +46,25 @@ const CalendarPage: FC = () => {
         );
     }, { enabled: currentType === "tv" });
 
-    // Fetch Movies upcoming (Improved to include far future 2026+)
+    // Fetch Movies upcoming - Only show unreleased movies (release_date > today)
     const { data: upcomingMovies, isLoading: isLoadingMovies } = useQuery(["calendar-movies"], async () => {
         const { getFutureUpcoming } = await import("../services/home");
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
 
         // Fetch both "near" upcoming and "far" future
         const nearRes = await axios.get("/movie/upcoming", { params: { page: 1 } });
         const farRes = await getFutureUpcoming("movie");
 
         const combined = [...(nearRes.data.results || []), ...(farRes || [])].filter(i => i && i.id);
+        
+        // Filter for unreleased movies only (release_date > today)
+        const unreleased = combined.filter((item) => {
+            const releaseDate = item.release_date || item.first_air_date;
+            return releaseDate && releaseDate > today;
+        });
+        
         // Dedupe
-        return combined.filter((item, index, self) =>
+        return unreleased.filter((item, index, self) =>
             index === self.findIndex((t) => t.id === item.id)
         );
     }, { enabled: currentType === "movie" });

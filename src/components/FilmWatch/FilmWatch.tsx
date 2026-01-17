@@ -56,36 +56,61 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
 
   // Generate all available video sources
   const getVideoSources = () => {
+    // Check if this is a YouTube video (from YouTube content)
+    const isYouTubeContent = (detail as any)?.youtubeId || window.location.pathname.includes('/youtube/');
+    if (isYouTubeContent) {
+      const youtubeId = (detail as any)?.youtubeId || window.location.pathname.split('/youtube/')[1];
+      return [`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`];
+    }
+
     // Get IMDB ID for movies, use TMDB ID as fallback for TV shows
     const imdbId = media_type === "movie"
       ? (detail as DetailMovie)?.imdb_id || detail?.id?.toString()
       : detail?.id?.toString();
     const tmdbId = detail?.id?.toString() || "";
 
+    // Only use known working sources: vidsrc, vidplay, upcloud
+    // For non-Western content, add regional sources
+    const isNonWestern = (detail as any)?.origin_country?.some((c: string) => 
+      ['IN', 'KR', 'JP', 'CN', 'TH', 'PH', 'NG', 'KE', 'ZA', 'GH', 'EG', 'MA', 'MX', 'BR', 'AR'].includes(c)
+    ) || false;
+
     if (media_type === "movie") {
-      return [
+      const baseSources = [
         `https://vidsrc.me/embed/${imdbId}`,
-        `${EMBED_ALTERNATIVES.VIDSRC}/${detail?.id}`,
-        `${EMBED_ALTERNATIVES.VIDSRC_TO}/movie/${detail?.id}`,
-        `https://vidplay.online/e/movie/${detail?.id}`,
-        `https://getsuperembed.link/?video_id=${imdbId}`,
-        `https://databasegdriveplayer.co/player.php?type=movie&tmdb=${tmdbId}`,
-        `${EMBED_ALTERNATIVES.EMBEDTO}/movie?id=${detail?.id}`,
-        `${EMBED_ALTERNATIVES.TWOEMBED}/movie?tmdb=${detail?.id}`,
-        `${EMBED_ALTERNATIVES.MOVIEBOX}/movie/${detail?.id}`,
-      ].slice(0, 9); // Limit to top 9 superior sources
+        `${EMBED_ALTERNATIVES.VIDSRC_ME}/movie/${tmdbId}`,
+        `${EMBED_ALTERNATIVES.VIDSRC_TO}/movie/${tmdbId}`,
+        `https://vidplay.online/e/movie/${tmdbId}`,
+        `https://upcloud.to/e/movie/${tmdbId}`,
+        `${EMBED_ALTERNATIVES.APIMDB}/movie/${imdbId}`,
+      ];
+      
+      // Add non-Western sources if applicable
+      if (isNonWestern) {
+        baseSources.push(
+          `https://vidsrc.me/embed/movie/${imdbId}`, // Alternative format
+          `https://vidplay.online/e/movie/${imdbId}` // IMDB format
+        );
+      }
+      
+      return baseSources;
     } else {
-      return [
-        `https://v2.apimdb.net/e/tmdb/tv/${tmdbId}/${seasonId}/${episodeId}/`,
-        `${EMBED_ALTERNATIVES.VIDSRC}/${detail?.id}/${seasonId}-${episodeId}`,
-        `${EMBED_ALTERNATIVES.VIDSRC_TO}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `https://vidplay.online/e/tv/${detail?.id}/${seasonId}/${episodeId}`,
-        `https://databasegdriveplayer.co/player.php?type=series&tmdb=${tmdbId}&season=${seasonId}&episode=${episodeId}`,
-        `https://getsuperembed.link/?video_id=${imdbId}&season=${seasonId}&episode=${episodeId}`,
-        `${EMBED_ALTERNATIVES.EMBEDTO}/tv?id=${detail?.id}&s=${seasonId}&e=${episodeId}`,
-        `${EMBED_ALTERNATIVES.TWOEMBED}/series?tmdb=${detail?.id}&sea=${seasonId}&epi=${episodeId}`,
-        `${EMBED_ALTERNATIVES.MOVIEBOX}/tv/${detail?.id}/${seasonId}/${episodeId}`,
-      ].slice(0, 9); // Limit to top 9 superior sources
+      const baseSources = [
+        `${EMBED_ALTERNATIVES.VIDSRC_ME}/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
+        `${EMBED_ALTERNATIVES.VIDSRC_TO}/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
+        `https://vidplay.online/e/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
+        `https://upcloud.to/e/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
+        `${EMBED_ALTERNATIVES.APIMDB}/tmdb/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}/`,
+      ];
+      
+      // Add non-Western sources if applicable
+      if (isNonWestern) {
+        baseSources.push(
+          `https://vidsrc.me/embed/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}` // Alternative format
+        );
+      }
+      
+      return baseSources;
     }
   };
 

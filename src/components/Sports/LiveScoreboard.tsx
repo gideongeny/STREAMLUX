@@ -87,15 +87,20 @@ const LiveScoreboard: FC = () => {
 
       {/* Scoreboard Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
-        {fixtures.map((fixture) => (
-          <a
-            key={fixture.id}
-            href={fixture.matchId 
+        {fixtures.map((fixture) => {
+          const matchLink = fixture.matchId 
             ? `https://sportslive.run/matches/${fixture.matchId}?utm_source=MB_Website&sportType=football`
-            : `https://sportslive.run/live?utm_source=MB_Website&sportType=football&home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}`
-          }
-            target="_blank"
-            rel="noopener noreferrer"
+            : `https://sportslive.run/live?utm_source=MB_Website&sportType=football&home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}`;
+          
+          return (
+          <Link
+            key={fixture.id}
+            to={`/sports/${fixture.leagueId}/${fixture.id}/watch`}
+            onClick={(e) => {
+              // Open live match in new tab
+              window.open(matchLink, '_blank');
+              e.preventDefault();
+            }}
             className="bg-gray-900/50 rounded-lg border border-gray-700 hover:border-primary/50 hover:bg-gray-900 transition p-4 group"
           >
             {/* League and Status */}
@@ -121,13 +126,13 @@ const LiveScoreboard: FC = () => {
                     <img
                       src={fixture.homeTeamLogo}
                       alt={fixture.homeTeam}
-                      className="w-8 h-8 object-contain"
+                      className="w-10 h-10 object-contain bg-white/5 p-1 rounded"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-400">
+                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-400">
                       {fixture.homeTeam.charAt(0)}
                     </div>
                   )}
@@ -149,13 +154,13 @@ const LiveScoreboard: FC = () => {
                     <img
                       src={fixture.awayTeamLogo}
                       alt={fixture.awayTeam}
-                      className="w-8 h-8 object-contain"
+                      className="w-10 h-10 object-contain bg-white/5 p-1 rounded"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-400">
+                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-400">
                       {fixture.awayTeam.charAt(0)}
                     </div>
                   )}
@@ -187,8 +192,9 @@ const LiveScoreboard: FC = () => {
                 Watch →
               </span>
             </div>
-          </a>
-        ))}
+          </Link>
+          );
+        })}
       </div>
     </div>
   );

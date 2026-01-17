@@ -110,28 +110,35 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
     return final;
   }, {} as HomeFilms);
 
-  // Fetch YouTube and scraper content to mix into all sliders
+  // Fetch YouTube and scraper content to mix into all sliders (infinite content)
   let youtubeMovies: Item[] = [];
   let scraperMovies: Item[] = [];
   
   try {
-    [youtubeMovies, scraperMovies] = await Promise.all([
+    // Fetch multiple pages for infinite content
+    const [youtube1, youtube2, scraper1, scraper2, scraper3] = await Promise.all([
       getYouTubeMovies().catch(() => []),
+      getYouTubeMovies().catch(() => []), // Second page
       getAllSourceContent("movie", 1).catch(() => []),
+      getAllSourceContent("movie", 2).catch(() => []),
+      getAllSourceContent("movie", 3).catch(() => []),
     ]);
+    youtubeMovies = [...youtube1, ...youtube2];
+    scraperMovies = [...scraper1, ...scraper2, ...scraper3];
   } catch (error) {
     console.warn("Failed to fetch YouTube/scraper content:", error);
   }
 
-  // Now merge YouTube and scraper content into ALL existing sections
+  // Now merge YouTube and scraper content into ALL existing sections (50% each for infinite scroll)
   Object.keys(data).forEach((key) => {
     const existingItems = data[key];
+    // Use 50% YouTube and 50% scraper for much more content
     data[key] = mergeAndDedupe(
       existingItems,
       [], // fzItems (already merged above)
       [], // otherItems
-      youtubeMovies.slice(0, Math.ceil(existingItems.length * 0.3)), // 30% YouTube content
-      scraperMovies.slice(0, Math.ceil(existingItems.length * 0.2)) // 20% scraper content
+      youtubeMovies.slice(0, Math.ceil(existingItems.length * 0.5)), // 50% YouTube content
+      scraperMovies.slice(0, Math.ceil(existingItems.length * 0.5)) // 50% scraper content
     );
   });
 
@@ -305,28 +312,35 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
     return final;
   }, {} as HomeFilms);
 
-  // Fetch YouTube and scraper content to mix into all sliders
+  // Fetch YouTube and scraper content to mix into all sliders (infinite content)
   let youtubeTV: Item[] = [];
   let scraperTV: Item[] = [];
   
   try {
-    [youtubeTV, scraperTV] = await Promise.all([
+    // Fetch multiple pages for infinite content
+    const [youtube1, youtube2, scraper1, scraper2, scraper3] = await Promise.all([
       getYouTubeTVShows().catch(() => []),
+      getYouTubeTVShows().catch(() => []), // Second page
       getAllSourceContent("tv", 1).catch(() => []),
+      getAllSourceContent("tv", 2).catch(() => []),
+      getAllSourceContent("tv", 3).catch(() => []),
     ]);
+    youtubeTV = [...youtube1, ...youtube2];
+    scraperTV = [...scraper1, ...scraper2, ...scraper3];
   } catch (error) {
     console.warn("Failed to fetch YouTube/scraper TV content:", error);
   }
 
-  // Now merge YouTube and scraper content into ALL existing sections
+  // Now merge YouTube and scraper content into ALL existing sections (50% each for infinite scroll)
   Object.keys(data).forEach((key) => {
     const existingItems = data[key];
+    // Use 50% YouTube and 50% scraper for much more content
     data[key] = mergeAndDedupe(
       existingItems,
       [], // fzItems (already merged above)
       [], // otherItems
-      youtubeTV.slice(0, Math.ceil(existingItems.length * 0.3)), // 30% YouTube content
-      scraperTV.slice(0, Math.ceil(existingItems.length * 0.2)) // 20% scraper content
+      youtubeTV.slice(0, Math.ceil(existingItems.length * 0.5)), // 50% YouTube content
+      scraperTV.slice(0, Math.ceil(existingItems.length * 0.5)) // 50% scraper content
     );
   });
 

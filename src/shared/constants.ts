@@ -4,34 +4,23 @@ export const EMBED_URL = "https://2embed.org/embed";
 export const EMBED_VIDSRC = "https://vidsrc.me/embed";
 export const EMBED_TO = "https://www.2embed.to/embed/tmdb";
 
-// Alternative video streaming services as fallbacks
+// Video streaming services - Only known working sources
 export const EMBED_ALTERNATIVES = {
+  // Primary sources - Most reliable
   VIDSRC: "https://vidsrc.me/embed",
-  // New video sources - added after VIDSRC
   VIDSRC_ME: "https://vidsrc.me/embed",
-  FSAPI: "https://fsapi.xyz",
-  CURTSTREAM: "https://curtstream.com",
-  MOVIEWP: "https://moviewp.com",
-  APIMDB: "https://v2.apimdb.net/e",
-  GOMO: "https://gomo.to",
   VIDSRC_TO: "https://vidsrc.to/embed",
   VIDSRC_PRO: "https://vidsrc.pro/embed",
-  EMBED_SU: "https://embed.su/embed",
-  AUTOEMBED: "https://autoembed.to",
-  SMASHYSTREAM: "https://player.smashy.stream",
-  GETSUPEREMBED: "https://getsuperembed.link",
-  GODRIVEPLAYER: "https://databasegdriveplayer.co",
-  ONETWOTHREEMOVIES: "https://123movies.com",
-  FMOVIES_NEW: "https://fmovies.to",
-  YESMOVIES: "https://yesmovies.to",
-  GOMOVIES: "https://gomovies.sx",
-  TWOEMBED: "https://2embed.org/embed",
+  
+  // Secondary sources - Known working
+  VIDPLAY: "https://vidplay.online/e",
+  UPCLOUD: "https://upcloud.to/e",
+  VIDCLOUD: "https://vidcloud.stream",
+  
+  // Additional reliable sources
+  APIMDB: "https://v2.apimdb.net/e",
   EMBEDTO: "https://www.2embed.to/embed/tmdb",
-  VIDEMBED: "https://vidembed.cc",
-  MOVIEBOX: "https://moviebox.live",
-  WATCHMOVIES: "https://watchmovieshd.ru",
-  STREAMSB: "https://streamsb.net",
-  VIDSTREAM: "https://vidstream.pro",
+  TWOEMBED: "https://2embed.org/embed",
   // African and non-Western content sources - Updated with working alternatives
   AFRIKAN: "https://afrikan.tv",
   NOLLYWOOD: "https://nollywood.tv",
