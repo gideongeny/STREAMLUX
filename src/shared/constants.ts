@@ -113,9 +113,8 @@ export const EMBED_ALTERNATIVES = {
   SUPEREMBED: "https://superembed.com",
   EMBEDMOVIE: "https://embedmovie.com",
   MOVIEAPI: "https://movieapi.com",
-  STREAMTAPE: "https://streamtape.com",
+  STREAMTAPE: "https://streamtape.com",       
   MIXDROP: "https://mixdrop.com",
-  UPCLOUD: "https://upcloud.com",
   // Additional reliable embed sources
   EMBEDSB: "https://embedsb.com",
   STREAMWISH: "https://streamwish.com",
