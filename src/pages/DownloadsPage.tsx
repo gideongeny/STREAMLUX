@@ -48,7 +48,7 @@ const DownloadsPage: FC = () => {
 
             <div className="flex md:hidden justify-between items-center px-5 my-5">
                 <Link to="/" className="flex gap-2 items-center">
-                    <img src="/logo.png" alt="StreamLux Logo" className="h-10 w-10" />
+                    <img src="/logo.svg" alt="StreamLux Logo" className="h-10 w-10" />
                     <p className="text-xl text-white font-medium tracking-wider uppercase">
                         Stream<span className="text-primary">Lux</span>
                     </p>

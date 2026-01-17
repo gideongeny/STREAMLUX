@@ -5,13 +5,13 @@ import { getFirestore } from "firebase/firestore";
 
 // StreamLux Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyB6scsYbbA4ZfFhujp_eHg83QnsGxpwEAY",
-  authDomain: "streamlux-67a84.firebaseapp.com",
-  projectId: "streamlux-67a84",
-  storageBucket: "streamlux-67a84.firebasestorage.app",
-  messagingSenderId: "242283846154",
-  appId: "1:242283846154:web:c25b7416322f092cc49df3",
-  measurementId: "G-3C0V66LLLR"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyB6scsYbbA4ZfFhujp_eHg83QnsGxpwEAY",
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "streamlux-67a84.firebaseapp.com",
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "streamlux-67a84",
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "streamlux-67a84.firebasestorage.app",
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "242283846154",
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:242283846154:web:c25b7416322f092cc49df3",
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || "G-3C0V66LLLR"
 };
 
 // Initialize Firebase with error handling

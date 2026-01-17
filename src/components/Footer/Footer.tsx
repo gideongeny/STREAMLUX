@@ -2,6 +2,7 @@ import { FunctionComponent } from "react";
 import { Link } from "react-router-dom";
 import { SiTiktok } from "react-icons/si";
 import { BsInstagram, BsWhatsapp, BsFacebook } from "react-icons/bs";
+import BuyMeACoffee from "../Common/BuyMeACoffee";
 
 interface FooterProps {}
 
@@ -190,9 +191,12 @@ const Footer: FunctionComponent<FooterProps> = () => {
             <p>
               &copy; {new Date().getFullYear()} StreamLux. All rights reserved.
             </p>
-            <p className="text-xs">
-              Made with ❤️ for movie and TV show enthusiasts worldwide
-            </p>
+            <div className="flex items-center gap-4">
+              <BuyMeACoffee variant="badge" />
+              <p className="text-xs">
+                Made with ❤️ for movie and TV show enthusiasts worldwide
+              </p>
+            </div>
           </div>
         </div>
       </div>

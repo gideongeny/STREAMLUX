@@ -70,18 +70,47 @@ class BackendHealthService {
     }
 
     /**
-     * Keep backend alive by pinging every 10 minutes
-     * Call this only if user is actively using the app
+     * Keep backend alive by pinging every 5 minutes when user is active
+     * More frequent pings to prevent sleep on Render free tier
      */
     startKeepAlive(): () => void {
+        // Initial wake
+        this.wakeBackend();
+
+        // Ping every 5 minutes (Render free tier sleeps after 15 min inactivity)
         const interval = setInterval(() => {
-            if (document.visibilityState === 'visible') {
-                this.wakeBackend();
+            // Only ping if user is actively viewing the page
+            if (document.visibilityState === 'visible' && !document.hidden) {
+                this.wakeBackend().catch(() => {
+                    // Silently fail - don't spam if backend is down
+                });
             }
-        }, 10 * 60 * 1000); // 10 minutes
+        }, 5 * 60 * 1000); // 5 minutes - keeps it well within 15 min window
+
+        // Also ping on user activity (scroll, click, etc.) to keep it extra alive
+        let activityTimer: NodeJS.Timeout;
+        const activityEvents = ['scroll', 'click', 'keydown', 'mousemove', 'touchstart'];
+        const handleActivity = () => {
+            clearTimeout(activityTimer);
+            activityTimer = setTimeout(() => {
+                if (document.visibilityState === 'visible' && !document.hidden) {
+                    this.wakeBackend().catch(() => {});
+                }
+            }, 2 * 60 * 1000); // Ping 2 minutes after last activity
+        };
+
+        activityEvents.forEach(event => {
+            document.addEventListener(event, handleActivity, { passive: true });
+        });
 
         // Return cleanup function
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            clearTimeout(activityTimer);
+            activityEvents.forEach(event => {
+                document.removeEventListener(event, handleActivity);
+            });
+        };
     }
 }
 

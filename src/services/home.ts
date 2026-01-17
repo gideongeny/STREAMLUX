@@ -96,11 +96,34 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
     return final;
   }, {} as HomeFilms);
 
-  // Add extra sections from Scrappers and YouTube
+  // Fetch YouTube and scraper content to mix into all sliders
+  let youtubeMovies: Item[] = [];
+  let scraperMovies: Item[] = [];
+  
   try {
-    const [scrapperMovies, youtubeMovies, youtubeAction, youtubeHorror, youtubeSciFi, scrapperComedy, youtubeShorts] = await Promise.all([
-      getAllSourceContent("movie", 1).catch(() => []),
+    [youtubeMovies, scraperMovies] = await Promise.all([
       getYouTubeMovies().catch(() => []),
+      getAllSourceContent("movie", 1).catch(() => []),
+    ]);
+  } catch (error) {
+    console.warn("Failed to fetch YouTube/scraper content:", error);
+  }
+
+  // Now merge YouTube and scraper content into ALL existing sections
+  Object.keys(data).forEach((key) => {
+    const existingItems = data[key];
+    data[key] = mergeAndDedupe(
+      existingItems,
+      [], // fzItems (already merged above)
+      [], // otherItems
+      youtubeMovies.slice(0, Math.ceil(existingItems.length * 0.3)), // 30% YouTube content
+      scraperMovies.slice(0, Math.ceil(existingItems.length * 0.2)) // 20% scraper content
+    );
+  });
+
+  // Add extra sections from Scrappers and YouTube as dedicated sections
+  try {
+    const [youtubeAction, youtubeHorror, youtubeSciFi, scrapperComedy, youtubeShorts] = await Promise.all([
       getYouTubeByGenre("Action").catch(() => []),
       getYouTubeByGenre("Horror").catch(() => []),
       getYouTubeByGenre("Sci-Fi").catch(() => []),
@@ -108,8 +131,6 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
       getYouTubeShorts().catch(() => []),
     ]);
 
-    if (scrapperMovies.length > 0) data["From Scrappers"] = scrapperMovies;
-    if (youtubeMovies.length > 0) data["YouTube Movies"] = youtubeMovies;
     if (youtubeAction.length > 0) data["YouTube Action"] = youtubeAction;
     if (youtubeHorror.length > 0) data["YouTube Horror"] = youtubeHorror;
     if (youtubeSciFi.length > 0) data["YouTube Sci-Fi"] = youtubeSciFi;
@@ -221,13 +242,27 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
   ]).catch(() => { }); // Silently fail for background loading
 
   // Helper function to merge and deduplicate items from all sources
-  const mergeAndDedupe = (tmdbItems: Item[], fzItems: Item[], otherItems: Item[] = []): Item[] => {
-    const combined = [...tmdbItems, ...fzItems, ...otherItems];
+  // Now includes YouTube and scraper content in all sliders
+  const mergeAndDedupe = (tmdbItems: Item[], fzItems: Item[], otherItems: Item[] = [], youtubeItems: Item[] = [], scraperItems: Item[] = []): Item[] => {
+    // Interleave content: TMDB, YouTube, Scraper, FZMovies for better variety
+    const combined: Item[] = [];
+    const maxLength = Math.max(tmdbItems.length, youtubeItems.length, scraperItems.length, fzItems.length, otherItems.length);
+    
+    for (let i = 0; i < maxLength; i++) {
+      // Add items in rotation: TMDB -> YouTube -> Scraper -> FZMovies -> Other
+      if (tmdbItems[i]) combined.push(tmdbItems[i]);
+      if (youtubeItems[i]) combined.push(youtubeItems[i]);
+      if (scraperItems[i]) combined.push(scraperItems[i]);
+      if (fzItems[i]) combined.push(fzItems[i]);
+      if (otherItems[i]) combined.push(otherItems[i]);
+    }
+    
+    // Deduplicate by ID and ensure posters exist
     const seen = new Set<number>();
     return combined.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
-      return item.poster_path; // Only include items with posters
+      return item.poster_path || item.backdrop_path; // Include items with posters or backdrops
     });
   };
 
@@ -250,24 +285,45 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
       fzItems = additionalSources.fzLatest;
     }
 
-    // Use only TMDB + FZMovies for initial fast load
+    // Use only TMDB + FZMovies for initial fast load (YouTube/scraper will be added later)
     final[key] = mergeAndDedupe(tmdbItems, fzItems, []);
 
     return final;
   }, {} as HomeFilms);
 
-  // Add extra sections from Scrappers and YouTube
+  // Fetch YouTube and scraper content to mix into all sliders
+  let youtubeTV: Item[] = [];
+  let scraperTV: Item[] = [];
+  
   try {
-    const [scrapperTV, youtubeTV, youtubeDrama, youtubeComedy, scrapperAnimation] = await Promise.all([
-      getAllSourceContent("tv", 1).catch(() => []),
+    [youtubeTV, scraperTV] = await Promise.all([
       getYouTubeTVShows().catch(() => []),
+      getAllSourceContent("tv", 1).catch(() => []),
+    ]);
+  } catch (error) {
+    console.warn("Failed to fetch YouTube/scraper TV content:", error);
+  }
+
+  // Now merge YouTube and scraper content into ALL existing sections
+  Object.keys(data).forEach((key) => {
+    const existingItems = data[key];
+    data[key] = mergeAndDedupe(
+      existingItems,
+      [], // fzItems (already merged above)
+      [], // otherItems
+      youtubeTV.slice(0, Math.ceil(existingItems.length * 0.3)), // 30% YouTube content
+      scraperTV.slice(0, Math.ceil(existingItems.length * 0.2)) // 20% scraper content
+    );
+  });
+
+  // Add extra sections from Scrappers and YouTube as dedicated sections
+  try {
+    const [youtubeDrama, youtubeComedy, scrapperAnimation] = await Promise.all([
       getYouTubeByGenre("Drama", "tv").catch(() => []),
       getYouTubeByGenre("Comedy", "tv").catch(() => []),
       getAllSourceContent("tv", 2).catch(() => []),
     ]);
 
-    if (scrapperTV.length > 0) data["From Scrappers"] = scrapperTV;
-    if (youtubeTV.length > 0) data["YouTube TV Shows"] = youtubeTV;
     if (youtubeDrama.length > 0) data["YouTube Drama"] = youtubeDrama;
     if (youtubeComedy.length > 0) data["YouTube Comedy"] = youtubeComedy;
     if (scrapperAnimation.length > 0) data["Scrapper Anime"] = scrapperAnimation;

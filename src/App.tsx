@@ -32,6 +32,7 @@ import { auth, db } from "./shared/firebase";
 import { useAppDispatch } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
 import { backendHealthService } from "./services/backendHealth";
+import BuyMeACoffee from "./components/Common/BuyMeACoffee";
 
 function App() {
   const location = useLocation();
@@ -379,6 +380,7 @@ function App() {
         <Route path="*" element={<Error />} />
       </Routes>
       <MiniPlayer />
+      <BuyMeACoffee variant="floating" />
     </>
   );
 }

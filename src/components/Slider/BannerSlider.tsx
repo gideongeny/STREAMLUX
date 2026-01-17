@@ -40,14 +40,18 @@ const BannerSlider: FC<BannerSliderProps> = ({
           {films.map((film, index) => (
             <SwiperSlide key={film.id}>
               <div className="relative w-full h-full">
-                {/* Trailer Video Player */}
-                {activeIndex === index && dataDetail?.[index]?.trailer && !isMobile && (
+                {/* Trailer Video Player - Enhanced with better controls */}
+                {activeIndex === index && dataDetail?.[index]?.trailer && (
                   <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
                     <iframe
-                      src={`https://www.youtube.com/embed/${dataDetail[index].trailer}?autoplay=1&mute=1&controls=0&loop=1&playlist=${dataDetail[index].trailer}&rel=0&showinfo=0&iv_load_policy=3&modestbranding=1`}
-                      className="absolute top-1/2 left-1/2 w-[120%] h-[120%] -translate-x-1/2 -translate-y-1/2 opacity-60 scale-125"
-                      allow="autoplay; encrypted-media"
+                      src={`https://www.youtube.com/embed/${dataDetail[index].trailer}?autoplay=1&mute=1&controls=0&loop=1&playlist=${dataDetail[index].trailer}&rel=0&showinfo=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1`}
+                      className={`absolute top-1/2 left-1/2 w-[120%] h-[120%] -translate-x-1/2 -translate-y-1/2 scale-125 transition-opacity duration-1000 ${
+                        isMobile ? 'opacity-40' : 'opacity-60'
+                      }`}
+                      allow="autoplay; encrypted-media; picture-in-picture"
+                      allowFullScreen={false}
                       title="Film Trailer"
+                      style={{ pointerEvents: 'none' }}
                     />
                   </div>
                 )}

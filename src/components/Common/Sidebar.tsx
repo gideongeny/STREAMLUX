@@ -12,6 +12,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import { auth } from "../../shared/firebase";
 import { useAppSelector } from "../../store/hooks";
+import BuyMeACoffee from "./BuyMeACoffee";
 
 interface SidebarProps {
   isSidebarActive: boolean;
@@ -238,6 +239,11 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               <p>Logout</p>
             </button>
           )}
+
+          {/* Buy Me a Coffee */}
+          <div className="mt-6 pt-6 border-t border-gray-800">
+            <BuyMeACoffee variant="button" className="w-full justify-center" />
+          </div>
         </div>
       </div>
 

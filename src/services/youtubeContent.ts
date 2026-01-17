@@ -114,13 +114,17 @@ export const getYouTubeByGenre = async (genre: string, mediaType: 'movie' | 'tv'
         return [];
     }
 };
-// Fetch YouTube Must-Watch Shorts
+// Fetch YouTube Must-Watch Shorts (properly filtered for shorts)
 export const getYouTubeShorts = async (): Promise<Item[]> => {
     try {
+        // Use specific queries that target YouTube Shorts
         const queries = [
-            'movie trailers shorts',
-            'amazing movie clips shorts',
-            'must watch movie shorts 2024'
+            '#shorts movie trailers',
+            '#shorts movie clips',
+            '#shorts must watch',
+            'movie shorts 2024',
+            'film shorts',
+            'cinema shorts'
         ];
 
         const results = await Promise.allSettled(
@@ -130,7 +134,14 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
         const allVideos: YouTubeVideo[] = [];
         results.forEach(result => {
             if (result.status === 'fulfilled') {
-                allVideos.push(...result.value.videos);
+                // Filter for actual shorts (typically under 60 seconds)
+                allVideos.push(...result.value.videos.filter(v => {
+                    // Check if duration is short (under 60 seconds) or title contains #shorts
+                    const isShort = v.duration ? v.duration < 60 : false;
+                    const hasShortsTag = v.title.toLowerCase().includes('#shorts') || 
+                                        v.title.toLowerCase().includes('short');
+                    return isShort || hasShortsTag;
+                }));
             }
         });
 
@@ -141,7 +152,7 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
                 seen.add(v.id);
                 return true;
             })
-            .slice(0, 15)
+            .slice(0, 20)
             .map((v, i) => convertYouTubeToItem(v, i));
     } catch (error) {
         console.error('Error fetching YouTube shorts:', error);
