@@ -200,26 +200,26 @@ export class ResolverService {
                 type: "embed",
                 priority: 6
             },
-            // Priority 7: Embed.su
+            // Priority 7: VidSrc To (Alternative)
             {
-                name: "Embed.su",
+                name: "VidSrc To",
                 url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.EMBED_SU}/movie/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.EMBED_SU}/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "720p",
-                speed: "medium",
+                    ? `${EMBED_ALTERNATIVES.VIDSRC_TO}/movie/${tmdbId}`
+                    : `${EMBED_ALTERNATIVES.VIDSRC_TO}/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "1080p",
+                speed: "fast",
                 status: "checking",
                 type: "embed",
                 priority: 7
             },
-            // Priority 8: AutoEmbed
+            // Priority 8: APIMDB
             {
-                name: "AutoEmbed",
+                name: "APIMDB",
                 url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.AUTOEMBED}/movie/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.AUTOEMBED}/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                    ? `${EMBED_ALTERNATIVES.APIMDB}/movie/${imdbId || tmdbId}`
+                    : `${EMBED_ALTERNATIVES.APIMDB}/tmdb/tv/${tmdbId}/${season || 1}/${episode || 1}/`,
                 quality: "720p",
-                speed: "slow",
+                speed: "medium",
                 status: "checking",
                 type: "embed",
                 priority: 8
