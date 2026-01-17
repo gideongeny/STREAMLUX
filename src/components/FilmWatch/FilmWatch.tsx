@@ -76,31 +76,47 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     ) || false;
 
     if (media_type === "movie") {
+      // Primary: Use vidsrc.me/embed/{imdbId} (previous working version)
       const baseSources = [
-        `https://vidsrc.me/embed/${imdbId}`,
+        `https://vidsrc.me/embed/${imdbId}`, // Primary - previous working version
+        `https://vidsrc.me/embed/movie/${imdbId}`, // Alternative format
         `${EMBED_ALTERNATIVES.VIDSRC_ME}/movie/${tmdbId}`,
         `${EMBED_ALTERNATIVES.VIDSRC_TO}/movie/${tmdbId}`,
+        // MovieBox-style sources
+        `https://vidsrc.to/embed/movie/${tmdbId}`,
+        `https://vidsrc.pro/embed/movie/${tmdbId}`,
         `https://vidplay.online/e/movie/${tmdbId}`,
         `https://upcloud.to/e/movie/${tmdbId}`,
         `${EMBED_ALTERNATIVES.APIMDB}/movie/${imdbId}`,
+        // Additional MovieBox sources
+        `https://2embed.org/embed/${tmdbId}`,
+        `https://www.2embed.to/embed/tmdb/movie?id=${tmdbId}`,
       ];
       
       // Add non-Western sources if applicable
       if (isNonWestern) {
         baseSources.push(
-          `https://vidsrc.me/embed/movie/${imdbId}`, // Alternative format
-          `https://vidplay.online/e/movie/${imdbId}` // IMDB format
+          `https://vidplay.online/e/movie/${imdbId}`, // IMDB format
+          `https://vidsrc.me/embed/${imdbId}?tmdb=${tmdbId}` // With TMDB fallback
         );
       }
       
       return baseSources;
     } else {
+      // Primary: Use vidsrc.me for TV shows
       const baseSources = [
+        `https://vidsrc.me/embed/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`, // Primary
         `${EMBED_ALTERNATIVES.VIDSRC_ME}/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
         `${EMBED_ALTERNATIVES.VIDSRC_TO}/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
+        // MovieBox-style sources
+        `https://vidsrc.to/embed/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
+        `https://vidsrc.pro/embed/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
         `https://vidplay.online/e/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
         `https://upcloud.to/e/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
         `${EMBED_ALTERNATIVES.APIMDB}/tmdb/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}/`,
+        // Additional MovieBox sources
+        `https://2embed.org/embed/${tmdbId}?s=${seasonId || 1}&e=${episodeId || 1}`,
+        `https://www.2embed.to/embed/tmdb/tv?id=${tmdbId}&s=${seasonId || 1}&e=${episodeId || 1}`,
       ];
       
       // Add non-Western sources if applicable

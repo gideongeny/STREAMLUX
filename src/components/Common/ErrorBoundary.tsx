@@ -23,6 +23,22 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    // Suppress known non-critical errors
+    const errorMessage = error?.message || '';
+    const isNonCritical = 
+      errorMessage.includes('ResizeObserver') ||
+      errorMessage.includes('Non-Error promise rejection') ||
+      errorMessage.includes('client is offline') ||
+      errorMessage.includes('NetworkError') ||
+      errorMessage.includes('Failed to fetch');
+    
+    if (isNonCritical) {
+      // Reset error state for non-critical errors
+      this.setState({ hasError: false, error: null });
+      return;
+    }
+    
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }

@@ -39,25 +39,37 @@ export async function fetchYouTubeVideos(
     query: string,
     pageToken?: string
 ): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string }> {
-    const params: Record<string, string | number> = { q: query };
-    if (pageToken) params["pageToken"] = pageToken;
+    try {
+        // Check if API key exists
+        if (!API_KEY) {
+            console.warn('YouTube API key not configured');
+            return { videos: [], nextPageToken: undefined };
+        }
 
-    const url = buildQueryParams(params);
-    const response = await axios.get(url);
-    const items = response.data.items as any[];
-    const videos: YouTubeVideo[] = items.map((item) => {
-        const { videoId } = item.id;
-        const { title, description, thumbnails, channelTitle } = item.snippet;
-        return {
-            id: videoId,
-            title,
-            description,
-            thumbnail: thumbnails?.high?.url ?? thumbnails?.default?.url ?? "",
-            channelTitle,
-            type: classifyVideo(title, description),
-        };
-    });
-    return { videos, nextPageToken: response.data.nextPageToken };
+        const params: Record<string, string | number> = { q: query };
+        if (pageToken) params["pageToken"] = pageToken;
+
+        const url = buildQueryParams(params);
+        const response = await axios.get(url, { timeout: 10000 });
+        const items = response.data.items as any[];
+        const videos: YouTubeVideo[] = items.map((item) => {
+            const { videoId } = item.id;
+            const { title, description, thumbnails, channelTitle } = item.snippet;
+            return {
+                id: videoId,
+                title,
+                description,
+                thumbnail: thumbnails?.high?.url ?? thumbnails?.default?.url ?? "",
+                channelTitle,
+                type: classifyVideo(title, description),
+            };
+        });
+        return { videos, nextPageToken: response.data.nextPageToken };
+    } catch (error: any) {
+        console.error('YouTube API error:', error?.message || error);
+        // Return empty array instead of throwing
+        return { videos: [], nextPageToken: undefined };
+    }
 }
 
 /**
@@ -94,8 +106,12 @@ function parseDuration(duration: string): number {
 
 export async function getYouTubeVideoDetail(videoId: string): Promise<YouTubeVideoExtended | null> {
     try {
+        if (!API_KEY) {
+            console.warn('YouTube API key not configured');
+            return null;
+        }
         const url = `${BASE_URL}/videos?key=${API_KEY}&part=snippet,statistics,contentDetails&id=${videoId}`;
-        const response = await axios.get(url);
+        const response = await axios.get(url, { timeout: 10000 });
         const item = response.data.items[0];
         if (!item) return null;
 

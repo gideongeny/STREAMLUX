@@ -680,6 +680,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
             films={filtered}
             limitNumber={10}
             isLoading={false}
+            seeMoreParams={{ genre: "53", sort_by: "popularity.desc" }}
           />
         ) : null;
       })()}
@@ -696,6 +697,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
             films={filtered}
             limitNumber={10}
             isLoading={false}
+            seeMoreParams={{ genre: "10749", sort_by: "popularity.desc" }}
           />
         ) : null;
       })()}
@@ -712,6 +714,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
             films={filtered}
             limitNumber={10}
             isLoading={false}
+            seeMoreParams={{ genre: "878", sort_by: "popularity.desc" }}
           />
         ) : null;
       })()}
@@ -728,6 +731,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
             films={filtered}
             limitNumber={10}
             isLoading={false}
+            seeMoreParams={{ genre: "16", sort_by: "popularity.desc" }}
           />
         ) : null;
       })()}
@@ -744,6 +748,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
             films={filtered}
             limitNumber={10}
             isLoading={false}
+            seeMoreParams={{ genre: "99", sort_by: "popularity.desc" }}
           />
         ) : null;
       })()}

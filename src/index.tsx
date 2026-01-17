@@ -76,11 +76,14 @@ function initializeApp() {
   });
 
   window.addEventListener("unhandledrejection", (event) => {
-    // Ignore specific Firebase offline errors
+    // Ignore specific Firebase offline errors and network errors
     if (event.reason?.message?.includes("client is offline") ||
-      event.reason?.code === "unavailable") {
+      event.reason?.code === "unavailable" ||
+      event.reason?.message?.includes("NetworkError") ||
+      event.reason?.message?.includes("Failed to fetch") ||
+      event.reason?.message?.includes("ResizeObserver")) {
       event.preventDefault();
-      console.warn("Suppressed offline promise rejection:", event.reason);
+      console.warn("Suppressed non-critical promise rejection:", event.reason);
       return;
     }
     console.error("Unhandled promise rejection:", event.reason);
