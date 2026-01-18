@@ -1,10 +1,16 @@
+```typescript
 // Backend Download Proxy with HTTP Range Request Support
 // This should be deployed as a Node.js/Express backend
 
-import express, { Request, Response } from 'express';
-import cors from 'cors';
-import axios from 'axios';
-import crypto from 'crypto';
+import express from "express";
+import cors from "cors";
+import axios from "axios";
+import * as cheerio from "cheerio";
+import crypto from 'crypto'; // Keep crypto as it's used in /api/download
+import { runAllScrapers } from "./scrapers/run_all";
+import unifiedResolver from "./unifiedResolver";
+import keepAliveRoutes from "./keepAlive";
+import scraperResolverRoutes from "./scraperResolver";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -12,6 +18,13 @@ const PORT = process.env.PORT || 3001;
 // Enable CORS
 app.use(cors());
 app.use(express.json());
+
+// Keep-Alive Routes
+app.use("/api", keepAliveRoutes);
+app.use("/api", scraperResolverRoutes);
+
+// Unified Resolver Route
+app.get("/api/resolve", unifiedResolver);
 
 // Helper to get headers that mimic a real browser
 const getBrowserHeaders = (referer?: string) => ({
@@ -33,7 +46,7 @@ app.get('/api/proxy', async (req: Request, res: Response) => {
     }
 
     try {
-        console.log(`[Proxy] Fetching: ${url}`);
+        console.log(`[Proxy] Fetching: ${ url } `);
 
         const response = await axios.get(url, {
             headers: getBrowserHeaders(referer as string),
@@ -50,7 +63,7 @@ app.get('/api/proxy', async (req: Request, res: Response) => {
 
         response.data.pipe(res);
     } catch (error: any) {
-        console.error(`[Proxy Error] ${error.message}`);
+        console.error(`[Proxy Error] ${ error.message } `);
         res.status(500).json({ error: 'Proxy request failed', details: error.message });
     }
 });
@@ -69,42 +82,42 @@ app.get('/api/resolve', async (req: Request, res: Response) => {
     }
 
     try {
-        console.log(`[Resolver] Attempting to resolve ${type} ${id}${s ? ` S${s}E${e}` : ''}`);
+        console.log(`[Resolver] Attempting to resolve ${ type } ${ id }${ s ? ` S${s}E${e}` : '' } `);
 
         // Construct the correct VidSrc URL
         let vidsrcUrl = '';
         if (type === 'movie') {
             vidsrcUrl = `https://vidsrc.me/embed/movie?tmdb=${id}`;
         } else {
-            vidsrcUrl = `https://vidsrc.me/embed/tv?tmdb=${id}&sea=${s}&epi=${e}`;
-        }
+    vidsrcUrl = `https://vidsrc.me/embed/tv?tmdb=${id}&sea=${s}&epi=${e}`;
+}
 
-        // Attempt to verify if the embed exists
-        const check = await axios.head(vidsrcUrl, {
-            headers: getBrowserHeaders('https://vidsrc.me/'),
-            validateStatus: () => true
-        });
+// Attempt to verify if the embed exists
+const check = await axios.head(vidsrcUrl, {
+    headers: getBrowserHeaders('https://vidsrc.me/'),
+    validateStatus: () => true
+});
 
-        if (check.status === 200) {
-            // Determine base URL dynamically (for local vs production)
-            const protocol = req.protocol;
-            const host = req.get('host');
-            const baseUrl = `${protocol}://${host}`;
+if (check.status === 200) {
+    // Determine base URL dynamically (for local vs production)
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const baseUrl = `${protocol}://${host}`;
 
-            return res.json({
-                source: 'vidsrc',
-                status: 'active',
-                proxiedUrl: `${baseUrl}/api/proxy?url=${encodeURIComponent(vidsrcUrl)}&referer=${encodeURIComponent('https://vidsrc.me/')}`,
-                directUrl: vidsrcUrl,
-                isProxyNeeded: true
-            });
-        }
+    return res.json({
+        source: 'vidsrc',
+        status: 'active',
+        proxiedUrl: `${baseUrl}/api/proxy?url=${encodeURIComponent(vidsrcUrl)}&referer=${encodeURIComponent('https://vidsrc.me/')}`,
+        directUrl: vidsrcUrl,
+        isProxyNeeded: true
+    });
+}
 
-        res.status(404).json({ error: 'Source not found' });
+res.status(404).json({ error: 'Source not found' });
     } catch (error: any) {
-        console.error(`[Resolver Error] ${error.message}`);
-        res.status(500).json({ error: 'Resolution failed' });
-    }
+    console.error(`[Resolver Error] ${error.message}`);
+    res.status(500).json({ error: 'Resolution failed' });
+}
 });
 
 /**

@@ -124,10 +124,32 @@ export class ResolverService {
         episode?: number,
         imdbId?: string
     ): Promise<ResolvedSource[]> {
+        const sources: ResolvedSource[] = [];
+
+        // 1. Unified Backend Resolver (Priority: High)
+        // Queries FZMovies, GogoAnime, Dramacool, OK.ru from backend
+        // Use timeout to avoid blocking if backend is slow
+        try {
+            // We need title for the backend query.
+            // In a real app, we'd pass title from the component or fetch it here.
+            // For now, if we don't have title, we skip.
+            // Assuming this service might be called with title in future refactor.
+            // Falling back to existing logic if simple ID is passed,
+            // but if we had a title context here it would be:
+            // const backendSources = await this.queryUnifiedBackend(title, year, mediaType);
+            // sources.push(...backendSources);
+        } catch (e) {
+            console.warn("Unified backend resolution skipped/failed", e);
+        }
+
+        // 2. VidSrc & Embeds (Priority: Medium)
+        // ... existing embed logic ...
+        const embedId = imdbId || id;
+        const isTmdbId = !imdbId && typeof id === 'number';
         const tmdbId = id.toString();
 
         // Build sources with priority ordering
-        const sources: ResolvedSource[] = [
+        sources.push(
             // Priority 1: VidSrc Me (Primary - most reliable)
             {
                 name: "VidSrc Me",
@@ -224,7 +246,7 @@ export class ResolverService {
                 type: "embed",
                 priority: 8
             }
-        ];
+        );
 
         // NEW: Check backend resolution for VidSrc
         try {

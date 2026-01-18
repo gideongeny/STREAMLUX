@@ -24,7 +24,8 @@ const Explore = () => {
     genres: [] as number[],
     year: "",
     runtime: "",
-    region: searchParams.get("region") || "" // Add region filter
+    region: searchParams.get("region") || "",
+    rating: searchParams.get("vote_average.gte") || "0",
   });
 
   const { data, isLoading, error } = useTMDBCollectionQuery(
@@ -33,7 +34,8 @@ const Explore = () => {
     filters.genres,
     filters.year,
     filters.runtime,
-    filters.region // Pass region to the query
+    filters.region,
+    filters.rating
   );
 
   // Use YouTube hook when a region is selected (and we want YouTube content)
@@ -44,12 +46,29 @@ const Explore = () => {
 
   useEffect(() => {
     // Update filters when URL params change
-    const region = searchParams.get("region");
+    const region = searchParams.get("region") || "";
     const type = searchParams.get("type") as "movie" | "tv" | null;
+    const yearFrom = searchParams.get("from");
+    const yearTo = searchParams.get("to");
+    const genres = searchParams.getAll("genre").map(Number);
+    const voteAverage = searchParams.get("vote_average.gte") || "0";
+    const minRuntime = searchParams.get("minRuntime");
+    const maxRuntime = searchParams.get("maxRuntime");
 
-    if (region) {
-      setFilters(prev => ({ ...prev, region }));
-    }
+    // Construct runtime string if both exist
+    let runtime = "";
+    if (minRuntime === "0" && maxRuntime === "90") runtime = "short";
+    if (minRuntime === "90" && maxRuntime === "150") runtime = "medium";
+    if (minRuntime === "150" && maxRuntime === "200") runtime = "long";
+
+    setFilters(prev => ({
+      ...prev,
+      region,
+      genres,
+      year: yearFrom && yearTo ? `${yearFrom}-${yearTo}` : "",
+      sortBy: searchParams.get("sort_by") || "popularity.desc",
+      // Add missing filter props if they were part of the state
+    }));
 
     // Update currentTab from URL or localStorage
     if (type && (type === "movie" || type === "tv")) {

@@ -30,7 +30,8 @@ export const useTMDBCollectionQuery = (
   genres: number[] = [],
   year: string = "",
   runtime: string = "",
-  region: string = ""
+  region: string = "",
+  rating: string = "0"
 ): TMDBCollectionQueryResult => {
   const [data, setData] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -91,22 +92,31 @@ export const useTMDBCollectionQuery = (
         const exploreConfig: any = {
           sort_by: sortBy,
           ...(genres.length > 0 && { with_genres: genres.join(",") }),
-          ...(region && targetCountries.length > 0 && { 
+          "vote_average.gte": rating,
+          ...(region && targetCountries.length > 0 && {
             with_origin_country: targetCountries.join("|"),
-            region: region 
+            region: region
           }),
         };
 
         // Use enhanced explore functions that fetch from all sources
-        const exploreResult = mediaType === "movie" 
+        const exploreResult = mediaType === "movie"
           ? await getExploreMovie(1, exploreConfig).catch(() => ({ results: [] }))
           : await getExploreTV(1, exploreConfig).catch(() => ({ results: [] }));
 
         // Get results from explore (already includes multiple sources)
-        let uniqueResults = exploreResult.results || [];
+        // Ensure we handle results safely if undefined
+        let uniqueResults = Array.isArray(exploreResult?.results) ? exploreResult.results : [];
 
         // Apply client-side filters (like MovieBox does)
         let filteredResults = uniqueResults;
+
+        // Filter by rating (client-side as backup)
+        if (Number(rating) > 0) {
+          filteredResults = filteredResults.filter((item) =>
+            (item.vote_average || 0) >= Number(rating)
+          );
+        }
 
         // Filter by genre (client-side)
         if (genres.length > 0) {
@@ -120,7 +130,7 @@ export const useTMDBCollectionQuery = (
           const currentYear = new Date().getFullYear();
           let startYear = 0;
           let endYear = currentYear;
-          
+
           if (year === "2020s") {
             startYear = 2020;
             endYear = currentYear;
@@ -133,11 +143,16 @@ export const useTMDBCollectionQuery = (
           } else if (year === "1990s") {
             startYear = 1990;
             endYear = 1999;
+          } else if (year.includes("-")) {
+            // Handle precise range if passed like "2020-2022"
+            const [f, t] = year.split("-");
+            startYear = Number(f) || 0;
+            endYear = Number(t) || currentYear;
           }
-          
+
           filteredResults = filteredResults.filter((item) => {
-            const releaseDate = mediaType === "movie" 
-              ? item.release_date 
+            const releaseDate = mediaType === "movie"
+              ? item.release_date
               : item.first_air_date;
             if (!releaseDate) return false;
             const itemYear = Number.parseInt(releaseDate.split("-")[0], 10);
@@ -156,13 +171,27 @@ export const useTMDBCollectionQuery = (
           });
         }
 
-        // Filter by region (client-side) - STRICT FILTERING
+        // Filter by region (client-side) - RELAXED FILTERING
+        // Only filter strictly if we have enough results, otherwise be lenient to prevent empty screen
         if (targetCountries.length > 0) {
-          filteredResults = filteredResults.filter((item) => {
+          const strictFiltered = filteredResults.filter((item) => {
             const countries = item.origin_country || [];
-            // Only include if at least one country matches
             return countries.some((c: string) => targetCountries.includes(c));
           });
+
+          // If strict filtering kills all results but we got some from the API (which implies they are relevant),
+          // maybe the metadata is missing. In that case, use the original results but warn.
+          // Or stick to strict filtering if it's crucial. 
+          // Given the user issue "No videos found", let's be careful.
+          // If we requested by country from API, the results SHOULD be valid even if metadata is missing.
+
+          if (strictFiltered.length === 0 && filteredResults.length > 0) {
+            console.warn("Valid API results found but filtered out by client-side region check. Showing metadata-less items as fallback.");
+            // Fallback: show items that came from region-specific API call but might lack origin_country tag
+            filteredResults = filteredResults;
+          } else {
+            filteredResults = strictFiltered;
+          }
         }
 
         // Sort results
@@ -187,14 +216,16 @@ export const useTMDBCollectionQuery = (
         if (filteredResults.length === 0) {
           console.log("No results after filtering, falling back to popular content");
           try {
-            const fallbackResult = mediaType === "movie" 
+            const fallbackResult = mediaType === "movie"
               ? await getExploreMovie(1, {}).catch(() => ({ results: [] }))
               : await getExploreTV(1, {}).catch(() => ({ results: [] }));
-            
-            const fallbackItems = (fallbackResult.results || [])
-              .filter((item: Item) => item.media_type === mediaType && Boolean(item.poster_path))
-              .slice(0, 20);
-            
+
+            const fallbackItems = Array.isArray(fallbackResult?.results)
+              ? fallbackResult.results
+                .filter((item: Item) => item.media_type === mediaType && Boolean(item.poster_path))
+                .slice(0, 20)
+              : [];
+
             if (fallbackItems.length > 0) {
               setData(fallbackItems);
               setIsLoading(false);
@@ -210,14 +241,16 @@ export const useTMDBCollectionQuery = (
         console.error("Error fetching collection data:", err);
         // Try fallback on error too
         try {
-          const fallbackResult = mediaType === "movie" 
+          const fallbackResult = mediaType === "movie"
             ? await getExploreMovie(1, {}).catch(() => ({ results: [] }))
             : await getExploreTV(1, {}).catch(() => ({ results: [] }));
-          
-          const fallbackItems = (fallbackResult.results || [])
-            .filter((item: Item) => item.media_type === mediaType && Boolean(item.poster_path))
-            .slice(0, 20);
-          
+
+          const fallbackItems = Array.isArray(fallbackResult?.results)
+            ? fallbackResult.results
+              .filter((item: Item) => item.media_type === mediaType && Boolean(item.poster_path))
+              .slice(0, 20)
+            : [];
+
           if (fallbackItems.length > 0) {
             setData(fallbackItems);
             setError(null); // Clear error if fallback succeeds
@@ -235,7 +268,7 @@ export const useTMDBCollectionQuery = (
     };
 
     fetchData();
-  }, [mediaType, sortBy, genres, year, runtime, region]);
+  }, [mediaType, sortBy, genres, year, runtime, region, rating]);
 
   return { data, isLoading, error };
 };

@@ -4,20 +4,21 @@ import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 import FilterByDate from "./FilterByDate";
 import FilterByGenres from "./FilterByGenres";
 import FilterByRuntime from "./FilterByRuntime";
+import FilterByRating from "./FilterByRating";
+import FilterByRegion from "./FilterByRegion";
 
 interface FilterByProps {
-  currentTab: string;
+  currentTab: "movie" | "tv";
 }
 
 const FilterBy: FunctionComponent<FilterByProps> = ({ currentTab }) => {
-  
+
 
   const [openFilter, setOpenFilter] = useState(true);
 
   return (
     <div
-      // @ts-ignore
-      
+
       className="bg-dark-lighten rounded-md shadow-md px-4 py-3 mt-8"
     >
       <div className="flex justify-between items-center text-white pb-3">
@@ -29,12 +30,19 @@ const FilterBy: FunctionComponent<FilterByProps> = ({ currentTab }) => {
       </div>
       {openFilter && (
         <div className="py-3 border-t border-dark-darken">
-          <p className="text-lg mb-4 text-white/80">Genres</p>
+          <p className="text-lg mb-3 text-white/80">Region</p>
+          <FilterByRegion />
+
+          <p className="text-lg mb-3 mt-6 text-white/80">Genres</p>
           <FilterByGenres currentTab={currentTab} />
 
-          <p className="text-lg mb-2 mt-8 text-white/80">Runtime</p>
+          <p className="text-lg mb-2 mt-6 text-white/80">Rating</p>
+          <FilterByRating />
+
+          <p className="text-lg mb-2 mt-6 text-white/80">Runtime</p>
           <FilterByRuntime />
-          <p className="text-lg mb-2 mt-8 text-white/80">Release Dates</p>
+
+          <p className="text-lg mb-2 mt-6 text-white/80">Release Dates</p>
           <FilterByDate />
         </div>
       )}
