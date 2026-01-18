@@ -16,40 +16,42 @@ const getHeaders = () => ({
     'Referer': BASE_URL,
 });
 
-export const crawlNetNaija = async (): Promise<DownloadResult[]> => {
+export const searchNetNaija = async (query: string): Promise<DownloadResult[]> => {
     try {
-        console.log(`Crawling NetNaija (${BASE_URL})...`);
-        const { data } = await axios.get(BASE_URL, { headers: getHeaders(), timeout: 15000 });
+        console.log(`Searching NetNaija for: ${query}`);
+        const searchUrl = `${BASE_URL}/search?t=${encodeURIComponent(query)}`;
+        const { data } = await axios.get(searchUrl, { headers: getHeaders(), timeout: 15000 });
         const $ = cheerio.load(data);
         const results: DownloadResult[] = [];
 
-        // Scrape "Recent Movies" or similar sections
-        $('.file-one').each((_, element) => {
-            const title = $(element).find('h2 a').text().trim();
-            const href = $(element).find('h2 a').attr('href');
-            const category = $(element).find('.category').text().trim();
-            const date = $(element).find('.date').text().trim();
+        $('.search-results .result-item, .file-one').each((_, element) => {
+            const title = $(element).find('h3 a, h2 a').text().trim();
+            const href = $(element).find('h3 a, h2 a').attr('href');
+            const info = $(element).find('.info').text(); // May contain date/category
 
             if (title && href) {
                 results.push({
                     title,
-                    url: href, // NetNaija usually has full URLs or relative
+                    url: href,
                     source: 'NetNaija',
-                    category: category || 'Movie',
-                    date
+                    category: 'Search Result',
+                    date: ''
                 });
             }
         });
 
-        // Also check "Trending" or other lists if available on home
-        // This is a basic scrape of the main feed
-
         console.log(`Found ${results.length} items on NetNaija.`);
         return results;
     } catch (error) {
-        console.error('Error crawling NetNaija:', error);
+        console.error('Error searching NetNaija:', error);
         return [];
     }
+};
+
+// Keep crawler for fallback or recent
+export const crawlNetNaija = async (): Promise<DownloadResult[]> => {
+    // ... existing implementation if needed, or remove
+    return [];
 };
 
 

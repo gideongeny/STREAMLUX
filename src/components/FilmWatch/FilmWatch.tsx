@@ -70,7 +70,8 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
           id,
           seasonId,
           episodeId,
-          imdbId
+          imdbId,
+          title || (detail as any)?.title || (detail as any)?.name // Pass title
         );
 
         // Map to VideoPlayer format
@@ -177,141 +178,142 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
       <Title value={`Watch: ${title} | StreamLux`} />
 
       <div className="flex relative min-h-screen bg-dark-lighten">
-        <div className="flex relative min-h-screen bg-dark-lighten">
-          <Sidebar
-            isSidebarActive={isSidebarActive}
-            onCloseSidebar={() => setIsSidebarActive(false)}
-          />
 
-          <div className="flex-grow min-w-0 pt-14 md:pt-0"> {/* Add padding top for mobile */}
+        <Sidebar
+          isSidebarActive={isSidebarActive}
+          onCloseSidebar={() => setIsSidebarActive(false)}
+        />
 
-            {/* Mobile Header with Menu Button */}
-            <div className="md:hidden fixed top-0 left-0 w-full z-40 bg-dark-lighten/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-white/5">
-              <Link to="/" className="flex gap-2 items-center">
-                <img src="/logo.svg" alt="StreamLux" className="w-8 h-8" />
-                <span className="text-white font-bold tracking-wider">StreamLux</span>
-              </Link>
-              <button onClick={() => setIsSidebarActive(true)}>
-                <GiHamburgerMenu size={24} className="text-white" />
-              </button>
-            </div>
+        <div className="flex-grow min-w-0 pt-14 md:pt-0"> {/* Add padding top for mobile */}
 
-            <div
-              className="flex flex-col xl:grid xl:grid-cols-4 gap-8 p-4 md:p-8"
-            >
-              {/* Main Content Area */}
-              <div className="xl:col-span-3 col-span-4 space-y-8">
-
-                {/* Video Player Container */}
-                <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl relative border border-white/5 group">
-                  {isResolving ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center bg-black text-white">
-                      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                      <p>Resolving best quality sources...</p>
-                    </div>
-                  ) : (
-                    <VideoPlayer
-                      sources={sources}
-                      poster={`https://image.tmdb.org/t/p/original${poster}`}
-                      title={title}
-                      onError={() => {
-                        console.log("Video playback error");
-                      }}
-                    />
-                  )}
-                </div>
-
-                {/* Episode Selection for TV Shows */}
-                {media_type === "tv" && (
-                  <div className="bg-dark rounded-2xl p-6 border border-white/5">
-                    <SeasonSelection
-                      detailSeasons={detailSeasons}
-                      seasonId={seasonId}
-                      episodeId={episodeId}
-                    />
-                  </div>
-                )}
-
-                {/* Movie/Show Info & Controls */}
-                <div className="space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-                    <div className="flex-1 space-y-4">
-                      <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight">
-                        {title}
-                      </h1>
-
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
-                        <div className="flex items-center gap-1 text-yellow-400">
-                          <AiFillStar size={18} />
-                          <span className="font-bold text-white">{rating?.toFixed(1)}</span>
-                        </div>
-                        <span>•</span>
-                        <div className="flex items-center gap-2">
-                          <AiTwotoneCalendar size={18} />
-                          <span>{media_type === "movie" ? (detail as DetailMovie)?.release_date?.slice(0, 4) : (detail as DetailTV)?.first_air_date?.slice(0, 4)}</span>
-                        </div>
-                        <span>•</span>
-                        <span className="px-2 py-0.5 rounded-md bg-white/10 text-white text-xs font-bold uppercase tracking-wider">
-                          HD
-                        </span>
-                      </div>
-
-                      <div className="text-gray-300 leading-relaxed text-sm md:text-base">
-                        <ReadMore limitTextLength={250}>
-                          {overview}
-                        </ReadMore>
-                      </div>
-                    </div>
-
-                    {/* Download Button */}
-                    <div className="w-full md:w-auto">
-                      {downloadInfo && <DownloadOptions downloadInfo={downloadInfo} />}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ad Banner Placement */}
-                <div className="mt-8">
-                  <AdBanner position="watch" />
-                </div>
-
-                {/* Comments Section */}
-                <div className="mt-12">
-                  <Comments mediaId={detail?.id?.toString() || ""} mediaType={media_type} />
-                </div>
-
-              </div>
-
-              {/* Sidebar (Recommendations) */}
-              <div className="xl:col-span-1 col-span-4 space-y-8">
-                <RightbarFilms
-                  className="xl:block"
-                  films={recommendations}
-                  name="More Like This"
-                  limitNumber={10}
-                  isLoading={!recommendations}
-                />
-
-                {/* Vertical Ad Banner for Desktop */}
-                <div className="hidden xl:block sticky top-24">
-                  <div className="bg-dark-lighten border border-white/5 rounded-2xl p-4 flex flex-col items-center text-center">
-                    <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Sponsored</p>
-                    <div className="w-full aspect-[9/16] bg-primary/5 rounded-xl flex items-center justify-center mb-4">
-                      <p className="text-primary font-bold">Ad Space</p>
-                    </div>
-                    <Link to="/download" className="w-full py-2 bg-primary text-black font-bold rounded-lg hover:bg-white transition">
-                      Download App
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Footer />
+          {/* Mobile Header with Menu Button */}
+          <div className="md:hidden fixed top-0 left-0 w-full z-40 bg-dark-lighten/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-white/5">
+            <Link to="/" className="flex gap-2 items-center">
+              <img src="/logo.svg" alt="StreamLux" className="w-8 h-8" />
+              <span className="text-white font-bold tracking-wider">StreamLux</span>
+            </Link>
+            <button onClick={() => setIsSidebarActive(true)}>
+              <GiHamburgerMenu size={24} className="text-white" />
+            </button>
           </div>
+
+          <div
+            className="flex flex-col xl:grid xl:grid-cols-4 gap-8 p-4 md:p-8"
+          >
+            {/* Main Content Area */}
+            <div className="xl:col-span-3 col-span-4 space-y-8">
+
+              {/* Video Player Container */}
+              <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl relative border border-white/5 group">
+                {isResolving ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-black text-white">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p>Resolving best quality sources...</p>
+                  </div>
+                ) : (
+                  <VideoPlayer
+                    sources={sources}
+                    poster={`https://image.tmdb.org/t/p/original${poster}`}
+                    title={title}
+                    onError={() => {
+                      console.log("Video playback error");
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* Episode Selection for TV Shows */}
+              {media_type === "tv" && (
+                <div className="bg-dark rounded-2xl p-6 border border-white/5">
+                  <SeasonSelection
+                    detailSeasons={detailSeasons}
+                    seasonId={seasonId}
+                    episodeId={episodeId}
+                  />
+                </div>
+              )}
+
+              {/* Movie/Show Info & Controls */}
+              <div className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                  <div className="flex-1 space-y-4">
+                    <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight">
+                      {title}
+                    </h1>
+
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+                      <div className="flex items-center gap-1 text-yellow-400">
+                        <AiFillStar size={18} />
+                        <span className="font-bold text-white">{rating?.toFixed(1)}</span>
+                      </div>
+                      <span>•</span>
+                      <div className="flex items-center gap-2">
+                        <AiTwotoneCalendar size={18} />
+                        <span>{media_type === "movie" ? (detail as DetailMovie)?.release_date?.slice(0, 4) : (detail as DetailTV)?.first_air_date?.slice(0, 4)}</span>
+                      </div>
+                      <span>•</span>
+                      <span className="px-2 py-0.5 rounded-md bg-white/10 text-white text-xs font-bold uppercase tracking-wider">
+                        HD
+                      </span>
+                    </div>
+
+                    <div className="text-gray-300 leading-relaxed text-sm md:text-base">
+                      <ReadMore limitTextLength={250}>
+                        {overview}
+                      </ReadMore>
+                    </div>
+                  </div>
+
+                  {/* Download Button */}
+                  <div className="w-full md:w-auto">
+                    {downloadInfo && <DownloadOptions downloadInfo={downloadInfo} />}
+                  </div>
+                </div>
+              </div>
+
+              {/* Ad Banner Placement */}
+              <div className="mt-8">
+                <AdBanner position="watch" />
+              </div>
+
+              {/* Comments Section */}
+              <div className="mt-12">
+                <Comments mediaId={detail?.id?.toString() || ""} mediaType={media_type} />
+              </div>
+
+            </div>
+
+            {/* Sidebar (Recommendations) */}
+            <div className="xl:col-span-1 col-span-4 space-y-8">
+              <RightbarFilms
+                className="xl:block"
+                films={recommendations}
+                name="More Like This"
+                limitNumber={10}
+                isLoading={!recommendations}
+              />
+
+              {/* Vertical Ad Banner for Desktop */}
+              <div className="hidden xl:block sticky top-24">
+                <div className="bg-dark-lighten border border-white/5 rounded-2xl p-4 flex flex-col items-center text-center">
+                  <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Sponsored</p>
+                  <div className="w-full aspect-[9/16] bg-primary/5 rounded-xl flex items-center justify-center mb-4">
+                    <p className="text-primary font-bold">Ad Space</p>
+                  </div>
+                  <Link to="/download" className="w-full py-2 bg-primary text-black font-bold rounded-lg hover:bg-white transition">
+                    Download App
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Footer />
         </div>
-      </>
-      );
+
+      </div>
+    </>
+  );
 };
 
-      export default FilmWatch;
+export default FilmWatch;

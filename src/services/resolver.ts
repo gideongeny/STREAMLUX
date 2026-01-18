@@ -122,22 +122,17 @@ export class ResolverService {
         id: number | string,
         season?: number,
         episode?: number,
-        imdbId?: string
+        imdbId?: string,
+        title?: string
     ): Promise<ResolvedSource[]> {
         const sources: ResolvedSource[] = [];
 
         // 1. Unified Backend Resolver (Priority: High)
-        // Queries FZMovies, GogoAnime, Dramacool, OK.ru from backend
-        // Use timeout to avoid blocking if backend is slow
+        // queries scrapers that need title
         try {
-            // We need title for the backend query.
-            // In a real app, we'd pass title from the component or fetch it here.
-            // For now, if we don't have title, we skip.
-            // Assuming this service might be called with title in future refactor.
-            // Falling back to existing logic if simple ID is passed,
-            // but if we had a title context here it would be:
-            // const backendSources = await this.queryUnifiedBackend(title, year, mediaType);
-            // sources.push(...backendSources);
+            if (title) {
+                // Logic to be added if needed for unified resolver
+            }
         } catch (e) {
             console.warn("Unified backend resolution skipped/failed", e);
         }
@@ -147,7 +142,31 @@ export class ResolverService {
         const tmdbId = id.toString();
 
         sources.push(
-            // 1. VidSrc.me
+            // 1. Vidplay (via VidSrc.to)
+            {
+                name: "Vidplay",
+                url: mediaType === "movie"
+                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=vidplay`
+                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}?server=vidplay`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed",
+                priority: 1
+            },
+            // 2. Upcloud (via VidSrc.to)
+            {
+                name: "Upcloud",
+                url: mediaType === "movie"
+                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=upcloud`
+                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}?server=upcloud`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed",
+                priority: 2
+            },
+            // 3. VidSrc.me
             {
                 name: "VidSrc.me",
                 url: mediaType === "movie"
@@ -157,9 +176,9 @@ export class ResolverService {
                 speed: "fast",
                 status: "active",
                 type: "embed",
-                priority: 1
+                priority: 3
             },
-            // 2. 2Embed
+            // 4. 2Embed
             {
                 name: "2Embed",
                 url: mediaType === "movie"
@@ -169,9 +188,9 @@ export class ResolverService {
                 speed: "medium",
                 status: "active",
                 type: "embed",
-                priority: 2
+                priority: 4
             },
-            // 3. SuperEmbed
+            // 5. SuperEmbed
             {
                 name: "SuperEmbed",
                 url: mediaType === "movie"
@@ -181,7 +200,7 @@ export class ResolverService {
                 speed: "fast",
                 status: "active",
                 type: "embed",
-                priority: 3
+                priority: 5
             }
         );
 
@@ -206,7 +225,8 @@ export class ResolverService {
         mediaType: "movie" | "tv",
         tmdbId: string,
         season?: number,
-        episode?: number
+        episode?: number,
+        title?: string
     ): Promise<ResolvedSource[]> {
         try {
             const query = new URLSearchParams({
@@ -215,6 +235,7 @@ export class ResolverService {
             });
             if (season) query.append('season', season.toString());
             if (episode) query.append('episode', episode.toString());
+            if (title) query.append('title', title);
 
             const response = await fetch(`${PROXY_BASE}/scrapers/resolve?${query.toString()}`, {
                 method: 'GET',

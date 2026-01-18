@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { searchFzMovies } from './scrapers/fzmovies';
-import { crawlNetNaija } from './scrapers/netnaija';
+import { searchNetNaija } from './scrapers/netnaija';
+import { scrapeSFlix } from './scrapers/sflix';
 
 const router = express.Router();
 
@@ -10,31 +11,28 @@ const router = express.Router();
  */
 router.get('/resolve', async (req: Request, res: Response) => {
     try {
-        const { type, id, season, episode } = req.query;
+        const { type, id, season, episode, title } = req.query;
 
-        if (!type || !id) {
+        if (!type || (!id && !title)) {
             return res.status(400).json({
-                error: 'Missing required parameters: type and id'
+                error: 'Missing required parameters: type and (id or title)'
             });
         }
 
-        // For now, we'll return empty arrays since the scrapers need TMDB title matching
-        // In production, you'd need to:
-        // 1. Fetch TMDB data for the given ID
-        // 2. Search scrapers using the title
-        // 3. Return matching video URLs
+        const queryTitle = (title as string) || ""; // In real app, fetch from TMDB if missing
+
+        // Run scrapers in parallel
+        const [fzMovies, netNaija, sflixVal] = await Promise.allSettled([
+            searchFzMovies(queryTitle),
+            searchNetNaija(queryTitle),
+            scrapeSFlix(queryTitle)
+        ]);
 
         const response: any = {
-            fzmovies: [],
-            netnaija: [],
-            o2tvseries: []
+            fzmovies: fzMovies.status === 'fulfilled' ? fzMovies.value : [],
+            netnaija: netNaija.status === 'fulfilled' ? netNaija.value : [],
+            sflix: sflixVal.status === 'fulfilled' ? sflixVal.value : []
         };
-
-        // TODO: Implement actual scraper integration
-        // This would require:
-        // - TMDB API call to get title from ID
-        // - Search each scraper with the title
-        // - Match and return direct video URLs
 
         res.json(response);
     } catch (error) {

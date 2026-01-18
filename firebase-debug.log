@@ -1,0 +1,16 @@
+[debug] [2026-01-18T22:31:07.051Z] ----------------------------------------------------------------------
+[debug] [2026-01-18T22:31:07.056Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\mukht\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2026-01-18T22:31:07.057Z] CLI Version:   15.2.1
+[debug] [2026-01-18T22:31:07.057Z] Platform:      win32
+[debug] [2026-01-18T22:31:07.058Z] Node Version:  v22.19.0
+[debug] [2026-01-18T22:31:07.059Z] Time:          Mon Jan 19 2026 01:31:07 GMT+0300 (East Africa Time)
+[debug] [2026-01-18T22:31:07.059Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-01-18T22:31:11.623Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-18T22:31:11.624Z] > authorizing via signed-in user (gideongeng@gmail.com)
+[debug] [2026-01-18T22:31:11.624Z] [iam] checking project streamlux-67a84 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-01-18T22:31:11.626Z] Checked if tokens are valid: true, expires at: 1768778896454
+[debug] [2026-01-18T22:31:11.627Z] Checked if tokens are valid: true, expires at: 1768778896454
+[debug] [2026-01-18T22:31:11.629Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/streamlux-67a84:testIamPermissions [none]
+[debug] [2026-01-18T22:31:11.630Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/streamlux-67a84:testIamPermissions x-goog-quota-user=projects/streamlux-67a84
+[debug] [2026-01-18T22:31:11.630Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/streamlux-67a84:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
