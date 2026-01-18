@@ -30,6 +30,7 @@ import SeasonSelection from "./SeasonSelection";
 import DownloadOptions from "../Common/DownloadOptions";
 import PlayerControls from "./PlayerControls";
 import VideoPlayer from "./VideoPlayer";
+import AdBanner from "../Ads/AdBanner";
 
 interface FilmWatchProps {
   media_type: "movie" | "tv";
@@ -656,6 +657,9 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 <DownloadOptions downloadInfo={downloadInfo} />
               </div>
             )}
+
+            {/* MovieBox-Style Ad Banner - Watch Page */}
+            <AdBanner position="watch" />
           </div>
           <Comment media_type={media_type} id={detail?.id} />
         </div>

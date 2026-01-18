@@ -8,10 +8,7 @@ interface AdBannerProps {
 }
 
 const AdBanner: React.FC<AdBannerProps> = ({ position, onClose }) => {
-    const [isVisible, setIsVisible] = React.useState(true);
-    const [canClose, setCanClose] = React.useState(false);
-
-    // Check if running in native app (no ads in APK)
+    // Check if running in native app (no ads in APK) - MUST be before hooks
     const isNativeApp = React.useMemo(() => {
         if (typeof window === 'undefined') return false;
         return !!(window as any).Capacitor ||
@@ -19,10 +16,15 @@ const AdBanner: React.FC<AdBannerProps> = ({ position, onClose }) => {
             navigator.userAgent.includes('StreamLuxApp');
     }, []);
 
-    // Don't show ads in native app
-    if (isNativeApp) {
-        return null;
-    }
+    const [isVisible, setIsVisible] = React.useState(true);
+    const [canClose, setCanClose] = React.useState(false);
+
+    // Don't show ads in native app - return early AFTER all hooks
+    React.useEffect(() => {
+        if (isNativeApp) {
+            setIsVisible(false);
+        }
+    }, [isNativeApp]);
 
     // Enable close button after 5 seconds
     React.useEffect(() => {
