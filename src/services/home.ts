@@ -11,6 +11,9 @@ import {
 import { getAllSourceContent } from "./contentSources";
 import { getAllAPIContent, getAllAPIContentByGenre } from "./movieAPIs";
 import { getYouTubeMovies, getYouTubeTVShows, getYouTubeByGenre, getYouTubeShorts } from "./youtubeContent";
+import { getWatchModePopular, searchWatchModeTitles } from "./watchmode";
+import { searchStreamingTitles, getStreamingTitles } from "./rapidapi-streaming";
+import { searchOMDBTitles, getOMDBPopular } from "./omdb";
 
 // MOVIE TAB
 ///////////////////////////////////////////////////////////////
@@ -53,25 +56,44 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
   ]) as { fzTrending: Item[], fzPopular: Item[], fzTopRated: Item[], fzLatest: Item[] };
 
   // Load other sources in background (non-blocking) - these will be available later if needed
-  // Now includes Letterboxd, Rotten Tomatoes, YouTube, and enhanced TMDB via getAllAPIContent
+  // Now includes Letterboxd, Rotten Tomatoes, YouTube, WatchMode, RapidAPI, OMDB, and enhanced TMDB via getAllAPIContent
   Promise.allSettled([
     getAllSourceContent("movie", 1),
     getAllAPIContent("movie", "popular"), // Includes IMDB -> Letterboxd -> Rotten Tomatoes -> TMDB fallback
     getYouTubeMovies(), // Add YouTube movies to background loading
+    getWatchModePopular("movie", 1), // WatchMode popular movies
+    getStreamingTitles("movie", "us", undefined, 1), // RapidAPI streaming availability
+    getOMDBPopular("movie"), // OMDB popular movies
   ]).catch(() => { }); // Silently fail for background loading
 
   // Helper function to merge and deduplicate items from all sources
-  // Now includes YouTube and scraper content in all sliders
-  const mergeAndDedupe = (tmdbItems: Item[], fzItems: Item[], otherItems: Item[] = [], youtubeItems: Item[] = [], scraperItems: Item[] = []): Item[] => {
-    // Interleave content: TMDB, YouTube, Scraper, FZMovies for better variety
+  // Now includes YouTube, scraper, WatchMode, RapidAPI, and OMDB content in all sliders
+  const mergeAndDedupe = (
+    tmdbItems: Item[], 
+    fzItems: Item[], 
+    otherItems: Item[] = [], 
+    youtubeItems: Item[] = [], 
+    scraperItems: Item[] = [],
+    watchModeItems: Item[] = [],
+    rapidApiItems: Item[] = [],
+    omdbItems: Item[] = []
+  ): Item[] => {
+    // Interleave content: TMDB, YouTube, Scraper, WatchMode, RapidAPI, OMDB, FZMovies for better variety
     const combined: Item[] = [];
-    const maxLength = Math.max(tmdbItems.length, youtubeItems.length, scraperItems.length, fzItems.length, otherItems.length);
+    const maxLength = Math.max(
+      tmdbItems.length, youtubeItems.length, scraperItems.length, 
+      fzItems.length, otherItems.length, watchModeItems.length, 
+      rapidApiItems.length, omdbItems.length
+    );
     
     for (let i = 0; i < maxLength; i++) {
-      // Add items in rotation: TMDB -> YouTube -> Scraper -> FZMovies -> Other
+      // Add items in rotation: TMDB -> YouTube -> Scraper -> WatchMode -> RapidAPI -> OMDB -> FZMovies -> Other
       if (tmdbItems[i]) combined.push(tmdbItems[i]);
       if (youtubeItems[i]) combined.push(youtubeItems[i]);
       if (scraperItems[i]) combined.push(scraperItems[i]);
+      if (watchModeItems[i]) combined.push(watchModeItems[i]);
+      if (rapidApiItems[i]) combined.push(rapidApiItems[i]);
+      if (omdbItems[i]) combined.push(omdbItems[i]);
       if (fzItems[i]) combined.push(fzItems[i]);
       if (otherItems[i]) combined.push(otherItems[i]);
     }
@@ -104,41 +126,63 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
       fzItems = additionalSources.fzLatest;
     }
 
-    // Use only TMDB + FZMovies for initial fast load (YouTube/scraper will be added later)
-    final[key] = mergeAndDedupe(tmdbItems, fzItems, [], [], []);
+    // Use only TMDB + FZMovies for initial fast load (YouTube/scraper/WatchMode/RapidAPI/OMDB will be added later)
+    final[key] = mergeAndDedupe(tmdbItems, fzItems, [], [], [], [], [], []);
 
     return final;
   }, {} as HomeFilms);
 
-  // Fetch YouTube and scraper content to mix into all sliders (infinite content)
+  // Fetch YouTube, scraper, WatchMode, RapidAPI, and OMDB content to mix into all sliders (infinite content)
   let youtubeMovies: Item[] = [];
   let scraperMovies: Item[] = [];
+  let watchModeMovies: Item[] = [];
+  let rapidApiMovies: Item[] = [];
+  let omdbMovies: Item[] = [];
   
   try {
-    // Fetch multiple pages for infinite content
-    const [youtube1, youtube2, scraper1, scraper2, scraper3] = await Promise.all([
+    // Fetch multiple pages for infinite content from all sources
+    const [
+      youtube1, youtube2,
+      scraper1, scraper2, scraper3,
+      watchMode1, watchMode2,
+      rapidApi1, rapidApi2,
+      omdb1, omdb2,
+    ] = await Promise.all([
       getYouTubeMovies().catch(() => []),
       getYouTubeMovies().catch(() => []), // Second page
       getAllSourceContent("movie", 1).catch(() => []),
       getAllSourceContent("movie", 2).catch(() => []),
       getAllSourceContent("movie", 3).catch(() => []),
+      getWatchModePopular("movie", 1).catch(() => []),
+      getWatchModePopular("movie", 2).catch(() => []),
+      getStreamingTitles("movie", "us", undefined, 1).catch(() => []),
+      getStreamingTitles("movie", "us", undefined, 2).catch(() => []),
+      getOMDBPopular("movie").catch(() => []),
+      searchOMDBTitles("popular movie").catch(() => []),
     ]);
     youtubeMovies = [...youtube1, ...youtube2];
     scraperMovies = [...scraper1, ...scraper2, ...scraper3];
+    watchModeMovies = [...watchMode1, ...watchMode2];
+    rapidApiMovies = [...rapidApi1, ...rapidApi2];
+    omdbMovies = [...omdb1, ...omdb2];
   } catch (error) {
-    console.warn("Failed to fetch YouTube/scraper content:", error);
+    console.warn("Failed to fetch multi-source content:", error);
   }
 
-  // Now merge YouTube and scraper content into ALL existing sections (50% each for infinite scroll)
+  // Now merge YouTube, scraper, WatchMode, RapidAPI, and OMDB content into ALL existing sections
   Object.keys(data).forEach((key) => {
     const existingItems = data[key];
-    // Use 50% YouTube and 50% scraper for much more content
+    const itemsPerSource = Math.ceil(existingItems.length * 0.3); // 30% from each source
+    // Use multiple sources for much more content
     data[key] = mergeAndDedupe(
       existingItems,
       [], // fzItems (already merged above)
       [], // otherItems
-      youtubeMovies.slice(0, Math.ceil(existingItems.length * 0.5)), // 50% YouTube content
-      scraperMovies.slice(0, Math.ceil(existingItems.length * 0.5)) // 50% scraper content
+      youtubeMovies.slice(0, itemsPerSource), // YouTube content
+      scraperMovies.slice(0, itemsPerSource), // Scraper content
+      watchModeMovies.slice(0, itemsPerSource), // WatchMode content
+      rapidApiMovies.slice(0, itemsPerSource), // RapidAPI content
+      omdbMovies.slice(0, itemsPerSource) // OMDB content
     );
   });
 
@@ -255,25 +299,44 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
   ]) as { fzTrending: Item[], fzPopular: Item[], fzTopRated: Item[], fzLatest: Item[] };
 
   // Load other sources in background (non-blocking) - these will be available later if needed
-  // Now includes Letterboxd, Rotten Tomatoes, YouTube, and enhanced TMDB via getAllAPIContent
+  // Now includes Letterboxd, Rotten Tomatoes, YouTube, WatchMode, RapidAPI, OMDB, and enhanced TMDB via getAllAPIContent
   Promise.allSettled([
     getAllSourceContent("tv", 1),
     getAllAPIContent("tv", "popular"), // Includes IMDB -> Letterboxd -> Rotten Tomatoes -> TMDB fallback
     getYouTubeTVShows(), // Add YouTube TV shows to background loading
+    getWatchModePopular("tv_series", 1), // WatchMode popular TV shows
+    getStreamingTitles("series", "us", undefined, 1), // RapidAPI streaming availability
+    getOMDBPopular("series"), // OMDB popular TV shows
   ]).catch(() => { }); // Silently fail for background loading
 
   // Helper function to merge and deduplicate items from all sources
-  // Now includes YouTube and scraper content in all sliders
-  const mergeAndDedupe = (tmdbItems: Item[], fzItems: Item[], otherItems: Item[] = [], youtubeItems: Item[] = [], scraperItems: Item[] = []): Item[] => {
-    // Interleave content: TMDB, YouTube, Scraper, FZMovies for better variety
+  // Now includes YouTube, scraper, WatchMode, RapidAPI, and OMDB content in all sliders
+  const mergeAndDedupe = (
+    tmdbItems: Item[], 
+    fzItems: Item[], 
+    otherItems: Item[] = [], 
+    youtubeItems: Item[] = [], 
+    scraperItems: Item[] = [],
+    watchModeItems: Item[] = [],
+    rapidApiItems: Item[] = [],
+    omdbItems: Item[] = []
+  ): Item[] => {
+    // Interleave content: TMDB, YouTube, Scraper, WatchMode, RapidAPI, OMDB, FZMovies for better variety
     const combined: Item[] = [];
-    const maxLength = Math.max(tmdbItems.length, youtubeItems.length, scraperItems.length, fzItems.length, otherItems.length);
+    const maxLength = Math.max(
+      tmdbItems.length, youtubeItems.length, scraperItems.length, 
+      fzItems.length, otherItems.length, watchModeItems.length, 
+      rapidApiItems.length, omdbItems.length
+    );
     
     for (let i = 0; i < maxLength; i++) {
-      // Add items in rotation: TMDB -> YouTube -> Scraper -> FZMovies -> Other
+      // Add items in rotation: TMDB -> YouTube -> Scraper -> WatchMode -> RapidAPI -> OMDB -> FZMovies -> Other
       if (tmdbItems[i]) combined.push(tmdbItems[i]);
       if (youtubeItems[i]) combined.push(youtubeItems[i]);
       if (scraperItems[i]) combined.push(scraperItems[i]);
+      if (watchModeItems[i]) combined.push(watchModeItems[i]);
+      if (rapidApiItems[i]) combined.push(rapidApiItems[i]);
+      if (omdbItems[i]) combined.push(omdbItems[i]);
       if (fzItems[i]) combined.push(fzItems[i]);
       if (otherItems[i]) combined.push(otherItems[i]);
     }
@@ -306,41 +369,63 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
       fzItems = additionalSources.fzLatest;
     }
 
-    // Use only TMDB + FZMovies for initial fast load (YouTube/scraper will be added later)
-    final[key] = mergeAndDedupe(tmdbItems, fzItems, [], [], []);
+    // Use only TMDB + FZMovies for initial fast load (YouTube/scraper/WatchMode/RapidAPI/OMDB will be added later)
+    final[key] = mergeAndDedupe(tmdbItems, fzItems, [], [], [], [], [], []);
 
     return final;
   }, {} as HomeFilms);
 
-  // Fetch YouTube and scraper content to mix into all sliders (infinite content)
+  // Fetch YouTube, scraper, WatchMode, RapidAPI, and OMDB content to mix into all sliders (infinite content)
   let youtubeTV: Item[] = [];
   let scraperTV: Item[] = [];
+  let watchModeTV: Item[] = [];
+  let rapidApiTV: Item[] = [];
+  let omdbTV: Item[] = [];
   
   try {
-    // Fetch multiple pages for infinite content
-    const [youtube1, youtube2, scraper1, scraper2, scraper3] = await Promise.all([
+    // Fetch multiple pages for infinite content from all sources
+    const [
+      youtube1, youtube2,
+      scraper1, scraper2, scraper3,
+      watchMode1, watchMode2,
+      rapidApi1, rapidApi2,
+      omdb1, omdb2,
+    ] = await Promise.all([
       getYouTubeTVShows().catch(() => []),
       getYouTubeTVShows().catch(() => []), // Second page
       getAllSourceContent("tv", 1).catch(() => []),
       getAllSourceContent("tv", 2).catch(() => []),
       getAllSourceContent("tv", 3).catch(() => []),
+      getWatchModePopular("tv_series", 1).catch(() => []),
+      getWatchModePopular("tv_series", 2).catch(() => []),
+      getStreamingTitles("series", "us", undefined, 1).catch(() => []),
+      getStreamingTitles("series", "us", undefined, 2).catch(() => []),
+      getOMDBPopular("series").catch(() => []),
+      searchOMDBTitles("popular series").catch(() => []),
     ]);
     youtubeTV = [...youtube1, ...youtube2];
     scraperTV = [...scraper1, ...scraper2, ...scraper3];
+    watchModeTV = [...watchMode1, ...watchMode2];
+    rapidApiTV = [...rapidApi1, ...rapidApi2];
+    omdbTV = [...omdb1, ...omdb2];
   } catch (error) {
-    console.warn("Failed to fetch YouTube/scraper TV content:", error);
+    console.warn("Failed to fetch multi-source TV content:", error);
   }
 
-  // Now merge YouTube and scraper content into ALL existing sections (50% each for infinite scroll)
+  // Now merge YouTube, scraper, WatchMode, RapidAPI, and OMDB content into ALL existing sections
   Object.keys(data).forEach((key) => {
     const existingItems = data[key];
-    // Use 50% YouTube and 50% scraper for much more content
+    const itemsPerSource = Math.ceil(existingItems.length * 0.3); // 30% from each source
+    // Use multiple sources for much more content
     data[key] = mergeAndDedupe(
       existingItems,
       [], // fzItems (already merged above)
       [], // otherItems
-      youtubeTV.slice(0, Math.ceil(existingItems.length * 0.5)), // 50% YouTube content
-      scraperTV.slice(0, Math.ceil(existingItems.length * 0.5)) // 50% scraper content
+      youtubeTV.slice(0, itemsPerSource), // YouTube content
+      scraperTV.slice(0, itemsPerSource), // Scraper content
+      watchModeTV.slice(0, itemsPerSource), // WatchMode content
+      rapidApiTV.slice(0, itemsPerSource), // RapidAPI content
+      omdbTV.slice(0, itemsPerSource) // OMDB content
     );
   });
 

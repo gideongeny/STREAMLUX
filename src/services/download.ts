@@ -72,9 +72,11 @@ export class DownloadService {
     const imdb = imdbId || tmdbId; // Use IMDB ID if available, otherwise TMDB ID
 
     if (mediaType === "movie") {
-      // Only use known working sources: vidsrc, vidplay, upcloud
+      // Only use known working sources: vidsrc, vidplay, upcloud, autoembed, vidlink
       return [
         `https://vidsrc.me/embed/${imdb}`,
+        `${EMBED_ALTERNATIVES.AUTOEMBED}/movie/${tmdbId}`,
+        `${EMBED_ALTERNATIVES.VIDLINK}/movie/${tmdbId}`,
         `${EMBED_ALTERNATIVES.VIDSRC_ME}/movie/${tmdbId}`,
         `${EMBED_ALTERNATIVES.VIDSRC_TO}/movie/${tmdbId}`,
         `https://vidplay.online/e/movie/${tmdbId}`,
@@ -84,15 +86,20 @@ export class DownloadService {
         `${EMBED_ALTERNATIVES.TWOEMBED}/movie?tmdb=${id}`,
       ];
     } else {
-      // Only use known working sources: vidsrc, vidplay, upcloud
+      // Only use known working sources: vidsrc, vidplay, upcloud, autoembed, vidlink
+      const season = seasonId || 1;
+      const episode = episodeId || 1;
       return [
-        `${EMBED_ALTERNATIVES.VIDSRC_ME}/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
-        `${EMBED_ALTERNATIVES.VIDSRC_TO}/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
-        `https://vidplay.online/e/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
-        `https://upcloud.to/e/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}`,
-        `${EMBED_ALTERNATIVES.APIMDB}/tmdb/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}/`,
-        `${EMBED_ALTERNATIVES.EMBEDTO}/tv?id=${id}&s=${seasonId || 1}&e=${episodeId || 1}`,
-        `${EMBED_ALTERNATIVES.TWOEMBED}/series?tmdb=${id}&sea=${seasonId || 1}&epi=${episodeId || 1}`,
+        `${EMBED_ALTERNATIVES.AUTOEMBED}/tv/${tmdbId}/${season}/${episode}`,
+        `${EMBED_ALTERNATIVES.AUTOEMBED}/tv/${tmdbId}/${season}/${episode}?server=1`,
+        `${EMBED_ALTERNATIVES.VIDLINK}/tv/${tmdbId}/${season}/${episode}`,
+        `${EMBED_ALTERNATIVES.VIDSRC_ME}/tv/${tmdbId}/${season}/${episode}`,
+        `${EMBED_ALTERNATIVES.VIDSRC_TO}/tv/${tmdbId}/${season}/${episode}`,
+        `https://vidplay.online/e/tv/${tmdbId}/${season}/${episode}`,
+        `https://upcloud.to/e/tv/${tmdbId}/${season}/${episode}`,
+        `${EMBED_ALTERNATIVES.APIMDB}/tmdb/tv/${tmdbId}/${season}/${episode}/`,
+        `${EMBED_ALTERNATIVES.EMBEDTO}/tv?id=${id}&s=${season}&e=${episode}`,
+        `${EMBED_ALTERNATIVES.TWOEMBED}/series?tmdb=${id}&sea=${season}&epi=${episode}`,
       ];
     }
   }

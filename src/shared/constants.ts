@@ -21,6 +21,8 @@ export const EMBED_ALTERNATIVES = {
   APIMDB: "https://v2.apimdb.net/e",
   EMBEDTO: "https://www.2embed.to/embed/tmdb",
   TWOEMBED: "https://2embed.org/embed",
+  AUTOEMBED: "https://player.autoembed.cc/embed",
+  VIDLINK: "https://vidlink.pro",
   // African and non-Western content sources - Updated with working alternatives
   AFRIKAN: "https://afrikan.tv",
   NOLLYWOOD: "https://nollywood.tv",
