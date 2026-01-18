@@ -22,6 +22,8 @@ export const convertYouTubeToItem = (video: YouTubeVideo, index: number): Item =
     } as Item;
 };
 
+
+
 // Fetch YouTube movies
 export const getYouTubeMovies = async (): Promise<Item[]> => {
     try {
@@ -51,7 +53,7 @@ export const getYouTubeMovies = async (): Promise<Item[]> => {
                 seen.add(v.id);
                 return true;
             })
-            .slice(0, 20)
+            // REMOVED LIMIT: .slice(0, 20)
             .map((v, i) => convertYouTubeToItem(v, i));
     } catch (error) {
         console.error('Error fetching YouTube movies:', error);
@@ -88,7 +90,7 @@ export const getYouTubeTVShows = async (): Promise<Item[]> => {
                 seen.add(v.id);
                 return true;
             })
-            .slice(0, 20)
+            // REMOVED LIMIT: .slice(0, 20)
             .map((v, i) => convertYouTubeToItem(v, i));
     } catch (error) {
         console.error('Error fetching YouTube TV shows:', error);
@@ -107,7 +109,7 @@ export const getYouTubeByGenre = async (genre: string, mediaType: 'movie' | 'tv'
         const filtered = result.videos.filter(v => v.type === mediaType);
 
         return filtered
-            .slice(0, 20)
+            // REMOVED LIMIT: .slice(0, 20)
             .map((v, i) => convertYouTubeToItem(v, i));
     } catch (error) {
         console.error(`Error fetching YouTube ${genre}:`, error);
@@ -163,7 +165,7 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
                 seen.add(v.id);
                 return true;
             })
-            .slice(0, 50) // Get more shorts for infinite scroll
+            // REMOVED LIMIT: .slice(0, 50) - MAX RESULTS
             .map((v, i) => {
                 const item = convertYouTubeToItem(v, i);
                 // Mark as YouTube Short for direct playback

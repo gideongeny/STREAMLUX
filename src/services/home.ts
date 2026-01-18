@@ -184,17 +184,18 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
   // Now merge YouTube, scraper, WatchMode, RapidAPI, and OMDB content into ALL existing sections
   Object.keys(data).forEach((key) => {
     const existingItems = data[key];
-    const itemsPerSource = Math.ceil(existingItems.length * 0.3); // 30% from each source
+    // MAX FILL: Use 100% of available items from each source
+    const itemsPerSource = 500; // Arbitrary high number to include everything
     // Use multiple sources for much more content
     data[key] = mergeAndDedupe(
       existingItems,
       [], // fzItems (already merged above)
       [], // otherItems
-      youtubeMovies.slice(0, itemsPerSource), // YouTube content
-      scraperMovies.slice(0, itemsPerSource), // Scraper content
-      watchModeMovies.slice(0, itemsPerSource), // WatchMode content
-      rapidApiMovies.slice(0, itemsPerSource), // RapidAPI content
-      omdbMovies.slice(0, itemsPerSource) // OMDB content
+      youtubeMovies, // Pass ALL YouTube content
+      scraperMovies, // Pass ALL Scraper content
+      watchModeMovies, // Pass ALL WatchMode content
+      rapidApiMovies, // Pass ALL RapidAPI content
+      omdbMovies // Pass ALL OMDB content
     );
   });
 
@@ -430,17 +431,18 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
   // Now merge YouTube, scraper, WatchMode, RapidAPI, and OMDB content into ALL existing sections
   Object.keys(data).forEach((key) => {
     const existingItems = data[key];
-    const itemsPerSource = Math.ceil(existingItems.length * 0.3); // 30% from each source
+    // MAX FILL: Use 100% of available items from each source
+    const itemsPerSource = 500;
     // Use multiple sources for much more content
     data[key] = mergeAndDedupe(
       existingItems,
       [], // fzItems (already merged above)
       [], // otherItems
-      youtubeTV.slice(0, itemsPerSource), // YouTube content
-      scraperTV.slice(0, itemsPerSource), // Scraper content
-      watchModeTV.slice(0, itemsPerSource), // WatchMode content
-      rapidApiTV.slice(0, itemsPerSource), // RapidAPI content
-      omdbTV.slice(0, itemsPerSource) // OMDB content
+      youtubeTV, // ALL YouTube
+      scraperTV, // ALL Scraper
+      watchModeTV, // ALL WatchMode
+      rapidApiTV, // ALL RapidAPI
+      omdbTV // ALL OMDB
     );
   });
 
@@ -654,27 +656,45 @@ export const getDramaMovies = async (): Promise<Item[]> => {
 };
 
 // Optimized helper function for genre movies - reduces API calls
-const getGenreMoviesOptimized = async (genreId: number): Promise<Item[]> => {
+const getGenreMoviesOptimized = async (genreId: number, genreName?: string): Promise<Item[]> => {
   try {
-    const tmdbResponse = await Promise.race([
+    const tmdbPromise = Promise.race([
       axios.get(`/discover/movie`, {
         params: { with_genres: genreId, sort_by: "popularity.desc", page: 1 },
         timeout: 3000,
       }),
       new Promise((resolve) => setTimeout(() => resolve({ data: { results: [] } }), 3000)),
-    ]) as { data: { results: any[] } };
+    ]) as Promise<{ data: { results: any[] } }>;
+
+    // Parallel fetch for extra content if genre name is known
+    const youtubePromise = genreName ? getYouTubeByGenre(genreName, "movie").catch(() => []) : Promise.resolve([]);
+    const scraperPromise = getAllSourceContent("movie", 1).catch(() => []); // Get mixed scraper content
+
+    const [tmdbResponse, youtubeItems, scraperItems] = await Promise.all([
+      tmdbPromise,
+      youtubePromise,
+      scraperPromise
+    ]);
 
     const tmdbItems = (tmdbResponse.data.results || []).map((item: any) => ({
       ...item,
       media_type: "movie" as const,
     }));
 
+    // Merge massive amounts of content
+    const combined = [
+      ...tmdbItems,
+      ...(youtubeItems as Item[]),
+      ...(scraperItems as Item[])
+    ];
+
     const seen = new Set<number>();
-    return tmdbItems.filter((item) => {
+    // MAX LIMIT: Return everything we found, deduplicated
+    return combined.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
       return item.poster_path;
-    }).slice(0, 20);
+    });
   } catch (error) {
     return [];
   }
@@ -682,7 +702,7 @@ const getGenreMoviesOptimized = async (genreId: number): Promise<Item[]> => {
 
 export const getThrillerMovies = async (): Promise<Item[]> => {
   try {
-    return await getGenreMoviesOptimized(53);
+    return await getGenreMoviesOptimized(53, "Thriller");
   } catch (error) {
     console.error("Error fetching thriller movies:", error);
     return [];
@@ -691,7 +711,7 @@ export const getThrillerMovies = async (): Promise<Item[]> => {
 
 export const getRomanceMovies = async (): Promise<Item[]> => {
   try {
-    return await getGenreMoviesOptimized(10749);
+    return await getGenreMoviesOptimized(10749, "Romance");
   } catch (error) {
     console.error("Error fetching romance movies:", error);
     return [];
@@ -700,7 +720,7 @@ export const getRomanceMovies = async (): Promise<Item[]> => {
 
 export const getSciFiMovies = async (): Promise<Item[]> => {
   try {
-    return await getGenreMoviesOptimized(878);
+    return await getGenreMoviesOptimized(878, "Sci-Fi");
   } catch (error) {
     console.error("Error fetching sci-fi movies:", error);
     return [];
@@ -709,7 +729,7 @@ export const getSciFiMovies = async (): Promise<Item[]> => {
 
 export const getAnimationMovies = async (): Promise<Item[]> => {
   try {
-    return await getGenreMoviesOptimized(16);
+    return await getGenreMoviesOptimized(16, "Animation");
   } catch (error) {
     console.error("Error fetching animation movies:", error);
     return [];
@@ -718,7 +738,7 @@ export const getAnimationMovies = async (): Promise<Item[]> => {
 
 export const getDocumentaryMovies = async (): Promise<Item[]> => {
   try {
-    return await getGenreMoviesOptimized(99);
+    return await getGenreMoviesOptimized(99, "Documentary");
   } catch (error) {
     console.error("Error fetching documentary movies:", error);
     return [];
@@ -727,7 +747,7 @@ export const getDocumentaryMovies = async (): Promise<Item[]> => {
 
 export const getCrimeMovies = async (): Promise<Item[]> => {
   try {
-    return await getGenreMoviesOptimized(80);
+    return await getGenreMoviesOptimized(80, "Crime");
   } catch (error) {
     console.error("Error fetching crime movies:", error);
     return [];
@@ -736,7 +756,7 @@ export const getCrimeMovies = async (): Promise<Item[]> => {
 
 export const getAdventureMovies = async (): Promise<Item[]> => {
   try {
-    return await getGenreMoviesOptimized(12);
+    return await getGenreMoviesOptimized(12, "Adventure");
   } catch (error) {
     console.error("Error fetching adventure movies:", error);
     return [];
@@ -745,7 +765,7 @@ export const getAdventureMovies = async (): Promise<Item[]> => {
 
 export const getFantasyMovies = async (): Promise<Item[]> => {
   try {
-    return await getGenreMoviesOptimized(14);
+    return await getGenreMoviesOptimized(14, "Fantasy");
   } catch (error) {
     console.error("Error fetching fantasy movies:", error);
     return [];

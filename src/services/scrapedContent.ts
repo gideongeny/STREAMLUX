@@ -119,8 +119,8 @@ export async function getEnrichedScrapedContent(): Promise<Item[]> {
         const scrapedData = await import('../data/downloads.json');
         const items = (scrapedData.default || scrapedData) as ScrapedItem[];
 
-        // Enrich with TMDB data - increased limit for better coverage
-        const enriched = await enrichScrapedContent(items, 200);
+        // Enrich with TMDB data - MAX LIMIT for better coverage
+        const enriched = await enrichScrapedContent(items, 1000);
 
         // Cache results
         cachedEnrichedContent = enriched;
