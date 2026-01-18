@@ -143,167 +143,47 @@ export class ResolverService {
         }
 
         // 2. VidSrc & Embeds (Priority: Medium)
-        // ... existing embed logic ...
         const embedId = imdbId || id;
-        const isTmdbId = !imdbId && typeof id === 'number';
         const tmdbId = id.toString();
 
-        // Build sources with priority ordering
         sources.push(
-            // Priority 1: VidSrc Me (Primary - most reliable)
+            // 1. VidSrc.me
             {
-                name: "VidSrc Me",
+                name: "VidSrc.me",
                 url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.VIDSRC_ME}/movie/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.VIDSRC_ME}/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                    ? `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`
+                    : `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&sea=${season}&epi=${episode}`,
                 quality: "1080p",
                 speed: "fast",
-                status: "checking",
+                status: "active",
                 type: "embed",
                 priority: 1
             },
-            // Priority 2: Vidplay
+            // 2. 2Embed
             {
-                name: "Vidplay",
+                name: "2Embed",
                 url: mediaType === "movie"
-                    ? `https://vidplay.online/e/movie/${tmdbId}`
-                    : `https://vidplay.online/e/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                    ? `https://www.2embed.cc/embed/${tmdbId}`
+                    : `https://www.2embed.cc/embedtv/${tmdbId}?s=${season}&e=${episode}`,
                 quality: "1080p",
-                speed: "fast",
-                status: "checking",
+                speed: "medium",
+                status: "active",
                 type: "embed",
                 priority: 2
             },
-            // Priority 3: Upcloud
-            {
-                name: "Upcloud",
-                url: mediaType === "movie"
-                    ? `https://upcloud.to/e/movie/${tmdbId}`
-                    : `https://upcloud.to/e/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "1080p",
-                speed: "medium",
-                status: "checking",
-                type: "embed",
-                priority: 3
-            },
-            // Priority 4: Vidcloud
-            {
-                name: "Vidcloud",
-                url: mediaType === "movie"
-                    ? `https://vidcloud.stream/e/movie/${tmdbId}`
-                    : `https://vidcloud.stream/e/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "720p",
-                speed: "medium",
-                status: "checking",
-                type: "embed",
-                priority: 4
-            },
-            // Priority 5: SmashyStream
-            {
-                name: "SmashyStream",
-                url: mediaType === "movie"
-                    ? `https://player.smashy.stream/movie/${tmdbId}`
-                    : `https://player.smashy.stream/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "checking",
-                type: "embed",
-                priority: 5
-            },
-            // Priority 6: VidSrc Pro (Alternative)
-            {
-                name: "VidSrc Pro",
-                url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.VIDSRC_PRO}/movie/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.VIDSRC_PRO}/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "checking",
-                type: "embed",
-                priority: 6
-            },
-            // Priority 7: VidSrc To (Alternative)
-            {
-                name: "VidSrc To",
-                url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.VIDSRC_TO}/movie/${tmdbId}`
-                    : `${EMBED_ALTERNATIVES.VIDSRC_TO}/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "checking",
-                type: "embed",
-                priority: 7
-            },
-            // Priority 8: APIMDB
-            {
-                name: "APIMDB",
-                url: mediaType === "movie"
-                    ? `${EMBED_ALTERNATIVES.APIMDB}/movie/${imdbId || tmdbId}`
-                    : `${EMBED_ALTERNATIVES.APIMDB}/tmdb/tv/${tmdbId}/${season || 1}/${episode || 1}/`,
-                quality: "720p",
-                speed: "medium",
-                status: "checking",
-                type: "embed",
-                priority: 8
-            }
-        );
-
-        // NEW: Check backend resolution for VidSrc
-        try {
-            const backendData = await resolveBackend(
-                mediaType,
-                tmdbId,
-                season?.toString(),
-                episode?.toString()
-            );
-            if (backendData && backendData.status === 'active' && backendData.proxiedUrl) {
-                // Prepend the backend resolved source as Priority 0 (Highest)
-                sources.unshift({
-                    name: "VidSrc (Fast)",
-                    url: backendData.proxiedUrl,
-                    quality: "1080p",
-                    speed: "fast",
-                    status: "active",
-                    type: "embed",
-                    priority: 0
-                });
-            }
-        } catch (e) {
-            console.warn("Backend resolution failed, falling back to client sources");
-        }
-
-        // Add additional missing sources requested by user
-        sources.push(
+            // 3. SuperEmbed
             {
                 name: "SuperEmbed",
                 url: mediaType === "movie"
-                    ? `https://superembed.stream/movie/${tmdbId}`
-                    : `https://superembed.stream/series/${tmdbId}/${season || 1}/${episode || 1}`,
+                    ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`
+                    : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}`,
                 quality: "1080p",
                 speed: "fast",
-                status: "checking",
+                status: "active",
                 type: "embed",
-                priority: 9
-            },
-            {
-                name: "2Embed",
-                url: `https://www.2embed.cc/embed${mediaType === "movie" ? "" : "tv"}/${tmdbId}${mediaType === "tv" ? `&s=${season || 1}&e=${episode || 1}` : ""}`,
-                quality: "1080p",
-                speed: "medium",
-                status: "checking",
-                type: "embed",
-                priority: 10
+                priority: 3
             }
         );
-
-        // NEW: Add scraper sources (direct video URLs)
-        // These are lower priority but provide fallback options
-        try {
-            const scraperSources = await this.getScraperSources(mediaType, tmdbId, season, episode);
-            sources.push(...scraperSources);
-        } catch (e) {
-            console.warn("Failed to get scraper sources:", e);
-        }
 
         // Simulate network delay for "Resolving" feel
         await new Promise(resolve => setTimeout(resolve, 800));
