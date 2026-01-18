@@ -69,10 +69,10 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
   // Helper function to merge and deduplicate items from all sources
   // Now includes YouTube, scraper, WatchMode, RapidAPI, and OMDB content in all sliders
   const mergeAndDedupe = (
-    tmdbItems: Item[], 
-    fzItems: Item[], 
-    otherItems: Item[] = [], 
-    youtubeItems: Item[] = [], 
+    tmdbItems: Item[],
+    fzItems: Item[],
+    otherItems: Item[] = [],
+    youtubeItems: Item[] = [],
     scraperItems: Item[] = [],
     watchModeItems: Item[] = [],
     rapidApiItems: Item[] = [],
@@ -81,11 +81,11 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
     // Interleave content: TMDB, YouTube, Scraper, WatchMode, RapidAPI, OMDB, FZMovies for better variety
     const combined: Item[] = [];
     const maxLength = Math.max(
-      tmdbItems.length, youtubeItems.length, scraperItems.length, 
-      fzItems.length, otherItems.length, watchModeItems.length, 
+      tmdbItems.length, youtubeItems.length, scraperItems.length,
+      fzItems.length, otherItems.length, watchModeItems.length,
       rapidApiItems.length, omdbItems.length
     );
-    
+
     for (let i = 0; i < maxLength; i++) {
       // Add items in rotation: TMDB -> YouTube -> Scraper -> WatchMode -> RapidAPI -> OMDB -> FZMovies -> Other
       if (tmdbItems[i]) combined.push(tmdbItems[i]);
@@ -97,14 +97,14 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
       if (fzItems[i]) combined.push(fzItems[i]);
       if (otherItems[i]) combined.push(otherItems[i]);
     }
-    
+
     // Deduplicate by ID and ensure posters or backdrops exist (or allow items with valid image URLs)
     const seen = new Set<number>();
     return combined.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
       // Include items with posters, backdrops, or full image URLs (for YouTube/OMDB/etc)
-      const hasImage = item.poster_path || item.backdrop_path || 
+      const hasImage = item.poster_path || item.backdrop_path ||
         (item.poster_path && (item.poster_path.startsWith('http://') || item.poster_path.startsWith('https://')));
       return hasImage;
     });
@@ -130,7 +130,11 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
     }
 
     // Use only TMDB + FZMovies for initial fast load (YouTube/scraper/WatchMode/RapidAPI/OMDB will be added later)
-    final[key] = mergeAndDedupe(tmdbItems, fzItems, [], [], [], [], [], []);
+    if (key === "Upcoming") {
+      final[key] = mergeAndDedupe(tmdbItems.filter((t: Item) => t.release_date && t.release_date >= '2026'), fzItems, [], [], [], [], [], []);
+    } else {
+      final[key] = mergeAndDedupe(tmdbItems, fzItems, [], [], [], [], [], []);
+    }
 
     return final;
   }, {} as HomeFilms);
@@ -141,7 +145,7 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
   let watchModeMovies: Item[] = [];
   let rapidApiMovies: Item[] = [];
   let omdbMovies: Item[] = [];
-  
+
   try {
     // Fetch multiple pages for infinite content from all sources
     const [
@@ -315,10 +319,10 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
   // Helper function to merge and deduplicate items from all sources
   // Now includes YouTube, scraper, WatchMode, RapidAPI, and OMDB content in all sliders
   const mergeAndDedupe = (
-    tmdbItems: Item[], 
-    fzItems: Item[], 
-    otherItems: Item[] = [], 
-    youtubeItems: Item[] = [], 
+    tmdbItems: Item[],
+    fzItems: Item[],
+    otherItems: Item[] = [],
+    youtubeItems: Item[] = [],
     scraperItems: Item[] = [],
     watchModeItems: Item[] = [],
     rapidApiItems: Item[] = [],
@@ -327,11 +331,11 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
     // Interleave content: TMDB, YouTube, Scraper, WatchMode, RapidAPI, OMDB, FZMovies for better variety
     const combined: Item[] = [];
     const maxLength = Math.max(
-      tmdbItems.length, youtubeItems.length, scraperItems.length, 
-      fzItems.length, otherItems.length, watchModeItems.length, 
+      tmdbItems.length, youtubeItems.length, scraperItems.length,
+      fzItems.length, otherItems.length, watchModeItems.length,
       rapidApiItems.length, omdbItems.length
     );
-    
+
     for (let i = 0; i < maxLength; i++) {
       // Add items in rotation: TMDB -> YouTube -> Scraper -> WatchMode -> RapidAPI -> OMDB -> FZMovies -> Other
       if (tmdbItems[i]) combined.push(tmdbItems[i]);
@@ -343,14 +347,14 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
       if (fzItems[i]) combined.push(fzItems[i]);
       if (otherItems[i]) combined.push(otherItems[i]);
     }
-    
+
     // Deduplicate by ID and ensure posters or backdrops exist (or allow items with valid image URLs)
     const seen = new Set<number>();
     return combined.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
       // Include items with posters, backdrops, or full image URLs (for YouTube/OMDB/etc)
-      const hasImage = item.poster_path || item.backdrop_path || 
+      const hasImage = item.poster_path || item.backdrop_path ||
         (item.poster_path && (item.poster_path.startsWith('http://') || item.poster_path.startsWith('https://')));
       return hasImage;
     });
@@ -387,7 +391,7 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
   let watchModeTV: Item[] = [];
   let rapidApiTV: Item[] = [];
   let omdbTV: Item[] = [];
-  
+
   try {
     // Fetch multiple pages for infinite content from all sources
     const [
