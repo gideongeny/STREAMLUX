@@ -81,35 +81,60 @@ const SmartAdContainer: FC<SmartAdContainerProps> = ({
         document.head.appendChild(script);
       }
     }
+
+    // Ensure Astrella container exists for invoke script
+    if (containerRef.current) {
+      const containerId = `container-e306b4e28d4fba3151a0a85384de410f-${position}`;
+      const existingContainer = document.getElementById('container-e306b4e28d4fba3151a0a85384de410f');
+      if (!existingContainer) {
+        const container = containerRef.current.querySelector(`#${containerId}`);
+        if (container) {
+          // Container is already in the DOM from renderAd
+        }
+      }
+    }
   }, [shouldShow, position]);
 
   // Render appropriate ad based on position
   const renderAd = () => {
     const adClass = "w-full bg-dark-lighten rounded-lg border border-gray-800 overflow-hidden";
+    const containerId = `container-e306b4e28d4fba3151a0a85384de410f-${position}`;
     
     switch (position) {
       case 'banner':
         return (
           <div className={`${adClass} h-[90px] md:h-[250px]`}>
-            <div className="w-full h-full" id={`ad-banner-${Date.now()}`}></div>
+            {/* Astrella container */}
+            <div id={containerId} className="w-full h-full"></div>
+            {/* HighPerformanceFormat iframe ad */}
+            <div id={`at-${position}-${Date.now()}`} className="w-full h-full flex items-center justify-center"></div>
           </div>
         );
       case 'sidebar':
         return (
           <div className={`${adClass} h-[300px] md:h-[600px]`}>
-            <div className="w-full h-full" id={`ad-sidebar-${Date.now()}`}></div>
+            {/* Astrella container */}
+            <div id={containerId} className="w-full h-full"></div>
+            {/* HighPerformanceFormat iframe ad */}
+            <div id={`at-${position}-${Date.now()}`} className="w-full h-full flex items-center justify-center"></div>
           </div>
         );
       case 'inline':
         return (
           <div className={`${adClass} h-[250px] my-8`}>
-            <div className="w-full h-full" id={`ad-inline-${Date.now()}`}></div>
+            {/* Astrella container */}
+            <div id={containerId} className="w-full h-full"></div>
+            {/* HighPerformanceFormat iframe ad */}
+            <div id={`at-${position}-${Date.now()}`} className="w-full h-full flex items-center justify-center"></div>
           </div>
         );
       case 'footer':
         return (
           <div className={`${adClass} h-[100px]`}>
-            <div className="w-full h-full" id={`ad-footer-${Date.now()}`}></div>
+            {/* Astrella container */}
+            <div id={containerId} className="w-full h-full"></div>
+            {/* HighPerformanceFormat iframe ad */}
+            <div id={`at-${position}-${Date.now()}`} className="w-full h-full flex items-center justify-center"></div>
           </div>
         );
       default:
