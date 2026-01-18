@@ -63,42 +63,64 @@ const SmartAdContainer: FC<SmartAdContainerProps> = ({
   // Don't show ad if user is not actively viewing
   const shouldShow = showAd && (!respectUserFocus || isVisible || !document.hidden);
 
-  if (!shouldShow) {
-    return null;
-  }
+  // Inject ad scripts when container is ready
+  useEffect(() => {
+    if (!shouldShow) return;
+
+    // Monetag ad script - only load once
+    if (position === 'banner' || position === 'sidebar') {
+      const monetagExists = document.querySelector('script[src*="alwingulla.com"]');
+      if (!monetagExists && (window as any).monetagScriptLoaded !== true) {
+        const script = document.createElement('script');
+        script.src = 'https://alwingulla.com/88/5a/6a/885a6a2dae1be8778f654f595085d68d.js';
+        script.async = true;
+        script.setAttribute('data-cfasync', 'false');
+        script.onload = () => {
+          (window as any).monetagScriptLoaded = true;
+        };
+        document.head.appendChild(script);
+      }
+    }
+  }, [shouldShow, position]);
 
   // Render appropriate ad based on position
   const renderAd = () => {
+    const adClass = "w-full bg-dark-lighten rounded-lg border border-gray-800 overflow-hidden";
+    
     switch (position) {
       case 'banner':
         return (
-          <div className="w-full h-[90px] md:h-[250px] bg-dark-lighten rounded-lg flex items-center justify-center border border-gray-800">
-            <div className="text-gray-500 text-sm">Advertisement</div>
-            {/* Ad script will be injected here */}
+          <div className={`${adClass} h-[90px] md:h-[250px]`}>
+            <div className="w-full h-full" id={`ad-banner-${Date.now()}`}></div>
           </div>
         );
       case 'sidebar':
         return (
-          <div className="w-full h-[600px] bg-dark-lighten rounded-lg flex items-center justify-center border border-gray-800">
-            <div className="text-gray-500 text-sm">Advertisement</div>
+          <div className={`${adClass} h-[300px] md:h-[600px]`}>
+            <div className="w-full h-full" id={`ad-sidebar-${Date.now()}`}></div>
           </div>
         );
       case 'inline':
         return (
-          <div className="w-full h-[250px] bg-dark-lighten rounded-lg flex items-center justify-center border border-gray-800 my-8">
-            <div className="text-gray-500 text-sm">Advertisement</div>
+          <div className={`${adClass} h-[250px] my-8`}>
+            <div className="w-full h-full" id={`ad-inline-${Date.now()}`}></div>
           </div>
         );
       case 'footer':
         return (
-          <div className="w-full h-[100px] bg-dark-lighten rounded-lg flex items-center justify-center border border-gray-800">
-            <div className="text-gray-500 text-sm">Advertisement</div>
+          <div className={`${adClass} h-[100px]`}>
+            <div className="w-full h-full" id={`ad-footer-${Date.now()}`}></div>
           </div>
         );
       default:
         return null;
     }
   };
+
+  // Don't show ad if user is not actively viewing
+  if (!shouldShow) {
+    return null;
+  }
 
   return (
     <div ref={containerRef} className={className}>

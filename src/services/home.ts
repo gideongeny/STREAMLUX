@@ -98,12 +98,15 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
       if (otherItems[i]) combined.push(otherItems[i]);
     }
     
-    // Deduplicate by ID and ensure posters exist
+    // Deduplicate by ID and ensure posters or backdrops exist (or allow items with valid image URLs)
     const seen = new Set<number>();
     return combined.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
-      return item.poster_path || item.backdrop_path; // Include items with posters or backdrops
+      // Include items with posters, backdrops, or full image URLs (for YouTube/OMDB/etc)
+      const hasImage = item.poster_path || item.backdrop_path || 
+        (item.poster_path && (item.poster_path.startsWith('http://') || item.poster_path.startsWith('https://')));
+      return hasImage;
     });
   };
 
@@ -341,12 +344,15 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
       if (otherItems[i]) combined.push(otherItems[i]);
     }
     
-    // Deduplicate by ID and ensure posters exist
+    // Deduplicate by ID and ensure posters or backdrops exist (or allow items with valid image URLs)
     const seen = new Set<number>();
     return combined.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
-      return item.poster_path || item.backdrop_path; // Include items with posters or backdrops
+      // Include items with posters, backdrops, or full image URLs (for YouTube/OMDB/etc)
+      const hasImage = item.poster_path || item.backdrop_path || 
+        (item.poster_path && (item.poster_path.startsWith('http://') || item.poster_path.startsWith('https://')));
+      return hasImage;
     });
   };
 

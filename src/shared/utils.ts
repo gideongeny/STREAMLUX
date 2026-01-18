@@ -3,7 +3,18 @@ import { EMBED_TO, IMAGE_URL } from "./constants";
 export const resizeImage = (
   imageUrl: string,
   width: string = "original"
-): string => `${IMAGE_URL}/${width}${imageUrl}`;
+): string => {
+  // If imageUrl is empty or undefined, return empty string
+  if (!imageUrl) return "";
+  
+  // If imageUrl is already a full URL (http/https), return as is
+  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+    return imageUrl;
+  }
+  
+  // Otherwise, treat as TMDB path and prepend IMAGE_URL
+  return `${IMAGE_URL}/${width}${imageUrl}`;
+};
 
 // export const embedMovie = (id: number): string =>
 //   `${EMBED_URL}/movie?tmdb=${id}`;

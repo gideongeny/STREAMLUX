@@ -21,6 +21,7 @@ import VerticalShorts from "../components/Home/VerticalShorts";
 import UpcomingCalendar from "../components/Home/UpcomingCalendar";
 import NewReleases from "../components/Home/NewReleases";
 import SectionErrorBoundary from "../components/Common/SectionErrorBoundary";
+import SmartAdContainer from "../components/Common/SmartAdContainer";
 import { useHomeData } from "../hooks/useHomeData";
 import { useWatchProgress } from "../hooks/useWatchProgress";
 import { useAppSelector } from "../store/hooks";
@@ -286,6 +287,9 @@ const Home: FC = () => {
                 <NewReleases />
               </ErrorBoundary>
 
+              {/* Inline Ad - Non-intrusive (only shows after 10 seconds) */}
+              <SmartAdContainer position="inline" minViewTime={10000} />
+
               {/* Discover World navigation */}
               <DiverseNavigation />
 
@@ -300,6 +304,10 @@ const Home: FC = () => {
           {currentTab !== "sports" && (
             <>
               <RecommendGenres currentTab={currentTab} />
+              {/* Sidebar Ad - Non-intrusive */}
+              <div className="my-6">
+                <SmartAdContainer position="sidebar" minViewTime={8000} />
+              </div>
               <TrendingNow />
             </>
           )}
