@@ -83,8 +83,15 @@ function App() {
     // Set up keep-alive pinging (every 10 minutes)
     const cleanup = backendHealthService.startKeepAlive();
 
-    // Cleanup on unmount
     return cleanup;
+  }, []);
+
+  // Initialize Theme from Storage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme_primary_color");
+    if (savedTheme) {
+      document.documentElement.style.setProperty("--color-primary", savedTheme);
+    }
   }, []);
 
   useEffect(() => {

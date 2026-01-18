@@ -31,7 +31,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
       toast.error("Authentication service is not available.");
       return;
     }
-    
+
     setIsLoading(true);
     signOut(auth)
       .then(() => {
@@ -84,9 +84,8 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
       <div
         className={`shrink-0 md:max-w-[260px] w-[70vw] pl-8 top-0 pt-10  
         md:sticky md:translate-x-0 md:bg-transparent md:shadow-none md:self-start md:max-h-screen md:overflow-y-auto
-      -translate-x-full fixed h-screen shadow-md transition duration-300 bg-dark-lighten z-50 ${
-        isSidebarActive && "translate-x-0"
-      }`}
+      -translate-x-full fixed h-screen shadow-md transition duration-300 bg-dark-lighten z-50 ${isSidebarActive && "translate-x-0"
+          }`}
       >
         {!isMobile && (
           <Link to="/" className="flex items-center gap-3">
@@ -103,19 +102,17 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
         )}
 
         <div
-          className={`text-white text-lg font-medium ${
-            isSidebarActive ? "-mt-6" : "mt-12"
-          }`}
+          className={`text-white text-lg font-medium ${isSidebarActive ? "-mt-6" : "mt-12"
+            }`}
         >
           MENU
         </div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
           <Link
             to="/"
-            className={`flex gap-6 items-center  ${
-              location.pathname === "/" &&
+            className={`flex gap-6 items-center  ${location.pathname === "/" &&
               "!text-primary border-r-4 border-primary font-medium"
-            } hover:text-white transition duration-300`}
+              } hover:text-white transition duration-300`}
           >
             <AiOutlineHome size={25} />
             <p>Home</p>
@@ -133,10 +130,9 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
           <Link
             to="/explore"
-            className={`flex gap-6 items-center  ${
-              location.pathname === "/explore" &&
+            className={`flex gap-6 items-center  ${location.pathname === "/explore" &&
               "!text-primary border-r-4 border-primary font-medium"
-            } hover:text-white transition duration-300`}
+              } hover:text-white transition duration-300`}
           >
             <MdOutlineExplore size={25} />
             <p>Explore</p>
@@ -144,10 +140,9 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
           <Link
             to="/search"
-            className={`flex gap-6 items-center  ${
-              location.pathname === "/search" &&
+            className={`flex gap-6 items-center  ${location.pathname === "/search" &&
               "!text-primary border-r-4 border-primary font-medium"
-            } hover:text-white transition duration-300`}
+              } hover:text-white transition duration-300`}
           >
             <BiSearch size={25} />
             <p>Search</p>
@@ -169,10 +164,9 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           )}
           <button
             onClick={() => personalPageHandler("/bookmarked")}
-            className={`flex gap-6 items-center  ${
-              location.pathname === "/bookmarked" &&
+            className={`flex gap-6 items-center  ${location.pathname === "/bookmarked" &&
               "!text-primary border-r-4 border-primary font-medium"
-            } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
+              } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={!currentUser}
             title={!currentUser ? "Sign in to access bookmarks" : ""}
           >
@@ -182,10 +176,9 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
           <button
             onClick={() => personalPageHandler("/history")}
-            className={`flex gap-6 items-center  ${
-              location.pathname === "/history" &&
+            className={`flex gap-6 items-center  ${location.pathname === "/history" &&
               "!text-primary border-r-4 border-primary font-medium"
-            } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
+              } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={!currentUser}
             title={!currentUser ? "Sign in to access history" : ""}
           >
@@ -196,23 +189,20 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
         <div className="text-white text-lg font-medium mt-12">GENERAL</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
-          <Link
-            to="/download"
-            className={`flex gap-6 items-center  ${
-              location.pathname === "/download" &&
-              "!text-primary border-r-4 border-primary font-medium"
-            } hover:text-white transition duration-300`}
+          <a
+            href="/streamlux.apk"
+            className={`flex gap-6 items-center hover:text-white transition duration-300`}
+            download
           >
             <FaDownload size={25} />
             <p>Download App</p>
-          </Link>
+          </a>
 
           <Link
             to="/settings"
-            className={`flex gap-6 items-center  ${
-              location.pathname === "/settings" &&
+            className={`flex gap-6 items-center  ${location.pathname === "/settings" &&
               "!text-primary border-r-4 border-primary font-medium"
-            } hover:text-white transition duration-300`}
+              } hover:text-white transition duration-300`}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -223,10 +213,9 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
           <button
             onClick={() => personalPageHandler("/profile")}
-            className={`flex gap-6 items-center  ${
-              location.pathname === "/profile" &&
+            className={`flex gap-6 items-center  ${location.pathname === "/profile" &&
               "!text-primary border-r-4 border-primary font-medium"
-            } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
+              } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={!currentUser}
             title={!currentUser ? "Sign in to access profile" : ""}
           >
@@ -263,9 +252,8 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
       <div
         onClick={onCloseSidebar}
-        className={`bg-black/60 z-[5] fixed top-0 left-0 w-full h-full md:opacity-0 transition duration-300 ${
-          isSidebarActive ? "opacity-100 visible" : "opacity-0 invisible"
-        }`}
+        className={`bg-black/60 z-[5] fixed top-0 left-0 w-full h-full md:opacity-0 transition duration-300 ${isSidebarActive ? "opacity-100 visible" : "opacity-0 invisible"
+          }`}
       ></div>
     </>
   );

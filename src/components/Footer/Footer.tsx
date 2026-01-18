@@ -4,7 +4,7 @@ import { SiTiktok } from "react-icons/si";
 import { BsInstagram, BsWhatsapp, BsFacebook } from "react-icons/bs";
 import BuyMeACoffee from "../Common/BuyMeACoffee";
 
-interface FooterProps {}
+interface FooterProps { }
 
 const Footer: FunctionComponent<FooterProps> = () => {
   return (
@@ -16,7 +16,7 @@ const Footer: FunctionComponent<FooterProps> = () => {
           <div>
             <h3 className="text-xl font-bold mb-4">StreamLux</h3>
             <p className="text-gray-400 text-sm">
-              Your destination for free movies, TV shows, and live sports streaming. 
+              Your destination for free movies, TV shows, and live sports streaming.
               Discover world cinema from around the globe.
             </p>
           </div>
@@ -46,9 +46,9 @@ const Footer: FunctionComponent<FooterProps> = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/download" className="text-gray-400 hover:text-primary transition">
+                <a href="/streamlux.apk" className="text-gray-400 hover:text-primary transition" download>
                   Download App
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -177,10 +177,10 @@ const Footer: FunctionComponent<FooterProps> = () => {
         {/* Disclaimer */}
         <div className="border-t border-gray-800 pt-6 mt-6">
           <p className="text-xs text-gray-500 text-center leading-relaxed">
-            <strong>Disclaimer:</strong> All content on this page is provided for testing and 
-            demonstration purposes only. All video streams, images, and texts are sourced from 
-            publicly available websites. We do not store, record, or upload any content ourselves. 
-            All copyrights belong to the original owners. If any content violates your rights, 
+            <strong>Disclaimer:</strong> All content on this page is provided for testing and
+            demonstration purposes only. All video streams, images, and texts are sourced from
+            publicly available websites. We do not store, record, or upload any content ourselves.
+            All copyrights belong to the original owners. If any content violates your rights,
             please <Link to="/copyright" className="text-primary hover:underline">contact us</Link> for removal.
           </p>
         </div>
