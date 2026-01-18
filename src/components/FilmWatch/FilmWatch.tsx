@@ -29,6 +29,7 @@ import Comment from "./Comment/Comment";
 import SeasonSelection from "./SeasonSelection";
 import DownloadOptions from "../Common/DownloadOptions";
 import PlayerControls from "./PlayerControls";
+import VideoPlayer from "./VideoPlayer";
 
 interface FilmWatchProps {
   media_type: "movie" | "tv";
@@ -71,7 +72,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
 
     // Only use known working sources: vidsrc, vidplay, upcloud
     // For non-Western content, add regional sources
-    const isNonWestern = (detail as any)?.origin_country?.some((c: string) => 
+    const isNonWestern = (detail as any)?.origin_country?.some((c: string) =>
       ['IN', 'KR', 'JP', 'CN', 'TH', 'PH', 'NG', 'KE', 'ZA', 'GH', 'EG', 'MA', 'MX', 'BR', 'AR'].includes(c)
     ) || false;
 
@@ -94,7 +95,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
         `https://2embed.org/embed/${tmdbId}`,
         `https://www.2embed.to/embed/tmdb/movie?id=${tmdbId}`,
       ];
-      
+
       // Add non-Western sources if applicable
       if (isNonWestern) {
         baseSources.push(
@@ -102,7 +103,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
           `https://vidsrc.me/embed/${imdbId}?tmdb=${tmdbId}` // With TMDB fallback
         );
       }
-      
+
       return baseSources;
     } else {
       // Primary: Use vidsrc.me for TV shows
@@ -125,14 +126,14 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
         `https://2embed.org/embed/${tmdbId}?s=${season}&e=${episode}`,
         `https://www.2embed.to/embed/tmdb/tv?id=${tmdbId}&s=${season}&e=${episode}`,
       ];
-      
+
       // Add non-Western sources if applicable
       if (isNonWestern) {
         baseSources.push(
           `https://vidsrc.me/embed/tv/${tmdbId}/${seasonId || 1}/${episodeId || 1}` // Alternative format
         );
       }
-      
+
       return baseSources;
     }
   };
@@ -473,15 +474,13 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   )}
                 </div>
 
-                <iframe
-                  className="absolute w-full h-full top-0 left-0"
-                  src={currentSource}
-                  title="Film Video Player"
-                  style={{ border: 0 }}
-                  allowFullScreen
+                <VideoPlayer
+                  source={currentSource}
+                  sourceName={getSourceDisplayName(currentSource)}
                   onError={handleVideoError}
                   onLoad={handleVideoLoad}
-                ></iframe>
+                  isLoading={isLoadingVideo}
+                />
 
                 {/* Advanced Player Controls - World-Class Feature */}
                 <div className="mt-4 flex items-center justify-between">

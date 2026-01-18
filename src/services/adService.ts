@@ -14,11 +14,47 @@ class AdService {
         pushNotificationId: '',
         interstitialFrequency: 5, // 5 minutes between ads
     };
+    private isNativeApp: boolean = false;
+
+    constructor() {
+        // Detect if running in Capacitor (native app)
+        this.isNativeApp = this.detectNativeApp();
+    }
+
+    /**
+     * Detect if app is running in Capacitor (Android/iOS)
+     */
+    private detectNativeApp(): boolean {
+        try {
+            // Check for Capacitor
+            if (typeof window !== 'undefined') {
+                return !!(window as any).Capacitor ||
+                    !!(window as any).cordova ||
+                    navigator.userAgent.includes('StreamLuxApp');
+            }
+        } catch (e) {
+            console.warn('Error detecting native app:', e);
+        }
+        return false;
+    }
+
+    /**
+     * Check if ads should be shown (disabled in native app)
+     */
+    private shouldShowAds(): boolean {
+        return !this.isNativeApp;
+    }
 
     /**
      * Initialize Monetag scripts
      */
     init(config: Partial<MonetizationConfig>) {
+        // Don't initialize ads in native app
+        if (!this.shouldShowAds()) {
+            console.log('StreamLux: Ads disabled in native app');
+            return;
+        }
+
         try {
             this.config = { ...this.config, ...config };
             this.loadMultiTag();
@@ -103,9 +139,14 @@ class AdService {
     }
 
     /**
-     * Check if user should see ad (respects frequency cap)
+     * Check if user should see ad (respects frequency cap and platform)
      */
     shouldShowAd(): boolean {
+        // Never show ads in native app
+        if (!this.shouldShowAds()) {
+            return false;
+        }
+
         try {
             const now = Date.now();
             const timeSinceLastAd = (now - this.lastInterstitialTime) / 1000 / 60;

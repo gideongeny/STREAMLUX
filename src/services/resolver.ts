@@ -250,6 +250,15 @@ export class ResolverService {
             console.warn("Backend resolution failed, falling back to client sources");
         }
 
+        // NEW: Add scraper sources (direct video URLs)
+        // These are lower priority but provide fallback options
+        try {
+            const scraperSources = await this.getScraperSources(mediaType, tmdbId, season, episode);
+            sources.push(...scraperSources);
+        } catch (e) {
+            console.warn("Failed to get scraper sources:", e);
+        }
+
         // Simulate network delay for "Resolving" feel
         await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -261,6 +270,94 @@ export class ResolverService {
         });
 
         return sources;
+    }
+
+    /**
+     * Get scraper sources from backend (FZMovies, NetNaija, O2TVSeries)
+     * These return direct video URLs
+     */
+    private async getScraperSources(
+        mediaType: "movie" | "tv",
+        tmdbId: string,
+        season?: number,
+        episode?: number
+    ): Promise<ResolvedSource[]> {
+        try {
+            const query = new URLSearchParams({
+                type: mediaType,
+                id: tmdbId,
+            });
+            if (season) query.append('season', season.toString());
+            if (episode) query.append('episode', episode.toString());
+
+            const response = await fetch(`${PROXY_BASE}/scrapers/resolve?${query.toString()}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            if (!response.ok) {
+                return [];
+            }
+
+            const data = await response.json();
+            const scraperSources: ResolvedSource[] = [];
+
+            // Process FZMovies sources
+            if (data.fzmovies && Array.isArray(data.fzmovies)) {
+                data.fzmovies.forEach((item: any, index: number) => {
+                    if (item.downloadLink) {
+                        scraperSources.push({
+                            name: `FZMovies - ${item.quality || 'HD'}`,
+                            url: item.downloadLink,
+                            quality: item.quality || '720p',
+                            speed: 'medium',
+                            status: 'checking',
+                            type: 'direct',
+                            priority: 100 + index
+                        });
+                    }
+                });
+            }
+
+            // Process NetNaija sources
+            if (data.netnaija && Array.isArray(data.netnaija)) {
+                data.netnaija.forEach((item: any, index: number) => {
+                    if (item.url) {
+                        scraperSources.push({
+                            name: `NetNaija - ${item.category || 'Movie'}`,
+                            url: item.url,
+                            quality: '720p',
+                            speed: 'medium',
+                            status: 'checking',
+                            type: 'direct',
+                            priority: 200 + index
+                        });
+                    }
+                });
+            }
+
+            // Process O2TVSeries sources
+            if (data.o2tvseries && Array.isArray(data.o2tvseries)) {
+                data.o2tvseries.forEach((item: any, index: number) => {
+                    if (item.url) {
+                        scraperSources.push({
+                            name: `O2TVSeries - ${item.title || 'Episode'}`,
+                            url: item.url,
+                            quality: '720p',
+                            speed: 'slow',
+                            status: 'checking',
+                            type: 'direct',
+                            priority: 300 + index
+                        });
+                    }
+                });
+            }
+
+            return scraperSources;
+        } catch (error) {
+            console.error('Error fetching scraper sources:', error);
+            return [];
+        }
     }
 
     /**
