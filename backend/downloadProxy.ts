@@ -108,6 +108,44 @@ app.get('/api/resolve', async (req: Request, res: Response) => {
 });
 
 /**
+ * Scraper Resolver Endpoint: Returns direct video URLs from scrapers
+ * Usage: /api/scrapers/resolve?type=movie&id=TMDB_ID
+ */
+app.get('/api/scrapers/resolve', async (req: Request, res: Response) => {
+    try {
+        const { type, id, season, episode } = req.query;
+
+        if (!type || !id) {
+            return res.status(400).json({
+                error: 'Missing required parameters: type and id'
+            });
+        }
+
+        console.log(`[Scraper Resolver] Resolving ${type} ${id}${season ? ` S${season}E${episode}` : ''}`);
+
+        // Return empty arrays for now
+        // In production, this would:
+        // 1. Fetch TMDB data to get the title
+        // 2. Search each scraper with the title
+        // 3. Return matching direct video URLs
+        const response: any = {
+            fzmovies: [],
+            netnaija: [],
+            o2tvseries: [],
+            message: 'Scraper integration placeholder - implement with actual scraper logic'
+        };
+
+        res.json(response);
+    } catch (error: any) {
+        console.error('[Scraper Resolver Error]:', error.message);
+        res.status(500).json({
+            error: 'Failed to resolve scraper sources',
+            message: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
+/**
  * Download proxy route with HTTP Range Request support
  * Supports pause/resume downloads
  */
@@ -189,10 +227,50 @@ app.get('/api/download', async (req: Request, res: Response) => {
 });
 
 /**
- * Health check endpoint
+ * Health check and keep-alive endpoints
  */
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', service: 'download-proxy', enhanced: true });
+    res.status(200).json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        message: 'StreamLux backend is running',
+        service: 'download-proxy',
+        enhanced: true
+    });
+});
+
+app.get('/api/health', (req, res) => {
+    res.status(200).json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        message: 'StreamLux backend is running'
+    });
+});
+
+app.get('/api/ping', (req, res) => {
+    res.status(200).json({
+        pong: true,
+        timestamp: new Date().toISOString()
+    });
+});
+
+app.get('/api/keep-alive', (req, res) => {
+    const memoryUsage = process.memoryUsage();
+
+    res.status(200).json({
+        status: 'alive',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        memory: {
+            rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
+            heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+            heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
+        },
+        nodeVersion: process.version,
+        platform: process.platform,
+    });
 });
 
 app.listen(PORT, () => {
