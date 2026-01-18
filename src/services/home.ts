@@ -131,7 +131,12 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
 
     // Use only TMDB + FZMovies for initial fast load (YouTube/scraper/WatchMode/RapidAPI/OMDB will be added later)
     if (key === "Upcoming") {
-      final[key] = mergeAndDedupe(tmdbItems.filter((t: Item) => t.release_date && t.release_date >= '2026'), fzItems, [], [], [], [], [], []);
+      const yearFilter = (item: Item) => item.release_date && item.release_date >= '2026';
+      final[key] = mergeAndDedupe(
+        tmdbItems.filter(yearFilter),
+        fzItems.filter(yearFilter),
+        [], [], [], [], [], []
+      );
     } else {
       final[key] = mergeAndDedupe(tmdbItems, fzItems, [], [], [], [], [], []);
     }

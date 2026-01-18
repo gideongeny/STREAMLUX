@@ -259,7 +259,7 @@ export class ResolverService {
             if (backendData && backendData.status === 'active' && backendData.proxiedUrl) {
                 // Prepend the backend resolved source as Priority 0 (Highest)
                 sources.unshift({
-                    name: "StreamLux Proxy (VidSrc)",
+                    name: "VidSrc (Fast)",
                     url: backendData.proxiedUrl,
                     quality: "1080p",
                     speed: "fast",
@@ -271,6 +271,30 @@ export class ResolverService {
         } catch (e) {
             console.warn("Backend resolution failed, falling back to client sources");
         }
+
+        // Add additional missing sources requested by user
+        sources.push(
+            {
+                name: "SuperEmbed",
+                url: mediaType === "movie"
+                    ? `https://superembed.stream/movie/${tmdbId}`
+                    : `https://superembed.stream/series/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "1080p",
+                speed: "fast",
+                status: "checking",
+                type: "embed",
+                priority: 9
+            },
+            {
+                name: "2Embed",
+                url: `https://www.2embed.cc/embed${mediaType === "movie" ? "" : "tv"}/${tmdbId}${mediaType === "tv" ? `&s=${season || 1}&e=${episode || 1}` : ""}`,
+                quality: "1080p",
+                speed: "medium",
+                status: "checking",
+                type: "embed",
+                priority: 10
+            }
+        );
 
         // NEW: Add scraper sources (direct video URLs)
         // These are lower priority but provide fallback options

@@ -9,7 +9,7 @@ import { searchIMDBContentEnhanced } from "./imdb";
 // Helper function to generate search queries for regions
 const getSearchQueriesForRegion = (region: string, type: "movie" | "tv"): string[] => {
   const queries: string[] = [];
-  
+
   if (region.includes("NG") || region.includes("nollywood")) {
     queries.push("nollywood", "nigerian", "african");
   }
@@ -43,7 +43,7 @@ const getSearchQueriesForRegion = (region: string, type: "movie" | "tv"): string
   if (region.includes("BR") || region.includes("brazil")) {
     queries.push("brazilian", "portuguese", "brasil");
   }
-  
+
   return queries.length > 0 ? queries : ["popular", "trending"];
 };
 
@@ -55,7 +55,7 @@ export const getExploreMovie: (
   const genreId = config.with_genres ? Number(config.with_genres) : undefined;
   // Get origin_country filter if specified
   const originCountry = config.with_origin_country || (config as any).region;
-  
+
   // Optimized: Fetch from fewer sources for faster loading
   // Only use essential sources, skip heavy ones for initial load
   const fetchPromises = [
@@ -71,13 +71,13 @@ export const getExploreMovie: (
       },
       timeout: 4000, // Reduced timeout for faster loading
     }).catch(() => ({ data: { results: [] } })),
-    
+
     // Fallback: TMDB popular (fast fallback)
     axios.get("/movie/popular", {
       params: { page },
       timeout: 3000, // Reduced timeout
     }).catch(() => ({ data: { results: [] } })),
-    
+
     // Only load additional sources if region is specified (for World Cinema)
     ...(originCountry ? [
       // FZMovies content (only for regional content)
@@ -90,7 +90,7 @@ export const getExploreMovie: (
       ).then(results => results.flat()).catch(() => []),
     ] : []),
   ];
-  
+
   const [tmdbData, popularData, trendingData, fzMovies, apiContent, sourceContent, imdbContent, regionalContent] = await Promise.all(fetchPromises);
 
   // Combine all TMDB results (discover, popular, trending)
@@ -98,20 +98,20 @@ export const getExploreMovie: (
   const tmdbDataTyped = tmdbData as { data?: ItemsPage };
   const popularDataTyped = popularData as { data?: ItemsPage };
   const trendingDataTyped = trendingData as { data?: ItemsPage };
-  
+
   // Type assertions for array results from Promise.all
   const fzMoviesTyped = fzMovies as Item[];
   const apiContentTyped = apiContent as Item[];
   const sourceContentTyped = sourceContent as Item[];
   const imdbContentTyped = imdbContent as Item[];
   const regionalContentTyped = regionalContent as Item[];
-  
+
   const allTmdbResults = [
     ...(tmdbDataTyped.data?.results ?? []),
     ...(popularDataTyped.data?.results ?? []),
     ...(trendingDataTyped.data?.results ?? []),
   ];
-  
+
   const tmdbItems = allTmdbResults
     .filter((item: Item) => {
       // If genre filter is applied, ensure item has that genre
@@ -136,7 +136,7 @@ export const getExploreMovie: (
   // Filter API content by genre and origin_country if specified
   let filteredApiContent = apiContentTyped;
   if (genreId) {
-    filteredApiContent = filteredApiContent.filter((item: Item) => 
+    filteredApiContent = filteredApiContent.filter((item: Item) =>
       item.genre_ids && item.genre_ids.includes(genreId)
     );
   }
@@ -147,7 +147,7 @@ export const getExploreMovie: (
       return countries.some((c: string) => filterCountries.includes(c));
     });
   }
-  
+
   // Filter source content by origin_country if specified
   let filteredSourceContent = sourceContentTyped;
   if (originCountry) {
@@ -172,7 +172,10 @@ export const getExploreMovie: (
     if (originCountry) {
       const countries = item.origin_country || [];
       const filterCountries = typeof originCountry === 'string' ? originCountry.split('|') : [originCountry];
-      if (!countries.some((c: string) => filterCountries.includes(c))) {
+
+      // FIX: Relax filter - if item has NO origin_country (scraper items), allow it
+      // otherwise, if it HAS origin_country, it must match.
+      if (countries.length > 0 && !countries.some((c: string) => filterCountries.includes(c))) {
         return false;
       }
     }
@@ -188,12 +191,12 @@ export const getExploreMovie: (
         params: { page: 1 },
         timeout: 3000,
       }).catch(() => ({ data: { results: [] } }));
-      
+
       const fallbackItems = (fallbackResponse.data?.results || []).slice(0, 20).map((item: any) => ({
         ...item,
         media_type: "movie" as const,
       })).filter((item: Item) => item.poster_path);
-      
+
       if (fallbackItems.length > 0) {
         return {
           page: 1,
@@ -223,7 +226,7 @@ export const getExploreTV: (
   const genreId = config.with_genres ? Number(config.with_genres) : undefined;
   // Get origin_country filter if specified
   const originCountry = config.with_origin_country || (config as any).region;
-  
+
   // Optimized: Fetch from fewer sources for faster loading
   // Only use essential sources, skip heavy ones for initial load
   const fetchPromises = [
@@ -239,13 +242,13 @@ export const getExploreTV: (
       },
       timeout: 4000, // Reduced timeout for faster loading
     }).catch(() => ({ data: { results: [] } })),
-    
+
     // Fallback: TMDB popular (fast fallback)
     axios.get("/tv/popular", {
       params: { page },
       timeout: 3000, // Reduced timeout
     }).catch(() => ({ data: { results: [] } })),
-    
+
     // Only load additional sources if region is specified (for World Cinema)
     ...(originCountry ? [
       // FZMovies content (only for regional content)
@@ -258,7 +261,7 @@ export const getExploreTV: (
       ).then(results => results.flat()).catch(() => []),
     ] : []),
   ];
-  
+
   const [tmdbData, popularData, trendingData, fzTV, apiContent, sourceContent, imdbContent, regionalContent] = await Promise.all(fetchPromises);
 
   // Combine all TMDB results (discover, popular, trending)
@@ -266,25 +269,25 @@ export const getExploreTV: (
   const tmdbDataTyped = tmdbData as { data?: ItemsPage };
   const popularDataTyped = popularData as { data?: ItemsPage };
   const trendingDataTyped = trendingData as { data?: ItemsPage };
-  
+
   // Type assertions for array results from Promise.all
   const fzTVTyped = fzTV as Item[];
   const apiContentTyped = apiContent as Item[];
   const sourceContentTyped = sourceContent as Item[];
   const imdbContentTyped = imdbContent as Item[];
   const regionalContentTyped = regionalContent as Item[];
-  
+
   const allTmdbResults = [
     ...(tmdbDataTyped.data?.results ?? []),
     ...(popularDataTyped.data?.results ?? []),
     ...(trendingDataTyped.data?.results ?? []),
   ];
-  
+
   const tmdbItems = allTmdbResults
     .filter((item: Item) => {
       // Must have poster
       if (!item.poster_path) return false;
-      
+
       // If genre filter is applied, ensure item has that genre
       if (genreId && item.genre_ids) {
         if (!item.genre_ids.includes(genreId)) return false;
@@ -309,7 +312,7 @@ export const getExploreTV: (
   // Filter API content by genre and origin_country if specified
   let filteredApiContent = apiContentTyped;
   if (genreId) {
-    filteredApiContent = filteredApiContent.filter((item: Item) => 
+    filteredApiContent = filteredApiContent.filter((item: Item) =>
       item.genre_ids && item.genre_ids.includes(genreId)
     );
   }
@@ -320,7 +323,7 @@ export const getExploreTV: (
       return countries.some((c: string) => filterCountries.includes(c));
     });
   }
-  
+
   // Filter source content by origin_country if specified
   let filteredSourceContent = sourceContentTyped;
   if (originCountry) {
@@ -361,12 +364,12 @@ export const getExploreTV: (
         params: { page: 1 },
         timeout: 3000,
       }).catch(() => ({ data: { results: [] } }));
-      
+
       const fallbackItems = (fallbackResponse.data?.results || []).slice(0, 20).map((item: any) => ({
         ...item,
         media_type: "tv" as const,
       })).filter((item: Item) => item.poster_path);
-      
+
       if (fallbackItems.length > 0) {
         return {
           page: 1,

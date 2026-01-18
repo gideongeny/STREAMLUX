@@ -30,7 +30,7 @@ const Auth: FunctionComponent<AuthProps> = () => {
           loop
           playsInline
           id="myVideo"
-          className="fixed md:-top-[130px] -top-[155px] object-cover left-0 h-[135vh] w-full -z-10"
+          className="fixed md:-top-[130px] -top-[155px] object-cover left-0 h-[135vh] w-full z-0 opacity-60"
           onLoadedData={(e) => {
             // Ensure video plays
             const video = e.target as HTMLVideoElement;
