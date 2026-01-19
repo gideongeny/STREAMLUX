@@ -13,6 +13,7 @@ import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import { auth } from "../../shared/firebase";
 import { useAppSelector } from "../../store/hooks";
 import BuyMeACoffee from "./BuyMeACoffee";
+import LanguageSelector from "./LanguageSelector";
 
 interface SidebarProps {
   isSidebarActive: boolean;
@@ -210,6 +211,15 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             </svg>
             <p>Settings</p>
           </Link>
+
+          <div className="flex gap-6 items-center px-0">
+            <div className="w-[30px] flex justify-center">
+              <span className="text-xl">🌐</span>
+            </div>
+            <div className="flex-grow">
+              <LanguageSelector />
+            </div>
+          </div>
 
           <button
             onClick={() => personalPageHandler("/profile")}

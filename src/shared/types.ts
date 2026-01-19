@@ -11,6 +11,8 @@ export interface Item {
 
   // Additional props
   media_type: "movie" | "tv" | "person";
+  isYouTube?: boolean;
+  youtubeId?: string;
 
   // Movie items
   release_date?: string;

@@ -11,10 +11,10 @@ interface FilmItemProps {
 
 const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
   // Check if movie is unreleased
-  const isUnreleased = item.media_type === "movie" && item.release_date 
+  const isUnreleased = item.media_type === "movie" && item.release_date
     ? new Date(item.release_date) > new Date()
     : false;
-  
+
   const releaseDate = item.media_type === "movie" && item.release_date
     ? new Date(item.release_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
@@ -22,11 +22,13 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
   return (
     <Link
       to={
-        item.media_type === "movie"
-          ? `/movie/${item.id}`
-          : item.media_type === "tv"
-          ? `/tv/${item.id}`
-          : `/`
+        item.isYouTube && item.youtubeId
+          ? `/youtube/${item.youtubeId}`
+          : item.media_type === "movie"
+            ? `/movie/${item.id}`
+            : item.media_type === "tv"
+              ? `/tv/${item.id}`
+              : `/`
       }
     >
       <div className="shadow-sm bg-dark-darken pb-2 rounded-md overflow-hidden hover:scale-105 hover:brightness-110 transition duration-300 relative group">

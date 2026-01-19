@@ -19,6 +19,8 @@ export const convertYouTubeToItem = (video: YouTubeVideo, index: number): Item =
         first_air_date: (video.publishedAt || new Date().toISOString()).split('T')[0],
         genre_ids: [18, 10749], // Drama, Romance defaults
         original_language: 'en',
+        isYouTube: true,
+        youtubeId: video.id,
     } as Item;
 };
 

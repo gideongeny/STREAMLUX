@@ -8,6 +8,7 @@ import ExploreResult from "../components/Explore/ExploreResult";
 import { useTMDBCollectionQuery } from "../hooks/useCollectionQuery";
 import { useYouTubeVideos } from "../hooks/useYouTube";
 import YouTubeGrid from "../components/Explore/YouTubeGrid";
+import { convertYouTubeToItem } from "../services/youtubeContent";
 
 const Explore = () => {
   const [searchParams] = useSearchParams();
@@ -175,16 +176,30 @@ const Explore = () => {
           </div>
 
           <div className="lg:col-span-3">
-            {filters.region ? (
-              <YouTubeGrid videos={ytVideos} loading={ytLoading} error={ytError} />
-            ) : (
-              <ExploreResult
-                data={data}
-                isLoading={isLoading}
-                error={error}
-                currentTab={currentTab}
-              />
-            )}
+            {(() => {
+              // Combine TMDB/Scraper data with YouTube data regardless of filter
+              const combinedData = [...data];
+              if (ytVideos && ytVideos.length > 0) {
+                const convertedYtVideos = ytVideos.map((video, index) =>
+                  convertYouTubeToItem(video, index + 10000 + data.length) // Offset IDs to avoid collision
+                );
+                combinedData.push(...convertedYtVideos);
+              }
+
+              // Deduplicate
+              const uniqueData = combinedData.filter((item, index, self) =>
+                index === self.findIndex((t) => t.id === item.id)
+              );
+
+              return (
+                <ExploreResult
+                  data={uniqueData}
+                  isLoading={isLoading && ytLoading}
+                  error={error}
+                  currentTab={currentTab}
+                />
+              );
+            })()}
           </div>
         </div>
       </div>

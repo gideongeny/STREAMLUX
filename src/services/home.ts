@@ -1041,14 +1041,15 @@ export const getNigerianTVShows = async (): Promise<Item[]> => {
 
 export const getAsianContent = async (): Promise<Item[]> => {
   try {
+    const countries = "KR|JP|CN|IN|PH|TH|VN|MY|SG|ID";
     // Fetch Asian movies and TV shows including Southeast Asia
     const [movieResponse, tvResponse] = await Promise.all([
-      axios.get(
-        `/discover/movie?with_origin_country=KR&with_origin_country=JP&with_origin_country=CN&with_origin_country=IN&with_origin_country=PH&with_origin_country=TH&with_origin_country=VN&with_origin_country=MY&with_origin_country=SG&with_origin_country=ID&sort_by=popularity.desc&page=1`
-      ),
-      axios.get(
-        `/discover/tv?with_origin_country=KR&with_origin_country=JP&with_origin_country=CN&with_origin_country=IN&with_origin_country=PH&with_origin_country=TH&with_origin_country=VN&with_origin_country=MY&with_origin_country=SG&with_origin_country=ID&sort_by=popularity.desc&page=1`
-      )
+      axios.get(`/discover/movie`, {
+        params: { with_origin_country: countries, sort_by: "popularity.desc", page: 1 }
+      }),
+      axios.get(`/discover/tv`, {
+        params: { with_origin_country: countries, sort_by: "popularity.desc", page: 1 }
+      })
     ]);
 
     const movieResults = movieResponse.data.results || [];
@@ -1067,13 +1068,14 @@ export const getAsianContent = async (): Promise<Item[]> => {
 // Separate function for Southeast Asian content
 export const getSoutheastAsianContent = async (): Promise<Item[]> => {
   try {
+    const countries = "PH|TH|VN|MY|SG|ID";
     const [movieResponse, tvResponse] = await Promise.all([
-      axios.get(
-        `/discover/movie?with_origin_country=PH&with_origin_country=TH&with_origin_country=VN&with_origin_country=MY&with_origin_country=SG&with_origin_country=ID&sort_by=popularity.desc&page=1`
-      ),
-      axios.get(
-        `/discover/tv?with_origin_country=PH&with_origin_country=TH&with_origin_country=VN&with_origin_country=MY&with_origin_country=SG&with_origin_country=ID&sort_by=popularity.desc&page=1`
-      )
+      axios.get(`/discover/movie`, {
+        params: { with_origin_country: countries, sort_by: "popularity.desc", page: 1 }
+      }),
+      axios.get(`/discover/tv`, {
+        params: { with_origin_country: countries, sort_by: "popularity.desc", page: 1 }
+      })
     ]);
 
     const movieResults = movieResponse.data.results || [];
@@ -1168,14 +1170,15 @@ export const getFilipinoContent = async (): Promise<Item[]> => {
 
 export const getLatinAmericanContent = async (): Promise<Item[]> => {
   try {
+    const countries = "MX|BR|AR|CO|PE|CL|VE|EC";
     // Fetch Latin American movies and TV shows including more countries
     const [movieResponse, tvResponse] = await Promise.all([
-      axios.get(
-        `/discover/movie?with_origin_country=MX&with_origin_country=BR&with_origin_country=AR&with_origin_country=CO&with_origin_country=PE&with_origin_country=CL&with_origin_country=VE&with_origin_country=EC&sort_by=popularity.desc&page=1`
-      ),
-      axios.get(
-        `/discover/tv?with_origin_country=MX&with_origin_country=BR&with_origin_country=AR&with_origin_country=CO&with_origin_country=PE&with_origin_country=CL&with_origin_country=VE&with_origin_country=EC&sort_by=popularity.desc&page=1`
-      )
+      axios.get(`/discover/movie`, {
+        params: { with_origin_country: countries, sort_by: "popularity.desc", page: 1 }
+      }),
+      axios.get(`/discover/tv`, {
+        params: { with_origin_country: countries, sort_by: "popularity.desc", page: 1 }
+      })
     ]);
 
     const movieResults = movieResponse.data.results || [];
@@ -1243,14 +1246,15 @@ export const getMexicanContent = async (): Promise<Item[]> => {
 
 export const getMiddleEasternContent = async (): Promise<Item[]> => {
   try {
+    const countries = "TR|EG|SA|AE|QA|LB|KW|OM|JO|IQ|MA|DZ|TN";
     // Fetch Middle Eastern movies and TV shows
     const [movieResponse, tvResponse] = await Promise.all([
-      axios.get(
-        `/discover/movie?with_origin_country=TR&with_origin_country=EG&with_origin_country=SA&with_origin_country=AE&sort_by=popularity.desc&page=1`
-      ),
-      axios.get(
-        `/discover/tv?with_origin_country=TR&with_origin_country=EG&with_origin_country=SA&with_origin_country=AE&sort_by=popularity.desc&page=1`
-      )
+      axios.get(`/discover/movie`, {
+        params: { with_origin_country: countries, sort_by: "popularity.desc", page: 1 }
+      }),
+      axios.get(`/discover/tv`, {
+        params: { with_origin_country: countries, sort_by: "popularity.desc", page: 1 }
+      })
     ]);
 
     const movieResults = movieResponse.data.results || [];
@@ -1262,6 +1266,51 @@ export const getMiddleEasternContent = async (): Promise<Item[]> => {
     return [...movies, ...tvs];
   } catch (error) {
     console.error("Error fetching Middle Eastern content:", error);
+    return [];
+  }
+};
+
+export const getWarMovies = async (): Promise<Item[]> => {
+  try {
+    return await getGenreMoviesOptimized(10752, "War");
+  } catch (error) {
+    console.error("Error fetching war movies:", error);
+    return [];
+  }
+};
+
+export const getHistoryMovies = async (): Promise<Item[]> => {
+  try {
+    return await getGenreMoviesOptimized(36, "History");
+  } catch (error) {
+    console.error("Error fetching history movies:", error);
+    return [];
+  }
+};
+
+export const getMusicMovies = async (): Promise<Item[]> => {
+  try {
+    return await getGenreMoviesOptimized(10402, "Music");
+  } catch (error) {
+    console.error("Error fetching music movies:", error);
+    return [];
+  }
+};
+
+export const getMysteryMovies = async (): Promise<Item[]> => {
+  try {
+    return await getGenreMoviesOptimized(9648, "Mystery");
+  } catch (error) {
+    console.error("Error fetching mystery movies:", error);
+    return [];
+  }
+};
+
+export const getFamilyMovies = async (): Promise<Item[]> => {
+  try {
+    return await getGenreMoviesOptimized(10751, "Family");
+  } catch (error) {
+    console.error("Error fetching family movies:", error);
     return [];
   }
 };

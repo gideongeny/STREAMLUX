@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Item } from '../../shared/types';
-import { 
-  getAfricanContent, 
-  getAsianContent, 
-  getLatinAmericanContent, 
+import {
+  getAfricanContent,
+  getAsianContent,
+  getLatinAmericanContent,
   getMiddleEasternContent,
   getNollywoodContent,
   getBollywoodContent,
@@ -33,7 +33,12 @@ import {
   getDocumentaryMovies,
   getCrimeMovies,
   getAdventureMovies,
-  getFantasyMovies
+  getFantasyMovies,
+  getWarMovies,
+  getHistoryMovies,
+  getMusicMovies,
+  getMysteryMovies,
+  getFamilyMovies
 } from '../../services/home';
 import SectionSlider from '../Slider/SectionSlider';
 import Skeleton from '../Common/Skeleton';
@@ -76,21 +81,26 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
   const [crimeMovies, setCrimeMovies] = useState<Item[]>([]);
   const [adventureMovies, setAdventureMovies] = useState<Item[]>([]);
   const [fantasyMovies, setFantasyMovies] = useState<Item[]>([]);
+  const [warMovies, setWarMovies] = useState<Item[]>([]);
+  const [historyMovies, setHistoryMovies] = useState<Item[]>([]);
+  const [musicMovies, setMusicMovies] = useState<Item[]>([]);
+  const [mysteryMovies, setMysteryMovies] = useState<Item[]>([]);
+  const [familyMovies, setFamilyMovies] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const fetchDiverseContent = async () => {
       try {
         setIsLoading(true);
-        
+
         // Priority 1: Load ONLY trending first (fastest to show content)
         const trendingResult = await Promise.race([
           getTrendingNow().catch(() => []),
           new Promise<Item[]>((resolve) => setTimeout(() => resolve([]), 3000)), // 3s timeout
         ]);
-        
+
         if (isMounted) {
           setTrendingAll(Array.isArray(trendingResult) ? trendingResult : []);
           setIsLoading(false); // Show content immediately after trending loads
@@ -141,6 +151,22 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
             setCrimeMovies(results[2].status === "fulfilled" ? results[2].value : []);
             setAdventureMovies(results[3].status === "fulfilled" ? results[3].value : []);
             setFantasyMovies(results[4].status === "fulfilled" ? results[4].value : []);
+          });
+
+          // Fetch new genres
+          Promise.allSettled([
+            getWarMovies().catch(() => []),
+            getHistoryMovies().catch(() => []),
+            getMusicMovies().catch(() => []),
+            getMysteryMovies().catch(() => []),
+            getFamilyMovies().catch(() => []),
+          ]).then((results) => {
+            if (!isMounted) return;
+            setWarMovies(results[0].status === "fulfilled" ? results[0].value : []);
+            setHistoryMovies(results[1].status === "fulfilled" ? results[1].value : []);
+            setMusicMovies(results[2].status === "fulfilled" ? results[2].value : []);
+            setMysteryMovies(results[3].status === "fulfilled" ? results[3].value : []);
+            setFamilyMovies(results[4].status === "fulfilled" ? results[4].value : []);
           });
         }, 4000);
 
@@ -210,7 +236,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
             setEnhancedKenyan(results[7].status === "fulfilled" ? results[7].value : []);
           });
         }, 10000);
-        
+
       } catch (error) {
         console.error('Error fetching diverse content:', error);
         if (isMounted) {
@@ -220,16 +246,16 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
     };
 
     fetchDiverseContent();
-    
+
     return () => {
       isMounted = false;
     };
   }, []);
 
   // Show minimal loading state - content loads progressively
-  const hasAnyContent = trendingAll.length > 0 || horrorMovies.length > 0 || 
+  const hasAnyContent = trendingAll.length > 0 || horrorMovies.length > 0 ||
     actionMovies.length > 0 || comedyMovies.length > 0;
-  
+
   if (isLoading && !hasAnyContent) {
     return (
       <div className="space-y-8 mt-8">
@@ -256,9 +282,9 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
     );
   }
 
-  const totalContent = africanContent.length + asianContent.length + 
-    latinAmericanContent.length + middleEasternContent.length + 
-    nollywoodContent.length + bollywoodContent.length + 
+  const totalContent = africanContent.length + asianContent.length +
+    latinAmericanContent.length + middleEasternContent.length +
+    nollywoodContent.length + bollywoodContent.length +
     koreanContent.length + japaneseContent.length + chineseContent.length +
     eastAfricanContent.length + southAfricanContent.length +
     southeastAsianContent.length + filipinoContent.length +
@@ -311,7 +337,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
     ...kenyanTVShows.filter((item) => item.media_type === "tv"),
     ...enhancedKenyan.filter((item) => item.media_type === "tv"),
   ]
-    .filter((item, index, self) => 
+    .filter((item, index, self) =>
       index === self.findIndex((t) => t.id === item.id)
     )
     .slice(0, 20);
@@ -323,7 +349,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
     ...eastAfricanContent.filter((item) => item.media_type === "movie"),
     ...southAfricanContent.filter((item) => item.media_type === "movie"),
   ]
-    .filter((item, index, self) => 
+    .filter((item, index, self) =>
       index === self.findIndex((t) => t.id === item.id)
     )
     .slice(0, 20);
@@ -339,7 +365,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
     ...nigerianTVShows,
     ...kenyanTVShows,
   ]
-    .filter((item, index, self) => 
+    .filter((item, index, self) =>
       index === self.findIndex((t) => t.id === item.id)
     )
     .slice(0, 20);
@@ -373,13 +399,13 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
           return hasGenre && matchesMediaType;
         });
         return filtered.length > 0 ? (
-        <SectionSlider
+          <SectionSlider
             title={`👻 Horror ${currentTab === "movie" ? "Movies" : "TV Shows"}`}
             films={filtered}
-          limitNumber={10}
-          isLoading={false}
-          seeMoreParams={{ genre: "27", sort_by: "popularity.desc" }}
-        />
+            limitNumber={10}
+            isLoading={false}
+            seeMoreParams={{ genre: "27", sort_by: "popularity.desc" }}
+          />
         ) : null;
       })()}
 
@@ -424,11 +450,11 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
           ...eastAfricanContent.filter((item) => item.media_type === "tv"),
           ...southAfricanContent.filter((item) => item.media_type === "tv"),
         ]
-          .filter((item, index, self) => 
+          .filter((item, index, self) =>
             index === self.findIndex((t) => t.id === item.id)
           )
           .slice(0, 20);
-        
+
         return allAfricanTV.length > 0 ? (
           <SectionSlider
             title="📺 African TV Shows & Series"
@@ -794,6 +820,86 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
         return filtered.length > 0 ? (
           <SectionSlider
             title={`✨ Fantasy ${currentTab === "movie" ? "Movies" : "TV Shows"}`}
+            films={filtered}
+            limitNumber={10}
+            isLoading={false}
+          />
+        ) : null;
+      })()}
+
+      {(() => {
+        const filtered = warMovies.filter((item) => {
+          const hasGenre = item.genre_ids && item.genre_ids.includes(10752);
+          const matchesMediaType = currentTab === "movie" ? item.media_type === "movie" : item.media_type === "tv";
+          return hasGenre && matchesMediaType;
+        });
+        return filtered.length > 0 ? (
+          <SectionSlider
+            title={`⚔️ War ${currentTab === "movie" ? "Movies" : "TV Shows"}`}
+            films={filtered}
+            limitNumber={10}
+            isLoading={false}
+          />
+        ) : null;
+      })()}
+
+      {(() => {
+        const filtered = historyMovies.filter((item) => {
+          const hasGenre = item.genre_ids && item.genre_ids.includes(36);
+          const matchesMediaType = currentTab === "movie" ? item.media_type === "movie" : item.media_type === "tv";
+          return hasGenre && matchesMediaType;
+        });
+        return filtered.length > 0 ? (
+          <SectionSlider
+            title={`📜 History ${currentTab === "movie" ? "Movies" : "TV Shows"}`}
+            films={filtered}
+            limitNumber={10}
+            isLoading={false}
+          />
+        ) : null;
+      })()}
+
+      {(() => {
+        const filtered = musicMovies.filter((item) => {
+          const hasGenre = item.genre_ids && item.genre_ids.includes(10402);
+          const matchesMediaType = currentTab === "movie" ? item.media_type === "movie" : item.media_type === "tv";
+          return hasGenre && matchesMediaType;
+        });
+        return filtered.length > 0 ? (
+          <SectionSlider
+            title={`🎵 Music ${currentTab === "movie" ? "Movies" : "TV Shows"}`}
+            films={filtered}
+            limitNumber={10}
+            isLoading={false}
+          />
+        ) : null;
+      })()}
+
+      {(() => {
+        const filtered = mysteryMovies.filter((item) => {
+          const hasGenre = item.genre_ids && item.genre_ids.includes(9648);
+          const matchesMediaType = currentTab === "movie" ? item.media_type === "movie" : item.media_type === "tv";
+          return hasGenre && matchesMediaType;
+        });
+        return filtered.length > 0 ? (
+          <SectionSlider
+            title={`🔍 Mystery ${currentTab === "movie" ? "Movies" : "TV Shows"}`}
+            films={filtered}
+            limitNumber={10}
+            isLoading={false}
+          />
+        ) : null;
+      })()}
+
+      {(() => {
+        const filtered = familyMovies.filter((item) => {
+          const hasGenre = item.genre_ids && item.genre_ids.includes(10751);
+          const matchesMediaType = currentTab === "movie" ? item.media_type === "movie" : item.media_type === "tv";
+          return hasGenre && matchesMediaType;
+        });
+        return filtered.length > 0 ? (
+          <SectionSlider
+            title={`👨‍👩‍👧‍👦 Family ${currentTab === "movie" ? "Movies" : "TV Shows"}`}
             films={filtered}
             limitNumber={10}
             isLoading={false}

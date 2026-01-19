@@ -142,31 +142,7 @@ export class ResolverService {
         const tmdbId = id.toString();
 
         sources.push(
-            // 1. Vidplay (via VidSrc.to)
-            {
-                name: "Vidplay",
-                url: mediaType === "movie"
-                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=vidplay`
-                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}?server=vidplay`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 1
-            },
-            // 2. Upcloud (via VidSrc.to)
-            {
-                name: "Upcloud",
-                url: mediaType === "movie"
-                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=upcloud`
-                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}?server=upcloud`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 2
-            },
-            // 3. VidSrc.me
+            // 1. VidSrc.me (Priority 1 - User Request)
             {
                 name: "VidSrc.me",
                 url: mediaType === "movie"
@@ -176,9 +152,139 @@ export class ResolverService {
                 speed: "fast",
                 status: "active",
                 type: "embed",
+                priority: 1
+            },
+            // 2. Vidplay (via VidSrc.to)
+            {
+                name: "Vidplay",
+                url: mediaType === "movie"
+                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=vidplay`
+                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}?server=vidplay`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed",
+                priority: 2
+            },
+            // 3. Upcloud (via VidSrc.to)
+            {
+                name: "Upcloud",
+                url: mediaType === "movie"
+                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=upcloud`
+                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}?server=upcloud`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed",
                 priority: 3
             },
-            // 4. 2Embed
+            // 4. Topish (Nollywood/African)
+            {
+                name: "Topish",
+                url: `https://topish.to/embed/${embedId}`,
+                quality: "720p",
+                speed: "medium",
+                status: "active",
+                type: "embed",
+                priority: 4
+            },
+            // 5. Embed.su (International)
+            {
+                name: "Embed.su",
+                url: mediaType === "movie"
+                    ? `https://embed.su/embed/movie/${tmdbId}`
+                    : `https://embed.su/embed/tv/${tmdbId}/${season}/${episode}`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed",
+                priority: 5
+            },
+            // 6. VidSrc.xyz (YouTube Aggregator)
+            {
+                name: "VidSrc.xyz",
+                url: mediaType === "movie"
+                    ? `https://vidsrc.xyz/embed/movie/${tmdbId}`
+                    : `https://vidsrc.xyz/embed/tv/${tmdbId}/${season}/${episode}`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed",
+                priority: 6
+            },
+            // 7. HiAnime (Anime Specialist)
+            {
+                name: "HiAnime",
+                url: mediaType === "tv" // Typically Anime is TV
+                    ? `https://hianime.to/embed/episode/${tmdbId}`
+                    : `https://hianime.to/embed/movie/${tmdbId}`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed",
+                priority: 7
+            },
+            // 8. AniWatch (Anime)
+            {
+                name: "AniWatch",
+                url: `https://aniwatch.to/embed?id=${tmdbId}`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed",
+                priority: 8
+            },
+            // 9. KissKH (Asian Drama)
+            {
+                name: "KissKH",
+                url: `https://kisskh.co/Embed/${embedId}?type=${mediaType === 'movie' ? 1 : 2}`,
+                quality: "720p",
+                speed: "medium",
+                status: "active",
+                type: "embed",
+                priority: 9
+            },
+            // 10. AsianEmbed
+            {
+                name: "AsianEmbed",
+                url: `https://asianembed.io/streaming.php?id=${embedId}`,
+                quality: "720p",
+                speed: "medium",
+                status: "active",
+                type: "embed",
+                priority: 10
+            },
+            // 11. DoodStream (Regional Mirror)
+            {
+                name: "DoodStream",
+                url: `https://d000d.com/e/${tmdbId}`,
+                quality: "SD",
+                speed: "slow",
+                status: "active",
+                type: "embed",
+                priority: 11
+            },
+            // 12. MixDrop
+            {
+                name: "MixDrop",
+                url: `https://mixdrop.co/e/${tmdbId}`,
+                quality: "SD",
+                speed: "slow",
+                status: "active",
+                type: "embed",
+                priority: 12
+            },
+            // 13. FileMoon
+            {
+                name: "FileMoon",
+                url: `https://filemoon.sx/e/${tmdbId}`,
+                quality: "HD",
+                speed: "medium",
+                status: "active",
+                type: "embed",
+                priority: 13
+            },
+            // 14. 2Embed (Fallback)
             {
                 name: "2Embed",
                 url: mediaType === "movie"
@@ -188,9 +294,9 @@ export class ResolverService {
                 speed: "medium",
                 status: "active",
                 type: "embed",
-                priority: 4
+                priority: 14
             },
-            // 5. SuperEmbed
+            // 15. SuperEmbed (Fallback)
             {
                 name: "SuperEmbed",
                 url: mediaType === "movie"
@@ -200,7 +306,7 @@ export class ResolverService {
                 speed: "fast",
                 status: "active",
                 type: "embed",
-                priority: 5
+                priority: 15
             }
         );
 
