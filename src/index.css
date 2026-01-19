@@ -145,7 +145,35 @@ input {
 
 /* CUSTOM SLIDER RANGE */
 .tw-slider-range::-webkit-slider-thumb {
-  @apply appearance-none h-4 w-4 rounded-full bg-primary pointer-events-auto;
+  @apply appearance-none h-4 w-4 rounded-full pointer-events-auto;
+  background-color: var(--color-primary, #ff6b35);
+}
+
+/* Dynamic Primary Color */
+:root {
+  --color-primary: #ff6b35;
+}
+
+.text-primary,
+.bg-primary,
+.border-primary {
+  color: var(--color-primary) !important;
+}
+
+.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+.border-primary {
+  border-color: var(--color-primary) !important;
+}
+
+.hover\:bg-primary:hover {
+  background-color: var(--color-primary) !important;
+}
+
+.hover\:text-primary:hover {
+  color: var(--color-primary) !important;
 }
 
 /* CUSTOM INPUT BACKGROUND WHEN AUTOFILL FORM */

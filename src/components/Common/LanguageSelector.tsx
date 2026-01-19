@@ -24,9 +24,11 @@ interface LanguageSelectorProps {
 const LanguageSelector: FC<LanguageSelectorProps> = ({ className = "" }) => {
     const { i18n } = useTranslation();
 
-    const handleLanguageChange = (code: string) => {
-        i18n.changeLanguage(code);
+    const handleLanguageChange = async (code: string) => {
+        await i18n.changeLanguage(code);
         safeStorage.set("streamlux_language", code);
+        // i18n.changeLanguage automatically triggers re-renders for components using useTranslation
+        // No need to reload the page
     };
 
     return (

@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { FunctionComponent, useState, useEffect } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { DetailSeason } from "../../shared/types";
 import { resizeImage } from "../../shared/utils";
 import Skeleton from "../Common/Skeleton";

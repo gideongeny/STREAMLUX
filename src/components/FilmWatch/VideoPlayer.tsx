@@ -147,6 +147,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 </video>
             ) : (
                 <iframe
+                    key={`${currentSource.url}-${Date.now()}`} // Force reload when URL changes
                     className="w-full h-full border-0"
                     src={currentSource.url}
                     title={title || `Video Player - ${currentSource.name}`}

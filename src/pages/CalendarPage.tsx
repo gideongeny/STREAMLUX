@@ -31,42 +31,116 @@ const CalendarPage: FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const currentType = searchParams.get("type") || "tv";
 
-    // Fetch TV airing today for the selected day (Improved to include far future)
+    // Fetch TV shows - Only show unreleased or upcoming episodes
     const { data: airingToday, isLoading: isLoadingTV } = useQuery(["calendar-airing", selectedDay], async () => {
         const { getFutureUpcoming } = await import("../services/home");
+        const today = new Date().toISOString().split('T')[0];
 
-        const res = await axios.get("/tv/on_the_air", {
-            params: { page: selectedDay + 1 }
+        // Fetch multiple pages of upcoming TV shows
+        const [page1Res, page2Res, page3Res, page4Res, page5Res, farRes] = await Promise.all([
+            axios.get("/tv/on_the_air", { params: { page: 1 } }),
+            axios.get("/tv/on_the_air", { params: { page: 2 } }),
+            axios.get("/tv/on_the_air", { params: { page: 3 } }),
+            axios.get("/tv/on_the_air", { params: { page: 4 } }),
+            axios.get("/tv/on_the_air", { params: { page: 5 } }),
+            getFutureUpcoming("tv")
+        ]);
+
+        const combined = [
+            ...(page1Res.data.results || []),
+            ...(page2Res.data.results || []),
+            ...(page3Res.data.results || []),
+            ...(page4Res.data.results || []),
+            ...(page5Res.data.results || []),
+            ...(farRes || [])
+        ].filter(i => i && i.id);
+        
+        // Filter for shows that haven't finished airing (first_air_date > today or no end date)
+        const upcoming = combined.filter((item) => {
+            const firstAirDate = item.first_air_date;
+            // Include shows that are currently airing or haven't started yet
+            return !firstAirDate || firstAirDate >= today;
         });
-        const farRes = await getFutureUpcoming("tv");
-
-        const combined = [...(res.data.results as Item[] || []), ...(farRes || [])].filter(i => i && i.id);
-        return combined.filter((item, index, self) =>
+        
+        // Dedupe and sort
+        const deduped = upcoming.filter((item, index, self) =>
             index === self.findIndex((t) => t.id === item.id)
         );
+        
+        return deduped.sort((a, b) => {
+            const dateA = a.first_air_date || '';
+            const dateB = b.first_air_date || '';
+            return dateA.localeCompare(dateB);
+        });
     }, { enabled: currentType === "tv" });
 
-    // Fetch Movies upcoming - Only show unreleased movies (release_date > today)
+    // Fetch Movies upcoming - Organized by time periods (next month, next 3 months, next year, etc.)
     const { data: upcomingMovies, isLoading: isLoadingMovies } = useQuery(["calendar-movies"], async () => {
         const { getFutureUpcoming } = await import("../services/home");
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        // Calculate date ranges
+        const nextMonth = new Date(today);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        const nextMonthStr = nextMonth.toISOString().split('T')[0];
+        
+        const next3Months = new Date(today);
+        next3Months.setMonth(next3Months.getMonth() + 3);
+        const next3MonthsStr = next3Months.toISOString().split('T')[0];
+        
+        const nextYear = new Date(today);
+        nextYear.setFullYear(nextYear.getFullYear() + 1);
+        const nextYearStr = nextYear.toISOString().split('T')[0];
 
-        // Fetch both "near" upcoming and "far" future
-        const nearRes = await axios.get("/movie/upcoming", { params: { page: 1 } });
-        const farRes = await getFutureUpcoming("movie");
+        // Fetch upcoming movies from multiple pages and future content
+        const [page1Res, page2Res, page3Res, page4Res, page5Res, farRes] = await Promise.all([
+            axios.get("/movie/upcoming", { params: { page: 1 } }),
+            axios.get("/movie/upcoming", { params: { page: 2 } }),
+            axios.get("/movie/upcoming", { params: { page: 3 } }),
+            axios.get("/movie/upcoming", { params: { page: 4 } }),
+            axios.get("/movie/upcoming", { params: { page: 5 } }),
+            getFutureUpcoming("movie")
+        ]);
 
-        const combined = [...(nearRes.data.results || []), ...(farRes || [])].filter(i => i && i.id);
+        const combined = [
+            ...(page1Res.data.results || []),
+            ...(page2Res.data.results || []),
+            ...(page3Res.data.results || []),
+            ...(page4Res.data.results || []),
+            ...(page5Res.data.results || []),
+            ...(farRes || [])
+        ].filter(i => i && i.id);
         
         // Filter for unreleased movies only (release_date > today)
         const unreleased = combined.filter((item) => {
             const releaseDate = item.release_date || item.first_air_date;
-            return releaseDate && releaseDate > today;
+            return releaseDate && releaseDate > todayStr;
         });
         
         // Dedupe
-        return unreleased.filter((item, index, self) =>
+        const deduped = unreleased.filter((item, index, self) =>
             index === self.findIndex((t) => t.id === item.id)
         );
+        
+        // Sort by release date and organize by time periods
+        const sorted = deduped.sort((a, b) => {
+            const dateA = a.release_date || a.first_air_date || '';
+            const dateB = b.release_date || b.first_air_date || '';
+            return dateA.localeCompare(dateB);
+        });
+        
+        // Add time period metadata
+        return sorted.map(item => ({
+            ...item,
+            timePeriod: (() => {
+                const releaseDate = item.release_date || item.first_air_date || '';
+                if (releaseDate <= nextMonthStr) return 'next-month';
+                if (releaseDate <= next3MonthsStr) return 'next-3-months';
+                if (releaseDate <= nextYearStr) return 'next-year';
+                return 'beyond-year';
+            })()
+        }));
     }, { enabled: currentType === "movie" });
 
     // Fetch sports fixtures
@@ -167,81 +241,231 @@ const CalendarPage: FC = () => {
                                 ))}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 gap-4">
-                                <div className="text-primary font-black uppercase tracking-[0.2em] text-xs mb-2 flex items-center gap-2">
-                                    <div className="w-8 h-[2px] bg-primary" />
-                                    {currentType === "tv" ? `Airing on ${days[selectedDay].full}` : "Upcoming Tournaments & Matches"}
-                                </div>
-                                {currentType === "tv" ? (
-                                    airingToday?.slice(0, 15).map((item) => (
-                                        <Link
-                                            key={item.id}
-                                            to={`/tv/${item.id}`}
-                                            className="flex items-center gap-4 bg-dark-lighten/30 p-4 rounded-[2rem] border border-white/5 hover:border-primary/40 transition-all duration-300 hover:bg-dark-lighten/50 group shadow-xl"
-                                        >
-                                            <div className="w-20 h-28 md:w-24 md:h-32 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl transition duration-500 group-hover:scale-105">
-                                                <LazyLoadImage
-                                                    src={resizeImage(item.poster_path, "w200")}
-                                                    className="w-full h-full object-cover"
-                                                    alt={item.name}
-                                                />
-                                            </div>
+                            <div className="space-y-8">
+                                {currentType === "movie" ? (
+                                    // Organize movies by time periods
+                                    (() => {
+                                        const nextMonth = upcomingMovies?.filter(m => m.timePeriod === 'next-month') || [];
+                                        const next3Months = upcomingMovies?.filter(m => m.timePeriod === 'next-3-months') || [];
+                                        const nextYear = upcomingMovies?.filter(m => m.timePeriod === 'next-year') || [];
+                                        const beyond = upcomingMovies?.filter(m => m.timePeriod === 'beyond-year') || [];
+                                        
+                                        return (
+                                            <>
+                                                {nextMonth.length > 0 && (
+                                                    <div>
+                                                        <div className="text-primary font-black uppercase tracking-[0.2em] text-xs mb-4 flex items-center gap-2">
+                                                            <div className="w-8 h-[2px] bg-primary" />
+                                                            Coming This Month
+                                                        </div>
+                                                        <div className="grid grid-cols-1 gap-4">
+                                                            {nextMonth.map((item) => (
+                                                                <Link
+                                                                    key={item.id}
+                                                                    to={`/movie/${item.id}`}
+                                                                    className="flex items-center gap-4 bg-dark-lighten/30 p-4 rounded-[2rem] border border-white/5 hover:border-primary/40 transition-all duration-300 hover:bg-dark-lighten/50 group shadow-xl"
+                                                                >
+                                                                    <div className="w-20 h-28 md:w-24 md:h-32 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl transition duration-500 group-hover:scale-105">
+                                                                        <LazyLoadImage
+                                                                            src={resizeImage(item.poster_path, "w200")}
+                                                                            className="w-full h-full object-cover"
+                                                                            alt={item.title}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="flex-grow">
+                                                                        <div className="flex items-center gap-2 mb-2">
+                                                                            <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[9px] font-black rounded uppercase tracking-wider border border-blue-500/20">Coming Soon</span>
+                                                                            <span className="text-[10px] text-gray-500 font-bold uppercase">MOVIE</span>
+                                                                        </div>
+                                                                        <h3 className="text-xl md:text-2xl font-black text-white group-hover:text-primary transition-colors line-clamp-1">
+                                                                            {item.title}
+                                                                        </h3>
+                                                                        <p className="text-sm text-gray-400 mt-2 line-clamp-1 italic font-medium opacity-80">
+                                                                            Release Date: {item.release_date || "Coming Soon"}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="hidden md:block pr-4">
+                                                                        <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-primary transition-all duration-300 group-hover:scale-110 shadow-lg">
+                                                                            <AiOutlineRight size={20} className="text-gray-400 group-hover:text-black" />
+                                                                        </div>
+                                                                    </div>
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {next3Months.length > 0 && (
+                                                    <div>
+                                                        <div className="text-primary font-black uppercase tracking-[0.2em] text-xs mb-4 flex items-center gap-2">
+                                                            <div className="w-8 h-[2px] bg-primary" />
+                                                            Coming in Next 3 Months
+                                                        </div>
+                                                        <div className="grid grid-cols-1 gap-4">
+                                                            {next3Months.slice(0, 10).map((item) => (
+                                                                <Link
+                                                                    key={item.id}
+                                                                    to={`/movie/${item.id}`}
+                                                                    className="flex items-center gap-4 bg-dark-lighten/30 p-4 rounded-[2rem] border border-white/5 hover:border-primary/40 transition-all duration-300 hover:bg-dark-lighten/50 group shadow-xl"
+                                                                >
+                                                                    <div className="w-20 h-28 md:w-24 md:h-32 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl transition duration-500 group-hover:scale-105">
+                                                                        <LazyLoadImage
+                                                                            src={resizeImage(item.poster_path, "w200")}
+                                                                            className="w-full h-full object-cover"
+                                                                            alt={item.title}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="flex-grow">
+                                                                        <div className="flex items-center gap-2 mb-2">
+                                                                            <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[9px] font-black rounded uppercase tracking-wider border border-blue-500/20">Coming Soon</span>
+                                                                            <span className="text-[10px] text-gray-500 font-bold uppercase">MOVIE</span>
+                                                                        </div>
+                                                                        <h3 className="text-xl md:text-2xl font-black text-white group-hover:text-primary transition-colors line-clamp-1">
+                                                                            {item.title}
+                                                                        </h3>
+                                                                        <p className="text-sm text-gray-400 mt-2 line-clamp-1 italic font-medium opacity-80">
+                                                                            Release Date: {item.release_date || "Coming Soon"}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="hidden md:block pr-4">
+                                                                        <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-primary transition-all duration-300 group-hover:scale-110 shadow-lg">
+                                                                            <AiOutlineRight size={20} className="text-gray-400 group-hover:text-black" />
+                                                                        </div>
+                                                                    </div>
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {nextYear.length > 0 && (
+                                                    <div>
+                                                        <div className="text-primary font-black uppercase tracking-[0.2em] text-xs mb-4 flex items-center gap-2">
+                                                            <div className="w-8 h-[2px] bg-primary" />
+                                                            Coming This Year
+                                                        </div>
+                                                        <div className="grid grid-cols-1 gap-4">
+                                                            {nextYear.slice(0, 10).map((item) => (
+                                                                <Link
+                                                                    key={item.id}
+                                                                    to={`/movie/${item.id}`}
+                                                                    className="flex items-center gap-4 bg-dark-lighten/30 p-4 rounded-[2rem] border border-white/5 hover:border-primary/40 transition-all duration-300 hover:bg-dark-lighten/50 group shadow-xl"
+                                                                >
+                                                                    <div className="w-20 h-28 md:w-24 md:h-32 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl transition duration-500 group-hover:scale-105">
+                                                                        <LazyLoadImage
+                                                                            src={resizeImage(item.poster_path, "w200")}
+                                                                            className="w-full h-full object-cover"
+                                                                            alt={item.title}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="flex-grow">
+                                                                        <div className="flex items-center gap-2 mb-2">
+                                                                            <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[9px] font-black rounded uppercase tracking-wider border border-blue-500/20">Coming Soon</span>
+                                                                            <span className="text-[10px] text-gray-500 font-bold uppercase">MOVIE</span>
+                                                                        </div>
+                                                                        <h3 className="text-xl md:text-2xl font-black text-white group-hover:text-primary transition-colors line-clamp-1">
+                                                                            {item.title}
+                                                                        </h3>
+                                                                        <p className="text-sm text-gray-400 mt-2 line-clamp-1 italic font-medium opacity-80">
+                                                                            Release Date: {item.release_date || "Coming Soon"}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="hidden md:block pr-4">
+                                                                        <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-primary transition-all duration-300 group-hover:scale-110 shadow-lg">
+                                                                            <AiOutlineRight size={20} className="text-gray-400 group-hover:text-black" />
+                                                                        </div>
+                                                                    </div>
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {beyond.length > 0 && (
+                                                    <div>
+                                                        <div className="text-primary font-black uppercase tracking-[0.2em] text-xs mb-4 flex items-center gap-2">
+                                                            <div className="w-8 h-[2px] bg-primary" />
+                                                            Beyond This Year
+                                                        </div>
+                                                        <div className="grid grid-cols-1 gap-4">
+                                                            {beyond.slice(0, 10).map((item) => (
+                                                                <Link
+                                                                    key={item.id}
+                                                                    to={`/movie/${item.id}`}
+                                                                    className="flex items-center gap-4 bg-dark-lighten/30 p-4 rounded-[2rem] border border-white/5 hover:border-primary/40 transition-all duration-300 hover:bg-dark-lighten/50 group shadow-xl"
+                                                                >
+                                                                    <div className="w-20 h-28 md:w-24 md:h-32 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl transition duration-500 group-hover:scale-105">
+                                                                        <LazyLoadImage
+                                                                            src={resizeImage(item.poster_path, "w200")}
+                                                                            className="w-full h-full object-cover"
+                                                                            alt={item.title}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="flex-grow">
+                                                                        <div className="flex items-center gap-2 mb-2">
+                                                                            <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[9px] font-black rounded uppercase tracking-wider border border-blue-500/20">Coming Soon</span>
+                                                                            <span className="text-[10px] text-gray-500 font-bold uppercase">MOVIE</span>
+                                                                        </div>
+                                                                        <h3 className="text-xl md:text-2xl font-black text-white group-hover:text-primary transition-colors line-clamp-1">
+                                                                            {item.title}
+                                                                        </h3>
+                                                                        <p className="text-sm text-gray-400 mt-2 line-clamp-1 italic font-medium opacity-80">
+                                                                            Release Date: {item.release_date || "Coming Soon"}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="hidden md:block pr-4">
+                                                                        <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-primary transition-all duration-300 group-hover:scale-110 shadow-lg">
+                                                                            <AiOutlineRight size={20} className="text-gray-400 group-hover:text-black" />
+                                                                        </div>
+                                                                    </div>
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
+                                        );
+                                    })()
+                                ) : currentType === "tv" ? (
+                                    <>
+                                        <div className="text-primary font-black uppercase tracking-[0.2em] text-xs mb-2 flex items-center gap-2">
+                                            <div className="w-8 h-[2px] bg-primary" />
+                                            Upcoming TV Shows
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-4">
+                                            {airingToday?.slice(0, 20).map((item) => (
+                                                <Link
+                                                    key={item.id}
+                                                    to={`/tv/${item.id}`}
+                                                    className="flex items-center gap-4 bg-dark-lighten/30 p-4 rounded-[2rem] border border-white/5 hover:border-primary/40 transition-all duration-300 hover:bg-dark-lighten/50 group shadow-xl"
+                                                >
+                                                    <div className="w-20 h-28 md:w-24 md:h-32 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl transition duration-500 group-hover:scale-105">
+                                                        <LazyLoadImage
+                                                            src={resizeImage(item.poster_path, "w200")}
+                                                            className="w-full h-full object-cover"
+                                                            alt={item.name}
+                                                        />
+                                                    </div>
 
-                                            <div className="flex-grow">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className="px-2 py-0.5 bg-primary/10 text-primary text-[9px] font-black rounded uppercase tracking-wider border border-primary/20">Airing Today</span>
-                                                    <span className="text-[10px] text-gray-500 font-bold uppercase">TV SHOW</span>
-                                                </div>
-                                                <h3 className="text-xl md:text-2xl font-black text-white group-hover:text-primary transition-colors line-clamp-1">
-                                                    {item.name}
-                                                </h3>
-                                                <p className="text-sm text-gray-400 mt-2 line-clamp-1 italic font-medium opacity-80">
-                                                    {item.overview || "New episode releasing today across all platforms worldwide."}
-                                                </p>
-                                            </div>
+                                                    <div className="flex-grow">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <span className="px-2 py-0.5 bg-primary/10 text-primary text-[9px] font-black rounded uppercase tracking-wider border border-primary/20">Upcoming</span>
+                                                            <span className="text-[10px] text-gray-500 font-bold uppercase">TV SHOW</span>
+                                                        </div>
+                                                        <h3 className="text-xl md:text-2xl font-black text-white group-hover:text-primary transition-colors line-clamp-1">
+                                                            {item.name}
+                                                        </h3>
+                                                        <p className="text-sm text-gray-400 mt-2 line-clamp-1 italic font-medium opacity-80">
+                                                            First Air Date: {item.first_air_date || "Coming Soon"}
+                                                        </p>
+                                                    </div>
 
-                                            <div className="hidden md:block pr-4">
-                                                <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-primary transition-all duration-300 group-hover:scale-110 shadow-lg">
-                                                    <AiOutlineRight size={20} className="text-gray-400 group-hover:text-black" />
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    ))
-                                ) : currentType === "movie" ? (
-                                    upcomingMovies?.map((item) => (
-                                        <Link
-                                            key={item.id}
-                                            to={`/movie/${item.id}`}
-                                            className="flex items-center gap-4 bg-dark-lighten/30 p-4 rounded-[2rem] border border-white/5 hover:border-primary/40 transition-all duration-300 hover:bg-dark-lighten/50 group shadow-xl"
-                                        >
-                                            <div className="w-20 h-28 md:w-24 md:h-32 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl transition duration-500 group-hover:scale-105">
-                                                <LazyLoadImage
-                                                    src={resizeImage(item.poster_path, "w200")}
-                                                    className="w-full h-full object-cover"
-                                                    alt={item.title}
-                                                />
-                                            </div>
-
-                                            <div className="flex-grow">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[9px] font-black rounded uppercase tracking-wider border border-blue-500/20">Coming Soon</span>
-                                                    <span className="text-[10px] text-gray-500 font-bold uppercase">MOVIE</span>
-                                                </div>
-                                                <h3 className="text-xl md:text-2xl font-black text-white group-hover:text-primary transition-colors line-clamp-1">
-                                                    {item.title}
-                                                </h3>
-                                                <p className="text-sm text-gray-400 mt-2 line-clamp-1 italic font-medium opacity-80">
-                                                    Release Date: {item.release_date || "Coming Soon"}
-                                                </p>
-                                            </div>
-
-                                            <div className="hidden md:block pr-4">
-                                                <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-primary transition-all duration-300 group-hover:scale-110 shadow-lg">
-                                                    <AiOutlineRight size={20} className="text-gray-400 group-hover:text-black" />
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    ))
+                                                    <div className="hidden md:block pr-4">
+                                                        <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-primary transition-all duration-300 group-hover:scale-110 shadow-lg">
+                                                            <AiOutlineRight size={20} className="text-gray-400 group-hover:text-black" />
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </>
                                 ) : (
                                     sportsFixtures?.map((fixture) => (
                                         <Link
