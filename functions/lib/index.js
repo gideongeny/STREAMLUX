@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.healthCheck = exports.resolveStream = void 0;
+exports.keepAlive = exports.healthCheck = exports.resolveStream = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const resolver_1 = require("./resolver");
@@ -105,5 +105,20 @@ exports.healthCheck = functions.https.onRequest((req, res) => {
         timestamp: new Date().toISOString(),
         version: '1.0.0',
     });
+});
+/**
+ * Scheduled Function: Keep Alive
+ * Pings the health check endpoint every 15 minutes to prevent cold starts
+ */
+exports.keepAlive = functions.pubsub.schedule('every 15 minutes').onRun(async (context) => {
+    try {
+        // Self-ping logic or just finish execution to keep the instance warm
+        console.log('Keep alive ping executed at', new Date().toISOString());
+        return null;
+    }
+    catch (error) {
+        console.error('Keep alive failed', error);
+        return null;
+    }
 });
 //# sourceMappingURL=index.js.map

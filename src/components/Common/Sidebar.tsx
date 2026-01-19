@@ -102,6 +102,17 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           </Link>
         )}
 
+        <div className="mt-8 px-4">
+          <div className="flex gap-6 items-center px-0">
+            <div className="w-[30px] flex justify-center">
+              <span className="text-xl">🌐</span>
+            </div>
+            <div className="flex-grow">
+              <LanguageSelector />
+            </div>
+          </div>
+        </div>
+
         <div
           className={`text-white text-lg font-medium ${isSidebarActive ? "-mt-6" : "mt-12"
             }`}
@@ -212,14 +223,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             <p>Settings</p>
           </Link>
 
-          <div className="flex gap-6 items-center px-0">
-            <div className="w-[30px] flex justify-center">
-              <span className="text-xl">🌐</span>
-            </div>
-            <div className="flex-grow">
-              <LanguageSelector />
-            </div>
-          </div>
+
 
           <button
             onClick={() => personalPageHandler("/profile")}

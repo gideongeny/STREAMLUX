@@ -1,7 +1,7 @@
 import { EMBED_ALTERNATIVES } from "../shared/constants";
 
 // Proxy Helpers
-const PROXY_BASE = process.env.REACT_APP_BACKEND_URL || "http://localhost:3001/api";
+const PROXY_BASE = process.env.REACT_APP_BACKEND_URL || "/api";
 
 export const getProxyUrl = (url: string, referer?: string) => {
     return `${PROXY_BASE}/proxy?url=${encodeURIComponent(url)}${referer ? `&referer=${encodeURIComponent(referer)}` : ''}`;

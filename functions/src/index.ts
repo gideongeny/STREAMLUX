@@ -88,3 +88,18 @@ export const healthCheck = functions.https.onRequest((req, res) => {
         version: '1.0.0',
     });
 });
+
+/**
+ * Scheduled Function: Keep Alive
+ * Pings the health check endpoint every 15 minutes to prevent cold starts
+ */
+export const keepAlive = functions.pubsub.schedule('every 15 minutes').onRun(async (context) => {
+    try {
+        // Self-ping logic or just finish execution to keep the instance warm
+        console.log('Keep alive ping executed at', new Date().toISOString());
+        return null;
+    } catch (error) {
+        console.error('Keep alive failed', error);
+        return null;
+    }
+});
