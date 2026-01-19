@@ -51,6 +51,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     const currentSource = normalizedSources[currentIndex];
 
+    // Reset player when sources change (new episode/season)
+    useEffect(() => {
+        if (normalizedSources.length > 0) {
+            setCurrentIndex(0);
+            setVideoError(false);
+            setIsLoading(true);
+            setIsDirect(isDirectVideoUrl(normalizedSources[0].url));
+        }
+    }, [normalizedSources.length, normalizedSources[0]?.url]);
+
     useEffect(() => {
         if (!currentSource) return;
         setIsDirect(isDirectVideoUrl(currentSource.url));

@@ -60,6 +60,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   // Use ResolverService to fetch sources
   useEffect(() => {
     const fetchSources = async () => {
+      setSources([]); // Clear stale sources immediately
       setIsResolving(true);
       const id = detail?.id || "";
       const imdbId = (detail as any)?.imdb_id;
@@ -212,6 +213,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   </div>
                 ) : (
                   <VideoPlayer
+                    key={`${detail?.id}-${seasonId}-${episodeId}`} // Force remount when episode changes
                     sources={sources}
                     poster={`https://image.tmdb.org/t/p/original${poster}`}
                     title={title}

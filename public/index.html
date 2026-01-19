@@ -39,278 +39,59 @@
   <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
 
   <!-- Smart Ad Integration - Monetag and PopAds loaded intelligently -->
-  <script>
-    (function() {
-      'use strict';
-      
-      // Ad loading configuration
-      var adConfig = {
-        monetagDelay: 3000,      // Load Monetag after 3 seconds
-        popAdsDelay: 15000,      // Load PopAds after 15 seconds
-        minPageViewTime: 2000,   // Minimum 2 seconds on page
-        maxInteractions: 10,      // Max interactions before skipping pop ads
-        checkInterval: 1000      // Check every second
-      };
-
-      var pageLoadTime = Date.now();
-      var userInteractions = 0;
-      var adsLoaded = {
-        monetag: false,
-        popAds: false
-      };
-
-      // Track user interactions
-      var interactionEvents = ['click', 'scroll', 'keydown', 'mousemove', 'touchstart'];
-      interactionEvents.forEach(function(event) {
-        document.addEventListener(event, function() {
-          userInteractions++;
-        }, { passive: true, once: false });
-      });
-
-      // Check if user is actively viewing
-      function isUserActive() {
-        return document.visibilityState === 'visible' && 
-               !document.hidden && 
-               (Date.now() - pageLoadTime) >= adConfig.minPageViewTime;
-      }
-
-      // Load Monetag ad
-      function loadMonetag() {
-        if (adsLoaded.monetag || !isUserActive()) return;
-        
-        try {
-          var script = document.createElement('script');
-          script.src = 'https://alwingulla.com/88/5a/6a/885a6a2dae1be8778f654f595085d68d.js';
-          script.async = true;
-          script.setAttribute('data-cfasync', 'false');
-          script.onload = function() {
-            adsLoaded.monetag = true;
-            console.log('Monetag ad loaded successfully');
-          };
-          script.onerror = function() {
-            console.warn('Monetag ad failed to load');
-          };
-          document.head.appendChild(script);
-          adsLoaded.monetag = true;
-        } catch (e) {
-          console.warn('Error loading Monetag:', e);
-        }
-      }
-
-      // Load PopAds
-      function loadPopAds() {
-        if (adsLoaded.popAds || !isUserActive() || userInteractions > adConfig.maxInteractions) return;
-        
-        try {
-          var script = document.createElement('script');
-          script.type = 'text/javascript';
-          script.setAttribute('data-cfasync', 'false');
-          script.textContent = '/*<![CDATA[/* */ (function () { var a = window, b = "bb6f8885a6466986641885f8841a18c66e2c3c6f85f8841a18c66e2c3c6f", c = ["d3d3LnBvcGFkcy5uZXQvcG9wanMuanM=", "ZDEyMzQ1Njc4OXRlc3QuY29tL3BvcGpzLmpz"], d = 0, e, f = function () { if (c[d]) { e = a.document.createElement("script"); e.type = "text/javascript"; e.async = !0; var g = a.document.getElementsByTagName("script")[0]; e.src = "https://" + atob(c[d]); e.crossOrigin = "anonymous"; e.onerror = function () { d++; f() }; g.parentNode.insertBefore(e, g) } }; f() })(); /*]]>/* */';
-          script.onload = function() {
-            adsLoaded.popAds = true;
-            console.log('PopAds loaded successfully');
-          };
-          script.onerror = function() {
-            console.warn('PopAds failed to load');
-          };
-          document.head.appendChild(script);
-          adsLoaded.popAds = true;
-        } catch (e) {
-          console.warn('Error loading PopAds:', e);
-        }
-      }
-
-      // Smart ad loading on page load
-      window.addEventListener('load', function() {
-        // Load Monetag after delay
-        setTimeout(function() {
-          if (isUserActive()) {
-            loadMonetag();
-          }
-        }, adConfig.monetagDelay);
-
-        // Load PopAds after longer delay (less intrusive)
-        setTimeout(function() {
-          if (isUserActive() && userInteractions <= adConfig.maxInteractions) {
-            loadPopAds();
-          }
-        }, adConfig.popAdsDelay);
-
-        // Periodic check to load ads if user becomes active
-        var checkInterval = setInterval(function() {
-          if (!adsLoaded.monetag && isUserActive()) {
-            loadMonetag();
-          }
-          if (!adsLoaded.popAds && isUserActive() && userInteractions <= adConfig.maxInteractions) {
-            loadPopAds();
-          }
-          
-          // Clear interval if both ads are loaded
-          if (adsLoaded.monetag && adsLoaded.popAds) {
-            clearInterval(checkInterval);
-          }
-        }, adConfig.checkInterval);
-      });
-
-      // Handle visibility changes (user switches tabs)
-      document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible' && !adsLoaded.monetag) {
-          setTimeout(loadMonetag, 1000);
-        }
-      });
-    })();
-  </script>
+  <!-- Smart Ad Integration - Monetag Removed due to user feedback -->
+  <!-- <script>...</script> monetag block removed -->
 
   <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1281448884303417"
-     crossorigin="anonymous"></script>
+    crossorigin="anonymous"></script>
 
-  <!-- Astrella/EffectiveGateCPM Ad Scripts - Loaded intelligently -->
+  <!-- Astrella/EffectiveGateCPM Ad Scripts - Delayed by 2 Hours -->
   <script>
-    (function() {
+    (function () {
       'use strict';
-      
-      // Track if Astrella ads are loaded
-      var astrellaAdsLoaded = {
-        invoke: false,
-        highperformance: false,
-        popup1: false,
-        popup2: false
-      };
 
-      // Load Astrella ads after user interaction and page view time
+      var astrellaAdsLoaded = { invoke: false, highperformance: false };
+
       function loadAstrellaAds() {
         var pageViewTime = Date.now() - (window.pageLoadTime || Date.now());
-        var minViewTime = 5000; // 5 seconds minimum
-        
+        var minViewTime = 7200000; // 2 hours
+
         if (pageViewTime < minViewTime || document.hidden) return;
 
-        // Load invoke.js script (requires container div)
         if (!astrellaAdsLoaded.invoke) {
           try {
             var invokeScript = document.createElement('script');
             invokeScript.async = true;
             invokeScript.setAttribute('data-cfasync', 'false');
             invokeScript.src = 'https://pl28506141.effectivegatecpm.com/e306b4e28d4fba3151a0a85384de410f/invoke.js';
-            invokeScript.onload = function() {
-              astrellaAdsLoaded.invoke = true;
-              console.log('Astrella invoke script loaded');
-            };
-            invokeScript.onerror = function() {
-              console.warn('Astrella invoke script failed to load');
-            };
             document.head.appendChild(invokeScript);
-          } catch (e) {
-            console.warn('Error loading Astrella invoke script:', e);
-          }
+            astrellaAdsLoaded.invoke = true;
+          } catch (e) { }
         }
 
-        // Load highperformanceformat ad
         if (!astrellaAdsLoaded.highperformance) {
           try {
-            // Set atOptions first
-            window.atOptions = window.atOptions || {};
-            window.atOptions = {
-              'key': '9e00c96fb20d6634af7710f519d7e1cb',
-              'format': 'iframe',
-              'height': 60,
-              'width': 468,
-              'params': {}
-            };
-            
+            window.atOptions = { 'key': '9e00c96fb20d6634af7710f519d7e1cb', 'format': 'iframe', 'height': 60, 'width': 468, 'params': {} };
             var hpScript = document.createElement('script');
             hpScript.src = 'https://www.highperformanceformat.com/9e00c96fb20d6634af7710f519d7e1cb/invoke.js';
             hpScript.async = true;
-            hpScript.onload = function() {
-              astrellaAdsLoaded.highperformance = true;
-              console.log('HighPerformanceFormat ad loaded');
-            };
-            hpScript.onerror = function() {
-              console.warn('HighPerformanceFormat ad failed to load');
-            };
             document.head.appendChild(hpScript);
-          } catch (e) {
-            console.warn('Error loading HighPerformanceFormat ad:', e);
-          }
-        }
-
-        // Load popup/redirect scripts (less intrusive, load later)
-        if (!astrellaAdsLoaded.popup1 && pageViewTime > 10000) {
-          try {
-            var popup1Script = document.createElement('script');
-            popup1Script.src = 'https://pl28506150.effectivegatecpm.com/6c/77/42/6c7742f0a5627b3dd3a2c03838d815f0.js';
-            popup1Script.async = true;
-            popup1Script.onload = function() {
-              astrellaAdsLoaded.popup1 = true;
-              console.log('Astrella popup script 1 loaded');
-            };
-            popup1Script.onerror = function() {
-              console.warn('Astrella popup script 1 failed to load');
-            };
-            document.head.appendChild(popup1Script);
-          } catch (e) {
-            console.warn('Error loading Astrella popup script 1:', e);
-          }
-        }
-
-        if (!astrellaAdsLoaded.popup2 && pageViewTime > 15000) {
-          try {
-            var popup2Script = document.createElement('script');
-            popup2Script.src = 'https://pl28506145.effectivegatecpm.com/a7/4b/7e/a74b7e022ff86f5be5f0126ae2c41473.js';
-            popup2Script.async = true;
-            popup2Script.onload = function() {
-              astrellaAdsLoaded.popup2 = true;
-              console.log('Astrella popup script 2 loaded');
-            };
-            popup2Script.onerror = function() {
-              console.warn('Astrella popup script 2 failed to load');
-            };
-            document.head.appendChild(popup2Script);
-          } catch (e) {
-            console.warn('Error loading Astrella popup script 2:', e);
-          }
-        }
-
-        // Load tracking pixel (non-blocking)
-        if (pageViewTime > 3000) {
-          try {
-            var trackingImg = document.createElement('img');
-            trackingImg.src = 'https://www.effectivegatecpm.com/y4mpgze5?key=991a6cb072d89d45167c2b82330c7117';
-            trackingImg.style.display = 'none';
-            trackingImg.width = 1;
-            trackingImg.height = 1;
-            document.body.appendChild(trackingImg);
-          } catch (e) {
-            console.warn('Error loading tracking pixel:', e);
-          }
+            astrellaAdsLoaded.highperformance = true;
+          } catch (e) { }
         }
       }
 
-      // Initialize page load time
       window.pageLoadTime = Date.now();
-
-      // Load ads after page load
-      window.addEventListener('load', function() {
-        setTimeout(loadAstrellaAds, 3000);
-      });
-
-      // Periodic check to load ads
-      var adCheckInterval = setInterval(function() {
-        loadAstrellaAds();
-        if (astrellaAdsLoaded.invoke && astrellaAdsLoaded.highperformance && 
-            astrellaAdsLoaded.popup1 && astrellaAdsLoaded.popup2) {
-          clearInterval(adCheckInterval);
-        }
-      }, 2000);
-
-      // Handle visibility changes
-      document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible') {
-          setTimeout(loadAstrellaAds, 1000);
-        }
+      window.addEventListener('load', function () {
+        setTimeout(loadAstrellaAds, 7200000); // 2 hour delay
       });
     })();
   </script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1281448884303417"
+    crossorigin="anonymous"></script>
 
   <!-- Vercel Web Analytics -->
   <script>

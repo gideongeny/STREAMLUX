@@ -183,19 +183,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
         </div>
 
 
-        <div className="text-white text-lg font-medium mt-12">GENRES</div>
-        <div className="mt-8 ml-4 flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-          {GENRES.map((genre) => (
-            <Link
-              key={genre.id}
-              to={`/explore?genre=${genre.id}`}
-              className="flex gap-6 items-center hover:text-primary transition duration-300 text-gray-300"
-            >
-              <MdOutlineCategory size={25} />
-              <p>{genre.name}</p>
-            </Link>
-          ))}
-        </div>
+
 
         <div className="text-white text-lg font-medium mt-12">PERSONAL</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">

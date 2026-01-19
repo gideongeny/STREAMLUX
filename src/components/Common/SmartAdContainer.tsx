@@ -1,7 +1,7 @@
 import { FC, useEffect, useState, useRef } from 'react';
 
 interface SmartAdContainerProps {
-  position: 'banner' | 'sidebar' | 'inline' | 'footer';
+  position: 'banner' | 'sidebar' | 'inline' | 'footer' | 'toast';
   className?: string;
   minViewTime?: number; // Minimum time user must be on page before showing ad
   respectUserFocus?: boolean; // Only show when user is actively viewing
@@ -10,7 +10,7 @@ interface SmartAdContainerProps {
 const SmartAdContainer: FC<SmartAdContainerProps> = ({
   position,
   className = '',
-  minViewTime = 5000, // 5 seconds default
+  minViewTime = 7200000, // 2 hours default
   respectUserFocus = true,
 }) => {
   const [showAd, setShowAd] = useState(false);
@@ -67,20 +67,9 @@ const SmartAdContainer: FC<SmartAdContainerProps> = ({
   useEffect(() => {
     if (!shouldShow) return;
 
-    // Monetag ad script - only load once
-    if (position === 'banner' || position === 'sidebar') {
-      const monetagExists = document.querySelector('script[src*="alwingulla.com"]');
-      if (!monetagExists && (window as any).monetagScriptLoaded !== true) {
-        const script = document.createElement('script');
-        script.src = 'https://alwingulla.com/88/5a/6a/885a6a2dae1be8778f654f595085d68d.js';
-        script.async = true;
-        script.setAttribute('data-cfasync', 'false');
-        script.onload = () => {
-          (window as any).monetagScriptLoaded = true;
-        };
-        document.head.appendChild(script);
-      }
-    }
+    // Monetag ad script REMOVED due to user complaints about redirects
+
+    // Popup scripts removed due to aggressive behavior
 
     // Ensure Astrella container exists for invoke script
     if (containerRef.current) {
@@ -98,43 +87,53 @@ const SmartAdContainer: FC<SmartAdContainerProps> = ({
   // Render appropriate ad based on position
   const renderAd = () => {
     const adClass = "w-full bg-dark-lighten rounded-lg border border-gray-800 overflow-hidden";
-    const containerId = `container-e306b4e28d4fba3151a0a85384de410f-${position}`;
-    
+
     switch (position) {
       case 'banner':
         return (
-          <div className={`${adClass} h-[90px] md:h-[250px]`}>
-            {/* Astrella container */}
-            <div id={containerId} className="w-full h-full"></div>
-            {/* HighPerformanceFormat iframe ad */}
-            <div id={`at-${position}-${Date.now()}`} className="w-full h-full flex items-center justify-center"></div>
+          <div className={`${adClass} h-[90px] md:h-[250px] flex items-center justify-center`}>
+            {/* Google AdSense or neutral placeholder */}
+            <p className="text-gray-600 text-xs italic">Sponsored Content</p>
           </div>
         );
       case 'sidebar':
         return (
-          <div className={`${adClass} h-[300px] md:h-[600px]`}>
-            {/* Astrella container */}
-            <div id={containerId} className="w-full h-full"></div>
-            {/* HighPerformanceFormat iframe ad */}
-            <div id={`at-${position}-${Date.now()}`} className="w-full h-full flex items-center justify-center"></div>
+          <div className={`${adClass} h-[300px] md:h-[600px] flex items-center justify-center`}>
+            <p className="text-gray-600 text-xs italic">Sponsored Content</p>
           </div>
         );
       case 'inline':
         return (
-          <div className={`${adClass} h-[250px] my-8`}>
-            {/* Astrella container */}
-            <div id={containerId} className="w-full h-full"></div>
-            {/* HighPerformanceFormat iframe ad */}
-            <div id={`at-${position}-${Date.now()}`} className="w-full h-full flex items-center justify-center"></div>
+          <div className={`${adClass} h-[250px] my-8 flex items-center justify-center`}>
+            <p className="text-gray-600 text-xs italic">Sponsored Content</p>
           </div>
         );
       case 'footer':
         return (
-          <div className={`${adClass} h-[100px]`}>
-            {/* Astrella container */}
-            <div id={containerId} className="w-full h-full"></div>
-            {/* HighPerformanceFormat iframe ad */}
-            <div id={`at-${position}-${Date.now()}`} className="w-full h-full flex items-center justify-center"></div>
+          <div className={`${adClass} h-[100px] flex items-center justify-center`}>
+            <p className="text-gray-600 text-xs italic">Sponsored Content</p>
+          </div>
+        );
+      case 'toast':
+        return (
+          <div className="fixed bottom-4 right-4 z-50 animate-slide-up">
+            <div className="bg-dark-lighten rounded-lg border border-gray-800 shadow-2xl overflow-hidden relative w-[320px] h-[250px] flex items-center justify-center">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAd(false);
+                }}
+                className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 z-20 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+              <div className="absolute top-0 left-0 bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 z-10">
+                AD
+              </div>
+              <p className="text-gray-600 text-xs italic">Sponsored Content</p>
+            </div>
           </div>
         );
       default:

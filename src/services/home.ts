@@ -658,28 +658,38 @@ export const getDramaMovies = async (): Promise<Item[]> => {
 // Optimized helper function for genre movies - reduces API calls
 const getGenreMoviesOptimized = async (genreId: number, genreName?: string): Promise<Item[]> => {
   try {
-    const tmdbPromise = Promise.race([
+    // Fetch 3 pages of content for "infinite" feel
+    const tmdbPromise = Promise.all([
       axios.get(`/discover/movie`, {
         params: { with_genres: genreId, sort_by: "popularity.desc", page: 1 },
         timeout: 3000,
-      }),
-      new Promise((resolve) => setTimeout(() => resolve({ data: { results: [] } }), 3000)),
-    ]) as Promise<{ data: { results: any[] } }>;
+      }).catch(() => ({ data: { results: [] } })),
+      axios.get(`/discover/movie`, {
+        params: { with_genres: genreId, sort_by: "popularity.desc", page: 2 },
+        timeout: 3000,
+      }).catch(() => ({ data: { results: [] } })),
+      axios.get(`/discover/movie`, {
+        params: { with_genres: genreId, sort_by: "popularity.desc", page: 3 },
+        timeout: 3000,
+      }).catch(() => ({ data: { results: [] } }))
+    ]);
 
     // Parallel fetch for extra content if genre name is known
     const youtubePromise = genreName ? getYouTubeByGenre(genreName, "movie").catch(() => []) : Promise.resolve([]);
     const scraperPromise = getAllSourceContent("movie", 1).catch(() => []); // Get mixed scraper content
 
-    const [tmdbResponse, youtubeItems, scraperItems] = await Promise.all([
+    const [tmdbResponses, youtubeItems, scraperItems] = await Promise.all([
       tmdbPromise,
       youtubePromise,
       scraperPromise
     ]);
 
-    const tmdbItems = (tmdbResponse.data.results || []).map((item: any) => ({
-      ...item,
-      media_type: "movie" as const,
-    }));
+    const tmdbItems = tmdbResponses.flatMap(response =>
+      (response.data.results || []).map((item: any) => ({
+        ...item,
+        media_type: "movie" as const,
+      }))
+    );
 
     // Merge massive amounts of content
     const combined = [
@@ -772,7 +782,197 @@ export const getFantasyMovies = async (): Promise<Item[]> => {
   }
 };
 
-// Helpers to enhance sourcing by networks/companies
+export const getWesternMovies = async (): Promise<Item[]> => {
+  try {
+    return await getGenreMoviesOptimized(37, "Western");
+  } catch (error) {
+    console.error("Error fetching western movies:", error);
+    return [];
+  }
+};
+
+export const getTVMovies = async (): Promise<Item[]> => {
+  try {
+    return await getGenreMoviesOptimized(10770, "TV Movie");
+  } catch (error) {
+    console.error("Error fetching TV movies:", error);
+    return [];
+  }
+};
+
+// Optimized helper function for TV genres
+const getGenreTVOptimized = async (genreId: number, genreName?: string): Promise<Item[]> => {
+  try {
+    const tmdbPromise = Promise.all([
+      axios.get(`/discover/tv`, {
+        params: { with_genres: genreId, sort_by: "popularity.desc", page: 1 },
+        timeout: 3000,
+      }).catch(() => ({ data: { results: [] } })),
+      axios.get(`/discover/tv`, {
+        params: { with_genres: genreId, sort_by: "popularity.desc", page: 2 },
+        timeout: 3000,
+      }).catch(() => ({ data: { results: [] } })),
+      axios.get(`/discover/tv`, {
+        params: { with_genres: genreId, sort_by: "popularity.desc", page: 3 },
+        timeout: 3000,
+      }).catch(() => ({ data: { results: [] } }))
+    ]);
+
+    const youtubePromise = genreName ? getYouTubeByGenre(genreName, "tv").catch(() => []) : Promise.resolve([]);
+    const scraperPromise = getAllSourceContent("tv", 1).catch(() => []);
+
+    const [tmdbResponses, youtubeItems, scraperItems] = await Promise.all([
+      tmdbPromise,
+      youtubePromise,
+      scraperPromise
+    ]);
+
+    const tmdbItems = tmdbResponses.flatMap(response =>
+      (response.data.results || []).map((item: any) => ({
+        ...item,
+        media_type: "tv" as const,
+      }))
+    );
+
+    const combined = [
+      ...tmdbItems,
+      ...(youtubeItems as Item[]),
+      ...(scraperItems as Item[])
+    ];
+
+    const seen = new Set<number>();
+    return combined.filter((item) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return item.poster_path;
+    });
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getRealityTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(10764, "Reality");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getKidsTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(10762, "Kids");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getSoapTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(10766, "Soap");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getNewsTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(10763, "News");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getTalkTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(10767, "Talk");
+  } catch (error) {
+    return [];
+  }
+};
+
+// Standard TV Genres
+export const getActionAdventureTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(10759, "Action & Adventure");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getComedyTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(35, "TV Comedy");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getDramaTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(18, "TV Drama");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getSciFiFantasyTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(10765, "Sci-Fi & Fantasy");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getWarPoliticsTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(10768, "War & Politics");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getAnimationTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(16, "TV Animation");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getCrimeTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(80, "TV Crime");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getDocumentaryTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(99, "TV Documentary");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getMysteryTV = async (): Promise<Item[]> => {
+  try {
+    return await getGenreTVOptimized(9648, "TV Mystery");
+  } catch (error) {
+    return [];
+  }
+};
+
+export const getFamilyTV = async (): Promise<Item[]> => { // Explicit TV fetcher for Family (10751)
+  try {
+    return await getGenreTVOptimized(10751, "TV Family");
+  } catch (error) {
+    return [];
+  }
+};
+
+// Helper function to randomize an array (Fisher-Yates shuffle)
 const searchIds = async (
   type: "network" | "company",
   names: string[]

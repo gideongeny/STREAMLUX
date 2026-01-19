@@ -52,7 +52,8 @@ const UpcomingCalendar: FC<UpcomingCalendarProps> = ({
             return res.data.results.map((t: any) => ({
                 ...t,
                 media_type: "tv",
-                title: t.name
+                title: t.name,
+                release_date: t.first_air_date // Fix: Map first_air_date to release_date
             })) as Item[];
         }
 

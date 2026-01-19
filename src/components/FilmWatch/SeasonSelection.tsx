@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { FunctionComponent, useState } from "react";
+import { FunctionComponent, useState, useEffect } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { Link } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { DetailSeason } from "../../shared/types";
 import { resizeImage } from "../../shared/utils";
 import Skeleton from "../Common/Skeleton";
@@ -22,10 +22,19 @@ const Season: FunctionComponent<SeasonProps> = ({
   seasonId,
   episodeId,
 }) => {
+  const navigate = useNavigate();
+  const { id } = useParams();
   const [isSeasonExpanded, setIsSeasonExpanded] = useState<boolean>(
-    season.season_number === 1
+    season.season_number === seasonId
   );
-  
+
+  // Update expanded state when seasonId changes
+  useEffect(() => {
+    if (season.season_number === seasonId) {
+      setIsSeasonExpanded(true);
+    }
+  }, [seasonId, season.season_number]);
+
   return (
     <motion.li
       initial={{ opacity: 0 }}
@@ -46,16 +55,14 @@ const Season: FunctionComponent<SeasonProps> = ({
         </div>
         <div className="flex-grow text-left">
           <p
-            className={`text-white text-lg mb-2 transition duration-300 ${
-              season.season_number === seasonId && "!text-primary"
-            }`}
+            className={`text-white text-lg mb-2 transition duration-300 ${season.season_number === seasonId && "!text-primary"
+              }`}
           >
             {season.name}
           </p>
           <p
-            className={` transition duration-300 ${
-              season.season_number === seasonId && "text-white"
-            }`}
+            className={` transition duration-300 ${season.season_number === seasonId && "text-white"
+              }`}
           >
             Episode: {season.episodes.length}
           </p>
@@ -64,7 +71,7 @@ const Season: FunctionComponent<SeasonProps> = ({
 
       <AnimatePresence>
         {isSeasonExpanded && (
-          <motion.ul 
+          <motion.ul
             className="flex flex-col gap-4 pl-6 mt-2"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -72,26 +79,27 @@ const Season: FunctionComponent<SeasonProps> = ({
             transition={{ duration: 0.3 }}
           >
             {season.episodes.map((episode) => (
-              <motion.li 
+              <motion.li
                 key={episode.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <Link
-                  to={{
-                    pathname: "",
-                    search: `?season=${season.season_number}&episode=${episode.episode_number}`,
+                <button
+                  onClick={() => {
+                    // Navigate to the same path but with new query params
+                    navigate(`/tv/${id}/watch?season=${season.season_number}&episode=${episode.episode_number}`, { replace: false });
+                    // Force scroll to top
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className="flex items-center gap-3 hover:bg-dark-lighten transiton duration-300 rounded-md pl-2"
+                  className="flex items-center gap-3 hover:bg-dark-lighten transiton duration-300 rounded-md pl-2 w-full text-left"
                 >
                   <div className="shrink-0 max-w-[15px] w-full">
                     <p
-                      className={`text-white font-medium transition duration-300 ${
-                        episode.episode_number === episodeId &&
+                      className={`text-white font-medium transition duration-300 ${episode.episode_number === episodeId &&
                         season.season_number === seasonId &&
                         "!text-primary"
-                      }`}
+                        }`}
                     >
                       {episode.episode_number}
                     </p>
@@ -106,16 +114,15 @@ const Season: FunctionComponent<SeasonProps> = ({
                   </div>
                   <div className="flex-grow">
                     <p
-                      className={`transition duration-300 text-sm ${
-                        episode.episode_number === episodeId &&
+                      className={`transition duration-300 text-sm ${episode.episode_number === episodeId &&
                         season.season_number === seasonId &&
                         "text-white"
-                      }`}
+                        }`}
                     >
                       {episode.name}
                     </p>
                   </div>
-                </Link>
+                </button>
               </motion.li>
             ))}
           </motion.ul>
