@@ -97,12 +97,24 @@ const Settings: FunctionComponent<SettingsProps> = () => {
             :root {
                 --color-primary: ${color};
             }
-            .text-primary { color: ${color} !important; }
-            .bg-primary { background-color: ${color} !important; }
-            .border-primary { border-color: ${color} !important; }
-            .hover\\:bg-primary:hover { background-color: ${color} !important; }
-            .hover\\:text-primary:hover { color: ${color} !important; }
-            .hover\\:border-primary:hover { border-color: ${color} !important; }
+            .text-primary { 
+                color: ${color} !important; 
+            }
+            .bg-primary { 
+                background-color: ${color} !important; 
+            }
+            .border-primary { 
+                border-color: ${color} !important; 
+            }
+            .hover\\:bg-primary:hover { 
+                background-color: ${color} !important; 
+            }
+            .hover\\:text-primary:hover { 
+                color: ${color} !important; 
+            }
+            .hover\\:border-primary:hover { 
+                border-color: ${color} !important; 
+            }
         `;
         
         toast.success("Theme updated! Refresh to see all changes.", { position: "top-right", autoClose: 2000 });

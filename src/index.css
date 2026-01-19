@@ -154,26 +154,32 @@ input {
   --color-primary: #ff6b35;
 }
 
-.text-primary,
-.bg-primary,
-.border-primary {
+/* Text color only for text-primary */
+.text-primary {
   color: var(--color-primary) !important;
 }
 
+/* Background color only for bg-primary */
 .bg-primary {
   background-color: var(--color-primary) !important;
 }
 
+/* Border color only for border-primary */
 .border-primary {
   border-color: var(--color-primary) !important;
 }
 
+/* Hover states */
 .hover\:bg-primary:hover {
   background-color: var(--color-primary) !important;
 }
 
 .hover\:text-primary:hover {
   color: var(--color-primary) !important;
+}
+
+.hover\:border-primary:hover {
+  border-color: var(--color-primary) !important;
 }
 
 /* CUSTOM INPUT BACKGROUND WHEN AUTOFILL FORM */
@@ -186,5 +192,6 @@ input:-webkit-autofill:active {
 
 /* CUSTOM SELECTION TEXT COLOR */
 ::selection {
-  @apply text-black bg-primary;
+  background-color: var(--color-primary, #ff6b35);
+  color: #000000;
 }
