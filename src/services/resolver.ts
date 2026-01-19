@@ -142,41 +142,53 @@ export class ResolverService {
         const tmdbId = id.toString();
 
         sources.push(
-            // 1. VidSrc.me (Priority 1 - User Request)
+            // 1. VidSrc.to (Priority 1 - Real Working VidSrc)
             {
-                name: "VidSrc.me",
+                name: "VidSrc",
                 url: mediaType === "movie"
-                    ? `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`
-                    : `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&sea=${season}&epi=${episode}`,
+                    ? `https://vidsrc.to/embed/movie/${tmdbId}`
+                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
                 quality: "1080p",
                 speed: "fast",
                 status: "active",
                 type: "embed",
                 priority: 1
             },
-            // 2. Vidplay (via VidSrc.to)
+            // Alternative VidSrc format
             {
-                name: "Vidplay",
+                name: "VidSrc (Alt)",
                 url: mediaType === "movie"
-                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=vidplay`
-                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}?server=vidplay`,
+                    ? `https://vidsrc.pro/embed/movie/${tmdbId}`
+                    : `https://vidsrc.pro/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
                 quality: "1080p",
                 speed: "fast",
                 status: "active",
                 type: "embed",
                 priority: 2
             },
-            // 3. Upcloud (via VidSrc.to)
+            // 3. Vidplay (via VidSrc.to)
             {
-                name: "Upcloud",
+                name: "Vidplay",
                 url: mediaType === "movie"
-                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=upcloud`
-                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}?server=upcloud`,
+                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=vidplay`
+                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season || 1}/${episode || 1}?server=vidplay`,
                 quality: "1080p",
                 speed: "fast",
                 status: "active",
                 type: "embed",
                 priority: 3
+            },
+            // 4. Upcloud (via VidSrc.to)
+            {
+                name: "Upcloud",
+                url: mediaType === "movie"
+                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=upcloud`
+                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season || 1}/${episode || 1}?server=upcloud`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed",
+                priority: 4
             },
             // 4. Topish (Nollywood/African)
             {

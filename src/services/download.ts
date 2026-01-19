@@ -74,7 +74,7 @@ export class DownloadService {
     if (mediaType === "movie") {
       // Only use known working sources: vidsrc, vidplay, upcloud, autoembed, vidlink
       return [
-        `https://vidsrc.me/embed/${imdb}`,
+        `https://vidsrc.to/embed/${imdb}`,
         `${EMBED_ALTERNATIVES.AUTOEMBED}/movie/${tmdbId}`,
         `${EMBED_ALTERNATIVES.VIDLINK}/movie/${tmdbId}`,
         `${EMBED_ALTERNATIVES.VIDSRC_ME}/movie/${tmdbId}`,

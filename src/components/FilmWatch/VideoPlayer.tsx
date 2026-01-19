@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import { FaServer } from 'react-icons/fa';
+import { MdSpeed, MdPictureInPicture } from 'react-icons/md';
 
 export interface VideoSource {
     name: string;
@@ -48,6 +49,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const [videoError, setVideoError] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [showSourceMenu, setShowSourceMenu] = useState(false);
+    const [playbackRate, setPlaybackRate] = useState(1);
+    const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+    const [isPiP, setIsPiP] = useState(false);
 
     const currentSource = normalizedSources[currentIndex];
 
@@ -81,7 +85,52 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const handleVideoLoad = () => {
         console.log(`Video loaded successfully: ${currentSource?.name}`);
         setIsLoading(false);
+        // Set playback rate
+        if (videoRef.current) {
+            videoRef.current.playbackRate = playbackRate;
+        }
     };
+
+    const handleSpeedChange = (rate: number) => {
+        setPlaybackRate(rate);
+        if (videoRef.current) {
+            videoRef.current.playbackRate = rate;
+        }
+        setShowSpeedMenu(false);
+    };
+
+    const handlePiPToggle = async () => {
+        if (!videoRef.current || !document.pictureInPictureEnabled) return;
+        
+        try {
+            if (isPiP) {
+                await document.exitPictureInPicture();
+                setIsPiP(false);
+            } else {
+                await videoRef.current.requestPictureInPicture();
+                setIsPiP(true);
+            }
+        } catch (error) {
+            console.error('PiP error:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (!videoRef.current) return;
+        
+        const video = videoRef.current;
+        const handlePiPChange = () => {
+            setIsPiP(document.pictureInPictureElement === video);
+        };
+
+        video.addEventListener('enterpictureinpicture', handlePiPChange);
+        video.addEventListener('leavepictureinpicture', handlePiPChange);
+
+        return () => {
+            video.removeEventListener('enterpictureinpicture', handlePiPChange);
+            video.removeEventListener('leavepictureinpicture', handlePiPChange);
+        };
+    }, [isDirect]);
 
     if (!currentSource) {
         return (
@@ -131,20 +180,60 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
             {/* Player */}
             {isDirect ? (
-                <video
-                    ref={videoRef}
-                    className="w-full h-full object-contain"
-                    controls
-                    autoPlay
-                    playsInline
-                    poster={poster}
-                    onError={handleVideoError}
-                    onLoadedData={handleVideoLoad}
-                    onCanPlay={handleVideoLoad}
-                    src={currentSource.url}
-                >
-                    Your browser does not support the video tag.
-                </video>
+                <div className="relative w-full h-full">
+                    <video
+                        ref={videoRef}
+                        className="w-full h-full object-contain"
+                        controls
+                        autoPlay
+                        playsInline
+                        poster={poster}
+                        onError={handleVideoError}
+                        onLoadedData={handleVideoLoad}
+                        onCanPlay={handleVideoLoad}
+                        src={currentSource.url}
+                    >
+                        Your browser does not support the video tag.
+                    </video>
+                    
+                    {/* Playback Controls Overlay */}
+                    <div className="absolute bottom-4 right-4 z-30 opacity-0 group-hover:opacity-100 transition duration-300 flex gap-2">
+                        {/* Speed Control */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+                                className="flex items-center gap-2 px-3 py-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-lg text-white hover:bg-black/80 transition shadow-lg"
+                            >
+                                <MdSpeed size={18} />
+                                <span className="text-sm font-medium">{playbackRate}x</span>
+                            </button>
+                            {showSpeedMenu && (
+                                <div className="absolute bottom-full right-0 mb-2 w-32 bg-dark-lighten border border-white/10 rounded-lg shadow-xl overflow-hidden py-1">
+                                    {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((rate) => (
+                                        <button
+                                            key={rate}
+                                            onClick={() => handleSpeedChange(rate)}
+                                            className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 transition ${playbackRate === rate ? 'text-primary bg-white/5' : 'text-gray-300'}`}
+                                        >
+                                            {rate}x
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* PiP Button */}
+                        {document.pictureInPictureEnabled && (
+                            <button
+                                onClick={handlePiPToggle}
+                                className="flex items-center gap-2 px-3 py-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-lg text-white hover:bg-black/80 transition shadow-lg"
+                                title="Picture-in-Picture"
+                            >
+                                <MdPictureInPicture size={18} />
+                            </button>
+                        )}
+                    </div>
+                </div>
             ) : (
                 <iframe
                     key={`${currentSource.url}-${Date.now()}`} // Force reload when URL changes

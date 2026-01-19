@@ -112,10 +112,18 @@ const CalendarPage: FC = () => {
             ...(farRes || [])
         ].filter(i => i && i.id);
         
-        // Filter for unreleased movies only (release_date > today)
+        // Filter for unreleased movies only (release_date >= 2026 or coming soon)
+        const currentYear = today.getFullYear();
         const unreleased = combined.filter((item) => {
             const releaseDate = item.release_date || item.first_air_date;
-            return releaseDate && releaseDate > todayStr;
+            if (!releaseDate) return false;
+            // Only show movies from 2026 onwards or coming soon (within next 30 days)
+            const releaseYear = parseInt(releaseDate.split('-')[0]);
+            const releaseDateObj = new Date(releaseDate);
+            const daysUntilRelease = Math.ceil((releaseDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            
+            // Show if: year >= 2026 OR coming within 30 days
+            return releaseYear >= 2026 || (daysUntilRelease > 0 && daysUntilRelease <= 30);
         });
         
         // Dedupe

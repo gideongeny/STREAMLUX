@@ -27,8 +27,12 @@ const LanguageSelector: FC<LanguageSelectorProps> = ({ className = "" }) => {
     const handleLanguageChange = async (code: string) => {
         await i18n.changeLanguage(code);
         safeStorage.set("streamlux_language", code);
-        // i18n.changeLanguage automatically triggers re-renders for components using useTranslation
-        // No need to reload the page
+        // Force a re-render by dispatching a custom event that components can listen to
+        window.dispatchEvent(new CustomEvent('languageChanged', { detail: code }));
+        // Small delay to ensure all components update
+        setTimeout(() => {
+            window.location.reload();
+        }, 300);
     };
 
     return (
