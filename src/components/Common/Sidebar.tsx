@@ -4,7 +4,7 @@ import { AiOutlineHistory, AiOutlineHome } from "react-icons/ai";
 import { BiSearch, BiUserCircle } from "react-icons/bi";
 import { BsBookmarkHeart } from "react-icons/bs";
 import { HiOutlineLogin, HiOutlineLogout } from "react-icons/hi";
-import { MdOutlineExplore, MdSportsSoccer } from "react-icons/md";
+import { MdOutlineExplore, MdSportsSoccer, MdOutlineCategory } from "react-icons/md";
 import { FaDownload } from "react-icons/fa";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -14,6 +14,27 @@ import { auth } from "../../shared/firebase";
 import { useAppSelector } from "../../store/hooks";
 import BuyMeACoffee from "./BuyMeACoffee";
 import LanguageSelector from "./LanguageSelector";
+
+const GENRES = [
+  { id: 28, name: "Action" },
+  { id: 12, name: "Adventure" },
+  { id: 16, name: "Animation" },
+  { id: 35, name: "Comedy" },
+  { id: 80, name: "Crime" },
+  { id: 99, name: "Documentary" },
+  { id: 18, name: "Drama" },
+  { id: 10751, name: "Family" },
+  { id: 14, name: "Fantasy" },
+  { id: 36, name: "History" },
+  { id: 27, name: "Horror" },
+  { id: 10402, name: "Music" },
+  { id: 9648, name: "Mystery" },
+  { id: 10749, name: "Romance" },
+  { id: 878, name: "Sci-Fi" },
+  { id: 53, name: "Thriller" },
+  { id: 10752, name: "War" },
+  { id: 37, name: "Western" },
+];
 
 interface SidebarProps {
   isSidebarActive: boolean;
@@ -159,6 +180,21 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             <BiSearch size={25} />
             <p>Search</p>
           </Link>
+        </div>
+
+
+        <div className="text-white text-lg font-medium mt-12">GENRES</div>
+        <div className="mt-8 ml-4 flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+          {GENRES.map((genre) => (
+            <Link
+              key={genre.id}
+              to={`/explore?genre=${genre.id}`}
+              className="flex gap-6 items-center hover:text-primary transition duration-300 text-gray-300"
+            >
+              <MdOutlineCategory size={25} />
+              <p>{genre.name}</p>
+            </Link>
+          ))}
         </div>
 
         <div className="text-white text-lg font-medium mt-12">PERSONAL</div>

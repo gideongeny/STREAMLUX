@@ -33,6 +33,7 @@ import { useAppDispatch } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
 import { backendHealthService } from "./services/backendHealth";
 import BuyMeACoffee from "./components/Common/BuyMeACoffee";
+import { safeStorage } from "./utils/safeStorage";
 
 function App() {
   const location = useLocation();
@@ -87,8 +88,9 @@ function App() {
   }, []);
 
   // Initialize Theme from Storage
+  // Initialize Theme from Storage
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme_primary_color");
+    const savedTheme = safeStorage.get("theme_primary_color");
     if (savedTheme) {
       document.documentElement.style.setProperty("--color-primary", savedTheme);
     }

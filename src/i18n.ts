@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { safeStorage } from "./utils/safeStorage";
 
 // Translations
 const resources = {
@@ -335,11 +336,13 @@ const resources = {
     }
 };
 
+
+
 i18n
     .use(initReactI18next)
     .init({
         resources,
-        lng: "en", // default language
+        lng: safeStorage.get("streamlux_language") || "en", // Load from storage
         fallbackLng: "en",
         interpolation: {
             escapeValue: false
