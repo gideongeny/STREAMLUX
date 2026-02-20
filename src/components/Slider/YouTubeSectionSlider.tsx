@@ -5,7 +5,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { useYouTubeVideos } from "../../hooks/useYouTube";
 import YouTubeFilmItem from "../Common/YouTubeFilmItem";
 import Skeleton from "../Common/Skeleton";
-import VideoPlayerModal from "../Explore/VideoPlayerModal";
+import StreamLuxPlayer from "../FilmWatch/StreamLuxPlayer";
 
 interface YouTubeSectionSliderProps {
     title: string;

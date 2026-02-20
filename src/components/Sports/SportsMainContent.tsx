@@ -161,24 +161,26 @@ const SportsMainContent: FC = () => {
                 backdrop_path: backdrop,
                 poster_path: f.homeTeamLogo || f.awayTeamLogo || "",
                 overview: f.status === "live"
-                    ? `LIVE NOW: ${f.homeTeam} vs ${f.awayTeam} in the ${f.leagueId.toUpperCase()}. Current Score: ${f.homeScore}-${f.awayScore}. Stream in ultra HD quality.`
-                    : `Upcoming: ${f.homeTeam} takes on ${f.awayTeam} in the ${f.leagueId.toUpperCase()} Tournament. Witness every play in premium 4K quality.`,
+                    ? `LIVE NOW: ${f.homeTeam} vs ${f.awayTeam} in the ${f.leagueName || f.leagueId.toUpperCase()}. Current Score: ${f.homeScore}-${f.awayScore}. Stream in ultra HD quality.`
+                    : `Upcoming: ${f.homeTeam} takes on ${f.awayTeam} in the ${f.leagueName || f.leagueId.toUpperCase()} Tournament. Witness every play in premium 4K quality.`,
                 vote_average: f.status === "live" ? 9.9 : 9.8,
                 release_date: f.status === "live" ? "🔴 LIVE NOW" : f.kickoffTimeFormatted,
                 media_type: "sports",
                 homeLogo: f.homeTeamLogo,
                 awayLogo: f.awayTeamLogo,
+                homeTeam: f.homeTeam,
+                awayTeam: f.awayTeam,
                 popularity: 200,
             };
         }) as unknown as Item[];
 
         const detail = topFixtures.map(f => ({
             genre: [
-                { id: 100, name: f.leagueId.toUpperCase() },
+                { id: 100, name: (f.leagueName || f.leagueId.toUpperCase()).slice(0, 15) },
                 { id: 101, name: f.status === "live" ? "Live Event" : "Upcoming" }
             ],
             translation: [
-                f.status === "live" ? `LIVE: ${f.homeTeam} vs ${f.awayTeam}` : `${f.homeTeam} vs ${f.awayTeam}`,
+                f.status === "live" ? `LIVE SCORE: ${f.homeScore} - ${f.awayScore}` : `${f.homeTeam} vs ${f.awayTeam}`,
                 `${f.homeTeam} vs ${f.awayTeam}`
             ]
         })) as BannerInfo[];

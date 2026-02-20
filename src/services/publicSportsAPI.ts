@@ -20,7 +20,7 @@ export const getTeamLogo = async (teamName: string): Promise<string | null> => {
       params: { t: teamName },
       timeout: 5000,
     });
-    
+
     if (response.data?.teams && response.data.teams.length > 0) {
       return response.data.teams[0].strTeamBadge || response.data.teams[0].strTeamLogo || null;
     }
@@ -31,8 +31,18 @@ export const getTeamLogo = async (teamName: string): Promise<string | null> => {
   }
 };
 
+// ESPN Hidden Public APIs
+const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports";
+const ESPN_ENDPOINTS = [
+  "/soccer/all/scoreboard",
+  "/basketball/nba/scoreboard",
+  "/mma/ufc/scoreboard",
+  "/tennis/atp/scoreboard",
+];
+
 // Helper to map league names to our league IDs
 const getLeagueIdFromName = (leagueName: string): string => {
+  if (!leagueName) return "epl";
   const name = leagueName.toLowerCase();
   if (name.includes("premier league") || name.includes("epl")) return "epl";
   if (name.includes("champions league") || name.includes("ucl")) return "ucl";
@@ -41,10 +51,63 @@ const getLeagueIdFromName = (leagueName: string): string => {
   if (name.includes("serie a") || name.includes("seriea")) return "seriea";
   if (name.includes("afcon") || name.includes("africa cup")) return "afcon";
   if (name.includes("bundesliga")) return "bundesliga";
+  if (name.includes("nba") || name.includes("basketball")) return "nba";
+  if (name.includes("ufc") || name.includes("mma")) return "ufc";
   if (name.includes("rugby")) return "rugby-world-cup";
-  if (name.includes("ufc")) return "ufc";
   if (name.includes("wwe")) return "wwe";
   return "epl"; // Default
+};
+
+/**
+ * Fetch live data from ESPN's hidden public APIs.
+ * No API key required.
+ */
+export const getESPNScores = async (): Promise<SportsFixtureConfig[]> => {
+  const allFixtures: SportsFixtureConfig[] = [];
+
+  try {
+    const responses = await Promise.allSettled(
+      ESPN_ENDPOINTS.map(endpoint =>
+        axios.get(`${ESPN_BASE}${endpoint}`, { timeout: 8000 })
+      )
+    );
+
+    responses.forEach((res) => {
+      if (res.status === 'fulfilled' && res.value.data?.events) {
+        const events = res.value.data.events;
+        events.forEach((event: any) => {
+          const competitorHome = event.competitions[0].competitors.find((c: any) => c.homeAway === 'home');
+          const competitorAway = event.competitions[0].competitors.find((c: any) => c.homeAway === 'away');
+          const status = event.status.type.name;
+
+          // Only show live or very recent/upcoming
+          if (status === 'STATUS_FINAL' || status === 'STATUS_CANCELED') return;
+
+          allFixtures.push({
+            id: `espn-${event.id}`,
+            leagueId: getLeagueIdFromName(event.season?.name || event.competitions[0].notes?.[0]?.headline || "General"),
+            leagueName: event.season?.name || "Global Sports",
+            homeTeam: competitorHome.team.displayName,
+            awayTeam: competitorAway.team.displayName,
+            homeTeamLogo: competitorHome.team.logo,
+            awayTeamLogo: competitorAway.team.logo,
+            status: status.includes('LIVE') || status.includes('IN_PROGRESS') ? "live" : "upcoming",
+            isLive: status.includes('LIVE') || status.includes('IN_PROGRESS'),
+            homeScore: competitorHome.score ? Number(competitorHome.score) : 0,
+            awayScore: competitorAway.score ? Number(competitorAway.score) : 0,
+            minute: event.status.displayClock || event.status.type.shortDetail,
+            venue: event.competitions[0].venue?.fullName || "Stadium",
+            kickoffTimeFormatted: new Date(event.date).toISOString(),
+          });
+        });
+      }
+    });
+
+    return allFixtures;
+  } catch (error) {
+    console.error("ESPN scores fetch error:", error);
+    return [];
+  }
 };
 
 // Get live fixtures from multiple public sources
@@ -55,21 +118,21 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
   try {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0].replaceAll('-', '/');
-    
+
     const response = await axios.get(`${SPORTSDB_BASE}/eventsday.php`, {
       params: { d: dateStr },
       timeout: 8000,
     });
 
     if (response.data?.events && Array.isArray(response.data.events)) {
-      const liveEvents = response.data.events.filter((e: any) => 
+      const liveEvents = response.data.events.filter((e: any) =>
         e.strStatus === "Live" || e.strStatus === "HT" || e.strStatus === "1H" || e.strStatus === "2H" ||
         e.strStatus === "Half Time" || e.strStatus === "Second Half"
       );
 
       // Process up to 30 live events
       const eventsToProcess = liveEvents.slice(0, 30);
-      
+
       for (const event of eventsToProcess) {
         try {
           const [homeLogo, awayLogo] = await Promise.all([
@@ -97,7 +160,7 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
           continue;
         }
       }
-      
+
       if (fixtures.length > 0) {
         console.log(`TheSportsDB returned ${fixtures.length} live fixtures`);
         return fixtures;
@@ -118,7 +181,7 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
     });
 
     if (response.data?.events && Array.isArray(response.data.events)) {
-      const liveEvents = response.data.events.filter((e: any) => 
+      const liveEvents = response.data.events.filter((e: any) =>
         e.status?.type === "inprogress" || e.status?.type === "live"
       );
 
@@ -144,7 +207,7 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
           continue;
         }
       }
-      
+
       if (fixtures.length > 0) {
         console.log(`Sofascore returned ${fixtures.length} live fixtures`);
         return fixtures;
@@ -178,10 +241,10 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
         });
 
         if (response.data?.events && Array.isArray(response.data.events)) {
-          const upcomingEvents = response.data.events.filter((e: any) => 
-            e.strStatus !== "Live" && 
-            e.strStatus !== "HT" && 
-            e.strStatus !== "1H" && 
+          const upcomingEvents = response.data.events.filter((e: any) =>
+            e.strStatus !== "Live" &&
+            e.strStatus !== "HT" &&
+            e.strStatus !== "1H" &&
             e.strStatus !== "2H" &&
             e.strStatus !== "FT" &&
             e.strStatus !== "Finished"
@@ -219,12 +282,12 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
         continue;
       }
     }
-    
+
     // Remove duplicates
     const unique = allFixtures.filter((fixture, index, self) =>
       index === self.findIndex((f) => f.id === fixture.id)
     );
-    
+
     if (unique.length > 0) {
       console.log(`TheSportsDB returned ${unique.length} upcoming fixtures`);
       return unique.slice(0, 50);
@@ -252,7 +315,7 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
         });
 
         if (response.data?.events && Array.isArray(response.data.events)) {
-          const upcomingEvents = response.data.events.filter((e: any) => 
+          const upcomingEvents = response.data.events.filter((e: any) =>
             e.status?.type !== "finished" && e.status?.type !== "inprogress"
           );
 
@@ -282,11 +345,11 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
         continue;
       }
     }
-    
+
     const unique = allFixtures.filter((fixture, index, self) =>
       index === self.findIndex((f) => f.id === fixture.id)
     );
-    
+
     if (unique.length > 0) {
       console.log(`Sofascore returned ${unique.length} upcoming fixtures`);
       return unique.slice(0, 50);

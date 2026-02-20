@@ -52,7 +52,16 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    // Try public APIs first (TheSportsDB, Sofascore)
+    // Try ESPN first (Elite Source)
+    const { getESPNScores } = await import("./publicSportsAPI");
+    const espnFixtures = await getESPNScores().catch(() => []);
+
+    if (espnFixtures.length > 0) {
+      clearTimeout(timeoutId);
+      return espnFixtures;
+    }
+
+    // Try other public APIs (TheSportsDB, Sofascore)
     const publicFixtures = await getLiveFixturesPublic().catch(() => []);
 
     if (publicFixtures.length > 0) {

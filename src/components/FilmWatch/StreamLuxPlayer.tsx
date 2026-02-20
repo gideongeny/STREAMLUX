@@ -49,7 +49,7 @@ const isCleanSource = (url: string) => CLEAN_SOURCES.some((s) => url.includes(s)
 
 const HIDE_CONTROLS_DELAY = 30000; // 30 seconds
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({
+const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     sources,
     poster,
     title,
@@ -287,7 +287,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         );
     }
 
-    // In fullscreen: make player cover the entire screen
     const fsOverride = isFullscreen
         ? { position: 'fixed' as const, inset: 0, zIndex: 9999, background: 'black' }
         : {};
@@ -297,15 +296,29 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             ref={playerRootRef}
             className="player-root relative w-full h-full bg-black group overflow-hidden"
             style={fsOverride}
+            onMouseMove={() => !controlsVisible && resetHideTimer()}
+            onTouchStart={() => !controlsVisible && resetHideTimer()}
         >
-            {/* Loading Overlay */}
+            {poster && (
+                <div
+                    className="absolute inset-x-[-10%] inset-y-[-10%] pointer-events-none opacity-15"
+                    style={{
+                        zIndex: 0,
+                        backgroundImage: `url(${poster})`,
+                        backgroundPosition: 'center',
+                        backgroundSize: 'cover',
+                        filter: 'blur(80px) saturate(1.5)',
+                        animation: 'pulse-glow 10s ease-in-out infinite alternate',
+                    }}
+                />
+            )}
+
             {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20 pointer-events-none">
                     <AiOutlineLoading3Quarters className="animate-spin text-primary" size={48} />
                 </div>
             )}
 
-            {/* Error Overlay */}
             {videoError && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-20">
                     <p className="text-red-400 text-lg mb-4">Playback failed for {currentSource.name}</p>
@@ -318,7 +331,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 </div>
             )}
 
-            {/* Ad-Skip Overlay */}
             {!isDirect && showAdSkip && (
                 <div className="absolute top-4 right-4 z-40 flex flex-col gap-2">
                     <button onClick={handleSkipAd} className="flex items-center gap-2 px-4 py-2 bg-black/80 backdrop-blur border border-white/20 rounded-xl text-white text-sm hover:bg-primary hover:border-primary transition shadow-lg font-bold">
@@ -332,7 +344,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 </div>
             )}
 
-            {/* ── FULLSCREEN BUTTON (always visible bottom-right, even on iframe) ── */}
             <div
                 className="absolute bottom-3 right-3 z-50 transition-opacity duration-500"
                 style={{ opacity: controlsVisible ? 1 : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}
@@ -344,13 +355,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     className="flex items-center gap-1.5 px-3 py-2 bg-black/80 backdrop-blur border border-white/20 rounded-xl text-white hover:bg-primary hover:border-primary transition shadow-xl font-bold text-xs"
                 >
                     {isFullscreen ? <MdFullscreenExit size={18} /> : <MdFullscreen size={18} />}
-                    {isFullscreen ? 'Exit' : 'Fullscreen'}
+                    <span className="ml-1">{isFullscreen ? 'Exit' : 'Fullscreen'}</span>
                 </button>
             </div>
 
-            {/* Player Body */}
             {isDirect ? (
-                <div className="relative w-full h-full">
+                <div className="relative w-full h-full z-10">
                     <video
                         ref={videoRef}
                         className="w-full h-full object-contain"
@@ -367,19 +377,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                         {subtitleTracks.map((track) => (
                             <track key={track.language} kind="subtitles" src={track.src} srcLang={track.language} label={track.label} default={track.language === 'en'} />
                         ))}
-                        Your browser does not support the video tag.
                     </video>
 
-                    {/* Premium Controls Overlay (bottom-right) */}
                     <div
                         className="absolute bottom-12 right-2 z-30 transition-opacity duration-500 flex gap-1.5 flex-wrap justify-end"
                         style={{ opacity: controlsVisible ? 1 : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Audio Language */}
                         {audioTracks.length > 0 && (
                             <div className="relative">
-                                <button onClick={() => setShowAudioMenu(!showAudioMenu)} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white hover:bg-black/90 transition text-xs font-medium" title="Audio Language">
+                                <button onClick={() => setShowAudioMenu(!showAudioMenu)} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white hover:bg-black/90 transition text-xs font-medium">
                                     <FaVolumeUp size={13} />
                                     <span>{audioTracks.find(t => t.id === activeAudio)?.label || 'Audio'}</span>
                                 </button>
@@ -397,10 +404,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                             </div>
                         )}
 
-                        {/* Subtitles */}
                         {subtitleTracks.length > 0 && (
                             <div className="relative">
-                                <button onClick={() => setShowSubtitleMenu(!showSubtitleMenu)} className={`flex items-center gap-1.5 px-2.5 py-1.5 ${activeSubtitle !== 'off' ? 'bg-primary text-black' : 'bg-black/70 text-white'} backdrop-blur border border-white/10 rounded-lg hover:bg-primary hover:text-black transition text-xs font-medium`} title="Subtitles">
+                                <button onClick={() => setShowSubtitleMenu(!showSubtitleMenu)} className={`flex items-center gap-1.5 px-2.5 py-1.5 ${activeSubtitle !== 'off' ? 'bg-primary text-black' : 'bg-black/70 text-white'} backdrop-blur border border-white/10 rounded-lg hover:bg-primary hover:text-black transition text-xs font-medium`}>
                                     <FaClosedCaptioning size={14} />
                                     <span>{activeSubtitle === 'off' ? 'Sub' : activeSubtitle.toUpperCase()}</span>
                                 </button>
@@ -416,14 +422,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                             </div>
                         )}
 
-                        {/* Quality badge */}
                         {currentSource.quality && (
                             <div className="flex items-center px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white text-xs font-bold">{currentSource.quality}</div>
                         )}
 
-                        {/* Speed Control */}
                         <div className="relative">
-                            <button onClick={() => setShowSpeedMenu(!showSpeedMenu)} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white hover:bg-black/90 transition text-xs font-medium" title="Playback Speed">
+                            <button onClick={() => setShowSpeedMenu(!showSpeedMenu)} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white hover:bg-black/90 transition text-xs font-medium">
                                 <MdSpeed size={15} />
                                 <span>{playbackRate}x</span>
                             </button>
@@ -436,29 +440,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                             )}
                         </div>
 
-                        {/* PiP */}
                         {document.pictureInPictureEnabled && (
-                            <button onClick={handlePiPToggle} className="flex items-center px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white hover:bg-black/90 transition" title="Picture-in-Picture">
+                            <button onClick={handlePiPToggle} className="flex items-center px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white hover:bg-black/90 transition">
                                 <MdPictureInPicture size={15} />
                             </button>
                         )}
                     </div>
                 </div>
             ) : (
-                /* Iframe embed */
-                <div className="relative w-full h-full">
+                <div className="relative w-full h-full z-10">
                     <iframe
                         ref={iframeRef}
                         key={`${currentSource.url}`}
                         className="w-full h-full border-0"
                         src={currentSource.url}
-                        title={title || `Video Player - ${currentSource.name}`}
+                        title={title || `Video Player`}
                         allowFullScreen
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         onError={handleVideoError}
                         onLoad={handleVideoLoad}
                     />
-                    {/* Iframe Controls Bar */}
                     <div
                         className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-2 z-30 flex items-center justify-between transition-opacity duration-500"
                         style={{ opacity: controlsVisible ? 1 : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}
@@ -473,7 +474,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 </div>
             )}
 
-            {/* Source Switcher - Top Left */}
             {normalizedSources.length > 1 && (
                 <div
                     className="absolute top-3 left-3 z-30 transition-opacity duration-500"
@@ -484,7 +484,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                         <button onClick={() => setShowSourceMenu(!showSourceMenu)} className="flex items-center gap-2 px-3 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-full text-white hover:bg-black/90 transition shadow-lg text-xs">
                             <FaServer className="text-primary" size={12} />
                             <span className="font-medium max-w-[90px] truncate">{currentSource.name}</span>
-                            {currentSource.quality && <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-gray-300">{currentSource.quality}</span>}
                         </button>
                         {showSourceMenu && (
                             <div className="absolute top-full left-0 mt-2 w-64 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-xl overflow-hidden py-2 max-h-[300px] overflow-y-auto no-scrollbar">
@@ -494,7 +493,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                                         <div className="flex items-center gap-2 overflow-hidden">
                                             <FaServer size={12} className={currentIndex === idx ? 'text-primary' : 'text-gray-500'} />
                                             <span className="truncate">{src.name}</span>
-                                            {isCleanSource(src.url) && <span className="text-[9px] text-green-400 bg-green-400/10 px-1 rounded flex-shrink-0">CLEAN</span>}
                                         </div>
                                         {src.quality && <span className="text-xs bg-black/40 px-1.5 py-0.5 rounded border border-white/5 flex-shrink-0">{src.quality}</span>}
                                     </button>
@@ -508,4 +506,4 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     );
 };
 
-export default VideoPlayer;
+export default StreamLuxPlayer;

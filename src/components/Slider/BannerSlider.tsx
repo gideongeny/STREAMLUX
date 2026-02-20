@@ -87,34 +87,59 @@ const BannerSlider: FC<BannerSliderProps> = ({
                     <BsFillPlayFill size={35} className="text-white" />
                   </div>
 
-                  <div className="absolute top-1/2 -translate-y-1/2 left-[5%] md:max-w-md max-w-[200px]">
-                    <h2 className="md:text-5xl text-xl  text-primary font-black tracking-wide md:tw-multiline-ellipsis-2 tw-multiline-ellipsis-3 drop-shadow-lg">
-                      {film.title || film.name}
-                    </h2>
+                  <div className="absolute top-1/2 -translate-y-1/2 left-[5%] md:max-w-2xl max-w-[280px]">
+                    {film.media_type === "sports" ? (
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-center gap-6 md:gap-10">
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="w-16 h-16 md:w-28 md:h-28 bg-white/10 backdrop-blur-md rounded-2xl p-3 flex items-center justify-center border border-white/20 shadow-2xl">
+                              <img src={(film as any).homeLogo} alt="" className="w-full h-full object-contain drop-shadow-lg" />
+                            </div>
+                            <span className="text-white font-bold text-xs md:text-sm text-center uppercase tracking-tighter">{(film as any).homeTeam || 'Home'}</span>
+                          </div>
+
+                          <div className="flex flex-col items-center">
+                            <span className="text-primary font-black text-2xl md:text-5xl italic drop-shadow-[0_0_15px_rgba(255,0,0,0.5)]">VS</span>
+                          </div>
+
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="w-16 h-16 md:w-28 md:h-28 bg-white/10 backdrop-blur-md rounded-2xl p-3 flex items-center justify-center border border-white/20 shadow-2xl">
+                              <img src={(film as any).awayLogo} alt="" className="w-full h-full object-contain drop-shadow-lg" />
+                            </div>
+                            <span className="text-white font-bold text-xs md:text-sm text-center uppercase tracking-tighter">{(film as any).awayTeam || 'Away'}</span>
+                          </div>
+                        </div>
+
+                        <h2 className="md:text-4xl text-xl text-white font-black tracking-tight drop-shadow-xl mt-2">
+                          {film.title || film.name}
+                        </h2>
+                      </div>
+                    ) : (
+                      <h2 className="md:text-5xl text-xl  text-primary font-black tracking-wide md:tw-multiline-ellipsis-2 tw-multiline-ellipsis-3 drop-shadow-lg">
+                        {film.title || film.name}
+                      </h2>
+                    )}
 
                     <div>
                       <p className="text-white font-semibold md:text-2xl text-base mt-6 drop-shadow-md">
                         {dataDetail?.[index].translation[0]}
                       </p>
-                      <p className="mt-1 text-gray-200">
-                        {film.release_date &&
-                          `Release date: ${film.release_date}`}
-                        {film.first_air_date &&
-                          `First air date: ${film.first_air_date}`}
+                      <p className="mt-1 text-primary/90 font-bold uppercase tracking-widest text-xs md:text-sm">
+                        {film.release_date && film.release_date}
                       </p>
                       {!isMobile && (
                         <>
                           <div className="flex gap-2 flex-wrap mt-5">
                             {dataDetail?.[index].genre.map((genre) => (
                               <div
-                                className="px-3 py-1 border border-white/30 rounded-full bg-black/20 backdrop-blur-sm"
+                                className="px-3 py-1 border border-primary/40 rounded-full bg-primary/10 backdrop-blur-sm text-xs font-bold text-white uppercase tracking-wider"
                                 key={genre.id}
                               >
                                 {genre.name}
                               </div>
                             ))}
                           </div>
-                          <p className=" mt-3 text-base tw-multiline-ellipsis-3 text-gray-200 drop-shadow-md">
+                          <p className=" mt-3 text-base tw-multiline-ellipsis-3 text-gray-200 drop-shadow-md bg-black/20 p-2 rounded backdrop-blur-xs">
                             {film.overview}
                           </p>
                         </>

@@ -11,12 +11,12 @@ export const EMBED_ALTERNATIVES = {
   VIDSRC_ME: "https://vidsrc.me/embed",
   VIDSRC_TO: "https://vidsrc.to/embed",
   VIDSRC_PRO: "https://vidsrc.pro/embed",
-  
+
   // Secondary sources - Known working
   VIDPLAY: "https://vidplay.online/e",
   UPCLOUD: "https://upcloud.to/e",
   VIDCLOUD: "https://vidcloud.stream",
-  
+
   // Additional reliable sources
   APIMDB: "https://v2.apimdb.net/e",
   EMBEDTO: "https://www.2embed.to/embed/tmdb",
@@ -115,7 +115,7 @@ export const EMBED_ALTERNATIVES = {
   SUPEREMBED: "https://superembed.com",
   EMBEDMOVIE: "https://embedmovie.com",
   MOVIEAPI: "https://movieapi.com",
-  STREAMTAPE: "https://streamtape.com",       
+  STREAMTAPE: "https://streamtape.com",
   MIXDROP: "https://mixdrop.com",
   // Additional reliable embed sources
   EMBEDSB: "https://embedsb.com",
@@ -142,6 +142,9 @@ export interface SportsLeagueConfig {
 export interface SportsFixtureConfig {
   id: string;
   leagueId: string;
+  leagueName?: string;
+  shortName?: string;
+  country?: string;
   homeTeam: string;
   awayTeam: string;
   homeTeamLogo?: string;
@@ -152,6 +155,7 @@ export interface SportsFixtureConfig {
   round?: string;
   referee?: string;
   broadcast?: string[];
+  broadcastInfo?: string;
   streamSources?: string[];
   extraInfo?: string;
   homeScore?: number;
@@ -162,6 +166,20 @@ export interface SportsFixtureConfig {
   banner?: string;
   thumb?: string;
   fanart?: string;
+  // Pro Stats & Details
+  stats?: {
+    possession?: string;
+    shotsOnTarget?: number;
+    totalShots?: number;
+    corners?: number;
+    yellowCards?: number;
+    redCards?: number;
+  };
+  lineups?: {
+    home?: any[];
+    away?: any[];
+  };
+  events?: any[]; // Match timeline events
 }
 
 export const SPORTS_CHANNELS = [

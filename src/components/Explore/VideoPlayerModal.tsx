@@ -1,12 +1,13 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import StreamLuxPlayer from "../FilmWatch/StreamLuxPlayer";
 
-interface VideoPlayerModalProps {
+interface StreamLuxPlayerModalProps {
     videoId: string;
     onClose: () => void;
 }
 
-const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ videoId, onClose }) => {
+const StreamLuxPlayerModal: React.FC<StreamLuxPlayerModalProps> = ({ videoId, onClose }) => {
     return (
         <AnimatePresence>
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
@@ -52,4 +53,4 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ videoId, onClose })
     );
 };
 
-export default VideoPlayerModal;
+export default StreamLuxPlayerModal;

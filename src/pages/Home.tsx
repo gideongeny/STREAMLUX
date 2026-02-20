@@ -83,6 +83,17 @@ const Home: FC = () => {
 
   const { watchHistory, clearProgress } = useWatchProgress();
 
+  // Elite Aspect: Context-Aware Mood & Greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return { text: "Good Morning, Enjoy your favorites!", mood: "🌅 Morning Boost", color: "text-blue-400" };
+    if (hour < 18) return { text: "Good Afternoon, Catch up on trending!", mood: "☀️ Daily Hits", color: "text-yellow-400" };
+    if (hour < 22) return { text: "Good Evening, Prime Time viewing!", mood: "🎬 Prime Time", color: "text-red-400" };
+    return { text: "Late Night, Ready for a deep dive?", mood: "🌙 Night Cinephile", color: "text-purple-400" };
+  };
+
+  const welcome = getGreeting();
+
   const handleTabChange = (tab: "movie" | "tv" | "sports") => {
     setCurrentTab(tab);
   };
@@ -210,158 +221,163 @@ const Home: FC = () => {
                 onSetCurrentTab={handleTabChange}
               />
             </div>
-            <div className="flex gap-6 items-center">
-              <p>{currentUser?.displayName || "Anonymous"}</p>
-              <LazyLoadImage
-                src={
-                  currentUser
-                    ? (currentUser.photoURL as string)
-                    : "/defaultAvatar.jpg"
-                }
-                alt="User avatar"
-                className="w-7 h-7 rounded-full object-cover"
-                effect="opacity"
-                referrerPolicy="no-referrer"
-              />
+            <div className="flex flex-col items-end gap-1">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">{welcome.text}</p>
+              <div className="flex gap-4 items-center">
+                <p className="font-bold text-white flex items-center gap-2">
+                  {currentUser?.displayName || "Guest"}
+                  <span className={`text-[10px] bg-white/5 px-2 py-0.5 rounded-full border border-white/10 ${welcome.color}`}>{welcome.mood}</span>
+                </p>
+                <LazyLoadImage
+                  src={
+                    currentUser
+                      ? (currentUser.photoURL as string)
+                      : "/defaultAvatar.jpg"
+                  }
+                  alt="User avatar"
+                  className="w-7 h-7 rounded-full object-cover"
+                  effect="opacity"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
             </div>
+
+            {/* Main Banner Slider for Movies/TV */}
+            {currentTab === "movie" && (
+              <MainHomeFilm
+                data={dataMovie}
+                dataDetail={detailQueryMovie.data}
+                isLoadingBanner={detailQueryMovie.isLoading}
+                isLoadingSection={isLoadingMovie}
+              />
+            )}
+            {currentTab === "tv" && (
+              <MainHomeFilm
+                data={dataTV}
+                dataDetail={detailQueryTV.data}
+                isLoadingBanner={detailQueryTV.isLoading}
+                isLoadingSection={isLoadingTV}
+              />
+            )}
+
+            {/* Conditional Sections based on Tab */}
+            {currentTab === "sports" ? (
+              <div className="mt-6">
+                <SportsMainContent />
+              </div>
+            ) : (
+              <>
+                {/* Top 10 Section - Movie/TV Only */}
+                <SectionErrorBoundary fallback={null}>
+                  <Top10Slider films={(currentTab === "movie" ? dataMovie?.Trending : dataTV?.Trending) || []} />
+                </SectionErrorBoundary>
+
+                {/* Sports Ticker (Optional for Movie/TV views) */}
+                <SectionErrorBoundary fallback={null}>
+                  <LiveSportsTicker />
+                </SectionErrorBoundary>
+
+                {/* Continue Watching Shelf */}
+                <ErrorBoundary fallback={null}>
+                  <ContinueWatching
+                    watchHistory={watchHistory}
+                    onClearProgress={clearProgress}
+                  />
+                </ErrorBoundary>
+
+                {/* AI-Powered Recommendations */}
+                <ErrorBoundary fallback={null}>
+                  <SmartRecommendations />
+                </ErrorBoundary>
+
+                {/* Must-Watch Vertical Shorts */}
+                <ErrorBoundary fallback={null}>
+                  <VerticalShorts variant="horizontal" />
+                </ErrorBoundary>
+
+                {/* Upcoming Content Calendar */}
+                <ErrorBoundary fallback={null}>
+                  <UpcomingCalendar contentType={currentTab as any} />
+                </ErrorBoundary>
+
+                {/* New Releases & Fast Discovery */}
+                <ErrorBoundary fallback={null}>
+                  <NewReleases />
+                </ErrorBoundary>
+
+                {/* Coming Soon — Future release dates only */}
+                <ErrorBoundary fallback={null}>
+                  <ComingSoonSlider />
+                </ErrorBoundary>
+
+                {/* MovieBox-Style Ad Banner - Promotes App Download */}
+                <AdBanner position="home" />
+
+                {/* Inline Ad - Non-intrusive (only shows after 10 seconds) */}
+                <SmartAdContainer position="inline" minViewTime={10000} />
+
+                {/* Discover World navigation */}
+                <DiverseNavigation />
+
+                {/* Discover World content */}
+                <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />
+              </>
+            )}
           </div>
 
-          {/* Main Banner Slider for Movies/TV */}
-          {currentTab === "movie" && (
-            <MainHomeFilm
-              data={dataMovie}
-              dataDetail={detailQueryMovie.data}
-              isLoadingBanner={detailQueryMovie.isLoading}
-              isLoadingSection={isLoadingMovie}
-            />
-          )}
-          {currentTab === "tv" && (
-            <MainHomeFilm
-              data={dataTV}
-              dataDetail={detailQueryTV.data}
-              isLoadingBanner={detailQueryTV.isLoading}
-              isLoadingSection={isLoadingTV}
-            />
-          )}
-
-          {/* Conditional Sections based on Tab */}
-          {currentTab === "sports" ? (
-            <div className="mt-6">
-              <SportsMainContent />
-            </div>
-          ) : (
-            <>
-              {/* Top 10 Section - Movie/TV Only */}
-              <SectionErrorBoundary fallback={null}>
-                <Top10Slider films={(currentTab === "movie" ? dataMovie?.Trending : dataTV?.Trending) || []} />
-              </SectionErrorBoundary>
-
-              {/* Sports Ticker (Optional for Movie/TV views) */}
-              <SectionErrorBoundary fallback={null}>
-                <LiveSportsTicker />
-              </SectionErrorBoundary>
-
-              {/* Continue Watching Shelf */}
-              <ErrorBoundary fallback={null}>
-                <ContinueWatching
-                  watchHistory={watchHistory}
-                  onClearProgress={clearProgress}
-                />
-              </ErrorBoundary>
-
-              {/* AI-Powered Recommendations */}
-              <ErrorBoundary fallback={null}>
-                <SmartRecommendations />
-              </ErrorBoundary>
-
-              {/* Must-Watch Vertical Shorts */}
-              <ErrorBoundary fallback={null}>
-                <VerticalShorts variant="horizontal" />
-              </ErrorBoundary>
-
-              {/* Upcoming Content Calendar */}
-              <ErrorBoundary fallback={null}>
-                <UpcomingCalendar contentType={currentTab as any} />
-              </ErrorBoundary>
-
-              {/* New Releases & Fast Discovery */}
-              <ErrorBoundary fallback={null}>
-                <NewReleases />
-              </ErrorBoundary>
-
-              {/* Coming Soon — Future release dates only */}
-              <ErrorBoundary fallback={null}>
-                <ComingSoonSlider />
-              </ErrorBoundary>
-
-              {/* MovieBox-Style Ad Banner - Promotes App Download */}
-              <AdBanner position="home" />
-
-              {/* Inline Ad - Non-intrusive (only shows after 10 seconds) */}
-              <SmartAdContainer position="inline" minViewTime={10000} />
-
-              {/* Discover World navigation */}
-              <DiverseNavigation />
-
-              {/* Discover World content */}
-              <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />
-            </>
-          )}
+          <div className="shrink-0 max-w-[310px] w-full hidden lg:block px-6 top-0 sticky ">
+            <SearchBox />
+            {currentTab !== "sports" && (
+              <>
+                <RecommendGenres currentTab={currentTab} />
+                {/* Sidebar Ad - Non-intrusive */}
+                <div className="my-6">
+                  <SmartAdContainer position="sidebar" minViewTime={8000} />
+                </div>
+                <TrendingNow />
+              </>
+            )}
+            {/* DiverseNavigation removed from sidebar */}
+          </div>
         </div>
 
-        <div className="shrink-0 max-w-[310px] w-full hidden lg:block px-6 top-0 sticky ">
-          <SearchBox />
-          {currentTab !== "sports" && (
-            <>
-              <RecommendGenres currentTab={currentTab} />
-              {/* Sidebar Ad - Non-intrusive */}
-              <div className="my-6">
-                <SmartAdContainer position="sidebar" minViewTime={8000} />
-              </div>
-              <TrendingNow />
-            </>
-          )}
-          {/* DiverseNavigation removed from sidebar */}
-        </div>
-      </div>
-
-      <Footer />
-    </>
-  );
+        <Footer />
+      </>
+      );
 };
 
-interface FilmTypeButtonProps {
-  onSetCurrentTab: (currentTab: "movie" | "tv" | "sports") => void;
-  currentTab: string;
-  buttonType: "movie" | "tv" | "sports";
+      interface FilmTypeButtonProps {
+        onSetCurrentTab: (currentTab: "movie" | "tv" | "sports") => void;
+      currentTab: string;
+      buttonType: "movie" | "tv" | "sports";
 }
-const FilmTypeButton: FC<FilmTypeButtonProps> = ({
-  onSetCurrentTab,
-  currentTab,
-  buttonType,
+      const FilmTypeButton: FC<FilmTypeButtonProps> = ({
+        onSetCurrentTab,
+        currentTab,
+        buttonType,
 }) => {
   const getButtonText = () => {
     if (buttonType === "movie") return "Movies";
-    if (buttonType === "tv") return "TV Show";
-    return "Sports";
+        if (buttonType === "tv") return "TV Show";
+        return "Sports";
   };
 
-  const isActive = currentTab === buttonType;
+        const isActive = currentTab === buttonType;
 
-  return (
-    <button
-      onClick={() => {
-        onSetCurrentTab(buttonType);
-      }}
-      className={`relative transition duration-300 hover:text-white ${isActive ? "text-white font-medium" : ""
-        }`}
-    >
-      {getButtonText()}
-      {isActive && (
-        <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-white" />
-      )}
-    </button>
-  );
+        return (
+        <button
+          onClick={() => {
+            onSetCurrentTab(buttonType);
+          }}
+          className={`relative transition duration-300 hover:text-white ${isActive ? "text-white font-medium" : ""
+            }`}
+        >
+          {getButtonText()}
+          {isActive && (
+            <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-white" />
+          )}
+        </button>
+        );
 };
 
-export default Home;
+        export default Home;

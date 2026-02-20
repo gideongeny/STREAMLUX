@@ -29,7 +29,7 @@ import Comments from "../Common/Comments"; // Swapped to stable Comments compone
 import SeasonSelection from "./SeasonSelection";
 import DownloadOptions from "../Common/DownloadOptions";
 import PlayerControls from "./PlayerControls";
-import VideoPlayer from "./VideoPlayer";
+import StreamLuxPlayer from "./StreamLuxPlayer";
 import AdBanner from "../Ads/AdBanner";
 import SmartAdContainer from "../Common/SmartAdContainer";
 import UserRating from "../Common/UserRating";
@@ -77,7 +77,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
           title || (detail as any)?.title || (detail as any)?.name // Pass title
         );
 
-        // Map to VideoPlayer format
+        // Map to StreamLuxPlayer format
         setSources(resolved.map(s => ({
           name: s.name,
           url: s.url,
@@ -214,7 +214,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     <p>Resolving best quality sources...</p>
                   </div>
                 ) : (
-                  <VideoPlayer
+                  <StreamLuxPlayer
                     key={`${detail?.id}-${seasonId}-${episodeId}`} // Force remount when episode changes
                     sources={sources}
                     poster={`https://image.tmdb.org/t/p/original${poster}`}

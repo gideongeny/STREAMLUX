@@ -15,6 +15,29 @@ export const enhancedSearch = async (
   related: Item[];
 }> => {
   try {
+    // Intelligent "Describe & Find" logic
+    let thematicResults: Item[] = [];
+    if (query.length > 10) {
+      // If query is long (a description), try discovering by keywords/overview
+      try {
+        const discoverResponse = await axios.get(`/discover/${mediaType === "all" ? "movie" : mediaType}`, {
+          params: {
+            with_keywords: query.split(' ').slice(0, 3).join(','), // Simple heuristic
+            sort_by: "relevance.desc",
+            page: 1,
+            include_adult: false
+          }
+        });
+        thematicResults = (discoverResponse.data.results || []).map((item: any) => ({
+          ...item,
+          media_type: mediaType === "all" ? "movie" : mediaType,
+          isThematic: true
+        }));
+      } catch (e) {
+        console.warn("Thematic search failed, falling back to multi-search");
+      }
+    }
+
     // Search from multiple sources
     const [tmdbResults, fzResults] = await Promise.all([
       axios.get(`/search/${mediaType === "all" ? "multi" : mediaType}`, {
@@ -25,11 +48,12 @@ export const enhancedSearch = async (
 
     // Combine and rank results
     const allResults = [
+      ...thematicResults,
       ...(tmdbResults.data.results || []),
       ...fzResults,
     ];
 
-    // Remove duplicates and rank by relevance
+    // Remove duplicates and rank by relevance + score
     const seen = new Set<number>();
     const uniqueResults = allResults
       .filter((item) => {
@@ -38,9 +62,13 @@ export const enhancedSearch = async (
         return item.poster_path;
       })
       .sort((a, b) => {
-        // Rank by popularity and vote average
-        const scoreA = (a.popularity || 0) + (a.vote_average || 0) * 10;
-        const scoreB = (b.popularity || 0) + (b.vote_average || 0) * 10;
+        // Boost thematic matches and FZ hits
+        let scoreA = (a.popularity || 0) + (a.vote_average || 0) * 10;
+        let scoreB = (b.popularity || 0) + (b.vote_average || 0) * 10;
+
+        if ((a as any).isThematic) scoreA *= 1.5;
+        if ((b as any).isThematic) scoreB *= 1.5;
+
         return scoreB - scoreA;
       });
 
