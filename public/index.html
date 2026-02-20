@@ -55,7 +55,11 @@
 
       function loadAstrellaAds() {
         var pageViewTime = Date.now() - (window.pageLoadTime || Date.now());
+<<<<<<< HEAD
         var minViewTime = 60000; // 1 minute
+=======
+        var minViewTime = 7200000; // 2 hours
+>>>>>>> 9b77a086ab01d9b3c8fe3e17c4883e897e62975f
 
         if (pageViewTime < minViewTime || document.hidden) return;
 
@@ -84,7 +88,11 @@
 
       window.pageLoadTime = Date.now();
       window.addEventListener('load', function () {
+<<<<<<< HEAD
         setTimeout(loadAstrellaAds, 60000); // 1 minute delay
+=======
+        setTimeout(loadAstrellaAds, 7200000); // 2 hour delay
+>>>>>>> 9b77a086ab01d9b3c8fe3e17c4883e897e62975f
       });
     })();
   </script>

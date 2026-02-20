@@ -1,0 +1,42 @@
+﻿node.exe : npm warn 
+using --force 
+Recommended 
+protections disabled.
+At line:1 char:1
++ & "C:\Program Files
+\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (npm war   
+ n using ...tions    
+ disabled.:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+
+> streamlux@0.1.0 build
+> cross-env CI=false react-scripts build
+
+Creating an optimized production build...
+Failed to compile.
+
+TS2304: Cannot find name 'i18n'.
+  [0m [90m 132 |[39m     [36mconst[39m storedLang [33m=[39m safeStorage[33m.[39m[36mget[39m([32m"streamlux_language"[39m)[33m;[39m
+   [90m 133 |[39m     [36mif[39m (storedLang) {
+  [31m[1m>[22m[39m[90m 134 |[39m       i18n[33m.[39mchangeLanguage(storedLang)[33m;[39m
+   [90m     |[39m       [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+   [90m 135 |[39m     }
+   [90m 136 |[39m     [36mconst[39m rootElement [33m=[39m document[33m.[39mgetElementById([32m"root"[39m)[33m;[39m
+   [90m 137 |[39m     [36mif[39m (rootElement) {[0m
+
+
