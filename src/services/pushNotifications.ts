@@ -281,7 +281,10 @@ class PushNotificationService {
 
 export const pushNotificationService = new PushNotificationService();
 
-// Auto-initialize on app load (native platforms only)
+// Note: Do NOT auto-initialize on app load to avoid startup crashes when Firebase is not configured via google-services.json.
+// Initialization should be requested after the app has loaded or by a user setting.
+/* 
 if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
     pushNotificationService.initialize();
 }
+*/
