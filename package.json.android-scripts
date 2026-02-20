@@ -1,0 +1,30 @@
+{
+  "name": "streamlux",
+  "displayName": "StreamLux",
+  "version": "2.7.0",
+  "description": "Premium streaming platform with offline downloads, push notifications, and Android TV support",
+  "main": "index.js",
+  "scripts": {
+    "android": "cap run android",
+    "android:build": "cd android && ./gradlew assembleDebug",
+    "android:release": "cd android && ./gradlew assembleRelease",
+    "ios": "cap run ios",
+    "build": "cross-env CI=false react-scripts build",
+    "start": "react-scripts start",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "cap:sync": "npx cap sync",
+    "cap:sync:android": "npx cap sync android",
+    "cap:open:android": "npx cap open android"
+  },
+  "keywords": [
+    "streaming",
+    "movies",
+    "tv shows",
+    "offline downloads",
+    "android tv",
+    "chromecast"
+  ],
+  "author": "StreamLux Team",
+  "license": "MIT"
+}

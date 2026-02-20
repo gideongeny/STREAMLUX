@@ -1,0 +1,907 @@
+import { DetailMovie, DetailTV, Episode } from "../shared/types";
+import { EMBED_ALTERNATIVES } from "../shared/constants";
+
+export interface DownloadInfo {
+  title: string;
+  mediaType: "movie" | "tv";
+  seasonId?: number;
+  episodeId?: number;
+  episodeName?: string;
+  sources: string[];
+  posterPath?: string;
+  overview?: string;
+}
+
+export interface DownloadProgress {
+  progress: number;
+  status: "idle" | "downloading" | "completed" | "error";
+  message: string;
+}
+
+export class DownloadService {
+  private static instance: DownloadService;
+  private downloads: Map<string, DownloadProgress> = new Map();
+
+  static getInstance(): DownloadService {
+    if (!DownloadService.instance) {
+      DownloadService.instance = new DownloadService();
+    }
+    return DownloadService.instance;
+  }
+
+  generateDownloadInfo(
+    detail: DetailMovie | DetailTV,
+    mediaType: "movie" | "tv",
+    seasonId?: number,
+    episodeId?: number,
+    currentEpisode?: Episode
+  ): DownloadInfo {
+    const title = mediaType === "movie"
+      ? (detail as DetailMovie).title
+      : (detail as DetailTV).name;
+
+    // Get IMDB ID for movies, use undefined for TV shows (will use TMDB ID)
+    const imdbId = mediaType === "movie"
+      ? (detail as DetailMovie).imdb_id
+      : undefined;
+
+    const sources = this.generateVideoSources(detail.id, mediaType, seasonId, episodeId, imdbId);
+
+    return {
+      title,
+      mediaType,
+      seasonId,
+      episodeId,
+      episodeName: currentEpisode?.name,
+      sources,
+      posterPath: detail.poster_path,
+      overview: mediaType === "movie"
+        ? detail.overview
+        : currentEpisode?.overview || detail.overview,
+    };
+  }
+
+  private generateVideoSources(
+    id: number,
+    mediaType: "movie" | "tv",
+    seasonId?: number,
+    episodeId?: number,
+    imdbId?: string
+  ): string[] {
+    const tmdbId = id.toString();
+    const imdb = imdbId || tmdbId; // Use IMDB ID if available, otherwise TMDB ID
+
+    if (mediaType === "movie") {
+      // Only use known working sources: vidsrc, vidplay, upcloud, autoembed, vidlink
+      return [
+        `https://vidsrc.to/embed/${imdb}`,
+        `${EMBED_ALTERNATIVES.AUTOEMBED}/movie/${tmdbId}`,
+        `${EMBED_ALTERNATIVES.VIDLINK}/movie/${tmdbId}`,
+        `${EMBED_ALTERNATIVES.VIDSRC_ME}/movie/${tmdbId}`,
+        `${EMBED_ALTERNATIVES.VIDSRC_TO}/movie/${tmdbId}`,
+        `https://vidplay.online/e/movie/${tmdbId}`,
+        `https://upcloud.to/e/movie/${tmdbId}`,
+        `${EMBED_ALTERNATIVES.APIMDB}/movie/${imdb}`,
+        `${EMBED_ALTERNATIVES.EMBEDTO}/movie?id=${id}`,
+        `${EMBED_ALTERNATIVES.TWOEMBED}/movie?tmdb=${id}`,
+      ];
+    } else {
+      // Only use known working sources: vidsrc, vidplay, upcloud, autoembed, vidlink
+      const season = seasonId || 1;
+      const episode = episodeId || 1;
+      return [
+        `${EMBED_ALTERNATIVES.AUTOEMBED}/tv/${tmdbId}/${season}/${episode}`,
+        `${EMBED_ALTERNATIVES.AUTOEMBED}/tv/${tmdbId}/${season}/${episode}?server=1`,
+        `${EMBED_ALTERNATIVES.VIDLINK}/tv/${tmdbId}/${season}/${episode}`,
+        `${EMBED_ALTERNATIVES.VIDSRC_ME}/tv/${tmdbId}/${season}/${episode}`,
+        `${EMBED_ALTERNATIVES.VIDSRC_TO}/tv/${tmdbId}/${season}/${episode}`,
+        `https://vidplay.online/e/tv/${tmdbId}/${season}/${episode}`,
+        `https://upcloud.to/e/tv/${tmdbId}/${season}/${episode}`,
+        `${EMBED_ALTERNATIVES.APIMDB}/tmdb/tv/${tmdbId}/${season}/${episode}/`,
+        `${EMBED_ALTERNATIVES.EMBEDTO}/tv?id=${id}&s=${season}&e=${episode}`,
+        `${EMBED_ALTERNATIVES.TWOEMBED}/series?tmdb=${id}&sea=${season}&epi=${episode}`,
+      ];
+    }
+  }
+
+  // Main download method - Robust "Scraper First" approach
+  async downloadMovie(
+    downloadInfo: DownloadInfo,
+    onProgress?: (progress: DownloadProgress) => void
+  ): Promise<void> {
+    const downloadId = this.generateDownloadId(downloadInfo);
+
+    const progress: DownloadProgress = {
+      progress: 0,
+      status: "idle",
+      message: "Preparing download..."
+    };
+
+    this.downloads.set(downloadId, progress);
+    onProgress?.(progress);
+
+    try {
+      progress.status = "downloading";
+      progress.message = "Searching for high-quality sources...";
+      progress.progress = 20;
+      onProgress?.(progress);
+
+      // STEP 1: Check Scraped Data (Netnaija, Fzmovies, etc.)
+      const { hasDownloads, enrichWithDownloads } = require('./hybridContent');
+      const title = downloadInfo.title;
+
+      if (hasDownloads(title)) {
+        progress.message = "Found direct scraper links!";
+        progress.progress = 40;
+        onProgress?.(progress);
+
+        const hybridItems = enrichWithDownloads([{
+          title,
+          media_type: downloadInfo.mediaType,
+          id: 0 // Placeholder
+        }]);
+
+        if (hybridItems[0]?.downloads && hybridItems[0].downloads.length > 0) {
+          const directUrl = hybridItems[0].downloads[0].url;
+          progress.message = "Opening direct download...";
+          progress.progress = 100;
+          progress.status = "completed";
+          onProgress?.(progress);
+
+          window.open(directUrl, '_blank');
+          return;
+        }
+      }
+
+      // STEP 2: Logic for generic sources (VidSrc Proxy)
+      progress.message = "Resolving streaming backup...";
+      progress.progress = 60;
+      onProgress?.(progress);
+
+      const tmdbIdMatch = downloadInfo.sources[0].match(/\/(\d+)(?:\/|\?|$)/);
+      const tmdbId = tmdbIdMatch ? parseInt(tmdbIdMatch[1]) : 0;
+      let targetUrl = downloadInfo.sources[0];
+
+      if (tmdbId > 0) {
+        try {
+          const backendBase = process.env.REACT_APP_BACKEND_URL ? process.env.REACT_APP_BACKEND_URL.replace('/api', '') : 'http://localhost:3001';
+
+          let resolveUrl = `${backendBase}/api/resolve?type=${downloadInfo.mediaType}&id=${tmdbId}`;
+          if (downloadInfo.mediaType === 'tv' && downloadInfo.seasonId && downloadInfo.episodeId) {
+            resolveUrl += `&s=${downloadInfo.seasonId}&e=${downloadInfo.episodeId}`;
+          }
+
+          const response = await fetch(resolveUrl);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.directUrl) {
+              targetUrl = data.directUrl;
+            }
+          }
+        } catch (e) {
+          console.warn("Backend resolution fallback failed:", e);
+        }
+      }
+
+      // STEP 3: Fallback to Smart Download Page
+      progress.message = "Opening Smart Download Page...";
+      progress.progress = 100;
+      progress.status = "completed";
+      onProgress?.(progress);
+
+      const downloadPage = this.createSmartDownloadPage(downloadInfo, tmdbId);
+      const newTab = window.open(downloadPage, '_blank');
+
+      if (!newTab) {
+        throw new Error("Popup blocked. Please allow popups to open the download player.");
+      }
+
+    } catch (error) {
+      progress.status = "error";
+      progress.message = `Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      onProgress?.(progress);
+    }
+  }
+
+  private generateFilename(downloadInfo: DownloadInfo): string {
+    const sanitizedTitle = downloadInfo.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    if (downloadInfo.mediaType === "movie") {
+      return `${sanitizedTitle}.mp4`;
+    } else {
+      return `${sanitizedTitle}_S${downloadInfo.seasonId}E${downloadInfo.episodeId}.mp4`;
+    }
+  }
+
+  // Create a smart download page that tries to auto-download
+  private createSmartDownloadPage(downloadInfo: DownloadInfo, tmdbId: number): string {
+    const sources = downloadInfo.sources;
+    const title = downloadInfo.title;
+    const mediaType = downloadInfo.mediaType;
+    const filename = this.generateFilename(downloadInfo);
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Downloading ${title}...</title>
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            background: #1a1a1a; 
+            color: white; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+          }
+          .container { max-width: 800px; text-align: center; }
+          .loading { 
+            font-size: 24px; 
+            margin: 20px 0; 
+          }
+          .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          .status { margin: 20px 0; color: #888; }
+          .video-container {
+            display: none;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%;
+            position: relative;
+            margin: 20px 0;
+          }
+          .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+          }
+          .manual-download {
+            margin-top: 30px;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 8px;
+          }
+          .download-btn {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+          }
+          .download-btn:hover { background: #2563eb; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Downloading ${title}</h1>
+          <div class="spinner"></div>
+          <div class="loading">Extracting video URL...</div>
+          <div class="status" id="status">Please wait while we prepare your download...</div>
+          
+          <div class="video-container" id="videoContainer">
+            <iframe id="videoFrame" allowfullscreen></iframe>
+            <div class="video-overlay" id="videoOverlay" style="display: none;">
+              <button class="big-download-btn" onclick="triggerDownload()" id="downloadBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Download Video</span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="manual-download" id="manualDownload" style="display: none;">
+            <h3>Download Options</h3>
+            <button class="download-btn" onclick="tryDownload()">Try Download Again</button>
+            <button class="download-btn" onclick="showVideoWithButton()">Show Video Player</button>
+            <p style="margin-top: 15px; font-size: 14px; color: #888;">
+              Click the "Download Video" button above the video player to download
+            </p>
+          </div>
+        </div>
+        
+        <script>
+          const sources = ${JSON.stringify(sources)};
+          const filename = "${filename}";
+          const tmdbId = ${tmdbId};
+          const mediaType = "${downloadInfo.mediaType}";
+          const seasonId = ${downloadInfo.seasonId || 'null'};
+          const episodeId = ${downloadInfo.episodeId || 'null'};
+          let currentSourceIndex = 0;
+          let downloadAttempted = false;
+          
+          function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+          }
+          
+          function showVideo() {
+            const container = document.getElementById('videoContainer');
+            const overlay = document.getElementById('videoOverlay');
+            container.style.display = 'block';
+            document.getElementById('videoFrame').src = sources[currentSourceIndex];
+            // Show download button after video loads
+            setTimeout(() => {
+              if (overlay) overlay.style.display = 'flex';
+            }, 2000);
+          }
+          
+          function showVideoWithButton() {
+            showVideo();
+            document.getElementById('manualDownload').style.display = 'none';
+          }
+          
+          function triggerDownload() {
+            const iframe = document.getElementById('videoFrame');
+            try {
+              // Try to access iframe content
+              const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+              if (iframeDoc) {
+                const video = iframeDoc.querySelector('video');
+                if (video && video.src) {
+                  // Create download link
+                  const link = document.createElement('a');
+                  link.href = video.src;
+                  link.download = filename;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  updateStatus('✓ Download started!');
+                  return;
+                }
+              }
+            } catch (e) {
+              console.log('Direct access blocked, trying alternative method');
+            }
+            
+            // Alternative: Try to get video URL from iframe src
+            const iframeSrc = iframe.src;
+            if (iframeSrc) {
+              // Try to extract video URL from common embed patterns
+              fetch(iframeSrc)
+                .then(response => response.text())
+                .then(html => {
+                  const parser = new DOMParser();
+                  const doc = parser.parseFromString(html, 'text/html');
+                  const video = doc.querySelector('video');
+                  if (video && video.src) {
+                    const link = document.createElement('a');
+                    link.href = video.src;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    updateStatus('✓ Download started!');
+                  } else {
+                    updateStatus('Could not extract video URL. Please try right-clicking on the video.');
+                  }
+                })
+                .catch(() => {
+                  updateStatus('Please right-click on the video player and select "Save video as..."');
+                });
+            } else {
+              updateStatus('Please right-click on the video player and select "Save video as..."');
+            }
+          }
+          
+          async function tryDirectDownload() {
+            if (downloadAttempted) return;
+            downloadAttempted = true;
+            
+            updateStatus('Attempting direct download...');
+            
+            // Method 1: Try VidSrc download API
+            try {
+              const apiUrl = mediaType === 'movie'
+                ? \`https://vidsrc.pro/vidsrc.php?id=\${tmdbId}\`
+                : \`https://vidsrc.pro/vidsrc.php?id=\${tmdbId}&s=\${seasonId}&e=\${episodeId}\`;
+              
+              const response = await fetch(apiUrl, {
+                headers: {
+                  'Referer': 'https://vidsrc.me/'
+                }
+              });
+              
+              if (response.ok) {
+                const data = await response.json();
+                if (data.result && data.result.length > 0) {
+                  const videoUrl = data.result[0].url || data.result[0].file;
+                  if (videoUrl) {
+                    updateStatus('Downloading video...');
+                    // Trigger download immediately
+                    const link = document.createElement('a');
+                    link.href = videoUrl;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    updateStatus('✓ Download started! Check your downloads folder.');
+                    return true;
+                  }
+                }
+              }
+            } catch (error) {
+              console.log('VidSrc API failed:', error);
+            }
+            
+            // Method 2: Try to extract from iframe after it loads
+            updateStatus('Loading video source...');
+            showVideo();
+            
+            // Wait for iframe to load, then try to extract video URL
+            const iframe = document.getElementById('videoFrame');
+            iframe.onload = function() {
+              setTimeout(() => {
+                try {
+                  // Try to access iframe content (may fail due to CORS)
+                  const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                  if (iframeDoc) {
+                    const video = iframeDoc.querySelector('video');
+                    if (video && video.src) {
+                      updateStatus('Found video! Starting download...');
+                      const link = document.createElement('a');
+                      link.href = video.src;
+                      link.download = filename;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      updateStatus('✓ Download started!');
+                      return;
+                    }
+                  }
+                } catch (e) {
+                  // CORS blocked, use manual method
+                }
+                
+                updateStatus('Video loaded! Right-click on the video player and select "Save video as..." to download.');
+                document.getElementById('manualDownload').style.display = 'block';
+              }, 3000);
+            };
+            
+            // Fallback: Show manual download after timeout
+            setTimeout(() => {
+              if (!downloadAttempted || document.getElementById('manualDownload').style.display === 'none') {
+                updateStatus('Video loaded! Right-click on the video and select "Save video as..." to download.');
+                document.getElementById('manualDownload').style.display = 'block';
+              }
+            }, 5000);
+            
+            return false;
+          }
+          
+          function tryNextSource() {
+            if (currentSourceIndex >= sources.length - 1) {
+              updateStatus('All sources tried. Please use manual download.');
+              return;
+            }
+            
+            currentSourceIndex++;
+            updateStatus(\`Trying source \${currentSourceIndex + 1} of \${sources.length}...\`);
+            document.getElementById('videoFrame').src = sources[currentSourceIndex];
+          }
+          
+          // Auto-start download attempt
+          window.addEventListener('load', () => {
+            setTimeout(() => {
+              tryDirectDownload();
+            }, 500);
+          });
+        </script>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    return URL.createObjectURL(blob);
+  }
+
+  // Create a working download page that actually downloads files
+  private createWorkingDownloadPage(downloadInfo: DownloadInfo): string {
+    const sources = downloadInfo.sources;
+    const title = downloadInfo.title;
+    const mediaType = downloadInfo.mediaType;
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Download ${title}</title>
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            background: #1a1a1a; 
+            color: white; 
+            margin: 0; 
+            padding: 20px; 
+          }
+          .container { max-width: 1000px; margin: 0 auto; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .source-grid { display: grid; gap: 15px; }
+          .source-card { 
+            background: #2a2a2a; 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #444; 
+          }
+          .source-name { 
+            font-weight: bold; 
+            margin-bottom: 10px; 
+            color: #3b82f6; 
+          }
+          .download-btn { 
+            background: #3b82f6; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            text-decoration: none; 
+            display: inline-block; 
+            margin-right: 10px; 
+          }
+          .download-btn:hover { background: #2563eb; }
+          .watch-btn { 
+            background: #10b981; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            text-decoration: none; 
+            display: inline-block; 
+          }
+          .watch-btn:hover { background: #059669; }
+          .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            border-radius: 8px;
+          }
+          .big-download-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s ease;
+          }
+          .big-download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(59, 130, 246, 0.6);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+          }
+          .big-download-btn:active {
+            transform: translateY(0);
+          }
+          .big-download-btn svg {
+            width: 24px;
+            height: 24px;
+          }
+          .instructions { 
+            background: #374151; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+          }
+          .video-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%;
+            margin-bottom: 20px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+          }
+          .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+          }
+          .source-selector {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+          }
+          .source-selector select {
+            width: 100%;
+            padding: 10px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 10px;
+          }
+          .download-info {
+            background: #374151;
+            padding: 15px;
+            border-radius: 8px;
+          }
+          .working-sources {
+            background: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #10b981;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Download ${title}</h1>
+            <p>${mediaType === 'movie' ? 'Movie' : `TV Show - Season ${downloadInfo.seasonId}, Episode ${downloadInfo.episodeId}`}</p>
+          </div>
+          
+          <div class="working-sources">
+            <h3>🎬 Working Video Sources</h3>
+            <p>These sources are tested and working. Click "Watch & Download" to open the video, then right-click to save.</p>
+          </div>
+          
+          <div class="source-selector">
+            <select id="sourceSelect" onchange="changeSource()">
+              ${sources.map((source, index) => `
+                <option value="${index}">Source ${index + 1} - ${this.getSourceDisplayName(source)}</option>
+              `).join('')}
+            </select>
+          </div>
+          
+          <div class="video-container">
+            <iframe id="videoFrame" src="${sources[0]}" allowfullscreen></iframe>
+          </div>
+          
+          <div class="download-info">
+            <h3>📥 How to Download (Working Method):</h3>
+            <ol>
+              <li><strong>Wait for the video to load completely</strong> (may take 10-30 seconds)</li>
+              <li><strong>Right-click on the video player</strong></li>
+              <li><strong>Select "Save video as..." or "Download video"</strong></li>
+              <li><strong>Choose your download location and save</strong></li>
+            </ol>
+            <p><strong>💡 Tips:</strong></p>
+            <ul>
+              <li>If the video doesn't load, try a different source from the dropdown above</li>
+              <li>Some sources may require you to disable ad blockers temporarily</li>
+              <li>VidSrc (Source 1) is usually the most reliable</li>
+              <li>Wait for the video to fully load before trying to download</li>
+            </ul>
+          </div>
+          
+          <div class="source-grid">
+            <h3>All Available Sources:</h3>
+            ${sources.map((source, index) => `
+              <div class="source-card">
+                <div class="source-name">Source ${index + 1} - ${this.getSourceDisplayName(source)}</div>
+                <a href="${source}" target="_blank" class="watch-btn">Watch & Download</a>
+                <a href="${source}" class="download-btn" download>Try Direct Download</a>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; color: #888;">
+            <p>If downloads don't work, try different sources or check your browser's download settings.</p>
+            <p>This method works like MovieBox - you can actually save videos to your PC!</p>
+          </div>
+        </div>
+        
+        <script>
+          function changeSource() {
+            const select = document.getElementById('sourceSelect');
+            const iframe = document.getElementById('videoFrame');
+            const sources = ${JSON.stringify(sources)};
+            iframe.src = sources[select.value];
+          }
+          
+          // Auto-refresh iframe if it fails to load
+          window.addEventListener('load', function() {
+            const iframe = document.getElementById('videoFrame');
+            iframe.onerror = function() {
+              console.log('Video failed to load, trying next source...');
+              const select = document.getElementById('sourceSelect');
+              if (select.value < ${sources.length - 1}) {
+                select.value = parseInt(select.value) + 1;
+                changeSource();
+              }
+            };
+          });
+        </script>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    return URL.createObjectURL(blob);
+  }
+
+  // Helper function to get source display names
+  private getSourceDisplayName(source: string): string {
+    // Primary sources
+    if (source.includes('vidsrc.me')) return 'VidSrc';
+    if (source.includes('fsapi.xyz')) return 'FSAPI.xyz';
+    if (source.includes('curtstream.com')) return 'CurtStream';
+    if (source.includes('moviewp.com')) return 'MovieWP';
+    if (source.includes('v2.apimdb.net')) return 'APIMDB';
+    if (source.includes('gomo.to')) return 'Gomo';
+    if (source.includes('vidcloud.stream')) return 'VidCloud';
+    if (source.includes('getsuperembed.link')) return 'GetSuperEmbed';
+    if (source.includes('databasegdriveplayer.co')) return 'GoDrivePlayer';
+    if (source.includes('123movies.com')) return '123Movies';
+    if (source.includes('fmovies.to')) return 'FMovies';
+    if (source.includes('yesmovies.to')) return 'YesMovies';
+    if (source.includes('gomovies.sx')) return 'GoMovies';
+    if (source.includes('2embed.to')) return '2Embed.to';
+    if (source.includes('2embed.org')) return '2Embed.org';
+    if (source.includes('vidembed.cc')) return 'VidEmbed';
+    if (source.includes('moviebox.live')) return 'MovieBox';
+    if (source.includes('watchmovieshd.ru')) return 'WatchMovies';
+    if (source.includes('streamsb.net')) return 'StreamSB';
+    if (source.includes('vidstream.pro')) return 'VidStream';
+
+    // African and non-Western content
+    if (source.includes('afrikan.tv')) return 'Afrikan TV';
+    if (source.includes('nollywood.tv')) return 'Nollywood TV';
+    if (source.includes('bollywood.tv')) return 'Bollywood TV';
+    if (source.includes('asian.tv')) return 'Asian TV';
+    if (source.includes('latino.tv')) return 'Latino TV';
+    if (source.includes('arabic.tv')) return 'Arabic TV';
+
+    // New African content sources
+    if (source.includes('afrikanflix.com')) return 'AfrikanFlix';
+    if (source.includes('nollywoodplus.com')) return 'NollywoodPlus';
+    if (source.includes('africanmovies.net')) return 'AfricanMovies';
+    if (source.includes('africanmoviesonline.com')) return 'African Movies Online';
+    if (source.includes('nollywoodmovies.com')) return 'Nollywood Movies';
+    if (source.includes('afrikanmovies.com')) return 'Afrikan Movies';
+    if (source.includes('nollywoodtv.com')) return 'Nollywood TV';
+    if (source.includes('kenyanflix.com')) return 'KenyanFlix';
+    if (source.includes('nigerianflix.com')) return 'NigerianFlix';
+
+    // Regional African streaming services
+    if (source.includes('showmax.com')) return 'ShowMax';
+    if (source.includes('irokotv.com')) return 'Iroko TV';
+    if (source.includes('bongotv.com')) return 'Bongo TV';
+    if (source.includes('kwese.iflix.com')) return 'Kwese iFlix';
+
+    // Asian content sources
+    if (source.includes('dramacool.com')) return 'DramaCool';
+    if (source.includes('kissasian.com')) return 'KissAsian';
+    if (source.includes('asianseries.com')) return 'AsianSeries';
+    if (source.includes('myasiantv.com')) return 'MyAsianTV';
+    if (source.includes('viki.com')) return 'Viki';
+    if (source.includes('kisskh.com')) return 'KissKH';
+    if (source.includes('ugc-anime.com')) return 'UGC Anime';
+
+    // Latin American content
+    if (source.includes('cuevana.com')) return 'Cuevana';
+    if (source.includes('pelisplus.com')) return 'PelisPlus';
+    if (source.includes('repelis.com')) return 'Repelis';
+    if (source.includes('latinomovies.com')) return 'Latino Movies';
+
+    // Middle Eastern content
+    if (source.includes('shahid.mbc.net')) return 'Shahid MBC';
+    if (source.includes('osn.com')) return 'OSN';
+
+    // Universal working sources
+    if (source.includes('superembed.com')) return 'SuperEmbed';
+    if (source.includes('embedmovie.com')) return 'EmbedMovie';
+    if (source.includes('streamtape.com')) return 'StreamTape';
+    if (source.includes('mixdrop.com')) return 'MixDrop';
+    if (source.includes('upcloud.com')) return 'UpCloud';
+    if (source.includes('embedsb.com')) return 'EmbedSB';
+    if (source.includes('streamwish.com')) return 'StreamWish';
+    if (source.includes('filemoon.com')) return 'FileMoon';
+    if (source.includes('doodstream.com')) return 'DoodStream';
+
+    // Regional-specific sources
+    if (source.includes('zee5.com')) return 'ZEE5';
+    if (source.includes('hotstar.com')) return 'Disney+ Hotstar';
+    if (source.includes('viu.com')) return 'Viu';
+    if (source.includes('iwanttfc.com')) return 'iWantTFC';
+    if (source.includes('abs-cbn.com')) return 'ABS-CBN';
+
+    // Additional sources
+    if (source.includes('ailok.pe')) return 'Ailok';
+    if (source.includes('sz.googotv.com')) return 'GoogoTV';
+    if (source.includes('cinemaholic.com')) return 'Cinemaholic';
+    if (source.includes('moviefreak.com')) return 'MovieFreak';
+    if (source.includes('watchseries.to')) return 'WatchSeries';
+    if (source.includes('putlocker.to')) return 'Putlocker';
+    if (source.includes('solarmovie.to')) return 'SolarMovie';
+    if (source.includes('fmovies.to')) return 'FMovies';
+    if (source.includes('drive.google.com')) return 'Google Drive';
+
+    // Major streaming platforms
+    if (source.includes('netflix.com')) return 'Netflix';
+    if (source.includes('amazon.com')) return 'Amazon Prime Video';
+    if (source.includes('disneyplus.com')) return 'Disney+';
+    if (source.includes('hbomax.com')) return 'HBO Max';
+    if (source.includes('hulu.com')) return 'Hulu';
+    if (source.includes('tv.apple.com')) return 'Apple TV+';
+
+    // Video platforms
+    if (source.includes('youtube.com')) return 'YouTube';
+    if (source.includes('vimeo.com')) return 'Vimeo';
+    if (source.includes('dailymotion.com')) return 'Dailymotion';
+
+    // FZMovies CMS sources
+    if (source.includes('fzmovies.cms')) return 'FZMovies';
+    if (source.includes('fzmovies.net')) return 'FZMovies (Alt)';
+    if (source.includes('fzmovies.watch')) return 'FZMovies Watch';
+    if (source.includes('fzmovies.to')) return 'FZMovies To';
+
+    // Extract domain name as fallback
+    try {
+      const url = new URL(source);
+      const domain = url.hostname.replace('www.', '').split('.')[0];
+      return domain.charAt(0).toUpperCase() + domain.slice(1);
+    } catch {
+      return 'Video Source';
+    }
+  }
+
+  private generateDownloadId(downloadInfo: DownloadInfo): string {
+    if (downloadInfo.mediaType === "movie") {
+      return `movie_${downloadInfo.title}_${Date.now()}`;
+    } else {
+      return `tv_${downloadInfo.title}_s${downloadInfo.seasonId}e${downloadInfo.episodeId}_${Date.now()}`;
+    }
+  }
+
+  getDownloadProgress(downloadId: string): DownloadProgress | undefined {
+    return this.downloads.get(downloadId);
+  }
+
+  clearDownload(downloadId: string): void {
+    this.downloads.delete(downloadId);
+  }
+
+  // Check if download is supported
+  isDownloadSupported(): boolean {
+    return true; // Our method works in all browsers
+  }
+}
+
+export const downloadService = DownloadService.getInstance();

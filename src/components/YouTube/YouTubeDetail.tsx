@@ -1,0 +1,471 @@
+import { FC, useState, useEffect } from "react";
+import { AiOutlineDownload, AiFillHeart, AiOutlineArrowLeft, AiOutlineClose } from "react-icons/ai";
+import { BsFillPlayFill, BsShareFill } from "react-icons/bs";
+import { GiHamburgerMenu } from "react-icons/gi";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import { Link, useNavigate } from "react-router-dom";
+import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
+import { toast, ToastContainer } from "react-toastify";
+import { doc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { db } from "../../shared/firebase";
+import { useAppSelector } from "../../store/hooks";
+import { calculateRating, YouTubeVideo, YouTubeVideoExtended } from "../../services/youtube";
+import { getDownloadUrl } from "../../services/resolver";
+import { Item, Reviews } from "../../shared/types";
+import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
+import Sidebar from "../Common/Sidebar";
+import SidebarMini from "../Common/SidebarMini";
+import Title from "../Common/Title";
+import Footer from "../Footer/Footer";
+import RightbarFilms from "../Common/RightbarFilms";
+import SearchBox from "../Common/SearchBox";
+import ReadMore from "../Common/ReadMore";
+import ReviewTab from "../FilmDetail/ReviewTab";
+
+interface YouTubeDetailProps {
+    video: YouTubeVideoExtended;
+    similar?: YouTubeVideo[];
+    reviews?: Reviews[];
+    episodes?: YouTubeVideo[];
+}
+
+const YouTubeDetail: FC<YouTubeDetailProps> = ({ video, similar, reviews, episodes }) => {
+    const { isMobile } = useCurrentViewportView();
+    const currentUser = useAppSelector((state) => state.auth.user);
+    const [isSidebarActive, setIsSidebarActive] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isBookmarked, setIsBookmarked] = useState(false);
+    const [currentTab, setCurrentTab] = useState("overall");
+    const navigate = useNavigate();
+
+    const rating = calculateRating(video.viewCount, video.likeCount);
+
+    // Sync bookmarks with Firebase
+    useEffect(() => {
+        if (!currentUser) return;
+
+        const unsubDoc = onSnapshot(doc(db, "users", currentUser.uid), (doc) => {
+            setIsBookmarked(
+                doc.data()?.bookmarks.some((item: any) => item.youtubeId === video.id || item.id === video.id)
+            );
+        });
+
+        return () => unsubDoc();
+    }, [currentUser, video.id]);
+
+    const bookmarkedHandler = async () => {
+        if (!currentUser) {
+            toast.error("You need to sign in to bookmark content", { position: "top-right" });
+            return;
+        }
+
+        const bookmarkItem = {
+            poster_path: video.thumbnail,
+            id: video.id,
+            youtubeId: video.id,
+            vote_average: rating,
+            media_type: video.type === "movie" ? "movie" : "tv",
+            title: video.title,
+        };
+
+        await updateDoc(doc(db, "users", currentUser.uid), {
+            bookmarks: !isBookmarked
+                ? arrayUnion(bookmarkItem)
+                : arrayRemove(bookmarkItem),
+        });
+
+        toast.success(isBookmarked ? "Removed from bookmarks" : "Added to bookmarks");
+    };
+
+    const formatViews = (views?: string) => {
+        if (!views) return "0";
+        const num = parseInt(views);
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+        if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+        return num.toString();
+    };
+
+    const similarItems: Item[] = (similar || []).map(v => ({
+        id: v.id as any,
+        youtubeId: v.id,
+        title: v.title,
+        poster_path: v.thumbnail,
+        backdrop_path: v.thumbnail,
+        vote_average: 9.0,
+        media_type: v.type === "movie" ? "movie" : "tv",
+        overview: v.description,
+        genre_ids: [],
+        original_language: "en",
+        popularity: 0,
+        vote_count: 0
+    }));
+
+    return (
+        <>
+            <Title value={`${video.title} | StreamLux`} />
+            <ToastContainer />
+
+            {/* Mobile Header */}
+            <div className="flex md:hidden justify-between items-center px-5 my-3 relative z-50">
+                <button onClick={() => navigate(-1)} className="text-white">
+                    <AiOutlineArrowLeft size={24} />
+                </button>
+                <Link to="/" className="flex gap-2 items-center">
+                    <img src="/logo.svg" alt="StreamLux Logo" className="h-8 w-8" />
+                </Link>
+                <button onClick={() => setIsSidebarActive((prev) => !prev)}>
+                    <GiHamburgerMenu size={25} />
+                </button>
+            </div>
+
+            <div className="flex flex-col md:flex-row bg-dark min-h-screen text-white relative">
+                {/* Desktop Back Button */}
+                {!isMobile && (
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="absolute top-6 left-20 z-50 bg-black/50 hover:bg-primary p-3 rounded-full backdrop-blur-md transition-all group"
+                        title="Go Back"
+                    >
+                        <AiOutlineArrowLeft size={24} className="text-white group-hover:scale-110 transition-transform" />
+                    </button>
+                )}
+                {!isMobile && <SidebarMini />}
+                {isMobile && (
+                    <Sidebar
+                        onCloseSidebar={() => setIsSidebarActive(false)}
+                        isSidebarActive={isSidebarActive}
+                    />
+                )}
+
+                <div className="flex-grow">
+                    {/* HERO SECTION */}
+                    <div className="relative w-full overflow-hidden">
+                        <div className={`relative transition - all duration - 700 bg - black ${isPlaying ? 'h-[60vh] md:h-[85vh]' : 'h-[400px] md:h-[500px]'} `}>
+                            {!isPlaying ? (
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
+                                    style={{ backgroundImage: `url(${video.thumbnail})` }}
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/40 to-transparent" />
+                                </div>
+                            ) : (
+                                <div className="absolute inset-0">
+                                    <iframe
+                                        src={`https://www.youtube.com/embed/${video.id}?autoplay=1&rel=0`}
+                                        title={video.title}
+                                        className="w-full h-full border-0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                    <button
+                                        onClick={() => setIsPlaying(false)}
+                                        className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-red-600 text-white p-2 rounded-full backdrop-blur-md transition-all group"
+                                        title="Close Player"
+                                    >
+                                        <AiOutlineClose size={24} className="group-hover:rotate-90 transition-transform" />
+                                    </button>
+                                </div >
+                            )}
+
+                            {
+                                !isPlaying && (
+                                    <div className="absolute inset-0 flex flex-col justify-end px-6 md:px-16 pb-12">
+                                        <div className="flex flex-col md:flex-row gap-8 items-end">
+                                            {!isMobile && (
+                                                <div className="shrink-0 w-[200px] shadow-2xl rounded-lg overflow-hidden translate-y-20 border-4 border-white/10">
+                                                    <LazyLoadImage
+                                                        src={video.thumbnail}
+                                                        className="w-full h-full object-cover"
+                                                        alt={video.title}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            <div className="flex-grow">
+                                                <div className="flex flex-wrap gap-2 mb-4">
+                                                    <span className="px-3 py-1 bg-primary/20 border border-primary/50 text-primary text-xs font-bold rounded-full uppercase tracking-widest">
+                                                        YouTube Premium
+                                                    </span>
+                                                    <span className="px-3 py-1 bg-white/10 border border-white/20 text-white text-xs font-bold rounded-full">
+                                                        4K UHD
+                                                    </span>
+                                                </div>
+                                                <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-tight max-w-[850px] drop-shadow-lg">
+                                                    {video.title}
+                                                </h1>
+
+                                                {video.tags && (
+                                                    <ul className="flex gap-3 flex-wrap mb-7">
+                                                        {video.tags.slice(0, 3).map((tag) => (
+                                                            <li key={tag}>
+                                                                <div className="px-4 py-1.5 rounded-full uppercase text-[10px] font-bold border border-white/30 text-white backdrop-blur-md">
+                                                                    {tag}
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+
+                                                <div className="flex flex-wrap gap-4 items-center">
+                                                    <button
+                                                        onClick={() => setIsPlaying(true)}
+                                                        className="flex items-center gap-4 px-10 py-4 bg-primary hover:bg-primary-dark text-white rounded-full font-bold transition-all transform hover:scale-105 shadow-xl shadow-primary/20"
+                                                    >
+                                                        <BsFillPlayFill size={30} />
+                                                        WATCH NOW
+                                                    </button>
+
+                                                    <div className="flex gap-3">
+                                                        <button
+                                                            onClick={bookmarkedHandler}
+                                                            className={`flex items-center justify-center h-12 w-12 rounded-full border-2 transition-all ${isBookmarked ? 'bg-primary border-primary text-white' : 'bg-white/10 border-white/30 text-white hover:border-primary hover:text-primary'}`}
+                                                            title={isBookmarked ? "Remove from Watchlist" : "Add to Watchlist"}
+                                                        >
+                                                            <AiFillHeart size={22} />
+                                                        </button>
+
+                                                        {/* Download Buttons - Using high-reliability public converters */}
+                                                        <div className="flex gap-2">
+                                                            <a
+                                                                href={`https://www.ssyoutube.com/watch?v=${video.id}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center justify-center h-12 px-6 rounded-full border-2 border-primary/50 bg-primary/10 hover:bg-primary transition-all text-white font-bold gap-2 group"
+                                                                title="Download Video (HD)"
+                                                            >
+                                                                <AiOutlineDownload size={22} className="group-hover:scale-110 transition-transform" />
+                                                                <span>DOWNLOAD</span>
+                                                            </a>
+                                                            <a
+                                                                href={`https://y2mate.is/watch?v=${video.id}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all text-white"
+                                                                title="Alternative Download (Server 2)"
+                                                            >
+                                                                <span className="text-[10px] font-bold">ALT</span>
+                                                            </a>
+                                                            <a
+                                                                href={getDownloadUrl(video.thumbnail, `${video.title.replace(/[^a-z0-9]/gi, '_')}_cover.jpg`)}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all text-white"
+                                                                title="Download Cover (Proxy Test)"
+                                                            >
+                                                                <AiOutlineDownload size={18} />
+                                                            </a>
+                                                        </div>
+
+                                                        <button
+                                                            className="flex items-center justify-center h-12 w-12 rounded-full border-2 border-white/30 bg-white/10 hover:bg-white/20 transition-all"
+                                                            title="Share"
+                                                        >
+                                                            <BsShareFill size={18} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            }
+                        </div >
+
+                        {/* DETAIL TABS SECTION */}
+                        < div className="flex flex-col md:flex-row mt-32 md:mt-0" >
+                            {/* RATING & DURATION COLUMN */}
+                            {
+                                !isMobile && (
+                                    <div className="shrink-0 md:max-w-[150px] w-full flex items-center md:flex-col justify-center flex-row gap-20 mt-20 md:border-r border-white/5 pt-16">
+                                        <div className="flex flex-col gap-6 items-center">
+                                            <p className="text-gray-500 font-bold text-xs uppercase tracking-[0.2em]">RATING</p>
+                                            <div className="w-16">
+                                                <CircularProgressbar
+                                                    value={rating}
+                                                    maxValue={10}
+                                                    text={`${rating}`}
+                                                    styles={buildStyles({
+                                                        textSize: "25px",
+                                                        pathColor: `rgba(81, 121, 255, ${rating / 10})`,
+                                                        textColor: "#fff",
+                                                        trailColor: "transparent",
+                                                        backgroundColor: "#5179ff",
+                                                    })}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col gap-3 items-center">
+                                            <p className="text-gray-500 font-bold text-xs uppercase tracking-[0.2em]">RUNTIME</p>
+                                            <div className="flex gap-1 items-baseline text-white/90">
+                                                <p className="text-2xl font-bold">
+                                                    {video.duration ? Math.floor(video.duration / 60) : "40+"}
+                                                </p>
+                                                <span className="text-xs font-bold uppercase opacity-60">min</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            }
+
+                            {/* TABBED CONTENT */}
+                            <div className="flex-grow min-h-[600px] md:border-r border-white/5 md:px-16 px-6 md:py-12 pt-40">
+                                <div className="flex gap-10 text-gray-400 text-lg justify-center mb-12 border-b border-white/5">
+                                    <button
+                                        onClick={() => setCurrentTab("overall")}
+                                        className={`pb-4 text-lg font-medium transition-all relative ${currentTab === "overall" ? "text-primary" : "text-white/60 hover:text-white"}`}
+                                    >
+                                        OVERALL
+                                        {currentTab === "overall" && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full" />}
+                                    </button>
+
+                                    {episodes && episodes.length > 0 && (
+                                        <button
+                                            onClick={() => setCurrentTab("episodes")}
+                                            className={`pb-4 text-lg font-medium transition-all relative ${currentTab === "episodes" ? "text-primary" : "text-white/60 hover:text-white"}`}
+                                        >
+                                            EPISODES
+                                            {currentTab === "episodes" && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full" />}
+                                        </button>
+                                    )}
+
+                                    <button
+                                        onClick={() => setCurrentTab("creator")}
+                                        className={`pb-4 text-lg font-medium transition-all relative ${currentTab === "creator" ? "text-primary" : "text-white/60 hover:text-white"}`}
+                                    >
+                                        CREATOR
+                                        {currentTab === "creator" && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full" />}
+                                    </button>
+
+                                    <button
+                                        onClick={() => setCurrentTab("reviews")}
+                                        className={`pb-4 text-lg font-medium transition-all relative ${currentTab === "reviews" ? "text-primary" : "text-white/60 hover:text-white"}`}
+                                    >
+                                        REVIEWS
+                                        {currentTab === "reviews" && <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full" />}
+                                    </button>
+                                </div>
+
+                                <div className="max-max-w-[900px]">
+                                    {currentTab === "overall" && (
+                                        <div className="animate-fade-in">
+                                            <p className="text-gray-300 leading-relaxed text-lg mb-8">
+                                                {video.description}
+                                            </p>
+                                            <h3 className="text-white font-bold mb-6 uppercase text-xs tracking-widest text-primary">Details</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                                <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                                    <h4 className="text-gray-500 text-[10px] font-bold uppercase mb-1">Status</h4>
+                                                    <p className="text-white font-medium text-sm">Released</p>
+                                                </div>
+                                                <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                                    <h4 className="text-gray-500 text-[10px] font-bold uppercase mb-1">Release Date</h4>
+                                                    <p className="text-white font-medium text-sm">
+                                                        {video.publishedAt ? new Date(video.publishedAt).toLocaleDateString() : "N/A"}
+                                                    </p>
+                                                </div>
+                                                <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                                    <h4 className="text-gray-500 text-[10px] font-bold uppercase mb-1">Media Type</h4>
+                                                    <p className="text-white font-medium text-sm uppercase">{video.type}</p>
+                                                </div>
+                                                <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                                    <h4 className="text-gray-500 text-[10px] font-bold uppercase mb-1">Viewers</h4>
+                                                    <p className="text-white font-medium text-sm">{formatViews(video.viewCount)}</p>
+                                                </div>
+                                                <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                                    <h4 className="text-gray-500 text-[10px] font-bold uppercase mb-1">Language</h4>
+                                                    <p className="text-white font-medium text-sm">English / International</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {currentTab === "episodes" && episodes && (
+                                        <div className="animate-fade-in">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                {episodes.map((ep) => (
+                                                    <Link
+                                                        to={`/youtube/${ep.id}`}
+                                                        key={ep.id}
+                                                        className={`flex gap-4 p-3 rounded-xl transition-all group ${ep.id === video.id ? "bg-primary/20 border-primary/50" : "bg-white/5 hover:bg-white/10 border-white/5"}`}
+                                                    >
+                                                        <div className="relative shrink-0 w-32 aspect-video rounded-lg overflow-hidden">
+                                                            <LazyLoadImage
+                                                                src={ep.thumbnail}
+                                                                alt={ep.title}
+                                                                effect="opacity"
+                                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                            />
+                                                            {ep.id === video.id && (
+                                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                                                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center animate-pulse">
+                                                                        <BsFillPlayFill className="text-white text-lg" />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col justify-center min-w-0">
+                                                            <h4 className={`font-medium line-clamp-2 mb-1 group-hover:text-primary transition-colors ${ep.id === video.id ? "text-primary" : "text-white"}`}>
+                                                                {ep.title}
+                                                            </h4>
+                                                            <p className="text-xs text-gray-400">
+                                                                {ep.publishedAt ? new Date(ep.publishedAt).toLocaleDateString() : "Unknown Date"}
+                                                            </p>
+                                                        </div>
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {currentTab === "creator" && (
+                                        <div className="flex flex-col items-center py-10">
+                                            <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center border-4 border-primary shadow-2xl mb-6">
+                                                <span className="text-3xl font-bold text-white uppercase">{video.channelTitle[0]}</span>
+                                            </div>
+                                            <h2 className="text-3xl font-bold mb-2">{video.channelTitle}</h2>
+                                            <p className="text-primary font-medium mb-8">Official Content Provider</p>
+                                            <div className="bg-white/5 p-8 rounded-2xl border border-white/5 w-full text-center">
+                                                <p className="text-white/70 italic">"Official studio partner providing high-quality streaming content for StreamLux."</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {currentTab === "reviews" && (
+                                        <div className="mt-4">
+                                            {reviews && reviews.length > 0 ? (
+                                                <ReviewTab reviews={reviews} />
+                                            ) : (
+                                                <div className="text-center py-20 opacity-50">
+                                                    <p className="text-xl">No reviews yet for this content.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* RIGHTBAR FOR SIMILAR CONTENT */}
+                            <div className="shrink-0 md:max-w-[310px] w-full relative px-6 md:mt-0 mt-12 bg-dark-lighten md:bg-transparent">
+                                {!isMobile && <SearchBox />}
+                                <RightbarFilms
+                                    name="Similar Content"
+                                    films={similarItems}
+                                    limitNumber={6}
+                                    isLoading={!similar}
+                                    className="md:mt-24 mt-12 pt-6 md:pt-0"
+                                />
+                            </div>
+                        </div >
+                    </div >
+
+                    <div className="px-6 md:px-16 mt-20">
+                        <Footer />
+                    </div>
+                </div >
+            </div >
+        </>
+    );
+};
+
+export default YouTubeDetail;

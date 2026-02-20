@@ -1,0 +1,6 @@
+{
+  "buildCommand": "npm install --force --legacy-peer-deps && npm run build",
+  "outputDirectory": "build",
+  "installCommand": "npm install --force --legacy-peer-deps --no-optional",
+  "devCommand": "npm start"
+}
