@@ -12,6 +12,7 @@ const config: CapacitorConfig = {
       'https://www.2embed.to',
       'https://vidembed.cc',
       'https://moviebox.live',
+      'https://www.moviebox.ng',
       'https://watchmovieshd.ru',
       'https://streamsb.net',
       'https://vidstream.pro',
@@ -24,12 +25,17 @@ const config: CapacitorConfig = {
       'https://getsuperembed.link',
       'https://databasegdriveplayer.co',
       'https://123movies.com',
+      'https://www.123movies.net',
       'https://fmovies.to',
       'https://yesmovies.to',
       'https://gomovies.sx',
       'https://sportslive.run',
+      'https://www.netnaija.com',
+      'https://netnaija.net',
       'https://streamlux.vercel.app',
       'https://moonlight-films-five.vercel.app',
+      // Firebase CORS proxy function
+      'https://us-central1-streamlux-app.cloudfunctions.net',
     ],
   },
   android: {
@@ -65,8 +71,14 @@ const config: CapacitorConfig = {
       style: 'dark',
       resizeOnFullScreen: true,
     },
+    // AdMob configuration
+    // App ID: ca-app-pub-1281448884303417~9595144052
+    AdMob: {
+      appId: {
+        android: 'ca-app-pub-1281448884303417~9595144052',
+      },
+    } as any,
   },
 };
 
 export default config;
-

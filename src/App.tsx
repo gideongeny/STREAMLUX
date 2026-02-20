@@ -34,10 +34,16 @@ import { setCurrentUser } from "./store/slice/authSlice";
 import { backendHealthService } from "./services/backendHealth";
 import BuyMeACoffee from "./components/Common/BuyMeACoffee";
 import { safeStorage } from "./utils/safeStorage";
+import { initializeAdMob } from "./services/capacitorAds";
 
 function App() {
   const location = useLocation();
   const dispatch = useAppDispatch();
+
+  // Initialize AdMob on native Android/iOS builds (no-op on web)
+  useEffect(() => {
+    initializeAdMob().catch(console.warn);
+  }, []);
 
   // Custom localStorage hook that handles JSON parsing errors gracefully
   const getInitialSignedIn = (): boolean => {

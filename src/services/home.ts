@@ -2132,3 +2132,164 @@ export const getNewReleases = async (type: "movie" | "tv"): Promise<Item[]> => {
     return [];
   }
 };
+
+// =========================================================
+// NEW EXCLUSIVE CONTENT SLIDERS
+// =========================================================
+
+/** 🌍 African Cinema — Nigerian, Ghanaian, South African films from TMDB */
+export const getAfricanCinema = async (type: "movie" | "tv" = "movie"): Promise<Item[]> => {
+  try {
+    const [ng, gh, za] = await Promise.all([
+      axios.get(`/discover/${type}`, {
+        params: { with_origin_country: "NG", sort_by: "popularity.desc", page: 1 },
+        timeout: 5000,
+      }).catch(() => ({ data: { results: [] } })),
+      axios.get(`/discover/${type}`, {
+        params: { with_origin_country: "GH", sort_by: "popularity.desc", page: 1 },
+        timeout: 5000,
+      }).catch(() => ({ data: { results: [] } })),
+      axios.get(`/discover/${type}`, {
+        params: { with_origin_country: "ZA", sort_by: "popularity.desc", page: 1 },
+        timeout: 5000,
+      }).catch(() => ({ data: { results: [] } })),
+    ]);
+
+    const combined: Item[] = [
+      ...ng.data.results.map((i: any) => ({ ...i, media_type: type })),
+      ...gh.data.results.map((i: any) => ({ ...i, media_type: type })),
+      ...za.data.results.map((i: any) => ({ ...i, media_type: type })),
+    ];
+
+    const seen = new Set<number>();
+    return combined.filter(i => {
+      if (seen.has(i.id)) return false;
+      seen.add(i.id);
+      return i.poster_path;
+    });
+  } catch (error) {
+    console.error("Error fetching African Cinema:", error);
+    return [];
+  }
+};
+
+/** 🏆 Award Winners — TMDB top-rated movies with ≥8.0 score */
+export const getAwardWinners = async (type: "movie" | "tv" = "movie"): Promise<Item[]> => {
+  try {
+    const [page1, page2] = await Promise.all([
+      axios.get(`/discover/${type}`, {
+        params: {
+          sort_by: "vote_average.desc",
+          "vote_count.gte": 5000,
+          "vote_average.gte": 8.0,
+          page: 1,
+        },
+        timeout: 5000,
+      }).catch(() => ({ data: { results: [] } })),
+      axios.get(`/discover/${type}`, {
+        params: {
+          sort_by: "vote_average.desc",
+          "vote_count.gte": 3000,
+          "vote_average.gte": 7.8,
+          page: 2,
+        },
+        timeout: 5000,
+      }).catch(() => ({ data: { results: [] } })),
+    ]);
+
+    const combined = [
+      ...page1.data.results.map((i: any) => ({ ...i, media_type: type })),
+      ...page2.data.results.map((i: any) => ({ ...i, media_type: type })),
+    ];
+    const seen = new Set<number>();
+    return combined.filter(i => {
+      if (seen.has(i.id)) return false;
+      seen.add(i.id);
+      return i.poster_path;
+    });
+  } catch (error) {
+    console.error("Error fetching Award Winners:", error);
+    return [];
+  }
+};
+
+/** 🌸 Asian Drama — Korean, Japanese, Chinese content from TMDB */
+export const getAsianDrama = async (type: "movie" | "tv" = "tv"): Promise<Item[]> => {
+  try {
+    const [kr, ja, cn] = await Promise.all([
+      axios.get(`/discover/${type}`, {
+        params: { with_original_language: "ko", sort_by: "popularity.desc", page: 1 },
+        timeout: 5000,
+      }).catch(() => ({ data: { results: [] } })),
+      axios.get(`/discover/${type}`, {
+        params: { with_original_language: "ja", sort_by: "popularity.desc", page: 1 },
+        timeout: 5000,
+      }).catch(() => ({ data: { results: [] } })),
+      axios.get(`/discover/${type}`, {
+        params: { with_original_language: "zh", sort_by: "popularity.desc", page: 1 },
+        timeout: 5000,
+      }).catch(() => ({ data: { results: [] } })),
+    ]);
+
+    const combined: Item[] = [
+      ...kr.data.results.map((i: any) => ({ ...i, media_type: type })),
+      ...ja.data.results.map((i: any) => ({ ...i, media_type: type })),
+      ...cn.data.results.map((i: any) => ({ ...i, media_type: type })),
+    ];
+
+    const seen = new Set<number>();
+    return combined.filter(i => {
+      if (seen.has(i.id)) return false;
+      seen.add(i.id);
+      return i.poster_path;
+    });
+  } catch (error) {
+    console.error("Error fetching Asian Drama:", error);
+    return [];
+  }
+};
+
+/** 🎬 Nollywood — dedicated Nigerian film shelf */
+export const getNollywoodMovies = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get("/discover/movie", {
+      params: { with_origin_country: "NG", sort_by: "popularity.desc", page: 1 },
+      timeout: 5000,
+    });
+    return (response.data.results || []).map((i: any) => ({
+      ...i,
+      media_type: "movie" as const,
+    })).filter((i: Item) => i.poster_path);
+  } catch (error) {
+    console.error("Error fetching Nollywood:", error);
+    return [];
+  }
+};
+
+/** 📺 K-Drama — dedicated Korean TV shelf */
+export const getKDrama = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get("/discover/tv", {
+      params: { with_original_language: "ko", sort_by: "popularity.desc", page: 1 },
+      timeout: 5000,
+    });
+    return (response.data.results || []).map((i: any) => ({
+      ...i,
+      media_type: "tv" as const,
+    })).filter((i: Item) => i.poster_path);
+  } catch (error) {
+    console.error("Error fetching K-Drama:", error);
+    return [];
+  }
+};
+
+/** 🌍 Trending Worldwide — cross-media trending from TMDB */
+export const getTrendingWorldwide = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get("/trending/all/week");
+    return (response.data.results || []).filter((i: any) => i.poster_path);
+  } catch (error) {
+    console.error("Error fetching Trending Worldwide:", error);
+    return [];
+  }
+};

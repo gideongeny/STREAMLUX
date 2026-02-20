@@ -20,6 +20,7 @@ import Top10Slider from "../components/Home/Top10Slider";
 import VerticalShorts from "../components/Home/VerticalShorts";
 import UpcomingCalendar from "../components/Home/UpcomingCalendar";
 import NewReleases from "../components/Home/NewReleases";
+import ComingSoonSlider from "../components/Home/ComingSoonSlider";
 import SectionErrorBoundary from "../components/Common/SectionErrorBoundary";
 import SmartAdContainer from "../components/Common/SmartAdContainer";
 import AdBanner from "../components/Ads/AdBanner";
@@ -286,6 +287,11 @@ const Home: FC = () => {
               {/* New Releases & Fast Discovery */}
               <ErrorBoundary fallback={null}>
                 <NewReleases />
+              </ErrorBoundary>
+
+              {/* Coming Soon — Future release dates only */}
+              <ErrorBoundary fallback={null}>
+                <ComingSoonSlider />
               </ErrorBoundary>
 
               {/* MovieBox-Style Ad Banner - Promotes App Download */}

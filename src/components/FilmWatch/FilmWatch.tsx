@@ -32,6 +32,7 @@ import PlayerControls from "./PlayerControls";
 import VideoPlayer from "./VideoPlayer";
 import AdBanner from "../Ads/AdBanner";
 import SmartAdContainer from "../Common/SmartAdContainer";
+import UserRating from "../Common/UserRating";
 
 interface FilmWatchProps {
   media_type: "movie" | "tv";
@@ -272,6 +273,14 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     {downloadInfo && <DownloadOptions downloadInfo={downloadInfo} />}
                   </div>
                 </div>
+              </div>
+
+              {/* User Rating */}
+              <div className="mt-8">
+                <UserRating
+                  mediaId={detail?.id?.toString() || ""}
+                  mediaType={media_type}
+                />
               </div>
 
               {/* Ad Banner Placement */}
