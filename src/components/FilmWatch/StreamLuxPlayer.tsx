@@ -3,6 +3,7 @@ import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import { FaServer, FaClosedCaptioning, FaVolumeUp } from 'react-icons/fa';
 import { MdSpeed, MdPictureInPicture, MdFullscreen, MdFullscreenExit } from 'react-icons/md';
 import { RiSkipForwardFill } from 'react-icons/ri';
+import { toast } from 'react-toastify';
 
 export interface VideoSource {
     name: string;
@@ -44,7 +45,7 @@ const isDirectVideoUrl = (url: string): boolean => {
     return directVideoPatterns.some((pattern) => pattern.test(url));
 };
 
-const CLEAN_SOURCES = ['vidsrc.to', 'embed.su', 'superembed.stream', '2embed.org'];
+const CLEAN_SOURCES = ['vidlink.pro', 'vidsrc.me', 'vidsrc.to', 'embed.su', 'superembed.stream', '2embed.org'];
 const isCleanSource = (url: string) => CLEAN_SOURCES.some((s) => url.includes(s));
 
 const HIDE_CONTROLS_DELAY = 30000; // 30 seconds
@@ -73,6 +74,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     const [isPiP, setIsPiP] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(true);
+    const [showClickShield, setShowClickShield] = useState(true); // New Click-Shield State
     const controlsHideTimer = useRef<NodeJS.Timeout | null>(null);
 
     // Audio/Subtitle state
@@ -172,6 +174,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
 
         if (!direct) {
             setShowAdSkip(false);
+            setShowClickShield(!isCleanSource(currentSource.url)); // Smart Click-Shield
             if (adTimerRef.current) clearTimeout(adTimerRef.current);
             adTimerRef.current = setTimeout(() => setShowAdSkip(true), 5000);
         }
@@ -279,6 +282,11 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         return () => document.removeEventListener('click', handler);
     }, []);
 
+    const getAutoplayUrl = (url: string) => {
+        if (url.includes('?')) return `${url}&autoplay=1`;
+        return `${url}?autoplay=1`;
+    };
+
     if (!currentSource) {
         return (
             <div className="absolute inset-0 bg-black flex items-center justify-center text-white">
@@ -367,6 +375,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                         controls
                         autoPlay
                         playsInline
+                        muted={false} // Ensure it's not muted so audio works with autoplay if browser allows
                         poster={poster}
                         onError={handleVideoError}
                         onLoadedData={handleVideoLoad}
@@ -453,13 +462,26 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                         ref={iframeRef}
                         key={`${currentSource.url}`}
                         className="w-full h-full border-0"
-                        src={currentSource.url}
+                        src={getAutoplayUrl(currentSource.url)}
                         title={title || `Video Player`}
                         allowFullScreen
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        referrerPolicy="origin"
                         onError={handleVideoError}
                         onLoad={handleVideoLoad}
                     />
+
+                    {/* Click-Shield Overlay for Embeds */}
+                    {showClickShield && !isLoading && (
+                        <div
+                            className="absolute inset-0 z-50 bg-transparent cursor-pointer"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowClickShield(false);
+                                toast.info("Ad blocked! Enjoy your stream.", { position: "top-center", autoClose: 2000 });
+                            }}
+                        />
+                    )}
                     <div
                         className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-2 z-30 flex items-center justify-between transition-opacity duration-500"
                         style={{ opacity: controlsVisible ? 1 : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}

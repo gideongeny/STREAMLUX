@@ -40,17 +40,34 @@ const BannerSlider: FC<BannerSliderProps> = ({
           {films.map((film, index) => (
             <SwiperSlide key={film.id}>
               <div className="relative w-full h-full">
-                {/* Trailer Video Player - Enhanced with better controls */}
+                {/* Poster image - always visible as base layer */}
+                <LazyLoadImage
+                  src={resizeImage(film.backdrop_path, "w1280")}
+                  alt="Backdrop image"
+                  effect="blur"
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ${activeIndex === index && dataDetail?.[index]?.trailer && !isMobile
+                      ? 'opacity-0'
+                      : 'opacity-100'
+                    }`}
+                  style={{ display: 'block', zIndex: 1 }}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.backgroundColor = '#1C1C1E';
+                  }}
+                />
+
+                {/* Dark gradient overlay (always on) */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent pointer-events-none" style={{ zIndex: 2 }} />
+
+                {/* Trailer Video Player */}
                 {activeIndex === index && dataDetail?.[index]?.trailer && (
-                  <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                  <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 0 }}>
                     <iframe
                       src={`https://www.youtube.com/embed/${dataDetail[index].trailer}?autoplay=1&mute=1&controls=0&loop=1&playlist=${dataDetail[index].trailer}&rel=0&showinfo=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1`}
-                      className={`absolute top-1/2 left-1/2 w-[120%] h-[120%] -translate-x-1/2 -translate-y-1/2 scale-125 transition-opacity duration-1000 ${isMobile ? 'opacity-40' : 'opacity-60'
-                        }`}
+                      className="absolute top-1/2 left-1/2 w-[120%] h-[120%] -translate-x-1/2 -translate-y-1/2 scale-125"
                       allow="autoplay; encrypted-media; picture-in-picture"
                       allowFullScreen={false}
                       title="Film Trailer"
-                      style={{ pointerEvents: 'none' }}
+                      style={{ pointerEvents: 'none', opacity: isMobile ? 0.4 : 0.65 }}
                     />
                   </div>
                 )}
@@ -63,26 +80,16 @@ const BannerSlider: FC<BannerSliderProps> = ({
                         ? `/tv/${film.id}`
                         : `/sports/${film.id}/watch`
                   }
-                  className="group relative z-10 block w-full h-full"
+                  className="group absolute inset-0 block"
+                  style={{ zIndex: 3 }}
                 >
-                  <LazyLoadImage
-                    src={resizeImage(film.backdrop_path, "w1280")}
-                    alt="Backdrop image"
-                    effect="blur"
-                    className={`w-full h-full object-cover transition-opacity duration-1000 ${activeIndex === index && dataDetail?.[index]?.trailer && !isMobile ? 'opacity-0' : 'opacity-100'}`}
-                    style={{ display: 'block' }}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.backgroundColor = '#1C1C1E';
-                    }}
-                  />
-
-                  <div className="absolute top-0 left-0 w-full h-full rounded-lg pointer-events-none tw-black-backdrop group-hover:bg-[#00000026] transition duration-700"></div>
-
-                  <div className="hidden md:flex absolute top-[5%] right-[3%] bg-primary px-3 py-1 rounded-full text-white  items-center gap-1">
+                  {/* Rating badge */}
+                  <div className="hidden md:flex absolute top-[5%] right-[3%] bg-primary px-3 py-1 rounded-full text-white items-center gap-1" style={{ zIndex: 4 }}>
                     <span>{film.vote_average.toFixed(1)}</span>
                     <AiFillStar size={15} />
                   </div>
 
+                  {/* Play button */}
                   <div className="tw-absolute-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-[#c353b4] tw-flex-center z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-700">
                     <BsFillPlayFill size={35} className="text-white" />
                   </div>

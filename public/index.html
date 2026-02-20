@@ -38,99 +38,11 @@
   <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
   <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
 
-  <!-- 
-      ===================================================================
-      MONETIZATION (DUAL NETWORK STRATEGY)
-      Using both Monetag Service Worker AND PopAds for maximum revenue.
-      Banner ads display visual content while popunders earn on clicks.
-      ===================================================================
-    -->
-
-  <script type="text/javascript" data-cfasync="false">
-    function loadPopAds() {
-      /*<![CDATA[/* */
-      (function () { var j = window, f = "f32e3c17e4383867b08d89c345c6a1a2", u = [["siteId", 5264003], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], c = ["d3d3LmNkbjRhZHMuY29tL25PRHVQQi9KSC9kdmV4Lm1pbi5qcw==", "ZDNnNW92Zm5nanc5YncuY2xvdWRmcm9udC5uZXQvZ3dlYl9zb2NrZXQubWluLmpz"], o = -1, v, l, n = function () { clearTimeout(l); o++; if (c[o] && !(1792840267000 < (new Date).getTime() && 1 < o)) { v = j.document.createElement("script"); v.type = "text/javascript"; v.async = !0; var h = j.document.getElementsByTagName("script")[0]; v.src = "https://" + atob(c[o]); v.crossOrigin = "anonymous"; v.onerror = n; v.onload = function () { clearTimeout(l); j[f.slice(0, 16) + f.slice(0, 16)] || n() }; l = setTimeout(n, 5E3); h.parentNode.insertBefore(v, h) } }; if (!j[f]) { try { Object.freeze(j[f] = u) } catch (e) { } n() } })();
-      (function () { var o = window, z = "f32e3c17e4383867b08d89c345c6a1a2", q = [["siteId", 4834555], ["minBid", 0], ["popundersPerIP", "0"], ["delayBetween", 0], ["default", false], ["defaultPerDay", 0], ["topmostLayer", "auto"]], t = ["d3d3LmNkbjRhZHMuY29tL3RubUdtUS9jVC9jdmV4Lm1pbi5qcw==", "ZDNnNW92Zm5nanc5YncuY2xvdWRmcm9udC5uZXQveHdlYl9zb2NrZXQubWluLmpz", "d3d3Lm13dnd0dGZ3YXVzemViLmNvbS9qWW8venhsL2N2ZXgubWluLmpz", "d3d3LndicG50aXFzbXNyLmNvbS9zd2ViX3NvY2tldC5taW4uanM="], x = -1, f, c, i = function () { clearTimeout(c); x++; if (t[x] && !(1792840267000 < (new Date).getTime() && 1 < x)) { f = o.document.createElement("script"); f.type = "text/javascript"; f.async = !0; var h = o.document.getElementsByTagName("script")[0]; f.src = "https://" + atob(t[x]); f.crossOrigin = "anonymous"; f.onerror = i; f.onload = function () { clearTimeout(c); o[z.slice(0, 16) + z.slice(0, 16)] || i() }; c = setTimeout(i, 5E3); h.parentNode.insertBefore(f, h) } }; if (!o[z]) { try { Object.freeze(o[z] = q) } catch (e) { } i() } })();
-      /*]]>/* */
-    }
-    window.addEventListener('load', function () {
-      setTimeout(loadPopAds, 15000); // 15s delay as per strategy
-    });
-  </script>
-
-  <!-- Register Service Worker (Monetag) -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js').then(function (registration) {
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }, function (err) {
-          console.log('ServiceWorker registration failed: ', err);
-        });
-      });
-    }
-  </script>
-
   <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1281448884303417"
     crossorigin="anonymous"></script>
 
-  <!-- Astrella/EffectiveGateCPM Ad Scripts - Delayed by 2 Hours -->
-  <script>
-    (function () {
-      'use strict';
 
-      var astrellaAdsLoaded = { invoke: false, highperformance: false };
-
-      function loadAstrellaAds() {
-        var pageViewTime = Date.now() - (window.pageLoadTime || Date.now());
-        var minViewTime = 60000; // 1 minute
-
-        if (pageViewTime < minViewTime || document.hidden) return;
-
-        if (!astrellaAdsLoaded.invoke) {
-          try {
-            var invokeScript = document.createElement('script');
-            invokeScript.async = true;
-            invokeScript.setAttribute('data-cfasync', 'false');
-            invokeScript.src = 'https://pl28506141.effectivegatecpm.com/e306b4e28d4fba3151a0a85384de410f/invoke.js';
-            document.head.appendChild(invokeScript);
-            astrellaAdsLoaded.invoke = true;
-          } catch (e) { }
-        }
-
-        if (!astrellaAdsLoaded.highperformance) {
-          try {
-            window.atOptions = { 'key': '9e00c96fb20d6634af7710f519d7e1cb', 'format': 'iframe', 'height': 60, 'width': 468, 'params': {} };
-            var hpScript = document.createElement('script');
-            hpScript.src = 'https://www.highperformanceformat.com/9e00c96fb20d6634af7710f519d7e1cb/invoke.js';
-            hpScript.async = true;
-            document.head.appendChild(hpScript);
-            astrellaAdsLoaded.highperformance = true;
-          } catch (e) { }
-        }
-      }
-
-      window.pageLoadTime = Date.now();
-      window.addEventListener('load', function () {
-        setTimeout(loadAstrellaAds, 60000); // 1 minute delay
-      });
-    })();
-  </script>
-
-
-  <!-- Vercel Web Analytics -->
-  <script>
-    (function () {
-      var script = document.createElement('script');
-      script.src = 'https://va.vercel-scripts.com/v1/script.js';
-      script.defer = true;
-      script.onload = function () {
-        window.va = window.va || function () { (window.va.q = window.va.q || []).push(arguments); };
-      };
-      document.head.appendChild(script);
-    })();
-  </script>
 </head>
 
 <body>

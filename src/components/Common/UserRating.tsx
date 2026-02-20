@@ -57,40 +57,57 @@ const UserRating: React.FC<UserRatingProps> = ({ mediaId, mediaType, compact = f
             toast.info('Sign in to rate this title');
             return;
         }
-        if (isSubmitting) return;
+        if (!mediaId || isSubmitting) return;
+
         setIsSubmitting(true);
+        const originalRating = userRating;
         setUserRating(rating);
 
         try {
-            await setDoc(doc(db, 'user_ratings', `${currentUser.uid}_${ratingDocId}`), {
+            const userRatingDocId = `${currentUser.uid}_${ratingDocId}`;
+            const userRatingRef = doc(db, 'user_ratings', userRatingDocId);
+
+            await setDoc(userRatingRef, {
                 userId: currentUser.uid,
-                mediaId,
+                mediaId: String(mediaId),
                 mediaType,
                 rating,
                 updatedAt: new Date().toISOString(),
-            });
+            }, { merge: true });
 
-            // Recalculate aggregate
+            // Recalculate aggregate using a new query to be sure
             const q = query(
                 collection(db, 'user_ratings'),
-                where('mediaId', '==', mediaId),
+                where('mediaId', '==', String(mediaId)),
                 where('mediaType', '==', mediaType)
             );
-            const snap = await getDocs(q);
-            const ratings = snap.docs.map(d => d.data().rating as number);
-            const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : rating;
 
-            await setDoc(doc(db, 'media_ratings', ratingDocId), {
-                mediaId,
-                mediaType,
-                average: Math.round(avg * 10) / 10,
-                count: ratings.length,
-            });
+            const snap = await getDocs(q);
+            const docs = snap.docs;
+
+            if (docs.length > 0) {
+                const total = docs.reduce((acc, d) => acc + (d.data().rating || 0), 0);
+                const count = docs.length;
+                const average = Math.round((total / count) * 10) / 10;
+
+                const mediaRatingRef = doc(db, 'media_ratings', ratingDocId);
+                await setDoc(mediaRatingRef, {
+                    mediaId: String(mediaId),
+                    mediaType,
+                    average,
+                    count,
+                    lastUpdated: new Date().toISOString()
+                }, { merge: true });
+
+                setAvgRating(average);
+                setTotalRatings(count);
+            }
 
             toast.success(`Rated ${rating}/10 ⭐`, { autoClose: 1500 });
         } catch (error) {
-            console.error('Rating error:', error);
-            toast.error('Failed to save rating');
+            console.error('Rating error details:', error);
+            setUserRating(originalRating); // Revert on failure
+            toast.error('Failed to save rating. Please try again.');
         } finally {
             setIsSubmitting(false);
         }

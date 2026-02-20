@@ -10,9 +10,18 @@ export interface Item {
   vote_average: number;
 
   // Additional props
-  media_type: "movie" | "tv" | "person";
+  media_type: "movie" | "tv" | "person" | "sports" | "youtube";
   isYouTube?: boolean;
   youtubeId?: string;
+
+  // Sports specific
+  homeTeam?: string;
+  awayTeam?: string;
+  homeLogo?: string;
+  awayLogo?: string;
+  venue?: string;
+  matchId?: string;
+  leagueId?: string;
 
   // Movie items
   release_date?: string;

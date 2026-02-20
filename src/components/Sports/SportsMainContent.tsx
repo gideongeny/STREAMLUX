@@ -34,8 +34,14 @@ const SportsMainContent: FC = () => {
 
             if (cachedLive && cachedUpcoming && cachedTime && (now - Number(cachedTime) < CACHE_DURATION)) {
                 try {
-                    setLiveFixtures(JSON.parse(cachedLive));
-                    setUpcomingFixtures(JSON.parse(cachedUpcoming));
+                    const live = JSON.parse(cachedLive);
+                    const upcoming = JSON.parse(cachedUpcoming);
+                    setLiveFixtures(live);
+                    setUpcomingFixtures(upcoming);
+                    // Auto-switch to upcoming if no live matches
+                    if (live.length === 0 && upcoming.length > 0) {
+                        setActiveStatus("upcoming");
+                    }
                     return; // Exit if cache is valid
                 } catch (e) {
                     console.error("Error parsing sports cache", e);
@@ -50,6 +56,13 @@ const SportsMainContent: FC = () => {
                 ]);
                 setLiveFixtures(live);
                 setUpcomingFixtures(upcoming);
+
+                // Auto-switch to upcoming tab if no live matches
+                if (live.length === 0 && upcoming.length > 0) {
+                    setActiveStatus("upcoming");
+                } else if (live.length > 0) {
+                    setActiveStatus("live");
+                }
 
                 // 3. Update Cache
                 safeStorage.set("sports_live_fixtures", JSON.stringify(live));
@@ -66,6 +79,10 @@ const SportsMainContent: FC = () => {
         // Subscribe to live updates
         const unsubscribe = subscribeToLiveScores((fixtures) => {
             setLiveFixtures(fixtures);
+            // If live matches appear while user is on upcoming, switch back
+            if (fixtures.length > 0) {
+                setActiveStatus("live");
+            }
         }, 60000);
 
         return () => {
@@ -75,6 +92,7 @@ const SportsMainContent: FC = () => {
 
     // Combine real API data (No static data as per user request)
     const allFixtures = useMemo(() => {
+
         const combined = [...liveFixtures, ...upcomingFixtures];
 
         // Remove duplicates

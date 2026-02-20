@@ -130,9 +130,18 @@ export class ResolverService {
         // 1. Unified Backend Resolver (Priority: High)
         // queries scrapers that need title
         try {
-            if (title) {
-                // Logic to be added if needed for unified resolver
-            }
+            const scrapers = await this.getScraperSources(
+                mediaType,
+                id.toString(),
+                season,
+                episode,
+                title
+            );
+
+            scrapers.forEach(s => {
+                s.priority = 0; // High priority to appear first
+                sources.push(s);
+            });
         } catch (e) {
             console.warn("Unified backend resolution skipped/failed", e);
         }
@@ -142,7 +151,31 @@ export class ResolverService {
         const tmdbId = id.toString();
 
         sources.push(
-            // 1. VidSrc.to (Priority 1 - Real Working VidSrc)
+            // 0. VidSrc.me (Clean Alternative - NEW DEFAULT)
+            {
+                name: "VidSrc.me",
+                url: mediaType === "movie"
+                    ? `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`
+                    : `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&sea=${season || 1}&epi=${episode || 1}`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed",
+                priority: 0
+            },
+            // 1. VidLink (Premium Ad-Free / Low Ads)
+            {
+                name: "VidLink",
+                url: mediaType === "movie"
+                    ? `https://vidlink.pro/embed/movie/${tmdbId}`
+                    : `https://vidlink.pro/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "1080p+",
+                speed: "fast",
+                status: "active",
+                type: "embed",
+                priority: 1 // shifted
+            },
+            // 2. VidSrc.to (Priority 2 - Real Working VidSrc)
             {
                 name: "VidSrc",
                 url: mediaType === "movie"
@@ -152,9 +185,21 @@ export class ResolverService {
                 speed: "fast",
                 status: "active",
                 type: "embed",
-                priority: 1
+                priority: 2
             },
-            // Alternative VidSrc format
+            // 3. VidSrc.vip (Low Ads)
+            {
+                name: "VidSrc.vip",
+                url: mediaType === "movie"
+                    ? `https://vidsrc.vip/embed/movie/${tmdbId}`
+                    : `https://vidsrc.vip/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "1080p",
+                speed: "fast",
+                status: "active",
+                type: "embed",
+                priority: 3
+            },
+            // 4. VidSrc.pro (Alt)
             {
                 name: "VidSrc (Alt)",
                 url: mediaType === "movie"
@@ -164,9 +209,9 @@ export class ResolverService {
                 speed: "fast",
                 status: "active",
                 type: "embed",
-                priority: 2
+                priority: 4
             },
-            // 3. Vidplay (via VidSrc.to)
+            // 5. Vidplay (via VidSrc.to)
             {
                 name: "Vidplay",
                 url: mediaType === "movie"
@@ -176,9 +221,9 @@ export class ResolverService {
                 speed: "fast",
                 status: "active",
                 type: "embed",
-                priority: 3
+                priority: 5
             },
-            // 4. Upcloud (via VidSrc.to)
+            // 6. Upcloud (via VidSrc.to)
             {
                 name: "Upcloud",
                 url: mediaType === "movie"
@@ -188,9 +233,9 @@ export class ResolverService {
                 speed: "fast",
                 status: "active",
                 type: "embed",
-                priority: 4
+                priority: 6
             },
-            // 4. Topish (Nollywood/African)
+            // 7. Topish (Nollywood/African)
             {
                 name: "Topish",
                 url: `https://topish.to/embed/${embedId}`,
@@ -198,7 +243,7 @@ export class ResolverService {
                 speed: "medium",
                 status: "active",
                 type: "embed",
-                priority: 4
+                priority: 7
             },
             // 5. Embed.su (International)
             {
@@ -355,10 +400,16 @@ export class ResolverService {
             if (episode) query.append('episode', episode.toString());
             if (title) query.append('title', title);
 
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second max for scrapers
+
             const response = await fetch(`${PROXY_BASE}/scrapers/resolve?${query.toString()}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 return [];

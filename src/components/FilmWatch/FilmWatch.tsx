@@ -27,7 +27,7 @@ import Title from "../Common/Title";
 import Footer from "../Footer/Footer";
 import Comments from "../Common/Comments"; // Swapped to stable Comments component
 import SeasonSelection from "./SeasonSelection";
-import DownloadOptions from "../Common/DownloadOptions";
+import EliteDownload from "../Common/EliteDownload";
 import PlayerControls from "./PlayerControls";
 import StreamLuxPlayer from "./StreamLuxPlayer";
 import AdBanner from "../Ads/AdBanner";
@@ -270,7 +270,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
 
                   {/* Download Button */}
                   <div className="w-full md:w-auto">
-                    {downloadInfo && <DownloadOptions downloadInfo={downloadInfo} />}
+                    {downloadInfo && <EliteDownload downloadInfo={downloadInfo} />}
                   </div>
                 </div>
               </div>
