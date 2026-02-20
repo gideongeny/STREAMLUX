@@ -7,21 +7,8 @@ import { Capacitor } from '@capacitor/core';
 import { userStatsService } from './userStats'; // To unlock premium features
 import { logger } from '../utils/logger';
 
-let AdMob: any = null;
-try {
-    // Dynamic import to avoid crash if plugin is missing from package.json
-    import('@capacitor-community/admob').then(m => {
-        AdMob = m.AdMob;
-        // Reinforce init if loading late
-        if (Capacitor.isNativePlatform()) {
-            AdMob.initialize().catch((e: any) => logger.error('Late AdMob init failed:', e));
-        }
-    }).catch(e => {
-        logger.warn('AdMob plugin not found in project');
-    });
-} catch (e) {
-    logger.warn('Failed to import AdMob:', e);
-}
+import { AdMob } from '@capacitor-community/admob';
+let AdMobPlugin: any = AdMob;
 
 export type RewardType = 'download' | 'premium_unlock' | 'remove_watermark';
 
@@ -72,13 +59,8 @@ class AdManager {
 
         if (this.isInitialized) return;
 
-        if (!AdMob) {
-            logger.warn('AdMob not available for initialization');
-            return;
-        }
-
         try {
-            await AdMob.initialize();
+            await AdMobPlugin.initialize();
             this.isInitialized = true;
             logger.log('AdMob initialized');
         } catch (error) {
@@ -90,7 +72,7 @@ class AdManager {
      * Show Banner Ad
      */
     async showBanner(): Promise<void> {
-        if (!this.isInitialized || !AdMob) return;
+        if (!this.isInitialized || !AdMobPlugin) return;
 
         try {
             const options: any = {
@@ -100,7 +82,7 @@ class AdManager {
                 margin: 0,
                 isTesting: true
             };
-            await AdMob.showBanner(options);
+            await AdMobPlugin.showBanner(options);
         } catch (error) {
             logger.error('Failed to show banner:', error);
         }
@@ -110,9 +92,9 @@ class AdManager {
      * Hide Banner Ad
      */
     async hideBanner(): Promise<void> {
-        if (!this.isInitialized || !AdMob) return;
+        if (!this.isInitialized || !AdMobPlugin) return;
         try {
-            await AdMob.hideBanner();
+            await AdMobPlugin.hideBanner();
         } catch (error) {
             logger.error('Failed to hide banner:', error);
         }
@@ -122,15 +104,15 @@ class AdManager {
      * Show Interstitial Ad (e.g., before playing video)
      */
     async showInterstitial(): Promise<void> {
-        if (!this.isInitialized || !AdMob) return;
+        if (!this.isInitialized || !AdMobPlugin) return;
 
         try {
             const options: any = {
                 adId: this.INTERSTITIAL_ID,
                 isTesting: true
             };
-            await AdMob.prepareInterstitial(options);
-            await AdMob.showInterstitial();
+            await AdMobPlugin.prepareInterstitial(options);
+            await AdMobPlugin.showInterstitial();
         } catch (error) {
             logger.error('Failed to show interstitial:', error);
         }
@@ -140,7 +122,7 @@ class AdManager {
      * Show Rewarded Ad (e.g., to unlock downloads)
      */
     async showRewardedAd(): Promise<boolean> {
-        if (!this.isInitialized || !AdMob) return false;
+        if (!this.isInitialized || !AdMobPlugin) return false;
 
         return new Promise(async (resolve) => {
             let rewardHandler: any = null;
@@ -152,14 +134,11 @@ class AdManager {
                     isTesting: true
                 };
 
-                await AdMob.prepareRewardVideoAd(options);
+                await AdMobPlugin.prepareRewardVideoAd(options);
 
-                // Use type assertion for event names as they may not be fully typed in the library
-                // addListener returns a Promise, so we need to await it
-                rewardHandler = await AdMob.addListener('onRewardVideoReward' as any, (reward: any) => {
+                // Use type assertion for event names
+                rewardHandler = await AdMobPlugin.addListener('onRewardVideoReward' as any, (reward: any) => {
                     logger.log('User rewarded:', reward);
-                    // Grant premium access for 24h as a reward example
-                    // In a real app, update user status in DB
                     resolve(true);
                     if (rewardHandler && typeof rewardHandler.remove === 'function') {
                         rewardHandler.remove();
@@ -169,8 +148,8 @@ class AdManager {
                     }
                 });
 
-                closeHandler = await AdMob.addListener('onRewardVideoAdDismissed' as any, () => {
-                    resolve(false); // Closed without reward? Logic depends on when reward fires
+                closeHandler = await AdMobPlugin.addListener('onRewardVideoAdDismissed' as any, () => {
+                    resolve(false);
                     if (rewardHandler && typeof rewardHandler.remove === 'function') {
                         rewardHandler.remove();
                     }
@@ -179,10 +158,9 @@ class AdManager {
                     }
                 });
 
-                await AdMob.showRewardVideoAd();
+                await AdMobPlugin.showRewardVideoAd();
             } catch (error) {
                 logger.error('Failed to show rewarded ad:', error);
-                // Clean up listeners on error
                 if (rewardHandler && typeof rewardHandler.remove === 'function') {
                     rewardHandler.remove();
                 }

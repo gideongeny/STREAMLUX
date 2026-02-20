@@ -4,6 +4,7 @@
   "proxy": "http://localhost:3001",
   "private": true,
   "dependencies": {
+    "@capacitor-community/admob": "^8.0.0",
     "@capacitor/android": "^7.4.4",
     "@capacitor/app": "^7.1.0",
     "@capacitor/cli": "^7.4.4",
