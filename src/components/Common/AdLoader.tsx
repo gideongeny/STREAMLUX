@@ -62,11 +62,7 @@ const AdLoader: FC<AdLoaderProps> = ({ src, adSlot, className = "" }) => {
         <div className={`ad-container my-4 flex justify-center ${className}`}>
             <ins className="adsbygoogle"
                 style={{ display: "block" }}
-<<<<<<< HEAD
                 data-ad-client="ca-pub-1281448884303417"
-=======
-                data-ad-client="ca-pub-YOUR_PUBLISHER_ID" // TODO: User needs to provide this or I'll use a placeholder
->>>>>>> 9b77a086ab01d9b3c8fe3e17c4883e897e62975f
                 data-ad-slot={adSlot}
                 data-ad-format="auto"
                 data-full-width-responsive="true"></ins>

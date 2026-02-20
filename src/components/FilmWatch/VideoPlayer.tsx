@@ -101,7 +101,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     const handlePiPToggle = async () => {
         if (!videoRef.current || !document.pictureInPictureEnabled) return;
-        
+
         try {
             if (isPiP) {
                 await document.exitPictureInPicture();
@@ -117,7 +117,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     useEffect(() => {
         if (!videoRef.current) return;
-        
+
         const video = videoRef.current;
         const handlePiPChange = () => {
             setIsPiP(document.pictureInPictureElement === video);
@@ -195,7 +195,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     >
                         Your browser does not support the video tag.
                     </video>
-                    
+
                     {/* Playback Controls Overlay */}
                     <div className="absolute bottom-4 right-4 z-30 opacity-0 group-hover:opacity-100 transition duration-300 flex gap-2">
                         {/* Speed Control */}
@@ -221,7 +221,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                                 </div>
                             )}
                         </div>
-                        
+
                         {/* PiP Button */}
                         {document.pictureInPictureEnabled && (
                             <button
@@ -249,7 +249,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
             {/* Source Switcher UI - Visible on Hover */}
             {normalizedSources.length > 1 && (
-                <div className="absolute top-4 right-4 z-30 opacity-0 group-hover:opacity-100 transition duration-300">
+                <div className="absolute top-4 left-4 z-30 opacity-0 group-hover:opacity-100 transition duration-300">
                     <div className="relative">
                         <button
                             onClick={() => setShowSourceMenu(!showSourceMenu)}

@@ -46,7 +46,6 @@ android/build/
 # OS
 .DS_Store
 Thumbs.db
-<<<<<<< HEAD
 
 # Build artifacts and logs
 *.apk
@@ -61,5 +60,3 @@ deploy-*.log
 deployment.log
 error_log.txt
 tatuscls
-=======
->>>>>>> 9b77a086ab01d9b3c8fe3e17c4883e897e62975f
