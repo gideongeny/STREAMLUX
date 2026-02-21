@@ -171,24 +171,11 @@ export const useTMDBCollectionQuery = (
           });
         }
 
-        // Filter by region (client-side) - RELAXED FILTERING
-        // Only filter strictly if we have enough results, otherwise be lenient to prevent empty screen
-        if (region) {
-          const strictFiltered = filteredResults.filter((item) => {
-            const countries = item.origin_country || [];
-            // If the service specifically returned this for a region, we trust it more
-            // than the partial TMDB metadata which often misses origin_country tags.
-            return targetCountries.length === 0 || countries.some((c: string) => targetCountries.includes(c));
-          });
-
-          // RELAXED: In specialized regional tabs, if the service returns items, we MUST show them.
-          // Filtering them out here is what leads to the "404 - no such films" message.
-          if (filteredResults.length > 0) {
-            console.log(`Region results found (${filteredResults.length}). Showing all results to avoid content gaps.`);
-            // DO NOT strictly enforce metadata filtering if we have content
-          } else if (targetCountries.length > 0) {
-            filteredResults = strictFiltered;
-          }
+        // Filter by region (client-side) - REMOVED STRICT FILTERING
+        // The explore service already handles regionality. Enforcing strict origin_country 
+        // metadata often leads to false-negative empty states (404s) for regional content.
+        if (region && filteredResults.length > 0) {
+          console.log(`Explore: Loaded ${filteredResults.length} items for region ${region}.`);
         }
 
         // Sort results
