@@ -46,6 +46,9 @@ import BuyMeACoffee from "./components/Common/BuyMeACoffee";
 import { safeStorage } from "./utils/safeStorage";
 import { initializeAdMob } from "./services/capacitorAds";
 import { App as CapApp } from "@capacitor/app";
+import { themeService } from "./services/theme";
+import { pushNotificationService } from "./services/pushNotifications";
+import { trendingNotificationService } from "./services/trendingNotifications";
 
 function App() {
   const location = useLocation();
@@ -81,9 +84,22 @@ function App() {
 
   const [isSignedIn, setIsSignedIn] = useState<boolean>(() => getInitialSignedIn());
 
-  // Initialize AdMob on native Android/iOS builds (no-op on web)
+  // Initialize Services (Theme, AdMob, Push Notifications)
   useEffect(() => {
+    themeService.initialize();
     initializeAdMob().catch(console.warn);
+
+    if (Capacitor.isNativePlatform()) {
+      pushNotificationService.initialize().catch(console.warn);
+    }
+
+    // Check for trending content notification on startup and periodically
+    trendingNotificationService.checkAndNotifyTrending();
+    const trendingInterval = setInterval(() => {
+      trendingNotificationService.checkAndNotifyTrending();
+    }, 10 * 60 * 1000); // Check every 10 minutes
+
+    return () => clearInterval(trendingInterval);
   }, []);
 
   // Handle Firebase Redirect Result (Google/Facebook Login fallback for native)

@@ -18,10 +18,14 @@ export const signInWithProvider = async (provider: any, type: string) => {
     if (isNative) {
       toast.info(`Initiating ${type} login...`);
       try {
+        // Set flag BEFORE redirect so when we return, SignIn.tsx shows the pending screen
+        try { localStorage.setItem('auth_redirect_pending', 'true'); } catch { }
         await signInWithRedirect(auth, provider);
         // On native, execution typically stops here as the browser takes over
         console.log('[Auth] Redirect initiated');
       } catch (err: any) {
+        // If redirect fails, clear the flag
+        try { localStorage.removeItem('auth_redirect_pending'); } catch { }
         console.error('[Auth] Redirect error:', err);
         toast.error(`Auth Error: ${err.message}`);
         throw err;

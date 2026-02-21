@@ -14,7 +14,7 @@ interface MediaMetadata {
 
 class BackgroundAudioService {
     private isPlaying = false;
-    private audioElement: HTMLAudioElement | null = null;
+    private audioElement: HTMLMediaElement | null = null;
 
     /**
      * Check if background audio is supported
@@ -26,7 +26,7 @@ class BackgroundAudioService {
     /**
      * Initialize background audio
      */
-    async initialize(audioEl: HTMLAudioElement): Promise<void> {
+    async initialize(audioEl: HTMLMediaElement): Promise<void> {
         if (!this.isSupported()) {
             console.log('Background audio only available on native platforms');
             return;

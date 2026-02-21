@@ -37,7 +37,8 @@ function buildQueryParams(params: Record<string, string | number>) {
  */
 export async function fetchYouTubeVideos(
     query: string,
-    pageToken?: string
+    pageToken?: string,
+    videoDuration?: 'any' | 'long' | 'medium' | 'short'
 ): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string }> {
     try {
         // Check if API key exists
@@ -48,6 +49,7 @@ export async function fetchYouTubeVideos(
 
         const params: Record<string, string | number> = { q: query };
         if (pageToken) params["pageToken"] = pageToken;
+        if (videoDuration) params["videoDuration"] = videoDuration;
 
         const url = buildQueryParams(params);
         const response = await axios.get(url, { timeout: 10000 });

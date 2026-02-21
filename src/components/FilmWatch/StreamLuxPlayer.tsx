@@ -13,6 +13,8 @@ import { toggleCinemaMode } from '../../store/slice/uiSlice';
 import AmbiFlowGlow from './AmbiFlowGlow';
 import VisionCastOverlay from './VisionCastOverlay';
 import { HiSparkles } from 'react-icons/hi';
+import { safeStorage } from '../../utils/safeStorage';
+import { backgroundAudioService } from '../../services/backgroundAudio';
 
 export interface VideoSource {
     name: string;
@@ -42,6 +44,12 @@ interface VideoPlayerProps {
     id?: number | string;
     mediaType?: "movie" | "tv";
 }
+
+const getSetting = (key: string, defaultValue: boolean): boolean => {
+    const val = safeStorage.get(key);
+    if (val === null) return defaultValue;
+    return val === "true";
+};
 
 const isDirectVideoUrl = (url: string): boolean => {
     const directVideoPatterns = [
@@ -201,10 +209,19 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
             adTimerRef.current = setTimeout(() => setShowAdSkip(true), 5000);
         }
 
+        // Handle Background Audio Initialization
+        if (direct && videoRef.current && getSetting('background_audio_enabled', false)) {
+            backgroundAudioService.initialize(videoRef.current);
+            backgroundAudioService.enableBackgroundPlayback();
+            if (title) {
+                backgroundAudioService.updateMetadata({ title });
+            }
+        }
+
         return () => {
             if (adTimerRef.current) clearTimeout(adTimerRef.current);
         };
-    }, [currentIndex, currentSource?.url]);
+    }, [currentIndex, currentSource?.url, title]);
 
     useEffect(() => {
         if (normalizedSources.length > 0) {
@@ -365,6 +382,8 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     }, []);
 
     const getAutoplayUrl = (url: string) => {
+        const isAutoplayEnabled = getSetting('autoplay_enabled', true);
+        if (!isAutoplayEnabled) return url;
         if (url.includes('?')) return `${url}&autoplay=1`;
         return `${url}?autoplay=1`;
     };
@@ -474,7 +493,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                         ref={videoRef}
                         className="w-full h-full object-contain"
                         controls
-                        autoPlay
+                        autoPlay={getSetting('autoplay_enabled', true)}
                         playsInline
                         muted={false} // Ensure it's not muted so audio works with autoplay if browser allows
                         poster={poster}

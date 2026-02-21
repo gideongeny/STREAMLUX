@@ -15,6 +15,7 @@ import { UserProfile } from "../shared/types";
 import { safeStorage } from "../utils/safeStorage";
 import { biometricAuthService } from "../services/biometricAuth";
 import { backgroundAudioService } from "../services/backgroundAudio";
+import { themeService } from "../services/theme";
 
 interface SettingsProps { }
 
@@ -82,41 +83,7 @@ const Settings: FunctionComponent<SettingsProps> = () => {
     };
 
     const handleThemeChange = (color: string) => {
-        // Update CSS variable
-        document.documentElement.style.setProperty("--color-primary", color);
-        safeStorage.set("theme_primary_color", color);
-        
-        // Also update Tailwind's primary color by injecting a style tag
-        let styleTag = document.getElementById("dynamic-primary-color");
-        if (!styleTag) {
-            styleTag = document.createElement("style");
-            styleTag.id = "dynamic-primary-color";
-            document.head.appendChild(styleTag);
-        }
-        styleTag.textContent = `
-            :root {
-                --color-primary: ${color};
-            }
-            .text-primary { 
-                color: ${color} !important; 
-            }
-            .bg-primary { 
-                background-color: ${color} !important; 
-            }
-            .border-primary { 
-                border-color: ${color} !important; 
-            }
-            .hover\\:bg-primary:hover { 
-                background-color: ${color} !important; 
-            }
-            .hover\\:text-primary:hover { 
-                color: ${color} !important; 
-            }
-            .hover\\:border-primary:hover { 
-                border-color: ${color} !important; 
-            }
-        `;
-        
+        themeService.applyTheme(color);
         toast.success("Theme updated! Refresh to see all changes.", { position: "top-right", autoClose: 2000 });
     };
 

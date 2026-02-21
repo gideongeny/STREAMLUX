@@ -6,18 +6,22 @@ interface ExploreFilterProps {
   currentTab: "movie" | "tv";
   onTabChange: (tab: "movie" | "tv") => void;
   filters: {
+    type: "movie" | "tv";
     sortBy: string;
     genres: number[];
     year: string;
     runtime: string;
     region: string;
+    rating: string;
   };
   onFilterChange: (newFilters: Partial<{
+    type: "movie" | "tv";
     sortBy: string;
     genres: number[];
     year: string;
     runtime: string;
     region: string;
+    rating: string;
   }>) => void;
 }
 
@@ -34,21 +38,19 @@ const ExploreFilter: FunctionComponent<ExploreFilterProps> = ({
         <div className="flex space-x-2">
           <button
             onClick={() => onTabChange("movie")}
-            className={`flex-1 py-2 px-4 rounded-md transition-colors ${
-              currentTab === "movie"
+            className={`flex-1 py-2 px-4 rounded-md transition-colors ${currentTab === "movie"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-            }`}
+              }`}
           >
             Movies
           </button>
           <button
             onClick={() => onTabChange("tv")}
-            className={`flex-1 py-2 px-4 rounded-md transition-colors ${
-              currentTab === "tv"
+            className={`flex-1 py-2 px-4 rounded-md transition-colors ${currentTab === "tv"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-            }`}
+              }`}
           >
             TV Shows
           </button>

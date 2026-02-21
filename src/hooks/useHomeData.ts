@@ -9,10 +9,10 @@ import {
 import { BannerInfo, HomeFilms, Item } from "../shared/types";
 import { safeStorage } from "../utils/safeStorage";
 
-export const useHomeData = (type: "movies" | "tvs") => {
+export const useHomeData = (type: "movie" | "tv") => {
   const queryClient = useQueryClient();
   const cacheKey = `home-cache-${type}`;
-  const getData = type === "movies" ? getHomeMovies : getHomeTVs;
+  const getData = type === "movie" ? getHomeMovies : getHomeTVs;
 
   // Load from cache initially for instant feel
   const initialData = safeStorage.getParsed<HomeFilms | undefined>(cacheKey, undefined);
@@ -33,7 +33,7 @@ export const useHomeData = (type: "movies" | "tvs") => {
   const detailQuery = useQuery<BannerInfo[], Error>(
     [`detail${type.charAt(0).toUpperCase() + type.slice(1)}`, data?.Trending],
     () =>
-      type === "movies"
+      type === "movie"
         ? getMovieBannerInfo(data?.Trending as Item[])
         : getTVBannerInfo(data?.Trending as Item[]),
     {

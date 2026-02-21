@@ -106,8 +106,8 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
       )}
 
       <div
-        className={`shrink-0 md:max-w-[260px] w-[70vw] pl-8 top-0 pt-10  
-        md:sticky md:translate-x-0 md:bg-transparent md:shadow-none md:self-start md:max-h-screen md:overflow-y-auto
+        className={`shrink-0 md:max-w-[260px] w-[70vw] pl-8 top-0 pt-10 overflow-y-auto pb-20
+        md:sticky md:translate-x-0 md:bg-transparent md:shadow-none md:self-start md:max-h-screen
       -translate-x-full fixed h-screen shadow-2xl transition-all duration-500 bg-dark/40 tw-glass z-50 ${isSidebarActive && "translate-x-0"
           }`}
       >

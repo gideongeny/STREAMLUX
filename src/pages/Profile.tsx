@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
 import Footer from "../components/Footer/Footer";
+import { themeService, themes } from "../services/theme";
 import DeleteAccount from "../components/Profile/DeleteAcount";
 import Email from "../components/Profile/Email";
 import EmailVerification from "../components/Profile/EmailVerification";
@@ -260,10 +261,14 @@ const Profile: FunctionComponent<ProfileProps> = () => {
                   Atmospheric Themes
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                  {["Classic", "Deep Sea", "Nebula", "Royal"].map((theme) => (
-                    <button key={theme} className="group relative aspect-video rounded-2xl overflow-hidden border border-white/5 hover:border-primary transition">
-                      <div className={`absolute inset-0 bg-gradient-to-br ${theme === "Classic" ? "from-orange-500 to-red-600" : theme === "Deep Sea" ? "from-blue-600 to-cyan-400" : theme === "Nebula" ? "from-purple-600 to-pink-500" : "from-yellow-400 to-orange-400"} opacity-40 group-hover:opacity-60 transition`} />
-                      <span className="absolute inset-0 flex items-center justify-center text-white text-[10px] font-black uppercase tracking-widest">{theme}</span>
+                  {themes.map((theme) => (
+                    <button
+                      key={theme.name}
+                      onClick={() => themeService.setThemeByName(theme.name)}
+                      className="group relative aspect-video rounded-2xl overflow-hidden border border-white/5 hover:border-primary transition"
+                    >
+                      <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-40 group-hover:opacity-60 transition`} />
+                      <span className="absolute inset-0 flex items-center justify-center text-white text-[10px] font-black uppercase tracking-widest">{theme.name}</span>
                     </button>
                   ))}
                 </div>

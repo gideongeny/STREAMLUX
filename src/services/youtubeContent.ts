@@ -141,7 +141,7 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
         ];
 
         const results = await Promise.allSettled(
-            queries.map(q => fetchYouTubeVideos(q, undefined))
+            queries.map(q => fetchYouTubeVideos(q, undefined, 'short'))
         );
 
         const allVideos: YouTubeVideo[] = [];

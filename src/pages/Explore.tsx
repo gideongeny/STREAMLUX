@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { IoArrowBack } from "react-icons/io5";
 import Sidebar from "../components/Common/Sidebar";
@@ -7,29 +7,28 @@ import ExploreFilter from "../components/Explore/ExploreFilter";
 import ExploreResult from "../components/Explore/ExploreResult";
 import { useTMDBCollectionQuery } from "../hooks/useCollectionQuery";
 import { useYouTubeVideos } from "../hooks/useYouTube";
-import YouTubeGrid from "../components/Explore/YouTubeGrid";
 import { convertYouTubeToItem } from "../services/youtubeContent";
+import { Item } from "../shared/types";
 
 const Explore = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  // Get currentTab from URL or localStorage, default to movie
-  const [currentTab, setCurrentTab] = useState<"movie" | "tv">(
-    (searchParams.get("type") as "movie" | "tv") ||
-    (localStorage.getItem("currentTab") as "movie" | "tv") ||
-    "movie"
-  );
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isSidebarActive, setIsSidebarActive] = useState(false);
+
+  // CONSOLIDATED STATE: Ensure everything stays in sync
   const [filters, setFilters] = useState({
-    sortBy: "popularity.desc",
-    genres: [] as number[],
-    year: "",
-    runtime: "",
+    type: (searchParams.get("type") as "movie" | "tv") || (localStorage.getItem("currentTab") as "movie" | "tv") || "movie",
+    sortBy: searchParams.get("sort_by") || "popularity.desc",
+    genres: searchParams.getAll("genre").map(Number),
+    year: searchParams.get("from") && searchParams.get("to") ? `${searchParams.get("from")}-${searchParams.get("to")}` : "",
+    runtime: "", // Calculated below
     region: searchParams.get("region") || "",
     rating: searchParams.get("vote_average.gte") || "0",
   });
 
-  const { data, isLoading, error } = useTMDBCollectionQuery(
+  // Derived currentTab from filters
+  const currentTab = filters.type;
+
+  const { data: tmdbData, isLoading: tmdbLoading, error } = useTMDBCollectionQuery(
     currentTab,
     filters.sortBy,
     filters.genres,
@@ -39,62 +38,46 @@ const Explore = () => {
     filters.rating
   );
 
-  // Use YouTube hook when a region is selected (and we want YouTube content)
-  const { videos: ytVideos, loading: ytLoading, error: ytError } = useYouTubeVideos({
+  const { videos: ytVideos, loading: ytLoading } = useYouTubeVideos({
     region: filters.region || undefined,
     type: currentTab,
   });
 
   useEffect(() => {
-    // Update filters when URL params change
     const region = searchParams.get("region") || "";
-    const type = searchParams.get("type") as "movie" | "tv" | null;
-    const yearFrom = searchParams.get("from");
-    const yearTo = searchParams.get("to");
+    const type = (searchParams.get("type") as "movie" | "tv") || "movie";
     const genres = searchParams.getAll("genre").map(Number);
-    const voteAverage = searchParams.get("vote_average.gte") || "0";
+    const sortBy = searchParams.get("sort_by") || "popularity.desc";
     const minRuntime = searchParams.get("minRuntime");
     const maxRuntime = searchParams.get("maxRuntime");
 
-    // Construct runtime string if both exist
     let runtime = "";
     if (minRuntime === "0" && maxRuntime === "90") runtime = "short";
-    if (minRuntime === "90" && maxRuntime === "150") runtime = "medium";
-    if (minRuntime === "150" && maxRuntime === "200") runtime = "long";
+    else if (minRuntime === "90" && maxRuntime === "150") runtime = "medium";
+    else if (minRuntime === "150" && maxRuntime === "200") runtime = "long";
 
-    setFilters(prev => ({
-      ...prev,
+    setFilters({
+      type,
       region,
       genres,
-      year: yearFrom && yearTo ? `${yearFrom}-${yearTo}` : "",
-      sortBy: searchParams.get("sort_by") || "popularity.desc",
-      // Add missing filter props if they were part of the state
-    }));
+      sortBy,
+      runtime,
+      year: searchParams.get("from") && searchParams.get("to") ? `${searchParams.get("from")}-${searchParams.get("to")}` : "",
+      rating: searchParams.get("vote_average.gte") || "0",
+    });
 
-    // Update currentTab from URL or localStorage
-    if (type && (type === "movie" || type === "tv")) {
-      setCurrentTab(type);
-      localStorage.setItem("currentTab", type);
-    } else {
-      // Read from localStorage if not in URL
-      const savedTab = localStorage.getItem("currentTab") as "movie" | "tv" | null;
-      if (savedTab && (savedTab === "movie" || savedTab === "tv")) {
-        setCurrentTab(savedTab);
-      }
-    }
+    if (type) localStorage.setItem("currentTab", type);
   }, [searchParams]);
 
-  const handleFilterChange = (newFilters: Partial<typeof filters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  };
-
   const handleTabChange = (tab: "movie" | "tv") => {
-    setCurrentTab(tab);
-    localStorage.setItem("currentTab", tab);
-    // Update URL to include type
     const newParams = new URLSearchParams(searchParams);
     newParams.set("type", tab);
-    window.history.replaceState({}, "", `?${newParams.toString()}`);
+    setSearchParams(newParams);
+  };
+
+  const handleFilterChange = (newFilters: Partial<typeof filters>) => {
+    // This is mainly for sub-components that might call it, but we mostly use URL params
+    setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
   const getRegionTitle = (region: string) => {
@@ -108,8 +91,8 @@ const Explore = () => {
       "korea": "🇰🇷 Korean Drama & Movies",
       "japan": "🇯🇵 Japanese Anime & Movies",
       "china": "🇨🇳 Chinese Cinema",
-      "philippines": "🇵🇭 Filipino Movies & TV (ABS-CBN/iWantTFC)",
-      "kenya": "🇰🇪 Kenyan Movies & TV (Citizen, NTV, KTN, Showmax)"
+      "philippines": "🇵🇭 Filipino Movies & TV",
+      "kenya": "🇰🇪 Kenyan Movies & TV"
     };
     return regionTitles[region] || "Explore Movies & TV Shows";
   };
@@ -117,7 +100,6 @@ const Explore = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-8">
-        {/* Mobile header with clickable logo, consistent with other pages */}
         <div className="flex md:hidden justify-between items-center mb-5">
           <Link to="/" className="flex gap-2 items-center">
             <img src="/logo.svg" alt="StreamLux Logo" className="h-10 w-10" />
@@ -130,12 +112,10 @@ const Explore = () => {
           </button>
         </div>
 
-        {/* Sidebar for navigation on mobile */}
         <div className="md:hidden">
           <Sidebar onCloseSidebar={() => setIsSidebarActive(false)} isSidebarActive={isSidebarActive} />
         </div>
 
-        {/* Desktop header with logo */}
         <div className="hidden md:flex items-center mb-6">
           <Link to="/" className="flex gap-2 items-center">
             <img src="/logo.svg" alt="StreamLux Logo" className="h-10 w-10" />
@@ -146,11 +126,7 @@ const Explore = () => {
         </div>
 
         <div className="mb-8">
-          {/* Back button */}
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors"
-          >
+          <Link to="/" className="flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition-colors">
             <IoArrowBack size={20} />
             <span>Back to Home</span>
           </Link>
@@ -158,11 +134,9 @@ const Explore = () => {
           <h1 className="text-4xl font-bold mb-2">
             {filters.region ? getRegionTitle(filters.region) : "Explore Movies & TV Shows"}
           </h1>
-          {filters.region && (
-            <p className="text-gray-400">
-              Discover amazing {currentTab === "movie" ? "movies" : "TV shows"} from around the world
-            </p>
-          )}
+          <p className="text-gray-400">
+            Discover amazing {currentTab === "movie" ? "movies" : "TV shows"} from around the world
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -177,24 +151,25 @@ const Explore = () => {
 
           <div className="lg:col-span-3">
             {(() => {
-              // Combine TMDB/Scraper data with YouTube data regardless of filter
-              const combinedData = [...data];
+              // Combine and Deduplicate
+              const combinedResults: Item[] = [...(tmdbData || [])];
               if (ytVideos && ytVideos.length > 0) {
-                const convertedYtVideos = ytVideos.map((video, index) =>
-                  convertYouTubeToItem(video, index + 10000 + data.length) // Offset IDs to avoid collision
-                );
-                combinedData.push(...convertedYtVideos);
+                const converted = ytVideos.map((v, i) => convertYouTubeToItem(v, i + 5000));
+                combinedResults.push(...converted);
               }
 
-              // Deduplicate
-              const uniqueData = combinedData.filter((item, index, self) =>
-                index === self.findIndex((t) => t.id === item.id)
-              );
+              const seen = new Set<number>();
+              const finalData = combinedResults.filter(item => {
+                if (!item || seen.has(item.id)) return false;
+                seen.add(item.id);
+                // Trust the service's media_type mapping
+                return true;
+              });
 
               return (
                 <ExploreResult
-                  data={uniqueData}
-                  isLoading={isLoading && ytLoading}
+                  data={finalData}
+                  isLoading={tmdbLoading || ytLoading}
                   error={error}
                   currentTab={currentTab}
                 />
