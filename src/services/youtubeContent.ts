@@ -142,19 +142,18 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
         const allVideos: YouTubeVideo[] = [];
         results.forEach(result => {
             if (result.status === 'fulfilled') {
-                // Filter for actual YouTube Shorts
+                // RELAXED FILTER: The search API snippet doesn't always have duration.
+                // Trust the query context and specific shorts tags.
                 allVideos.push(...result.value.videos.filter(v => {
-                    // 1. Must check duration first - Shorts are strictly under 60s
-                    const isShortDuration = v.duration ? v.duration <= 60 : false;
-
-                    // 2. Check for shorts indicators
-                    const hasShortsTag = v.title.toLowerCase().includes('#shorts') ||
-                        v.title.toLowerCase().includes('shorts') ||
+                    const hasShortsTag = v.title.toLowerCase().includes('shorts') ||
                         v.description?.toLowerCase().includes('shorts');
 
-                    // 3. Relaxed logic: If query was specifically for shorts and duration is short, allow it
-                    // even without specific tag, as the API query context implies relevance.
-                    return isShortDuration;
+                    // If it has #shorts or shorts in title, it's almost certainly a short.
+                    // If duration is unknown (undefined), allow it if tag exists.
+                    if (v.duration === undefined) return hasShortsTag;
+
+                    // If duration is known, it MUST be <= 60s
+                    return v.duration <= 60;
                 }));
             }
         });

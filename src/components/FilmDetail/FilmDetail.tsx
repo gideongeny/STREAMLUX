@@ -12,11 +12,12 @@ import { BsFillPlayFill, BsShareFill, BsThreeDots } from "react-icons/bs";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast, ToastContainer } from "react-toastify";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import { db } from "../../shared/firebase";
 import { DetailMovie, DetailTV, FilmInfo } from "../../shared/types";
-import { resizeImage } from "../../shared/utils";
+import { hapticImpact, hapticNotification, resizeImage } from "../../shared/utils";
 import { useAppSelector } from "../../store/hooks";
 import RightbarFilms from "../Common/RightbarFilms";
 import SearchBox from "../Common/SearchBox";
@@ -29,6 +30,8 @@ import FilmTabInfo from "./FilmTabInfo";
 import DownloadButton from "../Common/DownloadButton";
 import { downloadService } from "../../services/download";
 import HeroTrailer from "../Home/HeroTrailer";
+import AmbientGlow from "../Common/AmbientGlow";
+import { vibeService } from "../../services/vibe";
 
 const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
   const currentUser = useAppSelector((state) => state.auth.user);
@@ -48,6 +51,19 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
 
     return () => unsubDoc();
   }, [currentUser, detail?.id]);
+
+  useEffect(() => {
+    if (detail?.backdrop_path) {
+      const fullImageUrl = resizeImage(detail.backdrop_path, "w300");
+      vibeService.extractAverageColor(fullImageUrl).then((color) => {
+        vibeService.applyVibe(color);
+      });
+    }
+
+    return () => {
+      vibeService.resetVibe();
+    };
+  }, [detail?.backdrop_path]);
 
   const bookmarkedHandler = async () => {
     if (!detail) return;
@@ -73,18 +89,24 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
           id: detail?.id,
           vote_average: detail?.vote_average,
           media_type: detail?.media_type,
-          ...(detail?.media_type === "movie" && { title: detail?.title }),
-          ...(detail?.media_type === "tv" && { name: detail?.name }),
+          ...(detail?.media_type === "movie" && { title: (detail as DetailMovie).title }),
+          ...(detail?.media_type === "tv" && { name: (detail as DetailTV).name }),
         })
         : arrayRemove({
           poster_path: detail?.poster_path,
           id: detail?.id,
           vote_average: detail?.vote_average,
           media_type: detail?.media_type,
-          ...(detail?.media_type === "movie" && { title: detail?.title }),
-          ...(detail?.media_type === "tv" && { name: detail?.name }),
+          ...(detail?.media_type === "movie" && { title: (detail as DetailMovie).title }),
+          ...(detail?.media_type === "tv" && { name: (detail as DetailTV).name }),
         }),
     });
+
+    if (!isBookmarked) {
+      hapticNotification();
+    } else {
+      hapticImpact();
+    }
 
     toast.success(
       `${!isBookmarked
@@ -103,6 +125,28 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
     );
   };
 
+  const handleShareExperience = async () => {
+    if (!detail) return;
+    hapticImpact();
+    const title = (detail as DetailMovie).title || (detail as DetailTV).name;
+    const shareData = {
+      title: `Watching ${title} on StreamLux`,
+      text: `Elevating my entertainment with ${title}. Check it out on StreamLux!`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.info("Link copied to clipboard! Share the luxury.");
+      }
+    } catch (err) {
+      console.error("Sharing failed:", err);
+    }
+  };
+
   return (
     <>
       {detail && (
@@ -111,6 +155,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
             } | StreamLux`}
         />
       )}
+      <AmbientGlow imageUrl={resizeImage(detail?.backdrop_path || "")} />
 
       <div className="flex md:hidden justify-between items-center px-5 my-3">
         <Link to="/" className="flex gap-2 items-center">
@@ -172,13 +217,20 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                     </div>
                     {isMobile && (
                       <div className="flex flex-col gap-3 mt-4 ml-3 md:ml-0 w-full">
-                        <Link
-                          to="watch"
-                          className="flex gap-2 items-center justify-center px-4 py-2.5 rounded-full bg-primary text-white hover:bg-blue-600 transition duration-300 w-full"
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="w-full"
                         >
-                          <BsFillPlayFill size={18} />
-                          <span className="text-sm font-medium">WATCH</span>
-                        </Link>
+                          <Link
+                            to="watch"
+                            onClick={() => hapticImpact()}
+                            className="flex gap-2 items-center justify-center px-4 py-2.5 rounded-full bg-primary text-white hover:bg-blue-600 shadow-lg shadow-primary/20 transition duration-300 w-full"
+                          >
+                            <BsFillPlayFill size={18} />
+                            <span className="text-sm font-medium">WATCH</span>
+                          </Link>
+                        </motion.div>
 
                         {detail && (
                           <DownloadButton
@@ -230,13 +282,23 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                   {/* WATCH NOW */}
                   {!isMobile && (
                     <div className="flex gap-4 items-center mt-24">
-                      <Link
-                        to="watch"
-                        className="flex gap-6 items-center pl-6 pr-12 py-3 rounded-full bg-primary text-white hover:bg-blue-600 transition duration-300"
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        animate={{
+                          boxShadow: ["0 0 0px rgba(255,107,53,0)", "0 0 20px rgba(255,107,53,0.4)", "0 0 0px rgba(255,107,53,0)"]
+                        }}
+                        transition={{ duration: 2, repeat: Infinity }}
                       >
-                        <BsFillPlayFill size={25} />
-                        <span className="text-lg font-medium">WATCH</span>
-                      </Link>
+                        <Link
+                          to="watch"
+                          onClick={() => hapticImpact()}
+                          className="flex gap-6 items-center pl-6 pr-12 py-3 rounded-full bg-primary text-white hover:bg-blue-600 shadow-xl shadow-primary/30 transition duration-300"
+                        >
+                          <BsFillPlayFill size={25} />
+                          <span className="text-lg font-medium">WATCH</span>
+                        </Link>
+                      </motion.div>
 
                       {detail && (
                         <DownloadButton
@@ -254,25 +316,42 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
 
                 {/* BOOKMARK BUTTONS */}
                 <div className="flex gap-3 absolute top-[5%] right-[3%]">
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={bookmarkedHandler}
                     className={`tw-flex-center h-12 w-12 rounded-full border-[3px] border-white shadow-lg hover:border-primary transition duration-300 group ${isBookmarked && "!border-primary"
                       }`}
                   >
-                    <AiFillHeart
-                      size={20}
-                      className={`text-white group-hover:text-primary transition duration-300 ${isBookmarked && "!text-primary"
-                        }`}
-                    />
-                  </button>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={isBookmarked ? "booked" : "not-booked"}
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 1.5, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      >
+                        <AiFillHeart
+                          size={20}
+                          className={`text-white group-hover:text-primary transition duration-300 ${isBookmarked && "!text-primary"
+                            }`}
+                        />
+                      </motion.div>
+                    </AnimatePresence>
+                  </motion.button>
                   {!isMobile && (
                     <>
-                      <button className="tw-flex-center h-12 w-12 rounded-full border-[3px] border-white shadow-lg hover:border-primary transition duration-300 group">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={handleShareExperience}
+                        className="tw-flex-center h-12 w-12 rounded-full border-[3px] border-white shadow-lg hover:border-primary transition duration-300 group"
+                      >
                         <BsShareFill
                           size={20}
                           className="text-white group-hover:text-primary transition duration-300"
                         />
-                      </button>
+                      </motion.button>
                       <button className="tw-flex-center h-12 w-12 rounded-full border-[3px] border-white shadow-lg hover:border-primary transition duration-300 group">
                         <BsThreeDots
                           size={20}

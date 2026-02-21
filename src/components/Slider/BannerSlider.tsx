@@ -7,18 +7,21 @@ import { resizeImage } from "../../shared/utils";
 import { AiFillStar } from "react-icons/ai";
 import { Link } from "react-router-dom";
 import { BsFillPlayFill } from "react-icons/bs";
+import { motion, AnimatePresence } from "framer-motion";
 import Skeleton from "../Common/Skeleton";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 interface BannerSliderProps {
   films: Item[] | undefined;
   dataDetail: BannerInfo[] | undefined;
   isLoadingBanner: boolean;
+  onActiveImageChange?: (imageUrl: string) => void;
 }
 
 const BannerSlider: FC<BannerSliderProps> = ({
   films,
   dataDetail,
   isLoadingBanner,
+  onActiveImageChange,
 }) => {
   const { isMobile } = useCurrentViewportView();
 
@@ -34,7 +37,13 @@ const BannerSlider: FC<BannerSliderProps> = ({
           navigation
           autoplay={{ delay: 30000, disableOnInteraction: false }}
           slidesPerView={1}
-          onSlideChange={(swiper) => setActiveIndex(swiper.activeIndex)}
+          onSlideChange={(swiper) => {
+            const index = swiper.activeIndex;
+            setActiveIndex(index);
+            if (onActiveImageChange && films[index]) {
+              onActiveImageChange(resizeImage(films[index].backdrop_path, "w1280"));
+            }
+          }}
           className="!absolute !top-0 !left-0 !w-full !h-full  !rounded-lg"
         >
           {films.map((film, index) => (
@@ -46,8 +55,8 @@ const BannerSlider: FC<BannerSliderProps> = ({
                   alt="Backdrop image"
                   effect="blur"
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ${activeIndex === index && dataDetail?.[index]?.trailer && !isMobile
-                      ? 'opacity-0'
-                      : 'opacity-100'
+                    ? 'opacity-0'
+                    : 'opacity-100'
                     }`}
                   style={{ display: 'block', zIndex: 1 }}
                   onError={(e) => {
@@ -95,63 +104,84 @@ const BannerSlider: FC<BannerSliderProps> = ({
                   </div>
 
                   <div className="absolute top-1/2 -translate-y-1/2 left-[5%] md:max-w-2xl max-w-[280px]">
-                    {film.media_type === "sports" ? (
-                      <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-6 md:gap-10">
-                          <div className="flex flex-col items-center gap-2">
-                            <div className="w-16 h-16 md:w-28 md:h-28 bg-white/10 backdrop-blur-md rounded-2xl p-3 flex items-center justify-center border border-white/20 shadow-2xl">
-                              <img src={(film as any).homeLogo} alt="" className="w-full h-full object-contain drop-shadow-lg" />
-                            </div>
-                            <span className="text-white font-bold text-xs md:text-sm text-center uppercase tracking-tighter">{(film as any).homeTeam || 'Home'}</span>
-                          </div>
-
-                          <div className="flex flex-col items-center">
-                            <span className="text-primary font-black text-2xl md:text-5xl italic drop-shadow-[0_0_15px_rgba(255,0,0,0.5)]">VS</span>
-                          </div>
-
-                          <div className="flex flex-col items-center gap-2">
-                            <div className="w-16 h-16 md:w-28 md:h-28 bg-white/10 backdrop-blur-md rounded-2xl p-3 flex items-center justify-center border border-white/20 shadow-2xl">
-                              <img src={(film as any).awayLogo} alt="" className="w-full h-full object-contain drop-shadow-lg" />
-                            </div>
-                            <span className="text-white font-bold text-xs md:text-sm text-center uppercase tracking-tighter">{(film as any).awayTeam || 'Away'}</span>
-                          </div>
-                        </div>
-
-                        <h2 className="md:text-4xl text-xl text-white font-black tracking-tight drop-shadow-xl mt-2">
-                          {film.title || film.name}
-                        </h2>
-                      </div>
-                    ) : (
-                      <h2 className="md:text-5xl text-xl  text-primary font-black tracking-wide md:tw-multiline-ellipsis-2 tw-multiline-ellipsis-3 drop-shadow-lg">
-                        {film.title || film.name}
-                      </h2>
-                    )}
-
-                    <div>
-                      <p className="text-white font-semibold md:text-2xl text-base mt-6 drop-shadow-md">
-                        {dataDetail?.[index].translation[0]}
-                      </p>
-                      <p className="mt-1 text-primary/90 font-bold uppercase tracking-widest text-xs md:text-sm">
-                        {film.release_date && film.release_date}
-                      </p>
-                      {!isMobile && (
-                        <>
-                          <div className="flex gap-2 flex-wrap mt-5">
-                            {dataDetail?.[index].genre.map((genre) => (
-                              <div
-                                className="px-3 py-1 border border-primary/40 rounded-full bg-primary/10 backdrop-blur-sm text-xs font-bold text-white uppercase tracking-wider"
-                                key={genre.id}
-                              >
-                                {genre.name}
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`${film.id}-${activeIndex}`}
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                      >
+                        {film.media_type === "sports" ? (
+                          <div className="flex flex-col gap-4">
+                            <div className="flex items-center gap-6 md:gap-10">
+                              <div className="flex flex-col items-center gap-2">
+                                <motion.div
+                                  whileHover={{ scale: 1.1, rotate: 5 }}
+                                  className="w-16 h-16 md:w-28 md:h-28 bg-white/10 backdrop-blur-md rounded-2xl p-3 flex items-center justify-center border border-white/20 shadow-2xl"
+                                >
+                                  <img src={(film as any).homeLogo} alt="" className="w-full h-full object-contain drop-shadow-lg" />
+                                </motion.div>
+                                <span className="text-white font-bold text-xs md:text-sm text-center uppercase tracking-tighter">{(film as any).homeTeam || 'Home'}</span>
                               </div>
-                            ))}
+
+                              <div className="flex flex-col items-center">
+                                <span className="text-primary font-black text-2xl md:text-5xl italic drop-shadow-[0_0_15px_rgba(255,0,0,0.5)]">VS</span>
+                              </div>
+
+                              <div className="flex flex-col items-center gap-2">
+                                <motion.div
+                                  whileHover={{ scale: 1.1, rotate: -5 }}
+                                  className="w-16 h-16 md:w-28 md:h-28 bg-white/10 backdrop-blur-md rounded-2xl p-3 flex items-center justify-center border border-white/20 shadow-2xl"
+                                >
+                                  <img src={(film as any).awayLogo} alt="" className="w-full h-full object-contain drop-shadow-lg" />
+                                </motion.div>
+                                <span className="text-white font-bold text-xs md:text-sm text-center uppercase tracking-tighter">{(film as any).awayTeam || 'Away'}</span>
+                              </div>
+                            </div>
+
+                            <h2 className="md:text-4xl text-xl text-white font-black tracking-tight drop-shadow-xl mt-2">
+                              {film.title || film.name}
+                            </h2>
                           </div>
-                          <p className=" mt-3 text-base tw-multiline-ellipsis-3 text-gray-200 drop-shadow-md bg-black/20 p-2 rounded backdrop-blur-xs">
-                            {film.overview}
+                        ) : (
+                          <h2 className="md:text-5xl text-xl  text-primary font-black tracking-wide md:tw-multiline-ellipsis-2 tw-multiline-ellipsis-3 drop-shadow-lg">
+                            {film.title || film.name}
+                          </h2>
+                        )}
+
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3, duration: 0.6 }}
+                        >
+                          <p className="text-white font-semibold md:text-2xl text-base mt-6 drop-shadow-md">
+                            {dataDetail?.[index].translation[0]}
                           </p>
-                        </>
-                      )}
-                    </div>
+                          <p className="mt-1 text-primary/90 font-bold uppercase tracking-widest text-xs md:text-sm">
+                            {film.release_date && film.release_date}
+                          </p>
+                          {!isMobile && (
+                            <>
+                              <div className="flex gap-2 flex-wrap mt-5">
+                                {dataDetail?.[index].genre.map((genre) => (
+                                  <motion.div
+                                    whileHover={{ scale: 1.1, backgroundColor: "rgba(255,107,53,0.3)" }}
+                                    className="px-3 py-1 border border-primary/40 rounded-full bg-primary/10 backdrop-blur-sm text-xs font-bold text-white uppercase tracking-wider cursor-default"
+                                    key={genre.id}
+                                  >
+                                    {genre.name}
+                                  </motion.div>
+                                ))}
+                              </div>
+                              <p className=" mt-3 text-base tw-multiline-ellipsis-3 text-gray-200 drop-shadow-md bg-black/20 p-2 rounded backdrop-blur-xs">
+                                {film.overview}
+                              </p>
+                            </>
+                          )}
+                        </motion.div>
+                      </motion.div>
+                    </AnimatePresence>
                   </div>
                 </Link>
               </div>

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.keepAlive = exports.proxy = exports.healthCheck = exports.resolveStream = void 0;
+exports.proxy = exports.healthCheck = exports.resolveStream = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const resolver_1 = require("./resolver");
@@ -192,14 +192,13 @@ exports.proxy = functions
 /**
  * Scheduled Function: Keep Alive
  */
-exports.keepAlive = functions.pubsub.schedule('every 15 minutes').onRun(async (_context) => {
-    try {
-        console.log('Keep alive ping at', new Date().toISOString());
-        return null;
-    }
-    catch (error) {
-        console.error('Keep alive failed', error);
-        return null;
-    }
-});
+// export const keepAlive = functions.pubsub.schedule('every 15 minutes').onRun(async (_context) => {
+//     try {
+//         console.log('Keep alive ping at', new Date().toISOString());
+//         return null;
+//     } catch (error) {
+//         console.error('Keep alive failed', error);
+//         return null;
+//     }
+// });
 //# sourceMappingURL=index.js.map

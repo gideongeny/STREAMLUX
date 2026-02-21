@@ -1,9 +1,18 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import { FaServer, FaClosedCaptioning, FaVolumeUp } from 'react-icons/fa';
-import { MdSpeed, MdPictureInPicture, MdFullscreen, MdFullscreenExit } from 'react-icons/md';
+import { MdSpeed, MdPictureInPicture, MdFullscreen, MdFullscreenExit, MdMovieFilter } from 'react-icons/md';
 import { RiSkipForwardFill } from 'react-icons/ri';
 import { toast } from 'react-toastify';
+import { vibeService } from '../../services/vibe';
+import { hapticImpact } from '../../shared/utils';
+import { FiVolume2, FiSun, FiChevronsRight, FiChevronsLeft, FiXCircle } from 'react-icons/fi';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { toggleCinemaMode } from '../../store/slice/uiSlice';
+import AmbiFlowGlow from './AmbiFlowGlow';
+import VisionCastOverlay from './VisionCastOverlay';
+import { HiSparkles } from 'react-icons/hi';
 
 export interface VideoSource {
     name: string;
@@ -30,6 +39,8 @@ interface VideoPlayerProps {
     title?: string;
     onError?: () => void;
     subtitleTracks?: SubtitleTrack[];
+    id?: number | string;
+    mediaType?: "movie" | "tv";
 }
 
 const isDirectVideoUrl = (url: string): boolean => {
@@ -56,7 +67,11 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     title,
     onError,
     subtitleTracks = [],
+    id,
+    mediaType,
 }) => {
+    const dispatch = useAppDispatch();
+    const { isCinemaMode } = useAppSelector((state) => state.ui);
     const normalizedSources: VideoSource[] = sources.map((s) =>
         typeof s === 'string' ? { name: 'Default', url: s } : s
     );
@@ -86,7 +101,14 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
 
     // Ad-skip overlay state
     const [showAdSkip, setShowAdSkip] = useState(false);
+    const [showVisionCast, setShowVisionCast] = useState(false);
     const adTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Gesture / Indicator state
+    const [indicator, setIndicator] = useState<{ type: 'volume' | 'brightness' | 'seek', value: string | number, icon: any } | null>(null);
+    const indicatorTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const lastTapTime = useRef<number>(0);
+    const swipeStart = useRef<{ x: number, y: number } | null>(null);
 
     const currentSource = normalizedSources[currentIndex];
 
@@ -264,6 +286,66 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         setShowAdSkip(false);
     };
 
+    const showIndicator = (type: 'volume' | 'brightness' | 'seek', value: string | number, icon: any) => {
+        setIndicator({ type, value, icon });
+        if (indicatorTimerRef.current) clearTimeout(indicatorTimerRef.current);
+        indicatorTimerRef.current = setTimeout(() => setIndicator(null), 1000);
+    };
+
+    const handleDoubleTap = (e: React.MouseEvent | React.TouchEvent) => {
+        const now = Date.now();
+        const video = videoRef.current;
+        if (!video || !isDirect) return;
+
+        if (now - lastTapTime.current < 300) {
+            const clientX = 'touches' in e ? (e as React.TouchEvent).touches[0].clientX : (e as React.MouseEvent).clientX;
+            const rect = playerRootRef.current?.getBoundingClientRect();
+            if (!rect) return;
+
+            const x = clientX - rect.left;
+            const isRightSide = x > rect.width / 2;
+
+            if (isRightSide) {
+                video.currentTime += 10;
+                showIndicator('seek', '+10s', <FiChevronsRight />);
+            } else {
+                video.currentTime -= 10;
+                showIndicator('seek', '-10s', <FiChevronsLeft />);
+            }
+            hapticImpact();
+        }
+        lastTapTime.current = now;
+    };
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        if (!controlsVisible) resetHideTimer();
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!swipeStart.current || !isDirect || !videoRef.current) return;
+        const deltaY = swipeStart.current.y - e.touches[0].clientY;
+        const rect = playerRootRef.current?.getBoundingClientRect();
+        if (!rect) return;
+
+        const isLeftSide = swipeStart.current.x < rect.width / 2;
+
+        if (Math.abs(deltaY) > 20) {
+            if (isLeftSide) {
+                showIndicator('brightness', `${Math.min(100, Math.max(0, 50 + Math.round(deltaY / 2)))}%`, <FiSun />);
+            } else {
+                const currentVol = videoRef.current.volume;
+                const newVol = Math.min(1, Math.max(0, currentVol + (deltaY / 200)));
+                videoRef.current.volume = newVol;
+                showIndicator('volume', `${Math.round(newVol * 100)}%`, <FiVolume2 />);
+            }
+        }
+    };
+
+    const handleTouchEnd = () => {
+        swipeStart.current = null;
+    };
+
     useEffect(() => {
         if (!videoRef.current) return;
         const video = videoRef.current;
@@ -307,19 +389,22 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
             onMouseMove={() => !controlsVisible && resetHideTimer()}
             onTouchStart={() => !controlsVisible && resetHideTimer()}
         >
-            {poster && (
-                <div
-                    className="absolute inset-x-[-10%] inset-y-[-10%] pointer-events-none opacity-15"
-                    style={{
-                        zIndex: 0,
-                        backgroundImage: `url(${poster})`,
-                        backgroundPosition: 'center',
-                        backgroundSize: 'cover',
-                        filter: 'blur(80px) saturate(1.5)',
-                        animation: 'pulse-glow 10s ease-in-out infinite alternate',
-                    }}
-                />
-            )}
+            <AmbiFlowGlow videoRef={videoRef} poster={poster} isActive={isCinemaMode || isFullscreen} />
+
+            {/* Indicator Overlay */}
+            <AnimatePresence>
+                {indicator && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="tw-absolute-center z-[100] flex flex-col items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/10 p-6 rounded-3xl"
+                    >
+                        <div className="text-primary text-4xl">{indicator.icon}</div>
+                        <span className="text-white font-bold text-xl">{indicator.value}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20 pointer-events-none">
@@ -353,10 +438,26 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
             )}
 
             <div
-                className="absolute bottom-3 right-3 z-50 transition-opacity duration-500"
+                className="absolute bottom-3 right-3 z-50 transition-opacity duration-500 flex gap-2"
                 style={{ opacity: controlsVisible ? 1 : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}
                 onClick={(e) => e.stopPropagation()}
             >
+                <button
+                    onClick={() => setShowVisionCast(!showVisionCast)}
+                    title="Vision AI: Cast Identification"
+                    className={`flex items-center gap-1.5 px-3 py-2 ${showVisionCast ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)]' : 'bg-black/80 text-white'} backdrop-blur border border-white/20 rounded-xl hover:bg-indigo-500 transition shadow-xl font-bold text-xs group`}
+                >
+                    <HiSparkles size={18} className={showVisionCast ? "animate-spin text-white" : "text-indigo-400 group-hover:text-white transition"} />
+                    <span className="ml-1 tracking-tighter uppercase text-[10px]">Vision Cast</span>
+                </button>
+                <button
+                    onClick={() => dispatch(toggleCinemaMode())}
+                    title={isCinemaMode ? 'Exit Cinema Mode' : 'Enter Cinema Mode'}
+                    className={`flex items-center gap-1.5 px-3 py-2 ${isCinemaMode ? 'bg-primary text-black' : 'bg-black/80 text-white'} backdrop-blur border border-white/20 rounded-xl hover:bg-white hover:text-black transition shadow-xl font-bold text-xs`}
+                >
+                    {isCinemaMode ? <FiXCircle size={18} /> : <MdMovieFilter size={18} />}
+                    <span className="ml-1">{isCinemaMode ? 'Exit Cinema' : 'Cinema Mode'}</span>
+                </button>
                 <button
                     onClick={handleFullscreen}
                     title={isFullscreen ? 'Exit Fullscreen (Esc)' : 'Immersive Fullscreen'}
@@ -382,6 +483,10 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                         onCanPlay={handleVideoLoad}
                         src={currentSource.url}
                         crossOrigin="anonymous"
+                        onClick={handleDoubleTap}
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
                     >
                         {subtitleTracks.map((track) => (
                             <track key={track.language} kind="subtitles" src={track.src} srcLang={track.language} label={track.label} default={track.language === 'en'} />
@@ -524,6 +629,13 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                     </div>
                 </div>
             )}
+
+            <VisionCastOverlay
+                mediaId={id || ""}
+                mediaType={mediaType || "movie"}
+                isOpen={showVisionCast}
+                onClose={() => setShowVisionCast(false)}
+            />
         </div>
     );
 };

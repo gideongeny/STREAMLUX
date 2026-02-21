@@ -179,16 +179,11 @@ export const useTMDBCollectionQuery = (
             return countries.some((c: string) => targetCountries.includes(c));
           });
 
-          // If strict filtering kills all results but we got some from the API (which implies they are relevant),
-          // maybe the metadata is missing. In that case, use the original results but warn.
-          // Or stick to strict filtering if it's crucial. 
-          // Given the user issue "No videos found", let's be careful.
-          // If we requested by country from API, the results SHOULD be valid even if metadata is missing.
-
-          if (strictFiltered.length === 0 && filteredResults.length > 0) {
-            console.warn("Valid API results found but filtered out by client-side region check. Showing metadata-less items as fallback.");
-            // Fallback: show items that came from region-specific API call but might lack origin_country tag
-            filteredResults = filteredResults;
+          // RELAXED: If we are specifically in a regional tab, and the service returned items,
+          // trust the service results even if the metadata check fails (some scrapers/TMDB entries miss tags).
+          if (strictFiltered.length < 5 && filteredResults.length > 0) {
+            console.warn("Valid API results found but filtered out by strict client-side region check. Showing all results from regional service.");
+            // Keep the original results as they usually come from a region-specific API call
           } else {
             filteredResults = strictFiltered;
           }

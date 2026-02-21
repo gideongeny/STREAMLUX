@@ -1,4 +1,5 @@
 // Capacitor utilities for mobile app features
+import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
@@ -10,13 +11,15 @@ export const initCapacitor = async () => {
     // Set status bar style
     await StatusBar.setStyle({ style: Style.Dark });
     await StatusBar.setBackgroundColor({ color: '#1a1a1a' });
-    
+
     // Hide splash screen after app loads
     await SplashScreen.hide();
-    
-    // Configure keyboard
-    Keyboard.setAccessoryBarVisible({ isVisible: true });
-    
+
+    // Configure keyboard (iOS specific for accessory bar)
+    if (Capacitor.getPlatform() === 'ios') {
+      Keyboard.setAccessoryBarVisible({ isVisible: true });
+    }
+
     // Handle app state changes
     App.addListener('appStateChange', ({ isActive }) => {
       if (isActive) {
@@ -27,7 +30,7 @@ export const initCapacitor = async () => {
         console.log('App is in background');
       }
     });
-    
+
     // Handle back button (Android)
     App.addListener('backButton', ({ canGoBack }) => {
       if (!canGoBack) {
@@ -36,7 +39,7 @@ export const initCapacitor = async () => {
         window.history.back();
       }
     });
-    
+
     console.log('Capacitor initialized successfully');
   } catch (error) {
     console.warn('Capacitor initialization failed (running in browser):', error);

@@ -9,6 +9,7 @@ interface MainHomeFilmsProps {
   dataDetail: BannerInfo[] | undefined;
   isLoadingBanner: boolean;
   isLoadingSection: boolean;
+  onActiveImageChange?: (imageUrl: string) => void;
 }
 
 const MainHomeFilms: FC<MainHomeFilmsProps> = ({
@@ -16,6 +17,7 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
   dataDetail,
   isLoadingBanner,
   isLoadingSection,
+  onActiveImageChange,
 }) => {
   return (
     <>
@@ -23,6 +25,7 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
         films={data?.Trending}
         dataDetail={dataDetail}
         isLoadingBanner={isLoadingBanner}
+        onActiveImageChange={onActiveImageChange}
       />
 
       <ul className="flex flex-col gap-10 mt-12">

@@ -1,4 +1,25 @@
+import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
 import { EMBED_TO, IMAGE_URL } from "./constants";
+import { auraAudio } from "../services/audio";
+
+export const hapticImpact = async (style: ImpactStyle = ImpactStyle.Light) => {
+  auraAudio.tap();
+  try {
+    await Haptics.impact({ style });
+  } catch (e) {
+    // Ignore on web/unsupported
+  }
+};
+
+export const hapticNotification = async (type: NotificationType = NotificationType.Success) => {
+  if (type === NotificationType.Success) auraAudio.success();
+  else auraAudio.notify();
+  try {
+    await Haptics.notification({ type });
+  } catch (e) {
+    // Ignore on web/unsupported
+  }
+};
 
 export const resizeImage = (
   imageUrl: string,
@@ -6,12 +27,12 @@ export const resizeImage = (
 ): string => {
   // If imageUrl is empty or undefined, return empty string
   if (!imageUrl) return "";
-  
+
   // If imageUrl is already a full URL (http/https), return as is
   if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
     return imageUrl;
   }
-  
+
   // Otherwise, treat as TMDB path and prepend IMAGE_URL
   return `${IMAGE_URL}/${width}${imageUrl}`;
 };
@@ -71,7 +92,7 @@ export const convertErrorCodeToMessage = (errorCode: string): string => {
     "auth/invalid-credential": "Invalid credentials. Please check your email and password.",
     "auth/requires-recent-login": "Please sign out and sign in again to continue.",
   };
-  
+
   return errorMessages[errorCode] || `Authentication error: ${errorCode}. Please try again or contact support.`;
 };
 

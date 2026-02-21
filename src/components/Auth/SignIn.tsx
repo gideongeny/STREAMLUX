@@ -29,7 +29,7 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get("redirect");
-  
+
   // Redirect after successful sign in
   useEffect(() => {
     if (currentUser) {
@@ -48,7 +48,7 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
     const password = passwordRef.current.value;
 
     if (!email.trim() || !password.trim()) return;
-    
+
     if (!auth) {
       setError("Authentication service is not available. Please refresh the page.");
       toast.error("Authentication service is not available. Please refresh the page.");
@@ -118,9 +118,13 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
               onClick={async () => {
                 setIsLoading(true);
                 setError("");
+                // Safety timeout to ensure spinner doesn't get stuck
+                const timeoutId = setTimeout(() => setIsLoading(false), 15000);
                 try {
                   await signInWithProvider(new GoogleAuthProvider(), "google");
+                  clearTimeout(timeoutId);
                 } catch (err: any) {
+                  clearTimeout(timeoutId);
                   setError(err.message || "Failed to sign in with Google");
                 } finally {
                   setIsLoading(false);
@@ -136,9 +140,13 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
               onClick={async () => {
                 setIsLoading(true);
                 setError("");
+                // Safety timeout to ensure spinner doesn't get stuck
+                const timeoutId = setTimeout(() => setIsLoading(false), 15000);
                 try {
                   await signInWithProvider(new FacebookAuthProvider(), "facebook");
+                  clearTimeout(timeoutId);
                 } catch (err: any) {
+                  clearTimeout(timeoutId);
                   setError(err.message || "Failed to sign in with Facebook");
                 } finally {
                   setIsLoading(false);

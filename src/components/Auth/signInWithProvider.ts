@@ -1,5 +1,6 @@
-import { FacebookAuthProvider, signInWithPopup } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { FacebookAuthProvider, signInWithPopup, signInWithRedirect } from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { Capacitor } from "@capacitor/core";
 import { toast } from "react-toastify";
 import { auth, db } from "../../shared/firebase";
 import { convertErrorCodeToMessage } from "../../shared/utils";
@@ -9,8 +10,26 @@ export const signInWithProvider = async (provider: any, type: string) => {
     toast.error("Authentication service is not available. Please refresh the page.");
     throw new Error("Firebase not initialized");
   }
-  
+
   try {
+    const platform = Capacitor.getPlatform();
+    const isNative = platform === 'android' || platform === 'ios';
+
+    if (isNative) {
+      toast.info(`Initiating ${type} login...`);
+      try {
+        await signInWithRedirect(auth, provider);
+        // On native, execution typically stops here as the browser takes over
+        console.log('[Auth] Redirect initiated');
+      } catch (err: any) {
+        console.error('[Auth] Redirect error:', err);
+        toast.error(`Auth Error: ${err.message}`);
+        throw err;
+      }
+      return;
+    }
+
+    toast.info(`Opening ${type} login popup...`);
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
@@ -18,7 +37,6 @@ export const signInWithProvider = async (provider: any, type: string) => {
     // This reduces Firestore quota usage significantly
     let isStored = false;
     try {
-      const { getDoc } = await import("firebase/firestore");
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
       isStored = userDoc.exists();
@@ -60,7 +78,6 @@ export const signInWithProvider = async (provider: any, type: string) => {
       autoClose: 2000,
     });
   } catch (error: any) {
-    console.error("Sign in error:", error);
     const errorMessage = convertErrorCodeToMessage(error.code) || error.message || "Failed to sign in. Please try again.";
     toast.error(errorMessage, {
       position: "top-right",

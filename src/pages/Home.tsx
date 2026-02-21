@@ -24,6 +24,8 @@ import ComingSoonSlider from "../components/Home/ComingSoonSlider";
 import SectionErrorBoundary from "../components/Common/SectionErrorBoundary";
 import SmartAdContainer from "../components/Common/SmartAdContainer";
 import AdBanner from "../components/Ads/AdBanner";
+import CinematicMoments from "../components/Home/CinematicMoments";
+import AmbientGlow from "../components/Common/AmbientGlow";
 import { useHomeData } from "../hooks/useHomeData";
 import { useWatchProgress } from "../hooks/useWatchProgress";
 import { useAppSelector } from "../store/hooks";
@@ -32,6 +34,16 @@ const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
 
   const [isSidebarActive, setIsSidebarActive] = useState(false);
+  const [activeGlowImage, setActiveGlowImage] = useState<string | undefined>(undefined);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
 
   ///////////////////////////////////////////////////////////////////////////////////
@@ -177,8 +189,10 @@ const Home: FC = () => {
   return (
     <>
       <Title value="StreamLux | Free Movies, TV Shows & Live Sports" />
+      <AmbientGlow imageUrl={activeGlowImage} />
 
-      <div className="flex md:hidden justify-between items-center px-5 my-5">
+      <div className={`flex md:hidden justify-between items-center px-5 py-4 sticky top-0 z-[100] transition-all duration-300 ${isScrolled ? "tw-glass bg-dark/60 shadow-lg backdrop-blur-xl" : "bg-transparent"
+        }`}>
         <Link to="/" className="flex gap-2 items-center">
           <img
             src="/logo.svg"
@@ -244,6 +258,8 @@ const Home: FC = () => {
             </div>
           </div>
 
+          <CinematicMoments />
+
           {/* Main Banner Slider for Movies/TV */}
           {currentTab === "movie" && (
             <MainHomeFilm
@@ -251,6 +267,7 @@ const Home: FC = () => {
               dataDetail={detailQueryMovie.data}
               isLoadingBanner={detailQueryMovie.isLoading}
               isLoadingSection={isLoadingMovie}
+              onActiveImageChange={setActiveGlowImage}
             />
           )}
           {currentTab === "tv" && (
@@ -259,6 +276,7 @@ const Home: FC = () => {
               dataDetail={detailQueryTV.data}
               isLoadingBanner={detailQueryTV.isLoading}
               isLoadingSection={isLoadingTV}
+              onActiveImageChange={setActiveGlowImage}
             />
           )}
 

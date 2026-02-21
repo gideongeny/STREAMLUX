@@ -201,12 +201,24 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
 
   // Add extra sections from Scrappers and YouTube as dedicated sections
   try {
-    const [youtubeAction, youtubeHorror, youtubeSciFi, scrapperComedy, youtubeShorts] = await Promise.all([
+    const [
+      youtubeAction, youtubeHorror, youtubeSciFi, scrapperComedy, youtubeShorts,
+      africanCinema, asianDrama, nollywood, bollywood, filipino, kenyan,
+      latinAm, middleEast
+    ] = await Promise.all([
       getYouTubeByGenre("Action").catch(() => []),
       getYouTubeByGenre("Horror").catch(() => []),
       getYouTubeByGenre("Sci-Fi").catch(() => []),
       getAllSourceContent("movie", 2).catch(() => []),
       getYouTubeShorts().catch(() => []),
+      getAfricanCinema("movie").catch(() => []),
+      getAsianDrama("tv").catch(() => []),
+      getNollywoodMovies().catch(() => []),
+      getBollywoodContent().catch(() => []),
+      getFilipinoContent().catch(() => []),
+      getEnhancedKenyanContent().catch(() => []),
+      getLatinAmericanContent().catch(() => []),
+      getMiddleEasternContent().catch(() => []),
     ]);
 
     if (youtubeAction.length > 0) data["YouTube Action"] = youtubeAction;
@@ -214,6 +226,17 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
     if (youtubeSciFi.length > 0) data["YouTube Sci-Fi"] = youtubeSciFi;
     if (scrapperComedy.length > 0) data["Scrapper Hits"] = scrapperComedy;
     if (youtubeShorts.length > 0) data["Must-Watch Shorts"] = youtubeShorts;
+
+    // Add Regional Categories
+    if (africanCinema.length > 0) data["African Cinema"] = africanCinema;
+    if (nollywood.length > 0) data["Nollywood Hits"] = nollywood;
+    if (kenyan.length > 0) data["Kenyan Originals"] = kenyan;
+    if (asianDrama.length > 0) data["Asian Drama"] = asianDrama;
+    if (bollywood.length > 0) data["Bollywood"] = bollywood;
+    if (filipino.length > 0) data["Filipino Cinema"] = filipino;
+    if (latinAm.length > 0) data["Latin Cinema"] = latinAm;
+    if (middleEast.length > 0) data["Middle Eastern"] = middleEast;
+
   } catch (error) {
     console.warn("Home movie extras failed:", error);
   }
@@ -448,15 +471,29 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
 
   // Add extra sections from Scrappers and YouTube as dedicated sections
   try {
-    const [youtubeDrama, youtubeComedy, scrapperAnimation] = await Promise.all([
+    const [
+      youtubeDrama, youtubeComedy, scrapperAnimation,
+      africanTV, asianDrama, latinAm, middleEast
+    ] = await Promise.all([
       getYouTubeByGenre("Drama", "tv").catch(() => []),
       getYouTubeByGenre("Comedy", "tv").catch(() => []),
       getAllSourceContent("tv", 2).catch(() => []),
+      getAfricanTVContent().catch(() => []),
+      getAsianDrama("tv").catch(() => []),
+      getLatinAmericanContent().catch(() => []),
+      getMiddleEasternContent().catch(() => []),
     ]);
 
     if (youtubeDrama.length > 0) data["YouTube Drama"] = youtubeDrama;
     if (youtubeComedy.length > 0) data["YouTube Comedy"] = youtubeComedy;
     if (scrapperAnimation.length > 0) data["Scrapper Anime"] = scrapperAnimation;
+
+    // Add Regional Categories (TV)
+    if (africanTV.length > 0) data["African TV Shows"] = africanTV;
+    if (asianDrama.length > 0) data["Asian Global TV"] = asianDrama;
+    if (latinAm.length > 0) data["Latin TV Series"] = latinAm;
+    if (middleEast.length > 0) data["Middle East TV"] = middleEast;
+
   } catch (error) {
     console.warn("Home TV extras failed:", error);
   }

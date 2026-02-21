@@ -5,8 +5,9 @@ import { HiOutlineUpload } from "react-icons/hi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { db } from "../../shared/firebase";
 import { useAppSelector } from "../../store/hooks";
+import PrestigeBadge from "./PrestigeBadge";
 
-interface ProfileImageProps {}
+interface ProfileImageProps { }
 
 const ProfileImage: FunctionComponent<ProfileImageProps> = () => {
   const [isUpdatingImg, setIsUpdatingImg] = useState(false);
@@ -55,6 +56,9 @@ const ProfileImage: FunctionComponent<ProfileImageProps> = () => {
             className="w-[250px] h-[250px] rounded-full object-cover"
             effect="blur"
           />
+          <div className="absolute bottom-0 right-0 z-20">
+            <PrestigeBadge type="elite" />
+          </div>
           {isUpdatingImg && (
             <div className="border-[4px] border-primary border-t-transparent h-12 w-12 rounded-full animate-spin absolute top-[40%] left-[40%] z-10"></div>
           )}

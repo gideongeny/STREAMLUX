@@ -9,16 +9,17 @@ import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
 import Footer from "../components/Footer/Footer";
 import SearchResult from "../components/Search/SearchResult";
+import AmbientGlow from "../components/Common/AmbientGlow";
 import { useCurrentViewportView } from "../hooks/useCurrentViewportView";
 
-interface SearchProps {}
+interface SearchProps { }
 // https://raw.githubusercontent.com/fuocy/video/master/Studio%20Project%20%E2%80%94%20Kapwing.mp4
 const Search: FunctionComponent<SearchProps> = () => {
   const [isSidebarActive, setIsSidebarActive] = useState(false);
   const { isMobile } = useCurrentViewportView();
   const [searchParams, setSearchParams] = useSearchParams();
   const [openSearchFilter, setOpenSearchFilter] = useState(true);
-  
+
   const query = searchParams.get("query");
   const page = searchParams.get("page") || 1;
   const [currentTab, setCurrentTab] = useState("multi");
@@ -33,6 +34,7 @@ const Search: FunctionComponent<SearchProps> = () => {
     <>
       {!query && <Title value="Search | StreamLux" />}
       {query && <Title value={`Search: ${query} | StreamLux`} />}
+      <AmbientGlow imageUrl={undefined} fallbackColor="#5179ff" />
 
       <div className="flex md:hidden justify-between items-center px-5 my-5">
         <Link to="/" className="flex gap-2 items-center">
@@ -58,14 +60,12 @@ const Search: FunctionComponent<SearchProps> = () => {
         />
         <div className="flex-grow">
           <div
-            className={`relative z-30 md:max-w-[50vw] w-full mx-auto translate-y-[120px] transition duration-300 text-xl ${
-              query && "!translate-y-0"
-            }`}
+            className={`relative z-30 md:max-w-[50vw] w-full mx-auto translate-y-[120px] transition duration-300 text-xl ${query && "!translate-y-0"
+              }`}
           >
             <h1
-              className={`text-white text-[25px] font-medium text-center absolute md:-top-6 -top-14 left-0 right-0  ${
-                query ? "opacity-0 invisible" : "opacity-100 visible"
-              } transition duration-500`}
+              className={`text-white text-[25px] font-medium text-center absolute md:-top-6 -top-14 left-0 right-0  ${query ? "opacity-0 invisible" : "opacity-100 visible"
+                } transition duration-500`}
             >
               Find your favourite movies, TV shows, people and more
             </h1>
@@ -87,8 +87,8 @@ const Search: FunctionComponent<SearchProps> = () => {
             <div className="shrink-0 md:max-w-[310px] w-full md:pt-32 pt-[104px] px-3">
               <div
                 // @ts-ignore
-                
-                className="bg-dark-lighten rounded-md shadow-md px-4 pt-3"
+
+                className="bg-dark/40 tw-glass rounded-md shadow-2xl px-4 pt-3"
               >
                 <div className="flex justify-between items-center text-white pb-3">
                   <p className="text-lg ">Search Results</p>
@@ -99,29 +99,28 @@ const Search: FunctionComponent<SearchProps> = () => {
                 </div>
                 {openSearchFilter && (
                   <ul className="md:py-6 py-2 border-t border-dark-darken text-white text-lg flex md:flex-col flex-row gap-3">
-        <AnimatePresence>
-                    {filterOptions.map((filterOption) => (
-                      <motion.li
-              key={filterOption.id} className="flex-1"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}>
-                        <button
-                          onClick={() => {
-                            setSearchParams({ query: query ?? "", page: "1" });
-                            setCurrentTab(filterOption.value);
-                          }}
-                          className={`w-full hover:bg-dark-lighten-2 py-1 rounded-md transition duration-300 ${
-                            currentTab === filterOption.value &&
-                            "bg-dark-lighten-2"
-                          }`}
-                        >
-                          {filterOption.label}
-                        </button>
-                      </motion.li>
-                    ))}
-                          </AnimatePresence>
-      </ul>
+                    <AnimatePresence>
+                      {filterOptions.map((filterOption) => (
+                        <motion.li
+                          key={filterOption.id} className="flex-1"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}>
+                          <button
+                            onClick={() => {
+                              setSearchParams({ query: query ?? "", page: "1" });
+                              setCurrentTab(filterOption.value);
+                            }}
+                            className={`w-full hover:bg-dark-lighten-2 py-1 rounded-md transition duration-300 ${currentTab === filterOption.value &&
+                              "bg-dark-lighten-2"
+                              }`}
+                          >
+                            {filterOption.label}
+                          </button>
+                        </motion.li>
+                      ))}
+                    </AnimatePresence>
+                  </ul>
                 )}
               </div>
             </div>
@@ -140,8 +139,8 @@ const Search: FunctionComponent<SearchProps> = () => {
           <div className="shrink-0 md:max-w-[310px] w-full md:pt-32 pt-4 px-3">
             <div
               // @ts-ignore
-              
-              className="bg-dark-lighten rounded-md shadow-md px-4 pt-3"
+
+              className="bg-dark/40 tw-glass rounded-md shadow-2xl px-4 pt-3 transition duration-500"
             >
               <div className="flex justify-between items-center text-white pb-3">
                 <p className="text-lg ">Search Results</p>
@@ -152,29 +151,28 @@ const Search: FunctionComponent<SearchProps> = () => {
               </div>
               {openSearchFilter && (
                 <ul className="md:py-6 py-2 border-t border-dark-darken text-white text-lg flex md:flex-col flex-row gap-3">
-        <AnimatePresence>
-                  {filterOptions.map((filterOption) => (
-                    <motion.li
-              key={filterOption.id} className="flex-1"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}>
-                      <button
-                        onClick={() => {
-                          setSearchParams({ query: query ?? "", page: "1" });
-                          setCurrentTab(filterOption.value);
-                        }}
-                        className={`w-full hover:bg-dark-lighten-2 py-1 rounded-md transition duration-300 ${
-                          currentTab === filterOption.value &&
-                          "bg-dark-lighten-2"
-                        }`}
-                      >
-                        {filterOption.label}
-                      </button>
-                    </motion.li>
-                  ))}
-                        </AnimatePresence>
-      </ul>
+                  <AnimatePresence>
+                    {filterOptions.map((filterOption) => (
+                      <motion.li
+                        key={filterOption.id} className="flex-1"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}>
+                        <button
+                          onClick={() => {
+                            setSearchParams({ query: query ?? "", page: "1" });
+                            setCurrentTab(filterOption.value);
+                          }}
+                          className={`w-full hover:bg-dark-lighten-2 py-1 rounded-md transition duration-300 ${currentTab === filterOption.value &&
+                            "bg-dark-lighten-2"
+                            }`}
+                        >
+                          {filterOption.label}
+                        </button>
+                      </motion.li>
+                    ))}
+                  </AnimatePresence>
+                </ul>
               )}
             </div>
           </div>

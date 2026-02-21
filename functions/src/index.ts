@@ -193,12 +193,12 @@ export const proxy = functions
 /**
  * Scheduled Function: Keep Alive
  */
-export const keepAlive = functions.pubsub.schedule('every 15 minutes').onRun(async (_context) => {
-    try {
-        console.log('Keep alive ping at', new Date().toISOString());
-        return null;
-    } catch (error) {
-        console.error('Keep alive failed', error);
-        return null;
-    }
-});
+// export const keepAlive = functions.pubsub.schedule('every 15 minutes').onRun(async (_context) => {
+//     try {
+//         console.log('Keep alive ping at', new Date().toISOString());
+//         return null;
+//     } catch (error) {
+//         console.error('Keep alive failed', error);
+//         return null;
+//     }
+// });

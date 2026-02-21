@@ -219,6 +219,8 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     sources={sources}
                     poster={`https://image.tmdb.org/t/p/original${poster}`}
                     title={title}
+                    id={detail?.id}
+                    mediaType={media_type}
                     onError={() => {
                       console.log("Video playback error");
                     }}

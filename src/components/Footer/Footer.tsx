@@ -8,7 +8,7 @@ interface FooterProps { }
 
 const Footer: FunctionComponent<FooterProps> = () => {
   return (
-    <footer className="bg-dark-lighten text-white mt-8 border-t border-gray-800 relative z-20 w-full">
+    <footer className="bg-dark/40 tw-glass text-white mt-8 border-t border-gray-800 relative z-20 w-full shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-6">

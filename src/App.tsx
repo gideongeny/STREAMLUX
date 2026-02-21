@@ -1,10 +1,13 @@
-import { onAuthStateChanged } from "firebase/auth";
-import { doc, onSnapshot } from "firebase/firestore";
+import { onAuthStateChanged, getRedirectResult, GoogleAuthProvider, FacebookAuthProvider, getAdditionalUserInfo } from "firebase/auth";
+import { doc, onSnapshot, setDoc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { DownloadManagerProvider } from "./contexts/DownloadManagerContext";
 import DownloadTray from "./components/Common/DownloadTray";
+import { MdMovieFilter } from "react-icons/md";
 
 import Protected from "./components/Common/Protected";
 import Auth from "./pages/Auth";
@@ -30,22 +33,25 @@ import CalendarPage from "./pages/CalendarPage";
 import Settings from "./pages/Settings";
 import YouTubeInfo from "./pages/YouTube/YouTubeInfo";
 import MiniPlayer from "./components/FilmWatch/MiniPlayer";
+import SpotlightSearch from "./components/Common/SpotlightSearch";
+import MasterReveal from "./components/Common/MasterReveal";
+import VisionAssistant from "./components/Common/VisionAssistant";
+import AtmosphericBackground from "./components/Common/AtmosphericBackground";
 import { auth, db } from "./shared/firebase";
-import { useAppDispatch } from "./store/hooks";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
+import { setCinemaMode } from "./store/slice/uiSlice";
 import { backendHealthService } from "./services/backendHealth";
 import BuyMeACoffee from "./components/Common/BuyMeACoffee";
 import { safeStorage } from "./utils/safeStorage";
 import { initializeAdMob } from "./services/capacitorAds";
+import { App as CapApp } from "@capacitor/app";
 
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
-
-  // Initialize AdMob on native Android/iOS builds (no-op on web)
-  useEffect(() => {
-    initializeAdMob().catch(console.warn);
-  }, []);
+  const { isCinemaMode } = useAppSelector((state) => state.ui);
 
   // Custom localStorage hook that handles JSON parsing errors gracefully
   const getInitialSignedIn = (): boolean => {
@@ -74,6 +80,76 @@ function App() {
   };
 
   const [isSignedIn, setIsSignedIn] = useState<boolean>(() => getInitialSignedIn());
+
+  // Initialize AdMob on native Android/iOS builds (no-op on web)
+  useEffect(() => {
+    initializeAdMob().catch(console.warn);
+  }, []);
+
+  // Handle Firebase Redirect Result (Google/Facebook Login fallback for native)
+  useEffect(() => {
+    const handleRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+
+        if (result) {
+          const user = result.user;
+          const additionalInfo = getAdditionalUserInfo(result);
+          const isNewUser = additionalInfo?.isNewUser;
+
+          // If it's a new user OR the document is missing, create it
+          const userDocRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (isNewUser || !userDoc.exists()) {
+            let photoUrl = user.photoURL || "";
+            let token;
+
+            // Handle special case for Facebook photo URL/token
+            const providerId = user.providerData[0]?.providerId;
+            if (providerId === "facebook.com") {
+              const credential = FacebookAuthProvider.credentialFromResult(result);
+              token = credential?.accessToken;
+              if (token && photoUrl) {
+                photoUrl = photoUrl + "?access_token=" + token;
+              }
+            }
+
+            await setDoc(userDocRef, {
+              firstName: user.displayName?.split(" ")[0] || "",
+              lastName: user.displayName?.split(" ").slice(1).join(" ") || "",
+              photoUrl: photoUrl,
+              bookmarks: [],
+              recentlyWatch: [],
+              ...(token && { token }),
+              createdAt: new Date().toISOString()
+            });
+          }
+
+          // Force navigate to dashboard on success
+          setIsSignedIn(true);
+          navigate("/", { replace: true });
+        }
+      } catch (error: any) {
+        // Silently handle but navigate to error or auth if critical
+        if (error.code !== 'auth/no-current-user') {
+          console.warn("Redirect handling error:", error.message);
+        }
+      }
+    };
+
+    handleRedirect();
+
+    // Listen for deep links (Custom URL Scheme)
+    if (Capacitor.isNativePlatform()) {
+      CapApp.addListener('appUrlOpen', (data: any) => {
+        // If a URL is opened, trigger the redirect handler again
+        // Firebase SDK should pick up the result from the URL/local storage
+        handleRedirect();
+      });
+    }
+  }, [navigate]);
+
 
   // Sync to localStorage when isSignedIn changes
   useEffect(() => {
@@ -233,35 +309,51 @@ function App() {
 
   return (
     <DownloadManagerProvider>
-      <div className="transition-colors duration-300">
-        <Routes>
-          <Route index element={<Home />} />
-          <Route path="movie/:id" element={<MovieInfo />} />
-          <Route path="tv/:id" element={<TVInfo />} />
-          <Route path="movie/:id/watch" element={<MovieWatch />} />
-          <Route path="tv/:id/watch" element={<TVWatch />} />
-          <Route path="sports" element={<SportsHome />} />
-          <Route path="sports/:leagueId/:matchId/watch" element={<SportsWatch />} />
-          <Route path="explore" element={<Explore />} />
-          <Route path="calendar" element={<CalendarPage />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="search" element={<Search />} />
-          <Route path="youtube/:id" element={<YouTubeInfo />} />
-          <Route path="auth" element={<Auth />} />
-          <Route path="copyright" element={<Copyright />} />
-          <Route path="privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="user-agreement" element={<UserAgreement />} />
-          <Route path="disclaimer" element={<Disclaimer />} />
-          <Route path="download" element={<Download />} />
-          <Route path="bookmarked" element={<Protected isSignedIn={isSignedIn}><Bookmarked /></Protected>} />
-          <Route path="history" element={<Protected isSignedIn={isSignedIn}><History /></Protected>} />
-          <Route path="profile" element={<Protected isSignedIn={isSignedIn}><Profile /></Protected>} />
-          <Route path="*" element={<Error />} />
-        </Routes>
+      <div
+        className={`transition-[--color-primary,filter] duration-[800ms] ease-in-out overflow-x-hidden ${isCinemaMode ? "filter brightness-[0.3] saturate-[0.6] grayscale-[0.2]" : ""}`}
+      >
+        <MasterReveal />
+        <AtmosphericBackground />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <Routes location={location} key={location.pathname}>
+              <Route index element={<Home />} />
+              <Route path="movie/:id" element={<MovieInfo />} />
+              <Route path="tv/:id" element={<TVInfo />} />
+              <Route path="movie/:id/watch" element={<MovieWatch />} />
+              <Route path="tv/:id/watch" element={<TVWatch />} />
+              <Route path="sports" element={<SportsHome />} />
+              <Route path="sports/:leagueId/:matchId/watch" element={<SportsWatch />} />
+              <Route path="explore" element={<Explore />} />
+              <Route path="calendar" element={<CalendarPage />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="search" element={<Search />} />
+              <Route path="youtube/:id" element={<YouTubeInfo />} />
+              <Route path="auth" element={<Auth />} />
+              <Route path="copyright" element={<Copyright />} />
+              <Route path="privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="user-agreement" element={<UserAgreement />} />
+              <Route path="disclaimer" element={<Disclaimer />} />
+              <Route path="download" element={<Download />} />
+              <Route path="bookmarked" element={<Protected isSignedIn={isSignedIn}><Bookmarked /></Protected>} />
+              <Route path="history" element={<Protected isSignedIn={isSignedIn}><History /></Protected>} />
+              <Route path="profile" element={<Protected isSignedIn={isSignedIn}><Profile /></Protected>} />
+              <Route path="*" element={<Error />} />
+            </Routes>
+          </motion.div>
+        </AnimatePresence>
         <MiniPlayer />
-        <BuyMeACoffee variant="floating" />
+        <SpotlightSearch />
+        <VisionAssistant />
         <DownloadTray />
       </div>
+
     </DownloadManagerProvider>
   );
 }

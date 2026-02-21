@@ -8,6 +8,7 @@ import {
 import { FunctionComponent, useRef, useState } from "react";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
 import Footer from "../components/Footer/Footer";
@@ -21,7 +22,7 @@ import { auth } from "../shared/firebase";
 import { convertErrorCodeToMessage } from "../shared/utils";
 import { ToastContainer, toast } from "react-toastify";
 import BlackBackdrop from "../components/Common/BlackBackdrop";
-interface ProfileProps {}
+interface ProfileProps { }
 
 const Profile: FunctionComponent<ProfileProps> = () => {
   const [isSidebarActive, setIsSidebarActive] = useState(false);
@@ -214,22 +215,32 @@ const Profile: FunctionComponent<ProfileProps> = () => {
           onCloseSidebar={() => setIsSidebarActive(false)}
           isSidebarActive={isSidebarActive}
         />
-        <div className="flex-grow pt-7 md:pl-10 px-3">
-          <div className="pb-4 border-b border-dark-lighten-2">
-            <h1 className="text-[35px] text-white font-semibold uppercase">
-              Account settings
+        <div className="flex-grow md:pl-10 px-3 relative overflow-hidden">
+          {/* Elite Header Ambient Glow */}
+          <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-primary/10 via-transparent to-transparent -z-10 blur-[100px] animate-pulse" />
+
+          <div className="pb-8 pt-10 border-b border-white/5">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-4 mb-2"
+            >
+              <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] text-primary font-black uppercase tracking-tighter">Elite Discovery Center</div>
+            </motion.div>
+            <h1 className="text-4xl md:text-6xl text-white font-black uppercase tracking-tighter">
+              Account<span className="text-primary">.</span>Settings
             </h1>
+            <p className="text-gray-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Elevating your StreamLux Experience</p>
           </div>
           <div className="flex flex-col-reverse md:flex-row gap-8 md:gap-0 ">
             <div className="flex-grow">
-              <p className="text-white mt-5 text-xl font-medium mb-3">
-                User Information
-              </p>
-              <p>Here you can edit public information about yourself.</p>
-              <p>
-                If you signed in with Google or Facebook, you can't change your
-                email and password.
-              </p>
+              <div className="mt-10">
+                <h2 className="text-white text-2xl font-black uppercase tracking-tighter mb-4 flex items-center gap-3">
+                  <span className="w-8 h-1 bg-primary rounded-full" />
+                  User Intelligence
+                </h2>
+                <p className="text-gray-400 text-sm max-w-[500px]">Securely manage your identity and discovery credentials.</p>
+              </div>
 
               <div className="mt-7 max-w-[600px] w-full flex flex-col gap-3">
                 <Email
@@ -243,22 +254,40 @@ const Profile: FunctionComponent<ProfileProps> = () => {
                 <Name setIsUpdating={setIsUpdating} />
               </div>
 
-              <EmailVerification setIsUpdating={setIsUpdating} />
+              <div className="mt-12">
+                <h2 className="text-white text-2xl font-black uppercase tracking-tighter mb-4 flex items-center gap-3">
+                  <span className="w-8 h-1 bg-blue-500 rounded-full" />
+                  Atmospheric Themes
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                  {["Classic", "Deep Sea", "Nebula", "Royal"].map((theme) => (
+                    <button key={theme} className="group relative aspect-video rounded-2xl overflow-hidden border border-white/5 hover:border-primary transition">
+                      <div className={`absolute inset-0 bg-gradient-to-br ${theme === "Classic" ? "from-orange-500 to-red-600" : theme === "Deep Sea" ? "from-blue-600 to-cyan-400" : theme === "Nebula" ? "from-purple-600 to-pink-500" : "from-yellow-400 to-orange-400"} opacity-40 group-hover:opacity-60 transition`} />
+                      <span className="absolute inset-0 flex items-center justify-center text-white text-[10px] font-black uppercase tracking-widest">{theme}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-              <Password
-                onShowPromptReAuthForPassword={() =>
-                  setIsShowPromptReAuthFor("password")
-                }
-                isUpdatedPassword={isUpdatedPassword}
-                setIsUpdatedPassword={setIsUpdatedPassword}
-                newPasswordValueRef={newPasswordValueRef}
-              />
+              <div className="mt-12 bg-white/5 p-6 rounded-3xl border border-white/5 mb-20">
+                <h3 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Security Controls</h3>
+                <EmailVerification setIsUpdating={setIsUpdating} />
 
-              <DeleteAccount
-                onShowPromptReAuthForDeleteAccount={() =>
-                  setIsShowPromptReAuthFor("delete")
-                }
-              />
+                <Password
+                  onShowPromptReAuthForPassword={() =>
+                    setIsShowPromptReAuthFor("password")
+                  }
+                  isUpdatedPassword={isUpdatedPassword}
+                  setIsUpdatedPassword={setIsUpdatedPassword}
+                  newPasswordValueRef={newPasswordValueRef}
+                />
+
+                <DeleteAccount
+                  onShowPromptReAuthForDeleteAccount={() =>
+                    setIsShowPromptReAuthFor("delete")
+                  }
+                />
+              </div>
             </div>
             <ProfileImage />
           </div>

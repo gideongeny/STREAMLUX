@@ -36,7 +36,7 @@ const SidebarMini: FunctionComponent = () => {
     <>
       <ToastContainer />
 
-      <div className="shrink-0 max-w-[80px] w-full py-8 flex flex-col items-center justify-between h-screen sticky top-0">
+      <div className="shrink-0 max-w-[80px] w-full py-8 flex flex-col items-center justify-between h-screen sticky top-0 bg-dark/20 tw-glass shadow-2xl transition duration-500">
         <Link to="/">
           <img
             alt="StreamLux Logo"

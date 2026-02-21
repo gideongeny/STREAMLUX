@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'StreamLux',
   webDir: 'build',
   server: {
-    androidScheme: 'https',
+    androidScheme: 'streamlux',
     allowNavigation: [
       'https://vidsrc.me',
       'https://2embed.org',
@@ -34,8 +34,12 @@ const config: CapacitorConfig = {
       'https://netnaija.net',
       'https://streamlux.vercel.app',
       'https://moonlight-films-five.vercel.app',
-      // Firebase CORS proxy function
-      'https://us-central1-streamlux-app.cloudfunctions.net',
+      // Firebase/Google Auth Domains
+      'https://accounts.google.com',
+      'https://*.firebaseapp.com',
+      'https://*.facebook.com',
+      'https://streamlux-67a84.firebaseapp.com',
+      'https://streamlux-67a84.web.app',
     ],
   },
   android: {
@@ -70,6 +74,10 @@ const config: CapacitorConfig = {
       resize: 'body',
       style: 'dark',
       resizeOnFullScreen: true,
+    },
+    // Temporarily disabled to test if it conflicts with Firebase Auth
+    CapacitorHttp: {
+      enabled: false,
     },
     // AdMob configuration
     // App ID: ca-app-pub-1281448884303417~9595144052

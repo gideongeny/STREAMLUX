@@ -40,6 +40,20 @@ class PushNotificationService {
         if (this.isInitialized) return;
 
         try {
+            // CRITICAL: Check if Firebase is initialized before proceeding.
+            // Without google-services.json, FirebaseApp is not initialized and
+            // calling PushNotifications.register() will throw IllegalStateException.
+            try {
+                const { getApps } = await import('firebase/app');
+                if (getApps().length === 0) {
+                    console.warn('PushNotifications: Firebase is not initialized. Skipping registration. Add google-services.json to enable push notifications.');
+                    return;
+                }
+            } catch (firebaseCheckError) {
+                console.warn('PushNotifications: Could not verify Firebase initialization, skipping registration.', firebaseCheckError);
+                return;
+            }
+
             // Request permission
             const permStatus = await PushNotifications.requestPermissions();
 
