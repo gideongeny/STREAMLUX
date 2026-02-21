@@ -47,6 +47,7 @@ import { safeStorage } from "./utils/safeStorage";
 import { initializeAdMob } from "./services/capacitorAds";
 import { App as CapApp } from "@capacitor/app";
 import { themeService } from "./services/theme";
+import { useScrollPersistence } from "./hooks/useScrollPersistence";
 import { pushNotificationService } from "./services/pushNotifications";
 import { trendingNotificationService } from "./services/trendingNotifications";
 

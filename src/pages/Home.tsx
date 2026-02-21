@@ -29,6 +29,7 @@ import AmbientGlow from "../components/Common/AmbientGlow";
 import { useHomeData } from "../hooks/useHomeData";
 import { useWatchProgress } from "../hooks/useWatchProgress";
 import { useAppSelector } from "../store/hooks";
+import { useScrollPersistence } from "../hooks/useScrollPersistence";
 
 const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
@@ -44,6 +45,9 @@ const Home: FC = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Restore scroll position when user returns to Home
+  useScrollPersistence("home");
 
 
   ///////////////////////////////////////////////////////////////////////////////////
