@@ -176,15 +176,16 @@ export const useTMDBCollectionQuery = (
         if (region) {
           const strictFiltered = filteredResults.filter((item) => {
             const countries = item.origin_country || [];
-            // Use an even broader check or trust the service if it's a regional service call
+            // If the service specifically returned this for a region, we trust it more
+            // than the partial TMDB metadata which often misses origin_country tags.
             return targetCountries.length === 0 || countries.some((c: string) => targetCountries.includes(c));
           });
 
-          // RELAXED: If we are specifically in a regional tab, and the service returned items,
-          // trust the service results even if the metadata check fails (some scrapers/TMDB entries miss tags).
-          if (strictFiltered.length < 4 && filteredResults.length > 0) {
-            console.warn("Region results found but failing strict metadata check. Showing raw results from regional service.");
-            // Keep original results
+          // RELAXED: In specialized regional tabs, if the service returns items, we MUST show them.
+          // Filtering them out here is what leads to the "404 - no such films" message.
+          if (filteredResults.length > 0) {
+            console.log(`Region results found (${filteredResults.length}). Showing all results to avoid content gaps.`);
+            // DO NOT strictly enforce metadata filtering if we have content
           } else if (targetCountries.length > 0) {
             filteredResults = strictFiltered;
           }

@@ -1,29 +1,31 @@
 import axios from "../shared/axios";
 import { ConfigType, Item, ItemsPage } from "../shared/types";
 import { getFZContentByGenre, getFZContentByCountry } from "./fzmovies";
+import {
+  getAfricanCinema,
+  getAsianDrama,
+  getNollywoodMovies,
+  getBollywoodContent,
+  getEnhancedKenyanContent,
+  getLatinAmericanContent,
+  getMiddleEasternContent,
+  getKDrama
+} from "./home";
 
-// Helper to map UI region names to TMDB country codes and search queries
-const mapRegionToCodes = (region: string): { codes: string, queries: string[] } => {
+// Helper to map UI region names to specialized regional functions
+const getRegionalContent = async (region: string, mediaType: "movie" | "tv"): Promise<Item[]> => {
   const r = region.toLowerCase();
 
-  if (r === "africa") return { codes: "NG|KE|ZA|GH|TZ|UG|ET|RW|ZM|EG", queries: ["african", "nollywood"] };
-  if (r === "asia") return { codes: "IN|KR|JP|CN|TH|PH|VN|MY|ID", queries: ["asian", "bollywood", "k-drama", "anime"] };
-  if (r === "latin") return { codes: "MX|BR|AR|CO|CL|PE", queries: ["latin", "mexican", "brazilian", "spanish"] };
-  if (r === "middleeast") return { codes: "TR|EG|SA|AE|IR|JO|LB", queries: ["middle eastern", "turkish", "egyptian"] };
-  if (r === "nollywood") return { codes: "NG", queries: ["nollywood", "nigerian"] };
-  if (r === "kenya") return { codes: "KE", queries: ["kenyan"] };
-  if (r === "south africa") return { codes: "ZA", queries: ["south african"] };
-  if (r === "india" || r === "bollywood") return { codes: "IN", queries: ["bollywood", "indian"] };
-  if (r === "korea") return { codes: "KR", queries: ["korean", "k-drama"] };
-  if (r === "japan") return { codes: "JP", queries: ["japanese", "anime"] };
-  if (r === "china") return { codes: "CN", queries: ["chinese", "mandarin"] };
-  if (r === "philippines") return { codes: "PH", queries: ["filipino", "tagalog"] };
-  if (r === "thailand") return { codes: "TH", queries: ["thai"] };
-  if (r === "mexico") return { codes: "MX", queries: ["mexican"] };
-  if (r === "brazil") return { codes: "BR", queries: ["brazilian"] };
-  if (r === "turkey") return { codes: "TR", queries: ["turkish"] };
+  if (r === "africa") return await getAfricanCinema(mediaType);
+  if (r === "asia") return await getAsianDrama(mediaType);
+  if (r === "nollywood") return await getNollywoodMovies();
+  if (r === "kenya") return await getEnhancedKenyanContent();
+  if (r === "bollywood" || r === "india") return await getBollywoodContent();
+  if (r === "korea") return await getKDrama(); // KDrama is usually TV, but home.ts implementation is specific
+  if (r === "latin") return await getLatinAmericanContent();
+  if (r === "middleeast") return await getMiddleEasternContent();
 
-  return { codes: region, queries: [region] };
+  return [];
 };
 
 export const getExploreMovie: (
@@ -31,26 +33,24 @@ export const getExploreMovie: (
   config?: ConfigType
 ) => Promise<ItemsPage> = async (page, config = {}) => {
   const genreId = config.with_genres ? Number(config.with_genres) : undefined;
-  const rawRegion = config.with_origin_country || (config as any).region;
-  const { codes: originCountry, queries } = mapRegionToCodes(rawRegion || "");
+  const rawRegion = (config as any).region || config.with_origin_country;
+
+  // PRIMARY SOURCE: Specialized regional functions from home.ts
+  const regionalItems = rawRegion ? await getRegionalContent(rawRegion, "movie") : [];
 
   const fetchPromises = [
     axios.get("/discover/movie", {
-      params: { ...config, page, ...(genreId && { with_genres: genreId }), ...(originCountry && { with_origin_country: originCountry }) },
+      params: { ...config, page, ...(genreId && { with_genres: genreId }) },
       timeout: 5000,
     }).catch(() => ({ data: { results: [] } })),
     axios.get("/movie/popular", { params: { page }, timeout: 3000 }).catch(() => ({ data: { results: [] } })),
     axios.get("/trending/movie/day", { params: { page }, timeout: 3000 }).catch(() => ({ data: { results: [] } })),
-    ...(originCountry ? [
+    ...(rawRegion ? [
       getFZContentByGenre(genreId || 0, "movie", page).catch(() => []),
-      // Multi-page TMDB discovery for regions
-      Promise.all([1, 2, 3, 4, 5].map(p =>
-        axios.get("/discover/movie", { params: { ...config, page: p, with_origin_country: originCountry } })
+      // Multi-page TMDB discovery
+      Promise.all([1, 2, 3].map(p =>
+        axios.get("/discover/movie", { params: { ...config, page: p } })
           .then(res => res.data.results || []).catch(() => [])
-      )).then(results => results.flat()).catch(() => []),
-      // Regional scraper discovery
-      Promise.all(originCountry.split('|').slice(0, 5).map(country =>
-        getFZContentByCountry(country, "movie", page).catch(() => [])
       )).then(results => results.flat()).catch(() => []),
     ] : []),
   ];
@@ -60,16 +60,15 @@ export const getExploreMovie: (
   const popularData = tmdbResults[1];
   const trendingData = tmdbResults[2];
   const fzMovies = tmdbResults[3] || [];
-  const regionalDiscover = tmdbResults[4] || [];
-  const regionalScraper = tmdbResults[5] || [];
+  const multiPageDiscover = tmdbResults[4] || [];
 
   const allResults = [
+    ...regionalItems,
     ...(tmdbData as any).data?.results ?? [],
     ...(popularData as any).data?.results ?? [],
     ...(trendingData as any).data?.results ?? [],
-    ...(regionalDiscover as Item[]),
-    ...(regionalScraper as Item[]),
     ...(fzMovies as Item[]),
+    ...(multiPageDiscover as Item[]),
   ];
 
   const seen = new Set<number>();
@@ -78,17 +77,6 @@ export const getExploreMovie: (
       if (!item || !item.poster_path || seen.has(item.id)) return false;
       seen.add(item.id);
       if (genreId && item.genre_ids && !item.genre_ids.includes(genreId)) return false;
-
-      // Regional check: If a region is selected, priority to items from that region
-      if (originCountry) {
-        const isFromRegionalSource = (regionalDiscover as Item[]).some(r => r.id === item.id) ||
-          (regionalScraper as Item[]).some(r => r.id === item.id);
-        if (!isFromRegionalSource) {
-          const countries = item.origin_country || [];
-          const filterCountries = originCountry.split('|');
-          if (countries.length > 0 && !countries.some((c: string) => filterCountries.includes(c))) return false;
-        }
-      }
       return true;
     })
     .map((item: Item) => ({ ...item, media_type: "movie" as const }));
@@ -111,23 +99,22 @@ export const getExploreTV: (
   config?: ConfigType
 ) => Promise<ItemsPage> = async (page, config = {}) => {
   const genreId = config.with_genres ? Number(config.with_genres) : undefined;
-  const rawRegion = config.with_origin_country || (config as any).region;
-  const { codes: originCountry } = mapRegionToCodes(rawRegion || "");
+  const rawRegion = (config as any).region || config.with_origin_country;
+
+  // PRIMARY SOURCE: Specialized regional functions from home.ts
+  const regionalItems = rawRegion ? await getRegionalContent(rawRegion, "tv") : [];
 
   const fetchPromises = [
     axios.get("/discover/tv", {
-      params: { ...config, page, ...(genreId && { with_genres: genreId }), ...(originCountry && { with_origin_country: originCountry }) },
+      params: { ...config, page, ...(genreId && { with_genres: genreId }) },
       timeout: 5000,
     }).catch(() => ({ data: { results: [] } })),
     axios.get("/tv/popular", { params: { page }, timeout: 3000 }).catch(() => ({ data: { results: [] } })),
-    ...(originCountry ? [
+    ...(rawRegion ? [
       getFZContentByGenre(genreId || 0, "tv", page).catch(() => []),
-      Promise.all([1, 2, 3, 4, 5].map(p =>
-        axios.get("/discover/tv", { params: { ...config, page: p, with_origin_country: originCountry } })
+      Promise.all([1, 2, 3].map(p =>
+        axios.get("/discover/tv", { params: { ...config, page: p } })
           .then(res => res.data.results || []).catch(() => [])
-      )).then(results => results.flat()).catch(() => []),
-      Promise.all(originCountry.split('|').slice(0, 5).map(country =>
-        getFZContentByCountry(country, "tv", page).catch(() => [])
       )).then(results => results.flat()).catch(() => []),
     ] : []),
   ];
@@ -136,15 +123,14 @@ export const getExploreTV: (
   const tmdbData = tmdbResults[0];
   const popularData = tmdbResults[1];
   const fzTV = tmdbResults[2] || [];
-  const regionalDiscover = tmdbResults[3] || [];
-  const regionalScraper = tmdbResults[4] || [];
+  const multiPageDiscover = tmdbResults[3] || [];
 
   const allResults = [
+    ...regionalItems,
     ...(tmdbData as any).data?.results ?? [],
     ...(popularData as any).data?.results ?? [],
-    ...(regionalDiscover as Item[]),
-    ...(regionalScraper as Item[]),
     ...(fzTV as Item[]),
+    ...(multiPageDiscover as Item[]),
   ];
 
   const seen = new Set<number>();
@@ -153,15 +139,6 @@ export const getExploreTV: (
       if (!item || !item.poster_path || seen.has(item.id)) return false;
       seen.add(item.id);
       if (genreId && item.genre_ids && !item.genre_ids.includes(genreId)) return false;
-      if (originCountry) {
-        const isFromRegionalSource = (regionalDiscover as Item[]).some(r => r.id === item.id) ||
-          (regionalScraper as Item[]).some(r => r.id === item.id);
-        if (!isFromRegionalSource) {
-          const countries = item.origin_country || [];
-          const filterCountries = originCountry.split('|');
-          if (countries.length > 0 && !countries.some((c: string) => filterCountries.includes(c))) return false;
-        }
-      }
       return true;
     })
     .map((item: Item) => ({ ...item, media_type: "tv" as const }));
