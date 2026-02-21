@@ -173,18 +173,19 @@ export const useTMDBCollectionQuery = (
 
         // Filter by region (client-side) - RELAXED FILTERING
         // Only filter strictly if we have enough results, otherwise be lenient to prevent empty screen
-        if (targetCountries.length > 0) {
+        if (region) {
           const strictFiltered = filteredResults.filter((item) => {
             const countries = item.origin_country || [];
-            return countries.some((c: string) => targetCountries.includes(c));
+            // Use an even broader check or trust the service if it's a regional service call
+            return targetCountries.length === 0 || countries.some((c: string) => targetCountries.includes(c));
           });
 
           // RELAXED: If we are specifically in a regional tab, and the service returned items,
           // trust the service results even if the metadata check fails (some scrapers/TMDB entries miss tags).
-          if (strictFiltered.length < 5 && filteredResults.length > 0) {
-            console.warn("Valid API results found but filtered out by strict client-side region check. Showing all results from regional service.");
-            // Keep the original results as they usually come from a region-specific API call
-          } else {
+          if (strictFiltered.length < 4 && filteredResults.length > 0) {
+            console.warn("Region results found but failing strict metadata check. Showing raw results from regional service.");
+            // Keep original results
+          } else if (targetCountries.length > 0) {
             filteredResults = strictFiltered;
           }
         }

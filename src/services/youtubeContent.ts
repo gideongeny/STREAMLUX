@@ -132,7 +132,12 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
             'must watch #shorts',
             'best #shorts',
             'viral #shorts',
-            'trending #shorts'
+            'trending #shorts',
+            'nollywood #shorts',
+            'bollywood #shorts',
+            'netflix #shorts',
+            'marvel #shorts',
+            'comedy #shorts'
         ];
 
         const results = await Promise.allSettled(
@@ -160,20 +165,31 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
 
         // Deduplicate and convert
         const seen = new Set<string>();
-        return allVideos
+        const filteredShorts = allVideos
             .filter(v => {
                 if (seen.has(v.id)) return false;
                 seen.add(v.id);
                 return true;
             })
-            // REMOVED LIMIT: .slice(0, 50) - MAX RESULTS
             .map((v, i) => {
                 const item = convertYouTubeToItem(v, i);
-                // Mark as YouTube Short for direct playback
                 (item as any).youtubeId = v.id;
                 (item as any).isYouTubeShort = true;
                 return item;
             });
+
+        // LAST RESORT FALLBACK: If absolutely no shorts found, get trending movies as placeholders
+        if (filteredShorts.length === 0) {
+            console.warn("Shorts Engine returned 0 results. Using trending content fallback.");
+            const trending = await fetchYouTubeVideos('trending movies', undefined);
+            return trending.videos.map((v, i) => {
+                const item = convertYouTubeToItem(v, i);
+                (item as any).isYouTubeShort = true;
+                return item;
+            });
+        }
+
+        return filteredShorts;
     } catch (error) {
         console.error('Error fetching YouTube shorts:', error);
         return [];
