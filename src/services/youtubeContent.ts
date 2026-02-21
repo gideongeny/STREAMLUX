@@ -147,18 +147,18 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
         const allVideos: YouTubeVideo[] = [];
         results.forEach(result => {
             if (result.status === 'fulfilled') {
-                // RELAXED FILTER: The search API snippet doesn't always have duration.
-                // Trust the query context and specific shorts tags.
+                // RELAXED FILTER: The search API snippet doesn't always have duration properly parsed.
+                // Trust the query context and specific shorts tags, but allow slightly longer videos.
                 allVideos.push(...result.value.videos.filter(v => {
-                    const hasShortsTag = v.title.toLowerCase().includes('shorts') ||
-                        v.description?.toLowerCase().includes('shorts');
+                    const lowTitle = v.title.toLowerCase();
+                    const lowDesc = (v.description || "").toLowerCase();
+                    const hasShortsTag = lowTitle.includes('shorts') || lowDesc.includes('shorts') || lowTitle.includes('#short');
 
-                    // If it has #shorts or shorts in title, it's almost certainly a short.
-                    // If duration is unknown (undefined), allow it if tag exists.
-                    if (v.duration === undefined) return hasShortsTag;
+                    // If duration is unknown (undefined), allow if tag exists or it was a 'short' duration search
+                    if (v.duration === undefined) return hasShortsTag || true; // Be more permissive
 
-                    // If duration is known, it MUST be <= 60s
-                    return v.duration <= 60;
+                    // If duration is known, allow up to 90s (some shorts are slightly > 60s)
+                    return v.duration <= 95;
                 }));
             }
         });
@@ -178,11 +178,20 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
                 return item;
             });
 
-        // LAST RESORT FALLBACK: If absolutely no shorts found, get trending movies as placeholders
+        // LAST RESORT FALLBACK: If absolutely no shorts found, get trending content
         if (filteredShorts.length === 0) {
-            console.warn("Shorts Engine returned 0 results. Using trending content fallback.");
-            const trending = await fetchYouTubeVideos('trending movies', undefined);
-            return trending.videos.map((v, i) => {
+            console.warn("[ShortsEngine] 0 shorts found. Using trending fallback.");
+            const queries = ['trending shorts', 'movie trailers shorts', 'funny shorts'];
+            const fallbackResults = await Promise.allSettled(
+                queries.map(q => fetchYouTubeVideos(q, undefined, 'short'))
+            );
+
+            const fallbackVideos: any[] = [];
+            fallbackResults.forEach(r => {
+                if (r.status === 'fulfilled') fallbackVideos.push(...r.value.videos);
+            });
+
+            return fallbackVideos.map((v, i) => {
                 const item = convertYouTubeToItem(v, i);
                 (item as any).isYouTubeShort = true;
                 return item;

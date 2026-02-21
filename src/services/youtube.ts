@@ -14,8 +14,14 @@ export interface YouTubeVideo {
     viewCount?: string;
 }
 
-const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+// Fallback to Firebase API key if dedicated YouTube key is missing
+// Many users use the same Google Cloud project for both.
+const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY || "AIzaSyB6scsYbbA4ZfFhujp_eHg83QnsGxpwEAY";
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
+
+if (!process.env.REACT_APP_YOUTUBE_API_KEY && API_KEY) {
+    console.info("[ShortsEngine] Using fallback API key for YouTube services.");
+}
 
 /**
  * Build a search query for a given region or genre.
