@@ -40,8 +40,42 @@ export const convertYouTubeToItem = (video: YouTubeVideo, index: number): Item =
 
 
 
+// Basic Caching System to save YouTube Quota
+const CACHE_KEY_PREFIX = 'yt_cache_';
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
+const getCachedItems = (key: string): Item[] | null => {
+    try {
+        const cached = sessionStorage.getItem(CACHE_KEY_PREFIX + key);
+        if (!cached) return null;
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp > CACHE_DURATION) {
+            sessionStorage.removeItem(CACHE_KEY_PREFIX + key);
+            return null;
+        }
+        return data;
+    } catch { return null; }
+};
+
+const setCachedItems = (key: string, data: Item[]) => {
+    try {
+        sessionStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify({
+            data,
+            timestamp: Date.now()
+        }));
+    } catch { }
+};
+
+// Global flag to track if we've hit quota limits in the current session
+let isQuotaExhausted = false;
+
 // Fetch YouTube movies
 export const getYouTubeMovies = async (): Promise<Item[]> => {
+    if (isQuotaExhausted) return [];
+
+    const cached = getCachedItems('movies');
+    if (cached) return cached;
+
     try {
         const queries = [
             'full movie 2024',
@@ -63,15 +97,18 @@ export const getYouTubeMovies = async (): Promise<Item[]> => {
 
         // Deduplicate and convert
         const seen = new Set<string>();
-        return allVideos
+        const items = allVideos
             .filter(v => {
                 if (seen.has(v.id)) return false;
                 seen.add(v.id);
                 return true;
             })
-            // REMOVED LIMIT: .slice(0, 20)
             .map((v, i) => convertYouTubeToItem(v, i));
-    } catch (error) {
+
+        if (items.length > 0) setCachedItems('movies', items);
+        return items;
+    } catch (error: any) {
+        if (error?.response?.status === 403) isQuotaExhausted = true;
         console.error('Error fetching YouTube movies:', error);
         return [];
     }
@@ -79,6 +116,11 @@ export const getYouTubeMovies = async (): Promise<Item[]> => {
 
 // Fetch YouTube TV shows
 export const getYouTubeTVShows = async (): Promise<Item[]> => {
+    if (isQuotaExhausted) return [];
+
+    const cached = getCachedItems('tv');
+    if (cached) return cached;
+
     try {
         const queries = [
             'tv series full episodes',
@@ -100,7 +142,7 @@ export const getYouTubeTVShows = async (): Promise<Item[]> => {
 
         // Deduplicate and convert
         const seen = new Set<string>();
-        return allVideos
+        const items = allVideos
             .filter(v => {
                 if (seen.has(v.id)) return false;
                 seen.add(v.id);
@@ -108,32 +150,61 @@ export const getYouTubeTVShows = async (): Promise<Item[]> => {
             })
             // REMOVED LIMIT: .slice(0, 20)
             .map((v, i) => convertYouTubeToItem(v, i));
-    } catch (error) {
+
+        if (items.length > 0) setCachedItems('tv', items);
+        return items;
+    } catch (error: any) {
+        if (error?.response?.status === 403) isQuotaExhausted = true;
         console.error('Error fetching YouTube TV shows:', error);
         return [];
     }
 };
 
-// Fetch YouTube content by genre
-export const getYouTubeByGenre = async (genre: string, mediaType: 'movie' | 'tv' = 'movie'): Promise<Item[]> => {
+// Fetch YouTube by Genre
+export const getYouTubeByGenre = async (genreName: string, type: "movie" | "tv" = "movie"): Promise<Item[]> => {
+    if (isQuotaExhausted) return [];
+
+    const cacheKey = `genre_${genreName}_${type}`;
+    const cached = getCachedItems(cacheKey);
+    if (cached) return cached;
+
     try {
-        const query = mediaType === 'movie'
-            ? `${genre} movies full`
-            : `${genre} tv series`;
+        const query = type === 'movie'
+            ? `${genreName} movies full`
+            : `${genreName} tv series`;
 
         const result = await fetchYouTubeVideos(query);
-        const filtered = result.videos.filter(v => v.type === mediaType);
+        const allVideos = result.videos.filter(v => v.type === type);
 
-        return filtered
-            // REMOVED LIMIT: .slice(0, 20)
-            .map((v, i) => convertYouTubeToItem(v, i));
-    } catch (error) {
-        console.error(`Error fetching YouTube ${genre}:`, error);
+        // Deduplicate and convert
+        const seen = new Set<string>();
+        const items = allVideos
+            .filter(v => {
+                if (seen.has(v.id)) return false;
+                seen.add(v.id);
+                return true;
+            })
+            .map((v, i) => {
+                const item = convertYouTubeToItem(v, i);
+                (item as any).youtubeId = v.id;
+                return item;
+            });
+
+        if (items.length > 0) setCachedItems(cacheKey, items);
+        return items;
+    } catch (error: any) {
+        if (error?.response?.status === 403) isQuotaExhausted = true;
+        console.error(`Error fetching YouTube genre ${genreName}:`, error);
         return [];
     }
 };
 // Fetch YouTube Must-Watch Shorts (properly filtered for actual YouTube Shorts)
 export const getYouTubeShorts = async (): Promise<Item[]> => {
+    if (isQuotaExhausted) return [];
+
+    const cached = getCachedItems('shorts');
+    if (cached) return cached;
+
     try {
         // Use YouTube Shorts specific queries - these should return actual Shorts
         const queries = [
@@ -209,8 +280,10 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
             });
         }
 
+        if (filteredShorts.length > 0) setCachedItems('shorts', filteredShorts);
         return filteredShorts;
-    } catch (error) {
+    } catch (error: any) {
+        if (error?.response?.status === 403) isQuotaExhausted = true;
         console.error('Error fetching YouTube shorts:', error);
         return [];
     }

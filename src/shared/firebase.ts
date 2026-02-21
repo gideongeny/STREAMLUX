@@ -5,7 +5,7 @@ import { getFirestore } from "firebase/firestore";
 
 // StreamLux Firebase Configuration
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyB6scsYbbA4ZfFhujp_eHg83QnsGxpwEAY",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY",
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "streamlux-67a84.firebaseapp.com",
   projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "streamlux-67a84",
   storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "streamlux-67a84.firebasestorage.app",

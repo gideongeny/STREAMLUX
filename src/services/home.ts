@@ -1,5 +1,6 @@
 import axios from "../shared/axios";
 import { BannerInfo, Item, HomeFilms } from "../shared/types";
+import { Capacitor } from "@capacitor/core";
 import {
   getFZTrending,
   getFZPopular,
@@ -56,15 +57,14 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
   ]) as { fzTrending: Item[], fzPopular: Item[], fzTopRated: Item[], fzLatest: Item[] };
 
   // Load other sources in background (non-blocking) - these will be available later if needed
-  // Now includes Letterboxd, Rotten Tomatoes, YouTube, WatchMode, RapidAPI, OMDB, and enhanced TMDB via getAllAPIContent
+  // Reduced background load on native to save quota/data
+  const isWeb = Capacitor.getPlatform() === 'web';
   Promise.allSettled([
     getAllSourceContent("movie", 1),
-    getAllAPIContent("movie", "popular"), // Includes IMDB -> Letterboxd -> Rotten Tomatoes -> TMDB fallback
-    getYouTubeMovies(), // Add YouTube movies to background loading
-    getWatchModePopular("movie", 1), // WatchMode popular movies
-    getStreamingTitles("movie", "us", undefined, 1), // RapidAPI streaming availability
-    getOMDBPopular("movie"), // OMDB popular movies
-  ]).catch(() => { }); // Silently fail for background loading
+    getAllAPIContent("movie", "popular"),
+    ...(isWeb ? [getYouTubeMovies(), getWatchModePopular("movie", 1)] : []),
+    getStreamingTitles("movie", "us", undefined, 1),
+  ]).catch(() => { });
 
   // Helper function to merge and deduplicate items from all sources
   // Now includes YouTube, scraper, WatchMode, RapidAPI, and OMDB content in all sliders
@@ -335,14 +335,13 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
   ]) as { fzTrending: Item[], fzPopular: Item[], fzTopRated: Item[], fzLatest: Item[] };
 
   // Load other sources in background (non-blocking) - these will be available later if needed
-  // Now includes Letterboxd, Rotten Tomatoes, YouTube, WatchMode, RapidAPI, OMDB, and enhanced TMDB via getAllAPIContent
+  // Reduced background load on native to save quota/data
+  const isWeb = Capacitor.getPlatform() === 'web';
   Promise.allSettled([
     getAllSourceContent("tv", 1),
     getAllAPIContent("tv", "popular"), // Includes IMDB -> Letterboxd -> Rotten Tomatoes -> TMDB fallback
-    getYouTubeTVShows(), // Add YouTube TV shows to background loading
-    getWatchModePopular("tv_series", 1), // WatchMode popular TV shows
+    ...(isWeb ? [getYouTubeTVShows(), getWatchModePopular("tv_series", 1)] : []),
     getStreamingTitles("series", "us", undefined, 1), // RapidAPI streaming availability
-    getOMDBPopular("series"), // OMDB popular TV shows
   ]).catch(() => { }); // Silently fail for background loading
 
   // Helper function to merge and deduplicate items from all sources
@@ -2137,19 +2136,31 @@ export const getRecommendations = async (
   }
 };
 
+const trailerCache: Record<string, string> = {};
+
 export const getVideo = async (
   type: "movie" | "tv",
   id: number
 ): Promise<string | null> => {
+  const cacheKey = `${type}_${id}`;
+  if (trailerCache[cacheKey]) return trailerCache[cacheKey];
+
   try {
     const res = await axios.get(`/${type}/${id}/videos`);
     const video = res.data.results.find(
       (item: any) => item.site === "YouTube" && item.type === "Trailer"
     );
-    if (video) return video.key;
+    if (video) {
+      trailerCache[cacheKey] = video.key;
+      return video.key;
+    }
 
     const anyVideo = res.data.results.find((item: any) => item.site === "YouTube");
-    return anyVideo ? anyVideo.key : null;
+    if (anyVideo) {
+      trailerCache[cacheKey] = anyVideo.key;
+      return anyVideo.key;
+    }
+    return null;
   } catch (error) {
     console.error("Error fetching video:", error);
     return null;

@@ -16,7 +16,7 @@ export interface YouTubeVideo {
 
 // Fallback to Firebase API key if dedicated YouTube key is missing
 // Many users use the same Google Cloud project for both.
-const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY || "AIzaSyB6scsYbbA4ZfFhujp_eHg83QnsGxpwEAY";
+const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY || "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY";
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 
 if (!process.env.REACT_APP_YOUTUBE_API_KEY && API_KEY) {
