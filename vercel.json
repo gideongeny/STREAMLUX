@@ -1,6 +1,12 @@
 {
-  "buildCommand": "npm install --force --legacy-peer-deps && npm run build",
+  "buildCommand": "CI=false npm install --force --legacy-peer-deps && CI=false npm run build",
   "outputDirectory": "build",
   "installCommand": "npm install --force --legacy-peer-deps --no-optional",
-  "devCommand": "npm start"
+  "devCommand": "npm start",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }

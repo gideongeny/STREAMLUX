@@ -257,3 +257,45 @@ input:-webkit-autofill:active {
 .tw-focus-ring:focus-visible {
   @apply outline-none ring-4 ring-primary ring-offset-2 ring-offset-dark;
 }
+
+/* RTL Support */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .flex {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .flex-col {
+  flex-direction: column;
+}
+
+[dir="rtl"] .ml-4 {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+[dir="rtl"] .mr-4 {
+  margin-right: 0 !important;
+  margin-left: 1rem !important;
+}
+
+[dir="rtl"] .pl-8 {
+  padding-left: 0 !important;
+  padding-right: 2rem !important;
+}
+
+[dir="rtl"] .pr-8 {
+  padding-right: 0 !important;
+  padding-left: 2rem !important;
+}
+
+/* Specific component flips */
+[dir="rtl"] .translate-x-full {
+  --tw-translate-x: -100% !important;
+}
+
+[dir="rtl"] .-translate-x-full {
+  --tw-translate-x: 100% !important;
+}

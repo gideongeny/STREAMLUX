@@ -15,6 +15,7 @@ import { getYouTubeMovies, getYouTubeTVShows, getYouTubeByGenre, getYouTubeShort
 import { getWatchModePopular, searchWatchModeTitles } from "./watchmode";
 import { searchStreamingTitles, getStreamingTitles } from "./rapidapi-streaming";
 import { searchOMDBTitles, getOMDBPopular } from "./omdb";
+import { sanitizeString } from "../utils/security";
 
 // MOVIE TAB
 ///////////////////////////////////////////////////////////////

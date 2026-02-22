@@ -126,21 +126,14 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
         )}
 
         <div className="mt-8 px-4">
-          <div className="flex gap-6 items-center px-0">
-            <div className="w-[30px] flex justify-center">
-              <span className="text-xl">🌐</span>
-            </div>
-            <div className="flex-grow">
-              <LanguageSelector />
-            </div>
-          </div>
+          <LanguageSelector />
         </div>
 
         <div
           className={`text-white text-lg font-medium ${isSidebarActive ? "-mt-6" : "mt-12"
             }`}
         >
-          MENU
+          {t('MENU')}
         </div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
           <Link
@@ -160,7 +153,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             className="flex gap-6 items-center hover:text-white transition duration-300"
           >
             <MdSportsSoccer size={25} />
-            <p>Sports</p>
+            <p>{t('Sports')}</p>
           </a>
 
           <Link
@@ -187,16 +180,16 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
 
 
-        <div className="text-white text-lg font-medium mt-12">PERSONAL</div>
+        <div className="text-white text-lg font-medium mt-12">{t('PERSONAL')}</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
           {!currentUser && (
             <div className="mb-4 p-3 bg-primary/10 border border-primary/30 rounded-lg">
-              <p className="text-xs text-gray-400 mb-2">Sign in to access:</p>
+              <p className="text-xs text-gray-400 mb-2">{t('Sign in to access')}:</p>
               <Link
                 to="/auth"
                 className="text-primary hover:underline text-sm font-medium"
               >
-                Sign In / Sign Up →
+                {t('Sign In')} / {t('Sign Up')} →
               </Link>
             </div>
           )}
@@ -206,10 +199,10 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={!currentUser}
-            title={!currentUser ? "Sign in to access bookmarks" : ""}
+            title={!currentUser ? t("Sign in to access bookmarks") : ""}
           >
             <BsBookmarkHeart size={25} />
-            <p>Bookmarked</p>
+            <p>{t('Bookmarked')}</p>
           </button>
 
           <button
@@ -218,14 +211,14 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={!currentUser}
-            title={!currentUser ? "Sign in to access history" : ""}
+            title={!currentUser ? t("Sign in to access history") : ""}
           >
             <AiOutlineHistory size={25} />
             <p>{t('History')}</p>
           </button>
         </div>
 
-        <div className="text-white text-lg font-medium mt-12">GENERAL</div>
+        <div className="text-white text-lg font-medium mt-12">{t('GENERAL')}</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
           <a
             href="/streamlux.apk"
@@ -257,10 +250,10 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={!currentUser}
-            title={!currentUser ? "Sign in to access profile" : ""}
+            title={!currentUser ? t("Sign in to access profile") : ""}
           >
             <BiUserCircle size={25} />
-            <p>Profile</p>
+            <p>{t('Profile')}</p>
           </button>
 
           {!currentUser && (
@@ -269,7 +262,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               className="flex gap-5 items-center px-4 py-2 bg-primary/20 rounded-lg border border-primary/50 hover:bg-primary/30 transition"
             >
               <HiOutlineLogin size={30} />
-              <p className="font-medium">Sign In / Sign Up</p>
+              <p className="font-medium">{t('Sign In')} / {t('Sign Up')}</p>
             </Link>
           )}
 
@@ -279,7 +272,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               className="flex gap-5 items-center"
             >
               <HiOutlineLogout size={30} />
-              <p>Logout</p>
+              <p>{t('Logout')}</p>
             </button>
           )}
 

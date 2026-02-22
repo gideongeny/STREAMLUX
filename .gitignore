@@ -60,3 +60,5 @@ deploy-*.log
 deployment.log
 error_log.txt
 tatuscls
+.vercel
+.env*.local

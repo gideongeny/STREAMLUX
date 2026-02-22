@@ -166,6 +166,7 @@ export interface SportsFixtureConfig {
   banner?: string;
   thumb?: string;
   fanart?: string;
+  homeProb?: number;
   // Pro Stats & Details
   stats?: {
     possession?: string;

@@ -8,15 +8,14 @@ import Error from "../Error";
 
 const TVWatch: FC = () => {
   const { id } = useParams();
-  const { data, error } = useQuery<getWatchReturnedType, Error>(
-    ["watchTV", id],
-    () => getWatchTV(Number(id as string))
-  );
-
   const [queryParams] = useSearchParams();
-
   const seasonId = Number(queryParams.get("season")) || 1;
   const episodeId = Number(queryParams.get("episode")) || 1;
+
+  const { data, error } = useQuery<getWatchReturnedType, Error>(
+    ["watchTV", id, seasonId], // Include seasonId in key
+    () => getWatchTV(Number(id as string), seasonId)
+  );
 
   // if (error) return <div>ERROR: {error.message}</div>;
   if (error) return <Error />;

@@ -156,31 +156,58 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
 
     // ── True document-level fullscreen toggle ──────────────────────
     const handleFullscreen = useCallback(async () => {
+        const doc = document as any;
+        const playerRoot = playerRootRef.current;
+        const video = videoRef.current;
+
         try {
-            if (!document.fullscreenElement) {
-                // Request fullscreen on the entire page so the video covers everything
-                await document.documentElement.requestFullscreen();
-                // Scroll player into top so it fills the viewport
-                playerRootRef.current?.scrollIntoView({ behavior: 'auto' as ScrollBehavior });
+            if (!isFullscreen) {
+                // Try standard API first
+                if (doc.documentElement.requestFullscreen) {
+                    await doc.documentElement.requestFullscreen();
+                } else if (doc.documentElement.webkitRequestFullscreen) {
+                    await doc.documentElement.webkitRequestFullscreen();
+                } else if (video && (video as any).webkitEnterFullscreen) {
+                    // For iPhone native player take-over (standard behavior)
+                    (video as any).webkitEnterFullscreen();
+                    return; // The browser handles FS now
+                }
+
+                // If no native FS or to ensure custom controls stay visible (Pseudo-Fullscreen fallback)
+                // We ALWAYS set this state to trigger the fixed layout in fsOverride
                 setIsFullscreen(true);
+                if (playerRoot) {
+                    playerRoot.scrollIntoView({ behavior: 'auto' as ScrollBehavior });
+                }
             } else {
-                await document.exitFullscreen();
+                if (doc.exitFullscreen) {
+                    await doc.exitFullscreen();
+                } else if (doc.webkitExitFullscreen) {
+                    await doc.webkitExitFullscreen();
+                }
                 setIsFullscreen(false);
             }
         } catch (err) {
-            console.warn('Fullscreen error:', err);
+            console.warn('Fullscreen handling fallback triggered:', err);
+            // Even if native FS fails/is rejected, we enable our Pseudo-Fullscreen for World Class UX
+            setIsFullscreen(!isFullscreen);
         }
-    }, []);
+    }, [isFullscreen]);
 
     // Sync fullscreen state with actual browser events
     useEffect(() => {
         const onFSChange = () => {
-            const inFS = !!document.fullscreenElement;
+            const doc = document as any;
+            const inFS = !!(doc.fullscreenElement || doc.webkitFullscreenElement);
             setIsFullscreen(inFS);
             if (!inFS) setControlsVisible(true);
         };
         document.addEventListener('fullscreenchange', onFSChange);
-        return () => document.removeEventListener('fullscreenchange', onFSChange);
+        document.addEventListener('webkitfullscreenchange', onFSChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', onFSChange);
+            document.removeEventListener('webkitfullscreenchange', onFSChange);
+        };
     }, []);
 
     // Escape key exits fullscreen
@@ -495,6 +522,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                         controls
                         autoPlay={getSetting('autoplay_enabled', true)}
                         playsInline
+                        webkit-playsinline="true"
                         muted={false} // Ensure it's not muted so audio works with autoplay if browser allows
                         poster={poster}
                         onError={handleVideoError}

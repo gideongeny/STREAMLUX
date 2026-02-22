@@ -1,4 +1,5 @@
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, memo, useTransition } from "react";
+import { motion } from "framer-motion";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
@@ -110,8 +111,12 @@ const Home: FC = () => {
 
   const welcome = getGreeting();
 
+  const [isPending, startTransition] = useTransition();
+
   const handleTabChange = (tab: "movie" | "tv" | "sports") => {
-    setCurrentTab(tab);
+    startTransition(() => {
+      setCurrentTab(tab);
+    });
   };
 
   const {
@@ -370,7 +375,7 @@ interface FilmTypeButtonProps {
   currentTab: string;
   buttonType: "movie" | "tv" | "sports";
 }
-const FilmTypeButton: FC<FilmTypeButtonProps> = ({
+const FilmTypeButton: FC<FilmTypeButtonProps> = memo(({
   onSetCurrentTab,
   currentTab,
   buttonType,
@@ -388,15 +393,18 @@ const FilmTypeButton: FC<FilmTypeButtonProps> = ({
       onClick={() => {
         onSetCurrentTab(buttonType);
       }}
-      className={`relative transition duration-300 hover:text-white ${isActive ? "text-white font-medium" : ""
+      className={`relative transition duration-300 hover:text-white ${isActive ? "text-white font-medium" : "text-gray-400"
         }`}
     >
       {getButtonText()}
       {isActive && (
-        <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-white" />
+        <motion.span
+          layoutId="tab-underline"
+          className="absolute bottom-0 left-0 right-0 h-[3px] bg-white"
+        />
       )}
     </button>
   );
-};
+});
 
 export default Home;

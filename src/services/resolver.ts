@@ -156,7 +156,7 @@ export class ResolverService {
                 name: "VidSrc.me",
                 url: mediaType === "movie"
                     ? `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`
-                    : `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&sea=${season || 1}&epi=${episode || 1}`,
+                    : `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${season || 1}&episode=${episode || 1}`,
                 quality: "1080p",
                 speed: "fast",
                 status: "active",
@@ -250,7 +250,7 @@ export class ResolverService {
                 name: "Embed.su",
                 url: mediaType === "movie"
                     ? `https://embed.su/embed/movie/${tmdbId}`
-                    : `https://embed.su/embed/tv/${tmdbId}/${season}/${episode}`,
+                    : `https://embed.su/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
                 quality: "1080p",
                 speed: "fast",
                 status: "active",
@@ -262,7 +262,7 @@ export class ResolverService {
                 name: "VidSrc.xyz",
                 url: mediaType === "movie"
                     ? `https://vidsrc.xyz/embed/movie/${tmdbId}`
-                    : `https://vidsrc.xyz/embed/tv/${tmdbId}/${season}/${episode}`,
+                    : `https://vidsrc.xyz/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
                 quality: "1080p",
                 speed: "fast",
                 status: "active",
@@ -346,7 +346,7 @@ export class ResolverService {
                 name: "2Embed",
                 url: mediaType === "movie"
                     ? `https://www.2embed.cc/embed/${tmdbId}`
-                    : `https://www.2embed.cc/embedtv/${tmdbId}?s=${season}&e=${episode}`,
+                    : `https://www.2embed.cc/embedtv/${tmdbId}?s=${season || 1}&e=${episode || 1}`,
                 quality: "1080p",
                 speed: "medium",
                 status: "active",
@@ -358,7 +358,7 @@ export class ResolverService {
                 name: "SuperEmbed",
                 url: mediaType === "movie"
                     ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`
-                    : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}`,
+                    : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season || 1}&e=${episode || 1}`,
                 quality: "1080p",
                 speed: "fast",
                 status: "active",

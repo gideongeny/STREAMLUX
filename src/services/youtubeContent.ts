@@ -46,11 +46,11 @@ const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 const getCachedItems = (key: string): Item[] | null => {
     try {
-        const cached = sessionStorage.getItem(CACHE_KEY_PREFIX + key);
+        const cached = localStorage.getItem(CACHE_KEY_PREFIX + key);
         if (!cached) return null;
         const { data, timestamp } = JSON.parse(cached);
         if (Date.now() - timestamp > CACHE_DURATION) {
-            sessionStorage.removeItem(CACHE_KEY_PREFIX + key);
+            localStorage.removeItem(CACHE_KEY_PREFIX + key);
             return null;
         }
         return data;
@@ -59,7 +59,7 @@ const getCachedItems = (key: string): Item[] | null => {
 
 const setCachedItems = (key: string, data: Item[]) => {
     try {
-        sessionStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify({
+        localStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify({
             data,
             timestamp: Date.now()
         }));

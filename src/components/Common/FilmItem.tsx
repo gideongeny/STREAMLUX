@@ -1,33 +1,43 @@
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
-import { FunctionComponent, MouseEvent } from "react";
+import { FunctionComponent, MouseEvent, memo, useState, useEffect, useRef } from "react";
 import { AiFillStar } from "react-icons/ai";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
 import { Item } from "../../shared/types";
 import { hapticImpact, resizeImage } from "../../shared/utils";
-import { useState, useEffect, useRef } from "react";
 import axios from "../../shared/axios";
+import { Capacitor } from "@capacitor/core";
 
 interface FilmItemProps {
   item: Item;
 }
 
 const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
+  const isNative = Capacitor.isNativePlatform();
+
   // 3D Tilt Logic
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
   const [isHovered, setIsHovered] = useState(false);
+  const [isFullyHovered, setIsFullyHovered] = useState(false); // Used for tilt
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
   const hoverTimer = useRef<NodeJS.Timeout | null>(null);
+  const tiltTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const mouseXSpring = useSpring(x);
-  const mouseYSpring = useSpring(y);
+  const mouseXSpring = useSpring(x, { stiffness: 150, damping: 20 });
+  const mouseYSpring = useSpring(y, { stiffness: 150, damping: 20 });
 
   const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["10deg", "-10deg"]);
   const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-10deg", "10deg"]);
 
+  const glintLeft = useTransform(mouseXSpring, [-0.5, 0.5], ["-100%", "100%"]);
+  const glintTop = useTransform(mouseYSpring, [-0.5, 0.5], ["-100%", "100%"]);
+  const auraOpacity = useTransform(mouseXSpring, [-0.5, 0.5], [0.1, 0.3]);
+
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (isNative) return; // Disable tilt tracking on native/mobile
+
     const rect = e.currentTarget.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
@@ -46,22 +56,26 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
     x.set(0);
     y.set(0);
     setIsHovered(false);
+    setIsFullyHovered(false);
     if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    if (tiltTimer.current) clearTimeout(tiltTimer.current);
   };
 
   const handleMouseEnter = () => {
+    // Phase 1: Simple hover (for glint/border)
+    setIsHovered(true);
+
+    // Phase 2: Detailed hover (for video/tilt) - Delayed to prevent scroll lag
     hoverTimer.current = setTimeout(async () => {
-      setIsHovered(true);
       if (!trailerKey && !item.isYouTube) {
         try {
           const res = await axios.get(`/${item.media_type}/${item.id}/videos`);
           const trailer = res.data.results.find((v: any) => v.type === "Trailer" && v.site === "YouTube");
           if (trailer) setTrailerKey(trailer.key);
-        } catch (err) {
-          console.error("Failed to fetch hover trailer:", err);
-        }
+        } catch (err) { }
       }
-    }, 600);
+      setIsFullyHovered(true);
+    }, 800);
   };
 
   // Check if movie is unreleased
@@ -85,41 +99,45 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
               : `/`
       }
       onClick={() => hapticImpact()}
+      className="block w-full"
     >
       <motion.div
         style={{
-          rotateX,
-          rotateY,
+          rotateX: !isNative && isFullyHovered ? rotateX : 0,
+          rotateY: !isNative && isFullyHovered ? rotateY : 0,
           transformStyle: "preserve-3d",
         }}
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="shadow-sm bg-dark-darken pb-2 rounded-md overflow-hidden transition-all duration-300 relative group hover:shadow-[0_0_25px_rgba(255,107,53,0.35)] tw-focus-ring"
+        layoutId={`item-${item.id}`}
+        className="shadow-sm bg-dark-darken pb-2 rounded-md overflow-hidden transition-all duration-300 relative group hover:shadow-[0_0_25px_rgba(255,107,53,0.35)] tw-focus-ring will-change-transform"
       >
-        {/* Moving Glossy Highlight (Holographic Glint) */}
-        <motion.div
-          style={{
-            background: "linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%)",
-            left: useTransform(mouseXSpring, [-0.5, 0.5], ["-100%", "100%"]),
-            top: useTransform(mouseYSpring, [-0.5, 0.5], ["-100%", "100%"]),
-            rotate: 45,
-          }}
-          className="absolute inset-0 pointer-events-none z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-[2]"
-        />
+        {/* Moving Glossy Highlight - Disabled on native for perf */}
+        {!isNative && (
+          <motion.div
+            style={{
+              background: "linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%)",
+              left: glintLeft,
+              top: glintTop,
+              rotate: 45,
+            }}
+            className="absolute inset-0 pointer-events-none z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-[2]"
+          />
+        )}
 
         {/* Depth Aura (Reflective Glow) */}
         <motion.div
           style={{
             background: "radial-gradient(circle at center, var(--color-primary) 0%, transparent 70%)",
-            opacity: useTransform(mouseXSpring, [-0.5, 0.5], [0.1, 0.3]),
+            opacity: auraOpacity,
           }}
           className="absolute inset-0 pointer-events-none z-10 blur-3xl group-hover:block hidden"
         />
 
         {/* Video Preview Overlay */}
         <AnimatePresence>
-          {isHovered && (trailerKey || item.isYouTube) && (
+          {isFullyHovered && (trailerKey || item.isYouTube) && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -127,7 +145,7 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
               className="absolute inset-0 z-20 bg-black overflow-hidden pointer-events-none"
             >
               <iframe
-                src={`https://www.youtube.com/embed/${item.isYouTube ? item.youtubeId : trailerKey}?autoplay=1&mute=1&controls=0&loop=1&playlist=${item.isYouTube ? item.youtubeId : trailerKey}&rel=0&modestbranding=1`}
+                src={`https://www.youtube.com/embed/${item.isYouTube ? item.youtubeId : trailerKey}?autoplay=1&mute=1&controls=0&loop=1&playlist=${item.isYouTube ? item.youtubeId : trailerKey}&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1`}
                 className="w-full h-full scale-[1.5] object-cover"
                 allow="autoplay; encrypted-media"
               />
@@ -137,45 +155,40 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
         </AnimatePresence>
 
         <LazyLoadImage
-          alt="Poster film"
+          alt={item.title || item.name}
           src={
             item.media_type === "person"
               ? resizeImage(item.profile_path || "", "w342")
-              : resizeImage(item.poster_path, "w342")
+              : item.poster_path
+                ? resizeImage(item.poster_path, "w342")
+                : "https://via.placeholder.com/342x513?text=No+Poster"
           }
-          className="object-cover"
+          className="object-cover w-full aspect-[2/3]"
           effect="blur"
+          threshold={300}
+          onError={(e: any) => {
+            e.target.src = "https://via.placeholder.com/342x513?text=No+Poster";
+          }}
         />
-        <p className="whitespace-nowrap overflow-hidden text-ellipsis text-base text-gray-300 mt-1 text-center px-2 group-hover:text-white transition duration-300">
+        <p className="whitespace-nowrap overflow-hidden text-ellipsis text-[13px] font-medium text-gray-300 mt-2 text-center px-2 group-hover:text-white transition duration-300">
           {item.title || item.name}
         </p>
-        {isUnreleased && releaseDate && (
-          <p className="text-xs text-amber-400 text-center px-2 mt-1">
-            Releases: {releaseDate}
-          </p>
-        )}
-        <div className="bg-primary px-2 py-1 rounded-full absolute top-[5%] left-[8%] z-20 flex items-center gap-1 text-white text-xs">
-          {item.vote_average?.toFixed(1)}
-          <AiFillStar size={15} />
+
+        <div className="bg-primary/90 backdrop-blur-sm px-1.5 py-0.5 rounded absolute top-[5%] left-[8%] z-20 flex items-center gap-0.5 text-white text-[10px] font-bold">
+          {item.vote_average?.toFixed(1) || "7.0"}
+          <AiFillStar size={10} />
         </div>
-        {isUnreleased && (
-          <div className="bg-amber-500 px-2 py-1 rounded-full absolute top-[5%] right-[8%] z-20 text-black text-xs font-semibold">
-            Coming Soon
+
+        {item.vote_average > 8 && !isUnreleased && (
+          <div className="bg-black/60 backdrop-blur-md border border-primary/30 text-white px-2 py-0.5 rounded absolute top-[5%] right-[5%] z-20 text-[9px] font-black uppercase tracking-tighter flex items-center gap-1">
+            Top Hit
           </div>
-        )}
-        {item.vote_average > 7.5 && !isUnreleased && (
-          <motion.div
-            animate={{ boxShadow: ["0 0 0px #ff6b35", "0 0 15px #ff6b35", "0 0 0px #ff6b35"] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="bg-black/80 backdrop-blur-md border border-primary/50 text-white px-3 py-1 rounded-full absolute top-[5%] right-[5%] z-20 text-[10px] font-black uppercase tracking-tighter flex items-center gap-1"
-          >
-            <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-            Trending
-          </motion.div>
         )}
       </motion.div>
     </Link>
   );
 };
 
-export default FilmItem;
+export default memo(FilmItem, (prev, next) => {
+  return prev.item.id === next.item.id;
+});

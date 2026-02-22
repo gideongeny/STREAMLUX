@@ -56,10 +56,11 @@ export const getTVFullDetail = async (id: number): Promise<FilmInfo> => {
   return tvInfo;
 };
 
-export const getWatchTV = async (id: number): Promise<getWatchReturnedType> => {
+export const getWatchTV = async (id: number, seasonNumber: number = 1): Promise<getWatchReturnedType> => {
   const res = await Promise.all([
     axios.get(`/tv/${id}`),
     axios.get(`/tv/${id}/recommendations`),
+    axios.get(`/tv/${id}/season/${seasonNumber}`).catch(() => ({ data: null }))
   ]);
 
   const data = {
