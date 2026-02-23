@@ -1,14 +1,14 @@
-import { EMBED_ALTERNATIVES } from "../shared/constants";
+import { getBackendBase } from "./download";
 
-// Proxy Helpers
-const PROXY_BASE = process.env.REACT_APP_BACKEND_URL || "/api";
+// Proxy Helpers - backend expects /api/proxy, /api/download, /api/resolve
+const getApiBase = () => getBackendBase() + "/api";
 
 export const getProxyUrl = (url: string, referer?: string) => {
-    return `${PROXY_BASE}/proxy?url=${encodeURIComponent(url)}${referer ? `&referer=${encodeURIComponent(referer)}` : ''}`;
+    return `${getApiBase()}/proxy?url=${encodeURIComponent(url)}${referer ? `&referer=${encodeURIComponent(referer)}` : ''}`;
 };
 
 export const getDownloadUrl = (url: string, filename?: string) => {
-    return `${PROXY_BASE}/download?url=${encodeURIComponent(url)}${filename ? `&filename=${encodeURIComponent(filename)}` : ''}`;
+    return `${getApiBase()}/download?url=${encodeURIComponent(url)}${filename ? `&filename=${encodeURIComponent(filename)}` : ''}`;
 };
 
 // Helper to get backend resolution
@@ -18,7 +18,7 @@ const resolveBackend = async (type: string, id: string, s?: string, e?: string):
         if (s) query.append('s', s);
         if (e) query.append('e', e);
 
-        const response = await fetch(`${PROXY_BASE}/resolve?${query.toString()}`);
+        const response = await fetch(`${getApiBase()}/resolve?${query.toString()}`);
         if (!response.ok) return null;
         return await response.json();
     } catch (err) {
@@ -403,7 +403,7 @@ export class ResolverService {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second max for scrapers
 
-            const response = await fetch(`${PROXY_BASE}/scrapers/resolve?${query.toString()}`, {
+            const response = await fetch(`${getApiBase()}/scrapers/resolve?${query.toString()}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 signal: controller.signal

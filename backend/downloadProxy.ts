@@ -354,13 +354,15 @@ app.get('/api/download', async (req: express.Request, res: express.Response) => 
         const status = error?.response?.status;
         console.error('Download proxy error:', error.message, 'upstream status:', status);
 
-        // If the upstream host blocks our server (403/401), fall back to a direct redirect
-        // so the user's browser hits the video URL itself.
+        // If upstream blocks (403/401), only redirect when the URL is a direct stream
+        // (e.g. .mp4, .m3u8). Do NOT redirect to embed pages (e.g. vidsrc.to/embed) — they often 404.
         if (status === 403 || status === 401) {
             try {
-                const url = (req.query.url as string) || '';
-                if (url) {
-                    return res.redirect(url);
+                const rawUrl = (req.query.url as string) || '';
+                const decoded = decodeURIComponent(rawUrl).toLowerCase();
+                const isDirectStream = /\.(mp4|m3u8|ts|webm|mkv)(\?|$)/i.test(decoded) || decoded.includes("/stream/") || decoded.includes("/video/");
+                if (rawUrl && isDirectStream) {
+                    return res.redirect(302, rawUrl);
                 }
             } catch {
                 // ignore and fall through to JSON error
