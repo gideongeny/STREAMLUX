@@ -1,0 +1,22 @@
+# Render Blueprint: StreamLux Backend (download proxy, vision sniffer, keep-alive)
+# Use this when creating the backend service so build/start run from backend/ and dist/ is created.
+# Docs: https://docs.render.com/blueprint-spec
+
+services:
+  - type: web
+    name: streamlux-backend
+    runtime: node
+    region: oregon
+
+    # Critical: run everything from backend/ so dist/downloadProxy.js exists at start
+    rootDir: backend
+
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      # Optional: restrict CORS to these origins (comma-separated). Leave unset to use app defaults.
+      # - key: CORS_ORIGINS
+      #   value: https://streamlux.vercel.app,https://streamlux-67a84.web.app
