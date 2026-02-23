@@ -58,7 +58,8 @@
   },
   "scripts": {
     "start": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "cd backend && npm run dev",
+    "setup:backend": "cd backend && npm install",
+    "server": "npm run setup:backend && cd backend && npm run dev",
     "build-server": "cd backend && npm run build",
     "client": "react-scripts start",
     "build": "react-scripts build",
@@ -72,7 +73,8 @@
     "android:build": "npm run build && npx cap sync android && npx cap open android",
     "android:run": "npm run build && npx cap sync android",
     "android:apk": "npm run build && npx cap sync android && cd android && gradlew.bat assembleRelease",
-    "android:apk:linux": "npm run build && npx cap sync android && cd android && ./gradlew assembleRelease"
+    "android:apk:linux": "npm run build && npx cap sync android && cd android && ./gradlew assembleRelease",
+    "postinstall": "node scripts/postinstall.js"
   },
   "eslintConfig": {
     "extends": [
