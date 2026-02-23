@@ -2,7 +2,7 @@
 // This should be deployed as a Node.js/Express backend
 
 import express, { Request, Response } from "express";
-import cors from "cors";
+import cors, { CorsOptions } from "cors";
 import axios from "axios";
 import crypto from "crypto"; // Keep crypto as it's used in /api/download
 // Unified resolver is currently unused because we define a custom /api/resolve below.
@@ -15,8 +15,55 @@ import VisionLinkSniffer from "./visionSniffer";
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Enable CORS
-app.use(cors());
+// Enable CORS (important for Vercel/Firebase frontends calling this API)
+// - If CORS_ORIGINS is set (comma-separated), we enforce an allowlist.
+// - If not set, we allow all origins (simplest for public frontends).
+const corsOriginsEnv = (process.env.CORS_ORIGINS || "").trim();
+const allowAllOrigins = corsOriginsEnv.length === 0;
+const allowedOrigins = new Set(
+    corsOriginsEnv
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+);
+
+const corsOptions: CorsOptions = {
+    origin: (origin, callback) => {
+        // Non-browser clients (curl, server-to-server, downloads via navigation) may not send Origin
+        if (!origin) return callback(null, true);
+
+        if (allowAllOrigins) return callback(null, true);
+
+        if (allowedOrigins.has(origin)) return callback(null, true);
+
+        // Allow common deployment domains without needing to enumerate every preview URL
+        try {
+            const { hostname } = new URL(origin);
+            if (hostname.endsWith(".vercel.app")) return callback(null, true);
+            if (hostname.endsWith(".web.app")) return callback(null, true);
+            if (hostname.endsWith(".firebaseapp.com")) return callback(null, true);
+        } catch {
+            // ignore URL parse failures
+        }
+
+        return callback(null, false);
+    },
+    methods: ["GET", "HEAD", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Range", "Accept", "Origin", "Authorization"],
+    exposedHeaders: [
+        "Content-Length",
+        "Content-Range",
+        "Accept-Ranges",
+        "Content-Disposition",
+        "ETag",
+        "Content-Type",
+        "Location",
+    ],
+    maxAge: 86400,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 
 // Keep-Alive Routes
