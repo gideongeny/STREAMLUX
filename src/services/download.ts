@@ -1,6 +1,19 @@
 import { DetailMovie, DetailTV, Episode } from "../shared/types";
 import { EMBED_ALTERNATIVES } from "../shared/constants";
 
+/** Production backend used when REACT_APP_BACKEND_URL is unset or a placeholder */
+const PRODUCTION_BACKEND_BASE = "https://streamlux-backend.onrender.com";
+
+/** Use for all backend API URLs (sniff, download, resolve). Ignores placeholder "your-render-backend". */
+export function getBackendBase(): string {
+  const env = process.env.REACT_APP_BACKEND_URL;
+  if (env && typeof env === "string") {
+    const base = env.replace(/\/api\/?$/, "");
+    if (base && !/your-render-backend|localhost/i.test(base)) return base;
+  }
+  return PRODUCTION_BACKEND_BASE;
+}
+
 export interface DownloadInfo {
   title: string;
   mediaType: "movie" | "tv";
@@ -164,8 +177,32 @@ export class DownloadService {
 
       if (tmdbId > 0) {
         try {
-          const backendBase = process.env.REACT_APP_BACKEND_URL ? process.env.REACT_APP_BACKEND_URL.replace('/api', '') : 'http://localhost:3001';
+          const backendBase = getBackendBase();
 
+          // Try Vision Sniffer FIRST for high-quality detection
+          progress.message = "Vision AI: Sniffing stream...";
+          progress.progress = 70;
+          onProgress?.(progress);
+
+          const sniffUrl = `${backendBase}/api/vision/sniff?url=${encodeURIComponent(targetUrl)}`;
+          const sniffResponse = await fetch(sniffUrl);
+
+          if (sniffResponse.ok) {
+            const sniffData = await sniffResponse.json();
+            if (sniffData.success && sniffData.url) {
+              progress.message = "Stream captured! Starting download...";
+              progress.progress = 100;
+              progress.status = "completed";
+              onProgress?.(progress);
+
+              const encodedHeaders = encodeURIComponent(JSON.stringify(sniffData.headers || {}));
+              const downloadUrl = `${backendBase}/api/download?url=${encodeURIComponent(sniffData.url)}&filename=${encodeURIComponent(this.generateFilename(downloadInfo))}&headers=${encodedHeaders}`;
+              window.open(downloadUrl, '_blank');
+              return;
+            }
+          }
+
+          // Fallback to basic resolution
           let resolveUrl = `${backendBase}/api/resolve?type=${downloadInfo.mediaType}&id=${tmdbId}`;
           if (downloadInfo.mediaType === 'tv' && downloadInfo.seasonId && downloadInfo.episodeId) {
             resolveUrl += `&s=${downloadInfo.seasonId}&e=${downloadInfo.episodeId}`;

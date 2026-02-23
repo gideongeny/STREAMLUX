@@ -28,7 +28,7 @@ import Title from "../Common/Title";
 import Footer from "../Footer/Footer";
 import FilmTabInfo from "./FilmTabInfo";
 import DownloadButton from "../Common/DownloadButton";
-import { downloadService } from "../../services/download";
+import { downloadService, getBackendBase } from "../../services/download";
 import HeroTrailer from "../Home/HeroTrailer";
 import AmbientGlow from "../Common/AmbientGlow";
 import { vibeService } from "../../services/vibe";
@@ -64,6 +64,27 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
       vibeService.resetVibe();
     };
   }, [detail?.backdrop_path]);
+
+  // Vision AI Silent Warmup: Pre-sniff streams in background
+  useEffect(() => {
+    if (detail && !isMobile) {
+      const timeoutId = setTimeout(async () => {
+        try {
+          const backendBase = getBackendBase();
+
+          const info = downloadService.generateDownloadInfo(detail, detail.media_type as "movie" | "tv");
+          if (info.sources.length > 0) {
+            console.log('[VisionAI] Silent Warmup initiated...');
+            // We just ping it, the backend handles the caching
+            fetch(`${backendBase}/api/vision/sniff?url=${encodeURIComponent(info.sources[0])}`).catch(() => { });
+          }
+        } catch (e) {
+          // Silence is magic
+        }
+      }, 3000); // Wait 3s before warming up to prioritize initial page load
+      return () => clearTimeout(timeoutId);
+    }
+  }, [detail, isMobile]);
 
   const bookmarkedHandler = async () => {
     if (!detail) return;
