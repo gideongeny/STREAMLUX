@@ -16,9 +16,15 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Enable CORS (important for Vercel/Firebase frontends calling this API)
-// - If CORS_ORIGINS is set (comma-separated), we enforce an allowlist.
-// - If not set, we allow all origins (simplest for public frontends).
-const corsOriginsEnv = (process.env.CORS_ORIGINS || "").trim();
+// - If CORS_ORIGINS is set (comma-separated), we use that allowlist.
+// - If not set, we use the default production frontends + *.vercel.app, *.web.app, *.firebaseapp.com.
+const DEFAULT_CORS_ORIGINS = [
+    "https://streamlux.vercel.app",
+    "https://streamlux-67a84.web.app",
+    "https://streamlux-backend.onrender.com",
+    "https://streamlux.onrender.com",
+].join(",");
+const corsOriginsEnv = (process.env.CORS_ORIGINS || DEFAULT_CORS_ORIGINS).trim();
 const allowAllOrigins = corsOriginsEnv.length === 0;
 const allowedOrigins = new Set(
     corsOriginsEnv
