@@ -351,11 +351,26 @@ app.get('/api/download', async (req: express.Request, res: express.Response) => 
             response.data.pipe(res);
         }
     } catch (error: any) {
-        console.error('Download proxy error:', error.message);
+        const status = error?.response?.status;
+        console.error('Download proxy error:', error.message, 'upstream status:', status);
+
+        // If the upstream host blocks our server (403/401), fall back to a direct redirect
+        // so the user's browser hits the video URL itself.
+        if (status === 403 || status === 401) {
+            try {
+                const url = (req.query.url as string) || '';
+                if (url) {
+                    return res.redirect(url);
+                }
+            } catch {
+                // ignore and fall through to JSON error
+            }
+        }
+
         res.status(500).json({
             error: 'Failed to proxy download',
             message: error.message,
-            status: error.response?.status
+            status,
         });
     }
 });
