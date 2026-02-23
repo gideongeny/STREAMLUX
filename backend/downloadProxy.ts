@@ -1,16 +1,16 @@
-```typescript
 // Backend Download Proxy with HTTP Range Request Support
 // This should be deployed as a Node.js/Express backend
 
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
 import axios from "axios";
-import * as cheerio from "cheerio";
-import crypto from 'crypto'; // Keep crypto as it's used in /api/download
-import { runAllScrapers } from "./scrapers/run_all";
-import unifiedResolver from "./unifiedResolver";
+import crypto from "crypto"; // Keep crypto as it's used in /api/download
+// Unified resolver is currently unused because we define a custom /api/resolve below.
+// If you want to switch back, import and wire it here.
+// import unifiedResolver from "./unifiedResolver";
 import keepAliveRoutes from "./keepAlive";
 import scraperResolverRoutes from "./scraperResolver";
+import VisionLinkSniffer from "./visionSniffer";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -23,22 +23,20 @@ app.use(express.json());
 app.use("/api", keepAliveRoutes);
 app.use("/api", scraperResolverRoutes);
 
-// Unified Resolver Route
-app.get("/api/resolve", unifiedResolver);
-
 // Helper to get headers that mimic a real browser
-const getBrowserHeaders = (referer?: string) => ({
+const getBrowserHeaders = (overrides?: Record<string, string>) => ({
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Referer': referer || 'https://www.google.com/',
+    'Referer': 'https://www.google.com/',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.9',
+    ...overrides
 });
 
 /**
  * Proxy Endpoint: Bypasses CORS and Referer checks
  * Usage: /api/proxy?url=ENCODED_URL&referer=OPTIONAL_REFERER
  */
-app.get('/api/proxy', async (req: Request, res: Response) => {
+app.get("/api/proxy", async (req: Request, res: Response) => {
     const { url, referer } = req.query;
 
     if (!url || typeof url !== 'string') {
@@ -49,7 +47,7 @@ app.get('/api/proxy', async (req: Request, res: Response) => {
         console.log(`[Proxy] Fetching: ${ url } `);
 
         const response = await axios.get(url, {
-            headers: getBrowserHeaders(referer as string),
+            headers: getBrowserHeaders(referer ? { 'Referer': referer as string } : {}),
             responseType: 'stream',
             validateStatus: () => true,
         });
@@ -63,8 +61,8 @@ app.get('/api/proxy', async (req: Request, res: Response) => {
 
         response.data.pipe(res);
     } catch (error: any) {
-        console.error(`[Proxy Error] ${ error.message } `);
-        res.status(500).json({ error: 'Proxy request failed', details: error.message });
+        console.error(`[Proxy Error] ${error.message}`);
+        res.status(500).json({ error: "Proxy request failed", details: error.message });
     }
 });
 
@@ -74,7 +72,7 @@ app.get('/api/proxy', async (req: Request, res: Response) => {
  * - Movie: /api/resolve?type=movie&id=TMDB_ID
  * - TV: /api/resolve?type=tv&id=TMDB_ID&s=SEASON&e=EPISODE
  */
-app.get('/api/resolve', async (req: Request, res: Response) => {
+app.get("/api/resolve", async (req: Request, res: Response) => {
     const { type, id, s, e } = req.query;
 
     if (!type || !id) {
@@ -82,42 +80,82 @@ app.get('/api/resolve', async (req: Request, res: Response) => {
     }
 
     try {
-        console.log(`[Resolver] Attempting to resolve ${ type } ${ id }${ s ? ` S${s}E${e}` : '' } `);
+        console.log(
+            `[Resolver] Attempting to resolve ${type} ${id}${s ? ` S${s}E${e}` : ""} `
+        );
 
         // Construct the correct VidSrc URL
-        let vidsrcUrl = '';
-        if (type === 'movie') {
+        let vidsrcUrl = "";
+        if (type === "movie") {
             vidsrcUrl = `https://vidsrc.me/embed/movie?tmdb=${id}`;
         } else {
-    vidsrcUrl = `https://vidsrc.me/embed/tv?tmdb=${id}&sea=${s}&epi=${e}`;
-}
+            vidsrcUrl = `https://vidsrc.me/embed/tv?tmdb=${id}&sea=${s}&epi=${e}`;
+        }
 
-// Attempt to verify if the embed exists
-const check = await axios.head(vidsrcUrl, {
-    headers: getBrowserHeaders('https://vidsrc.me/'),
-    validateStatus: () => true
+        // Attempt to verify if the embed exists
+        const check = await axios.head(vidsrcUrl, {
+            headers: getBrowserHeaders({ Referer: "https://vidsrc.me/" }),
+            validateStatus: () => true,
+        });
+
+        if (check.status === 200) {
+            // Determine base URL dynamically (for local vs production)
+            const protocol = req.protocol;
+            const host = req.get("host");
+            const baseUrl = `${protocol}://${host}`;
+
+            return res.json({
+                source: "vidsrc",
+                status: "active",
+                proxiedUrl: `${baseUrl}/api/proxy?url=${encodeURIComponent(
+                    vidsrcUrl
+                )}&referer=${encodeURIComponent("https://vidsrc.me/")}`,
+                directUrl: vidsrcUrl,
+                isProxyNeeded: true,
+            });
+        }
+
+        res.status(404).json({ error: "Source not found" });
+    } catch (error: any) {
+        console.error(`[Resolver Error] ${error.message}`);
+        res.status(500).json({ error: "Resolution failed" });
+    }
 });
 
-if (check.status === 200) {
-    // Determine base URL dynamically (for local vs production)
-    const protocol = req.protocol;
-    const host = req.get('host');
-    const baseUrl = `${protocol}://${host}`;
+/**
+ * Vision Sniffer Endpoint: Extracts direct streams using headless browser
+ * Usage: /api/vision/sniff?url=ENCODED_EMBED_URL
+ */
+app.get('/api/vision/sniff', async (req: express.Request, res: express.Response) => {
+    const { url } = req.query;
 
-    return res.json({
-        source: 'vidsrc',
-        status: 'active',
-        proxiedUrl: `${baseUrl}/api/proxy?url=${encodeURIComponent(vidsrcUrl)}&referer=${encodeURIComponent('https://vidsrc.me/')}`,
-        directUrl: vidsrcUrl,
-        isProxyNeeded: true
-    });
-}
+    if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: 'Missing url parameter' });
+    }
 
-res.status(404).json({ error: 'Source not found' });
+    try {
+        console.log(`[VisionSniffer] Sniffing request for: ${url}`);
+        const result = await VisionLinkSniffer.sniff(url);
+
+        if (result) {
+            res.json({
+                success: true,
+                ...result
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                error: 'Could not detect video stream from source'
+            });
+        }
     } catch (error: any) {
-    console.error(`[Resolver Error] ${error.message}`);
-    res.status(500).json({ error: 'Resolution failed' });
-}
+        console.error(`[VisionSniffer Route Error] ${error.message}`);
+        res.status(500).json({
+            success: false,
+            error: 'Sniffing process failed',
+            details: error.message
+        });
+    }
 });
 
 /**
@@ -162,51 +200,80 @@ app.get('/api/scrapers/resolve', async (req: Request, res: Response) => {
  * Download proxy route with HTTP Range Request support
  * Supports pause/resume downloads
  */
-app.get('/api/download', async (req: Request, res: Response) => {
+app.get('/api/download', async (req: express.Request, res: express.Response) => {
     try {
-        const { url, filename } = req.query;
+        const { url, filename, headers: encodedHeaders } = req.query;
 
         if (!url || typeof url !== 'string') {
             return res.status(400).json({ error: 'URL parameter is required' });
         }
 
-        // Generate ETag for consistency
-        const etag = crypto.createHash('md5').update(url).digest('hex');
+        // Parse custom headers if provided
+        let customHeaders: Record<string, string> = {};
+        if (encodedHeaders && typeof encodedHeaders === 'string') {
+            try {
+                customHeaders = JSON.parse(decodeURIComponent(encodedHeaders));
+            } catch (e) {
+                console.warn('[DownloadProxy] Failed to parse custom headers');
+            }
+        }
 
-        // Get file info first
-        const headResponse = await axios.head(url, {
-            headers: getBrowserHeaders(),
+        // Filter out headers that might cause issues when proxying
+        const forbiddenHeaders = ['host', 'connection', 'content-length', 'accept-encoding', 'if-none-match', 'if-modified-since'];
+        const filteredHeaders: Record<string, string> = {};
+        Object.keys(customHeaders).forEach(key => {
+            if (!forbiddenHeaders.includes(key.toLowerCase())) {
+                filteredHeaders[key] = customHeaders[key];
+            }
         });
 
-        const fileSize = parseInt(headResponse.headers['content-length'] || '0');
-        const contentType = headResponse.headers['content-type'] || 'application/octet-stream';
+        const requestHeaders = getBrowserHeaders(filteredHeaders);
+        const etag = crypto.createHash('md5').update(url).digest('hex');
+
+        let fileSize = 0;
+        let contentType = 'application/octet-stream';
+
+        // Try to get file info first, but DON'T fail if it fails (some servers block HEAD)
+        try {
+            const headResponse = await axios.head(url, {
+                headers: requestHeaders,
+                timeout: 5000,
+            });
+            fileSize = parseInt(headResponse.headers['content-length'] || '0');
+            contentType = headResponse.headers['content-type'] || 'application/octet-stream';
+        } catch (e: any) {
+            console.warn(`[DownloadProxy] HEAD request failed (Status: ${e.response?.status}), proceeding with GET...`);
+        }
 
         // Check if client sent Range header
         const range = req.headers.range;
 
         if (range) {
-            // Parse range header (e.g., "bytes=0-1023")
+            // Parse range header
             const parts = range.replace(/bytes=/, '').split('-');
             const start = parseInt(parts[0], 10);
-            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-            const chunkSize = (end - start) + 1;
+            const end = parts[1] ? parseInt(parts[1], 10) : (fileSize > 0 ? fileSize - 1 : undefined);
+            const rangeHeader = end !== undefined ? `bytes=${start}-${end}` : `bytes=${start}-`;
 
-            // Fetch partial content from source
+            // Fetch partial content
             const response = await axios.get(url, {
                 headers: {
-                    ...getBrowserHeaders(),
-                    'Range': `bytes=${start}-${end}`,
+                    ...requestHeaders,
+                    'Range': rangeHeader,
                 },
                 responseType: 'stream',
             });
 
-            // Send 206 Partial Content
+            // If we didn't know the fileSize, try to get it from the response
+            const contentRange = response.headers['content-range'];
+            const actualSize = contentRange ? contentRange.split('/')[1] : (fileSize > 0 ? fileSize : response.headers['content-length']);
+
             res.status(206);
             res.set({
-                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Content-Range': contentRange || `bytes ${start}-${end !== undefined ? end : ''}/${actualSize || ''}`,
                 'Accept-Ranges': 'bytes',
-                'Content-Length': chunkSize,
-                'Content-Type': contentType,
+                'Content-Length': response.headers['content-length'],
+                'Content-Type': contentType || response.headers['content-type'],
                 'Content-Disposition': `attachment; filename="${filename || 'download'}"`,
                 'ETag': etag,
             });
@@ -215,14 +282,14 @@ app.get('/api/download', async (req: Request, res: Response) => {
         } else {
             // No range requested, send full file
             const response = await axios.get(url, {
-                headers: getBrowserHeaders(),
+                headers: requestHeaders,
                 responseType: 'stream',
             });
 
             res.status(200);
             res.set({
-                'Content-Length': fileSize,
-                'Content-Type': contentType,
+                'Content-Length': response.headers['content-length'] || fileSize,
+                'Content-Type': response.headers['content-type'] || contentType,
                 'Content-Disposition': `attachment; filename="${filename || 'download'}"`,
                 'Accept-Ranges': 'bytes',
                 'ETag': etag,
@@ -234,7 +301,8 @@ app.get('/api/download', async (req: Request, res: Response) => {
         console.error('Download proxy error:', error.message);
         res.status(500).json({
             error: 'Failed to proxy download',
-            message: error.message
+            message: error.message,
+            status: error.response?.status
         });
     }
 });
