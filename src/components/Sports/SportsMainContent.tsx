@@ -115,8 +115,16 @@ const SportsMainContent: FC = () => {
     const featuredMatch = useMemo(() => {
         if (liveFixtures.length > 0) return liveFixtures[0];
         if (upcomingFixtures.length > 0) return upcomingFixtures[0];
+
+        // Final fallback: Use a variety item as spotlight (e.g. Football Highlights or Documentary)
+        if (varietySports.length > 0) {
+            const spotlight = varietySports.find(s => s.sportsCategory === "Replay") ||
+                varietySports.find(s => s.sportsCategory === "Documentary") ||
+                varietySports[0];
+            return spotlight as SportsFixtureConfig;
+        }
         return null;
-    }, [liveFixtures, upcomingFixtures]);
+    }, [liveFixtures, upcomingFixtures, varietySports]);
 
     return (
         <div className="w-full pb-20">

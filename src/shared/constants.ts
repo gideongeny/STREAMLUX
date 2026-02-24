@@ -166,6 +166,9 @@ export interface SportsFixtureConfig {
   banner?: string;
   thumb?: string;
   fanart?: string;
+  poster_path?: string; // Added for variety compatibility
+  title?: string; // Added for variety compatibility
+  sportsCategory?: string; // Added for categorization
   homeProb?: number;
   // Pro Stats & Details
   stats?: {

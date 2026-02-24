@@ -18,21 +18,26 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
     }
 
     const isLive = featuredMatch.status === "live";
+    const hasTeams = !!(featuredMatch.homeTeam && featuredMatch.awayTeam);
+
+    // Safe ID extraction for trailer
+    const rawId = featuredMatch.id;
+    const numericId = typeof rawId === 'string' ? Number(rawId.replace(/[^0-9]/g, "")) || 0 : Number(rawId) || 0;
 
     return (
         <section className="relative w-full aspect-[21/9] min-h-[450px] md:min-h-[550px] rounded-[3rem] overflow-hidden group shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/10">
             {/* Immersive Background */}
             <div className="absolute inset-0">
                 <img
-                    src={featuredMatch.banner || "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1920&q=80"}
-                    alt="Featured Match"
+                    src={featuredMatch.banner || featuredMatch.thumb || featuredMatch.poster_path || "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1920&q=80"}
+                    alt="Featured Content"
                     className="w-full h-full object-cover transition-transform duration-10000 group-hover:scale-110"
                 />
 
                 {/* Auto-playing Trailer Backdrop */}
                 <div className="absolute inset-0 z-10">
                     <SportsHeroTrailer
-                        mediaId={Number(featuredMatch.id.replace(/[^0-9]/g, "")) || 0}
+                        mediaId={numericId}
                         mediaType="movie" // Sports can reuse movie trailer logic for YT search
                         isActive={true}
                     />
@@ -58,22 +63,28 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
                         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-2xl backdrop-blur-xl border border-white/10 ${isLive ? "bg-red-600/30 border-red-500/50" : "bg-white/10"}`}>
                             {isLive && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
                             <span className={`text-xs font-black uppercase tracking-widest ${isLive ? "text-red-400" : "text-white"}`}>
-                                {isLive ? "Live Match Center" : "Upcoming Spotlight"}
+                                {isLive ? "Live Match Center" : hasTeams ? "Upcoming Spotlight" : "Elite Spotlight"}
                             </span>
                         </div>
                         <span className="text-white/40 text-xs font-bold uppercase tracking-widest">
-                            {featuredMatch.leagueName || featuredMatch.leagueId.toUpperCase()}
+                            {featuredMatch.leagueName || featuredMatch.leagueId?.toUpperCase() || featuredMatch.sportsCategory || "STREAMLUX SPORTS"}
                         </span>
                     </div>
 
                     {/* Title / Teams */}
                     <h1 className="text-4xl md:text-7xl font-black text-white leading-tight drop-shadow-2xl">
-                        {featuredMatch.homeTeam} <span className="text-primary/80 italic text-3xl md:text-5xl align-middle mx-2 md:mx-4">vs</span> {featuredMatch.awayTeam}
+                        {hasTeams ? (
+                            <>
+                                {featuredMatch.homeTeam} <span className="text-primary/80 italic text-3xl md:text-5xl align-middle mx-2 md:mx-4">vs</span> {featuredMatch.awayTeam}
+                            </>
+                        ) : (
+                            featuredMatch.title || "Premium Sports Highlights"
+                        )}
                     </h1>
 
                     {/* Score / Time Overlay */}
                     <div className="flex items-center gap-8 md:gap-12 py-4">
-                        {isLive ? (
+                        {isLive && hasTeams ? (
                             <div className="flex items-center gap-6 bg-white/5 backdrop-blur-md px-8 py-4 rounded-3xl border border-white/10 shadow-2xl">
                                 <div className="flex flex-col items-center">
                                     <span className="text-5xl font-black text-white tabular-nums drop-shadow-lg">{featuredMatch.homeScore ?? 0}</span>
@@ -92,12 +103,14 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
                                 )}
                             </div>
                         ) : (
-                            <div className="flex items-center gap-4 bg-white/5 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10">
-                                <MdNotificationsActive className="text-primary" size={20} />
-                                <span className="text-lg font-bold text-white tracking-tight">
-                                    Kicking off at {new Date(featuredMatch.kickoffTimeFormatted).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                            </div>
+                            featuredMatch.kickoffTimeFormatted && (
+                                <div className="flex items-center gap-4 bg-white/5 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10">
+                                    <MdNotificationsActive className="text-primary" size={20} />
+                                    <span className="text-lg font-bold text-white tracking-tight">
+                                        Kicking off at {new Date(featuredMatch.kickoffTimeFormatted).getHours().toString().padStart(2, '0')}:{new Date(featuredMatch.kickoffTimeFormatted).getMinutes().toString().padStart(2, '0')}
+                                    </span>
+                                </div>
+                            )
                         )}
                     </div>
 
@@ -105,7 +118,9 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
                     <p className="text-gray-300 text-lg md:text-xl max-w-2xl font-medium leading-relaxed drop-shadow-lg hidden md:block">
                         {featuredMatch.status === "live"
                             ? `Witness the clash of titans live from ${featuredMatch.venue || 'the stadium'}. Stream in flawless 4K with multi-cam angles.`
-                            : `Prepare for an epic showdown as ${featuredMatch.homeTeam} hosts ${featuredMatch.awayTeam}. Set your reminders for this world-class event.`}
+                            : hasTeams
+                                ? `Prepare for an epic showdown as ${featuredMatch.homeTeam} hosts ${featuredMatch.awayTeam}. Set your reminders for this world-class event.`
+                                : `Experience the best of world sports. High-definition highlights, exclusive previews, and award-winning sports documentaries.`}
                     </p>
 
                     {/* Action Buttons */}
