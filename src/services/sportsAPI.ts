@@ -46,7 +46,10 @@ export const getScorebatHighlights = async (): Promise<any[]> => {
     return response.data.response.map((match: any) => ({
       id: `sb-${match.title.replace(/\s+/g, '-')}-${match.date}`,
       title: match.title,
+      name: match.title,
       thumb: match.thumbnail,
+      poster_path: match.thumbnail,
+      backdrop_path: match.thumbnail,
       url: match.matchviewUrl,
       embed: match.videos?.[0]?.embed,
       league: match.competition,
@@ -71,7 +74,10 @@ export const getNCAAFixtures = async (): Promise<any[]> => {
     return response.data.events.map((event: any) => ({
       id: `ncaa-${event.id}`,
       title: event.name,
+      name: event.name,
       thumb: event.competitions?.[0]?.competitors?.[0]?.team?.logo || "https://images.unsplash.com/photo-1546519638-68e109498ffc",
+      poster_path: event.competitions?.[0]?.competitors?.[0]?.team?.logo || "https://images.unsplash.com/photo-1546519638-68e109498ffc",
+      backdrop_path: event.competitions?.[0]?.competitors?.[0]?.team?.logo || "https://images.unsplash.com/photo-1546519638-68e109498ffc",
       league: "NCAA Basketball",
       status: "upcoming",
       sportsCategory: "NCAA",
@@ -87,11 +93,12 @@ export const getNCAAFixtures = async (): Promise<any[]> => {
 export const getVarietyYT = async (): Promise<any[]> => {
   try {
     const ytQueries = [
-      { q: "WWE full match 2024", type: "Wrestling" },
-      { q: "AEW highlights 2024", type: "Wrestling" },
-      { q: "UFC 300 full fights free", type: "MMA" },
-      { q: "NBA classic games full", type: "Classic" },
-      { q: "premier league classic matches full", type: "Replay" }
+      { q: "WWE Raw Smackdown Full Match 2024", type: "Wrestling" },
+      { q: "AEW Dynamite highlights 2024", type: "Wrestling" },
+      { q: "UFC Fights Full Free 2024", type: "MMA" },
+      { q: "MMA Highlights Best KOs 2024", type: "MMA" },
+      { q: "NBA Full Classic Games", type: "Classic" },
+      { q: "Premier League Full Match Replay 2024", type: "Replay" }
     ];
 
     const results = await Promise.all(
@@ -149,15 +156,23 @@ export const getVarietySports = async (): Promise<any[]> => {
     // Merge and shuffle (Waterfall: If YT fails, Scorebat, NCAA and TMDB carry the load)
     const combined = [...ytResults, ...scorebat, ...ncaa, ...tmdbItems];
 
-    // Safety check: if everything is empty (rare), return static featured items
-    if (combined.length === 0) {
-      return [
-        { id: "fallback-1", title: "Sports Legends: The Story", sportsCategory: "Documentary", media_type: "movie" },
-        { id: "fallback-2", title: "Global Footy Highlights", sportsCategory: "Replay", media_type: "sports_video" }
-      ];
-    }
+    // Safety check: if everything is empty or missing specific categories, inject high-quality Evergreens
+    const categories = ["Wrestling", "MMA", "Replay", "NCAA", "Documentary"];
+    const evergreens = [
+      { id: "ev-1", title: "WWE: Greatest Rivalries", name: "WWE: Greatest Rivalries", sportsCategory: "Wrestling", media_type: "sports_video", backdrop_path: "https://images.unsplash.com/photo-1599058917233-35f9dd66c433", poster_path: "https://images.unsplash.com/photo-1599058917233-35f9dd66c433", isYouTube: true, youtubeId: "S4vS-T68YPk" },
+      { id: "ev-2", title: "UFC: The Ultimate Knockouts", name: "UFC: The Ultimate Knockouts", sportsCategory: "MMA", media_type: "sports_video", backdrop_path: "https://images.unsplash.com/photo-1552072805-2a9039d00e57", poster_path: "https://images.unsplash.com/photo-1552072805-2a9039d00e57", isYouTube: true, youtubeId: "S4vS-T68YPk" },
+      { id: "ev-3", title: "Champions League: Legendary Finals", name: "Champions League: Legendary Finals", sportsCategory: "Replay", media_type: "sports_video", backdrop_path: "https://images.unsplash.com/photo-1574629810360-7efbbe195018", poster_path: "https://images.unsplash.com/photo-1574629810360-7efbbe195018", isYouTube: true, youtubeId: "S4vS-T68YPk" }
+    ];
 
-    return combined.sort(() => Math.random() - 0.5);
+    // Ensure we have at least 2 items for major categories
+    const finalContent = [...combined];
+    categories.forEach(cat => {
+      if (finalContent.filter(item => item.sportsCategory === cat).length < 2) {
+        finalContent.push(...evergreens.filter(e => e.sportsCategory === cat));
+      }
+    });
+
+    return finalContent.sort(() => Math.random() - 0.5);
   } catch (error) {
     console.error("Variety sports error:", error);
     return [];

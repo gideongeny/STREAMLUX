@@ -1,7 +1,4 @@
-import { FC } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { MdPlayArrow, MdInfoOutline, MdNotificationsActive } from "react-icons/md";
-import { SportsFixtureConfig } from "../../shared/constants";
+import SportsHeroTrailer from "../Home/HeroTrailer";
 
 interface SportsHeroProps {
     featuredMatch: SportsFixtureConfig | null;
@@ -27,15 +24,25 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
                     alt="Featured Match"
                     className="w-full h-full object-cover transition-transform duration-10000 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20" />
+
+                {/* Auto-playing Trailer Backdrop */}
+                <div className="absolute inset-0 z-10">
+                    <SportsHeroTrailer
+                        mediaId={Number(featuredMatch.id.replace(/[^0-9]/g, "")) || 0}
+                        mediaType="movie" // Sports can reuse movie trailer logic for YT search
+                        isActive={true}
+                    />
+                </div>
+
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent z-20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20 z-20" />
             </div>
 
             {/* Dynamic Ambient Glow */}
-            <div className={`absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-primary/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000`} />
+            <div className={`absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-primary/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-20`} />
 
             {/* Content Overlay */}
-            <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-20 z-10">
+            <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-20 z-30">
                 <motion.div
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}

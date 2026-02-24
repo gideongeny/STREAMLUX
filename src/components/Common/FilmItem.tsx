@@ -161,9 +161,11 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
               ? resizeImage(item.profile_path || "", "w342")
               : item.poster_path
                 ? resizeImage(item.poster_path, "w342")
-                : "https://via.placeholder.com/342x513?text=No+Poster"
+                : item.backdrop_path
+                  ? resizeImage(item.backdrop_path, "w342")
+                  : "https://via.placeholder.com/342x513?text=No+Poster"
           }
-          className="object-cover w-full aspect-[2/3]"
+          className={`object-cover w-full ${item.media_type === 'sports_video' ? 'aspect-video' : 'aspect-[2/3]'}`}
           loading="lazy"
           decoding="async"
           onError={(e: any) => {
