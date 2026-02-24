@@ -125,7 +125,7 @@ export class ResolverService {
         imdbId?: string,
         title?: string
     ): Promise<ResolvedSource[]> {
-        const sources: ResolvedSource[] = [];
+        let sources: ResolvedSource[] = [];
 
         // 1. Unified Backend Resolver (Priority: High)
         // queries scrapers that need title
@@ -370,12 +370,23 @@ export class ResolverService {
         // Simulate network delay for "Resolving" feel
         await new Promise(resolve => setTimeout(resolve, 800));
 
-        // Check health of all sources in parallel (don't wait for results)
-        sources.forEach(source => {
-            this.pingSource(source.url).then(status => {
-                source.status = status;
-            });
-        });
+        // Choose the first healthy source based on HEAD ping,
+        // then put it at the top of the list so the player starts
+        // with something that is actually up.
+        const healthy = await this.getHealthySource(sources);
+        if (healthy) {
+            const seen = new Set<string>();
+            const reordered: ResolvedSource[] = [];
+            reordered.push(healthy);
+            seen.add(healthy.url);
+            for (const s of sources) {
+                if (!seen.has(s.url)) {
+                    reordered.push(s);
+                    seen.add(s.url);
+                }
+            }
+            sources = reordered;
+        }
 
         return sources;
     }
