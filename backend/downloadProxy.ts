@@ -380,23 +380,41 @@ app.get('/api/download', async (req: express.Request, res: express.Response) => 
 
 // ─── yt-dlp helpers ────────────────────────────────────────────────────────
 
-// Resolve yt-dlp binary path (bundled via yt-dlp-wrap auto-download, or system install)
+// Resolve yt-dlp binary path (system PATH install, or YTDLP_PATH env var)
 function getYtDlpBinary(): string {
-    // 1. Environment override
     if (process.env.YTDLP_PATH) return process.env.YTDLP_PATH;
-
-    // 2. Check CWD / backend folder for yt-dlp(.exe)
     const ext = os.platform() === 'win32' ? '.exe' : '';
     const localPath = path.join(__dirname, `yt-dlp${ext}`);
     if (fs.existsSync(localPath)) return localPath;
-
-    // 3. Fall back to system PATH
     return `yt-dlp${ext}`;
 }
 
 /**
- * yt-dlp Endpoint: Extracts the best direct video URL, then streams it.
- * This bypasses 403 errors because yt-dlp handles all session auth natively.
+ * Direct Redirect: Redirects the browser straight to the stream URL.
+ * This COMPLETELY avoids the server-side proxy 403 problem.
+ * The browser downloads the file with its own HTTP stack.
+ * Usage: GET /api/stream/redirect?url=ENCODED_URL
+ */
+app.get('/api/stream/redirect', (req: express.Request, res: express.Response) => {
+    const { url, filename } = req.query;
+    if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: 'Missing url parameter' });
+    }
+    try {
+        const decoded = decodeURIComponent(url);
+        const safeFilename = (typeof filename === 'string' ? filename : null) || 'download.mp4';
+        // Redirect the browser directly to the CDN URL
+        // This avoids all server-side proxy 403 issues
+        res.redirect(302, decoded);
+    } catch (err: any) {
+        res.status(400).json({ error: 'Invalid URL', message: err.message });
+    }
+});
+
+/**
+ * yt-dlp Endpoint: Extracts the best direct video URL, then redirects to it.
+ * Uses yt-dlp for platforms it supports (YouTube, Vimeo, etc.).
+ * For unknown CDN URLs, falls back to direct redirect.
  * Usage: GET /api/ytdl?url=ENCODED_EMBED_URL&filename=optional_filename
  */
 app.get('/api/ytdl', async (req: express.Request, res: express.Response) => {
@@ -407,8 +425,9 @@ app.get('/api/ytdl', async (req: express.Request, res: express.Response) => {
 
     const ytdlp = getYtDlpBinary();
     const safeFilename = (typeof filename === 'string' ? filename : null) || 'download.mp4';
+    const decoded = decodeURIComponent(url);
 
-    // STEP 1: Ask yt-dlp for the best direct URL (no download, just resolution)
+    // STEP 1: Try yt-dlp to extract a better/authenticated URL
     try {
         const directUrl = await new Promise<string>((resolve, reject) => {
             const args = [
@@ -416,7 +435,7 @@ app.get('/api/ytdl', async (req: express.Request, res: express.Response) => {
                 '--no-warnings',
                 '--format', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
                 '--get-url',
-                url,
+                decoded,
             ];
 
             let stdout = '';
@@ -435,36 +454,27 @@ app.get('/api/ytdl', async (req: express.Request, res: express.Response) => {
             proc.on('error', reject);
         });
 
-        console.log(`[YTDLP] ✅ Got direct URL: ${directUrl.substring(0, 80)}...`);
-
-        // STEP 2: Stream the direct URL through the proxy (now it's a plain CDN link)
-        const headersForProxy = getBrowserHeaders({
-            'Referer': new URL(url).origin,
-        });
-
-        const upstream = await axios.get(directUrl, {
-            headers: headersForProxy,
-            responseType: 'stream',
-            timeout: 10000,
-        });
-
-        res.set({
-            'Content-Type': upstream.headers['content-type'] || 'video/mp4',
-            'Content-Length': upstream.headers['content-length'],
-            'Content-Disposition': `attachment; filename="${safeFilename}"`,
-            'Accept-Ranges': 'bytes',
-            'Cache-Control': 'no-cache',
-        });
-
-        upstream.data.pipe(res);
+        console.log(`[YTDLP] ✅ Extracted URL, redirecting...`);
+        // Redirect the browser directly to the extracted URL — no server proxying!
+        return res.redirect(302, directUrl);
 
     } catch (err: any) {
-        console.error('[YTDLP] Failed:', err.message);
-        res.status(500).json({
-            error: 'yt-dlp extraction failed',
-            message: err.message,
-            hint: 'Make sure yt-dlp is installed on the server. Run: pip install yt-dlp'
-        });
+        // yt-dlp failed (likely unknown CDN URL) — fall back to direct redirect
+        console.warn(`[YTDLP] yt-dlp failed (${err.message.substring(0, 80)}), trying direct redirect...`);
+
+        // Direct redirect: browser downloads from CDN URL natively
+        // This works when the CDN URL is valid and just needs the right Referer/UA
+        // which the browser will set automatically if the user came from the site
+        try {
+            console.log(`[YTDLP] ↩️ Direct redirect to: ${decoded.substring(0, 80)}...`);
+            return res.redirect(302, decoded);
+        } catch (redirectErr: any) {
+            return res.status(500).json({
+                error: 'Download failed',
+                message: 'Could not extract or redirect to video stream',
+                hint: 'The video host may require authentication. Try opening the stream page directly.'
+            });
+        }
     }
 });
 
