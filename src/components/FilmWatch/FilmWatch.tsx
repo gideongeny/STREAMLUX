@@ -285,10 +285,6 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 />
               </div>
 
-              {/* Ad Banner Placement */}
-              <div className="mt-8">
-                <AdBanner position="watch" />
-              </div>
 
               {/* Comments Section */}
               <div className="mt-12">
