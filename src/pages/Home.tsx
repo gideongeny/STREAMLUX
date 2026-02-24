@@ -5,7 +5,7 @@ import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
 import SearchBox from "../components/Common/SearchBox";
 import Sidebar from "../components/Common/Sidebar";
-import Title from "../components/Common/Title";
+import SEO from "../components/Common/SEO";
 import Footer from "../components/Footer/Footer";
 import MainHomeFilm from "../components/Home/MainHomeFilm";
 import RecommendGenres from "../components/Home/RecommendGenres";
@@ -197,7 +197,10 @@ const Home: FC = () => {
 
   return (
     <>
-      <Title value="StreamLux | Free Movies, TV Shows & Live Sports" />
+      <SEO
+        title={currentTab === "movie" ? "Movies" : currentTab === "tv" ? "TV Shows" : "Live Sports"}
+        description={`Explore the best ${currentTab === "movie" ? "movies" : currentTab === "tv" ? "tv shows" : "live sports events"} on StreamLux. World-class streaming experience.`}
+      />
       <AmbientGlow imageUrl={activeGlowImage} />
 
       <div className={`flex md:hidden justify-between items-center px-5 py-4 sticky top-0 z-[100] transition-all duration-300 ${isScrolled ? "tw-glass bg-dark/60 shadow-lg backdrop-blur-xl" : "bg-transparent"

@@ -179,29 +179,21 @@ export class DownloadService {
         try {
           const backendBase = getBackendBase();
 
-          // Try Vision Sniffer FIRST for high-quality detection
-          progress.message = "Vision AI: Sniffing stream...";
+          // Vision Download: sniffs AND pipes in one shot inside the Puppeteer
+          // session. This is the only reliable approach that bypasses CDN 403s.
+          progress.message = "Vision AI: Connecting to stream...";
           progress.progress = 70;
           onProgress?.(progress);
 
-          const sniffUrl = `${backendBase}/api/vision/sniff?url=${encodeURIComponent(targetUrl)}`;
-          const sniffResponse = await fetch(sniffUrl);
+          const visionDownloadUrl = `${backendBase}/api/vision/download?url=${encodeURIComponent(targetUrl)}&filename=${encodeURIComponent(this.generateFilename(downloadInfo))}`;
 
-          if (sniffResponse.ok) {
-            const sniffData = await sniffResponse.json();
-            if (sniffData.success && sniffData.url) {
-              progress.message = "Stream captured! Starting download...";
-              progress.progress = 100;
-              progress.status = "completed";
-              onProgress?.(progress);
+          progress.message = "Stream captured! Starting download...";
+          progress.progress = 100;
+          progress.status = "completed";
+          onProgress?.(progress);
 
-              // Use /api/ytdl which handles ALL auth/session issues automatically
-              // This is far more reliable than manually passing headers to /api/download
-              const ytdlUrl = `${backendBase}/api/ytdl?url=${encodeURIComponent(sniffData.url)}&filename=${encodeURIComponent(this.generateFilename(downloadInfo))}`;
-              window.open(ytdlUrl, '_blank');
-              return;
-            }
-          }
+          window.open(visionDownloadUrl, '_blank');
+          return;
 
           // Fallback to basic resolution
           let resolveUrl = `${backendBase}/api/resolve?type=${downloadInfo.mediaType}&id=${tmdbId}`;

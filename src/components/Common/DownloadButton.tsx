@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AiOutlineDownload } from 'react-icons/ai';
+import { HiSparkles } from 'react-icons/hi';
 import { toast } from 'react-toastify';
 import { downloadService, DownloadInfo, DownloadProgress } from '../../services/download';
 
@@ -44,7 +45,7 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({
     try {
       await downloadService.downloadMovie(downloadInfo, (progressUpdate) => {
         setProgress(progressUpdate);
-        
+
         if (progressUpdate.status === 'completed') {
           if (progressUpdate.message.includes('page') || progressUpdate.message.includes('interface')) {
             toast.info('Download interface opened! Video will download automatically if possible.');
@@ -80,7 +81,7 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({
     try {
       await downloadService.downloadMovie(downloadInfo, (progressUpdate) => {
         setProgress(progressUpdate);
-        
+
         if (progressUpdate.status === 'completed') {
           toast.success('Download page opened successfully!');
         } else if (progressUpdate.status === 'error') {
@@ -102,18 +103,28 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({
         onClick={handleDownload}
         disabled={isDownloading}
         className={`
-          flex items-center gap-2 rounded-full font-medium transition-all duration-200
+          flex items-center gap-2 rounded-full font-medium transition-all duration-300
           disabled:opacity-50 disabled:cursor-not-allowed
           ${sizeClasses[size]}
           ${variantClasses[variant]}
+          ${isDownloading ? 'ring-2 ring-primary/50' : ''}
           ${className}
         `}
       >
-        <AiOutlineDownload 
-          className={`${isDownloading ? 'animate-bounce' : ''}`}
-          size={size === 'sm' ? 16 : size === 'md' ? 18 : 20}
-        />
-        <span className="whitespace-nowrap">{isDownloading ? 'Downloading...' : 'Download'}</span>
+        {progress?.message?.includes('Vision AI') ? (
+          <HiSparkles
+            className="animate-pulse text-blue-300"
+            size={size === 'sm' ? 16 : size === 'md' ? 18 : 20}
+          />
+        ) : (
+          <AiOutlineDownload
+            className={`${isDownloading ? 'animate-bounce' : ''}`}
+            size={size === 'sm' ? 16 : size === 'md' ? 18 : 20}
+          />
+        )}
+        <span className="whitespace-nowrap">
+          {isDownloading ? (progress?.message?.includes('Vision AI') ? 'Vision AI Sniffing...' : 'Downloading...') : 'Download'}
+        </span>
       </button>
 
       {/* Progress indicator */}
@@ -123,16 +134,16 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({
             <span className="font-medium">Download Progress</span>
             <span className="text-primary">{Math.round(progress.progress)}%</span>
           </div>
-          
+
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-            <div 
+            <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress.progress}%` }}
             ></div>
           </div>
-          
+
           <p className="text-xs text-gray-300 mb-2">{progress.message}</p>
-          
+
           {progress.status === 'error' && (
             <button
               onClick={handleAlternativeDownload}

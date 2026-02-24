@@ -213,6 +213,47 @@ app.get('/api/vision/sniff', async (req: express.Request, res: express.Response)
 });
 
 /**
+ * Vision Download: Sniffs AND pipes the video directly to the browser.
+ * This is the most reliable approach - the download happens from within
+ * the same Puppeteer session that has CDN permission, bypassing all
+ * 403 session/IP-locking issues.
+ * Usage: GET /api/vision/download?url=ENCODED_EMBED_URL&filename=FILENAME
+ */
+app.get('/api/vision/download', async (req: express.Request, res: express.Response) => {
+    const { url, filename } = req.query;
+
+    if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: 'Missing url parameter' });
+    }
+
+    const safeFilename = (typeof filename === 'string' ? filename : null) || 'download.mp4';
+
+    console.log(`[VisionDownload] Starting pipe download for: ${url}`);
+
+    try {
+        const success = await VisionLinkSniffer.sniffAndPipe(url, res, safeFilename);
+
+        if (!success) {
+            // sniffAndPipe already closed res on failure — only reply if not already sent
+            if (!res.headersSent) {
+                res.status(404).json({
+                    error: 'Stream not found',
+                    message: 'Could not detect or pipe a video stream from this source'
+                });
+            }
+        }
+    } catch (error: any) {
+        console.error(`[VisionDownload Error] ${error.message}`);
+        if (!res.headersSent) {
+            res.status(500).json({
+                error: 'Vision download failed',
+                details: error.message
+            });
+        }
+    }
+});
+
+/**
  * Scraper Resolver Endpoint: Returns direct video URLs from scrapers
  * Usage: /api/scrapers/resolve?type=movie&id=TMDB_ID
  */

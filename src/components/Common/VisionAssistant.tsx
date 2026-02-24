@@ -103,7 +103,7 @@ const VisionAssistant: FC = () => {
                         whileHover={{ scale: 1.1, rotate: 5 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setIsOpen(true)}
-                        className="fixed bottom-6 right-6 z-[10001] w-14 h-14 bg-gradient-to-tr from-primary to-blue-400 rounded-full shadow-[0_10px_30px_rgba(255,107,53,0.4)] flex items-center justify-center text-white border-2 border-white/20"
+                        className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-6 z-[10001] w-14 h-14 bg-gradient-to-tr from-primary to-blue-400 rounded-full shadow-[0_10px_30px_rgba(255,107,53,0.4)] flex items-center justify-center text-white border-2 border-white/20"
                     >
                         <HiSparkles size={28} />
                         <motion.div
@@ -121,7 +121,7 @@ const VisionAssistant: FC = () => {
                         initial={{ opacity: 0, y: 100, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 100, scale: 0.9 }}
-                        className="fixed bottom-24 right-6 z-[10001] w-[350px] max-h-[500px] bg-black/60 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+                        className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-6 z-[10001] w-[350px] max-h-[500px] bg-black/60 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden"
                     >
                         {/* Header */}
                         <div className="p-4 border-b border-white/5 flex justify-between items-center bg-primary/10">

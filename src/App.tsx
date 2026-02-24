@@ -53,6 +53,7 @@ import { themeService } from "./services/theme";
 import { useScrollPersistence } from "./hooks/useScrollPersistence";
 import { pushNotificationService } from "./services/pushNotifications";
 import { trendingNotificationService } from "./services/trendingNotifications";
+import { setLanguage } from "./shared/axios";
 
 function App() {
   const location = useLocation();
@@ -223,6 +224,9 @@ function App() {
     document.documentElement.lang = currentLang;
     document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
 
+    // Update global axios language for TMDB/API queries
+    setLanguage(currentLang);
+
     // Add/remove rtl class for tailwind/css logic
     if (currentLang === "ar") {
       document.documentElement.classList.add("rtl");
@@ -384,7 +388,7 @@ function App() {
 
       <DownloadManagerProvider>
         <div
-          className={`transition-[--color-primary,filter] duration-[800ms] ease-in-out overflow-x-hidden ${isCinemaMode ? "filter brightness-[0.3] saturate-[0.6] grayscale-[0.2]" : ""
+          className={`transition-[--color-primary,filter] duration-[800ms] ease-in-out overflow-x-hidden min-h-[100dvh] pb-safe ${isCinemaMode ? "filter brightness-[0.3] saturate-[0.6] grayscale-[0.2]" : ""
             }`}
         >
           <MasterReveal />

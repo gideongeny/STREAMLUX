@@ -5,6 +5,7 @@ import { IoArrowBack } from "react-icons/io5";
 import Sidebar from "../components/Common/Sidebar";
 import ExploreFilter from "../components/Explore/ExploreFilter";
 import ExploreResult from "../components/Explore/ExploreResult";
+import SEO from "../components/Common/SEO";
 import { useTMDBCollectionQuery } from "../hooks/useCollectionQuery";
 import { useYouTubeVideos } from "../hooks/useYouTube";
 import { convertYouTubeToItem } from "../services/youtubeContent";
@@ -99,6 +100,10 @@ const Explore = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      <SEO
+        title={filters.region ? getRegionTitle(filters.region) : `Explore ${currentTab === "movie" ? "Movies" : "TV Shows"}`}
+        description={`Discover and explore a world of ${currentTab === "movie" ? "movies" : "TV shows"} ${filters.region ? `from ${filters.region}` : ""}.`}
+      />
       <div className="container mx-auto px-4 py-8">
         <div className="flex md:hidden justify-between items-center mb-5">
           <Link to="/" className="flex gap-2 items-center">

@@ -9,21 +9,26 @@ html {
   @apply bg-dark;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
 }
 
 body {
   @apply bg-dark text-gray-lighten font-roboto;
   margin: 0;
   padding: 0;
-  min-height: 100vh;
+  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 #root {
   @apply bg-dark;
-  min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 /* to prevent horizontal scrolling in small viewport width, I need to set the property overflow-x-hidden on both the body and html element */
