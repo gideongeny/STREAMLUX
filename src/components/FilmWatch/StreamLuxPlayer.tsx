@@ -619,7 +619,6 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                         allowFullScreen
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         referrerPolicy="origin"
-                        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups allow-fullscreen"
                         onError={handleVideoError}
                         onLoad={handleVideoLoad}
                     />
