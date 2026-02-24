@@ -43,7 +43,8 @@ const SectionSlider: FC<SectionSliderProps> = ({
   if (!films && !isLoading) return null;
 
   return (
-    <div className="mb-8 overflow-hidden">
+    <div className="mb-8">
+
       {/* Title section */}
       {title && (
         <div className="mb-4 flex items-center justify-between">
