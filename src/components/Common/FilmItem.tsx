@@ -154,7 +154,7 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
           )}
         </AnimatePresence>
 
-        <LazyLoadImage
+        <img
           alt={item.title || item.name}
           src={
             item.media_type === "person"
@@ -164,8 +164,8 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
                 : "https://via.placeholder.com/342x513?text=No+Poster"
           }
           className="object-cover w-full aspect-[2/3]"
-          effect="blur"
-          threshold={300}
+          loading="lazy"
+          decoding="async"
           onError={(e: any) => {
             e.target.src = "https://via.placeholder.com/342x513?text=No+Poster";
           }}
