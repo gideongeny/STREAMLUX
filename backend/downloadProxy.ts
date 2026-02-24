@@ -4,10 +4,11 @@
 import express, { Request, Response } from "express";
 import cors, { CorsOptions } from "cors";
 import axios from "axios";
-import crypto from "crypto"; // Keep crypto as it's used in /api/download
-// Unified resolver is currently unused because we define a custom /api/resolve below.
-// If you want to switch back, import and wire it here.
-// import unifiedResolver from "./unifiedResolver";
+import crypto from "crypto";
+import { exec, spawn } from "child_process";
+import path from "path";
+import fs from "fs";
+import os from "os";
 import keepAliveRoutes from "./keepAlive";
 import scraperResolverRoutes from "./scraperResolver";
 import VisionLinkSniffer from "./visionSniffer";
@@ -97,7 +98,7 @@ app.get("/api/proxy", async (req: Request, res: Response) => {
     }
 
     try {
-        console.log(`[Proxy] Fetching: ${ url } `);
+        console.log(`[Proxy] Fetching: ${url} `);
 
         const response = await axios.get(url, {
             headers: getBrowserHeaders(referer ? { 'Referer': referer as string } : {}),
@@ -373,6 +374,96 @@ app.get('/api/download', async (req: express.Request, res: express.Response) => 
             error: 'Failed to proxy download',
             message: error.message,
             status,
+        });
+    }
+});
+
+// ─── yt-dlp helpers ────────────────────────────────────────────────────────
+
+// Resolve yt-dlp binary path (bundled via yt-dlp-wrap auto-download, or system install)
+function getYtDlpBinary(): string {
+    // 1. Environment override
+    if (process.env.YTDLP_PATH) return process.env.YTDLP_PATH;
+
+    // 2. Check CWD / backend folder for yt-dlp(.exe)
+    const ext = os.platform() === 'win32' ? '.exe' : '';
+    const localPath = path.join(__dirname, `yt-dlp${ext}`);
+    if (fs.existsSync(localPath)) return localPath;
+
+    // 3. Fall back to system PATH
+    return `yt-dlp${ext}`;
+}
+
+/**
+ * yt-dlp Endpoint: Extracts the best direct video URL, then streams it.
+ * This bypasses 403 errors because yt-dlp handles all session auth natively.
+ * Usage: GET /api/ytdl?url=ENCODED_EMBED_URL&filename=optional_filename
+ */
+app.get('/api/ytdl', async (req: express.Request, res: express.Response) => {
+    const { url, filename } = req.query;
+    if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: 'Missing url parameter' });
+    }
+
+    const ytdlp = getYtDlpBinary();
+    const safeFilename = (typeof filename === 'string' ? filename : null) || 'download.mp4';
+
+    // STEP 1: Ask yt-dlp for the best direct URL (no download, just resolution)
+    try {
+        const directUrl = await new Promise<string>((resolve, reject) => {
+            const args = [
+                '--no-playlist',
+                '--no-warnings',
+                '--format', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+                '--get-url',
+                url,
+            ];
+
+            let stdout = '';
+            let stderr = '';
+            const proc = spawn(ytdlp, args, { timeout: 30000 });
+            proc.stdout.on('data', (d: Buffer) => { stdout += d.toString(); });
+            proc.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
+            proc.on('close', (code: number) => {
+                const extracted = stdout.trim().split('\n')[0].trim();
+                if (code === 0 && extracted.startsWith('http')) {
+                    resolve(extracted);
+                } else {
+                    reject(new Error(stderr.trim() || `yt-dlp exited with code ${code}`));
+                }
+            });
+            proc.on('error', reject);
+        });
+
+        console.log(`[YTDLP] ✅ Got direct URL: ${directUrl.substring(0, 80)}...`);
+
+        // STEP 2: Stream the direct URL through the proxy (now it's a plain CDN link)
+        const headersForProxy = getBrowserHeaders({
+            'Referer': new URL(url).origin,
+        });
+
+        const upstream = await axios.get(directUrl, {
+            headers: headersForProxy,
+            responseType: 'stream',
+            timeout: 10000,
+        });
+
+        res.set({
+            'Content-Type': upstream.headers['content-type'] || 'video/mp4',
+            'Content-Length': upstream.headers['content-length'],
+            'Content-Disposition': `attachment; filename="${safeFilename}"`,
+            'Accept-Ranges': 'bytes',
+            'Cache-Control': 'no-cache',
+        });
+
+        upstream.data.pipe(res);
+
+    } catch (err: any) {
+        console.error('[YTDLP] Failed:', err.message);
+        res.status(500).json({
+            error: 'yt-dlp extraction failed',
+            message: err.message,
+            hint: 'Make sure yt-dlp is installed on the server. Run: pip install yt-dlp'
         });
     }
 });

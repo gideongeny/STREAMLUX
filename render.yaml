@@ -1,5 +1,4 @@
 # Render Blueprint: StreamLux Backend (download proxy, vision sniffer, keep-alive)
-# Use this when creating the backend service so build/start run from backend/ and dist/ is created.
 # Docs: https://docs.render.com/blueprint-spec
 
 services:
@@ -8,15 +7,29 @@ services:
     runtime: node
     region: oregon
 
-    # Critical: run everything from backend/ so dist/downloadProxy.js exists at start
+    # Run everything from backend/ so dist/downloadProxy.js exists at start
     rootDir: backend
 
-    buildCommand: npm install && npm run build
+    # Install system deps (Chromium for Puppeteer + yt-dlp) then build TypeScript
+    buildCommand: |
+      apt-get update -qq && apt-get install -y -qq \
+        chromium \
+        chromium-sandbox \
+        python3 \
+        python3-pip && \
+      pip3 install -q yt-dlp && \
+      npm install && \
+      npm run build
+
     startCommand: npm start
 
     envVars:
       - key: NODE_VERSION
         value: 22
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: true
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/chromium
       # Optional: restrict CORS to these origins (comma-separated). Leave unset to use app defaults.
       # - key: CORS_ORIGINS
       #   value: https://streamlux.vercel.app,https://streamlux-67a84.web.app

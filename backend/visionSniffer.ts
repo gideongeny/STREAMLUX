@@ -19,15 +19,22 @@ export class VisionLinkSniffer {
     static async init() {
         if (!this.browser) {
             console.log('[VisionSniffer] Launching headless browser...');
-            this.browser = await puppeteer.launch({
+            const launchOptions: any = {
                 headless: true,
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--disable-web-security',
-                    '--disable-features=IsolateOrigins,site-per-process'
-                ]
-            });
+                    '--disable-features=IsolateOrigins,site-per-process',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                ],
+            };
+            // On Render/Linux servers, use the system Chromium
+            if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+                launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+            }
+            this.browser = await puppeteer.launch(launchOptions);
         }
     }
 

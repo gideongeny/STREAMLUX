@@ -195,9 +195,10 @@ export class DownloadService {
               progress.status = "completed";
               onProgress?.(progress);
 
-              const encodedHeaders = encodeURIComponent(JSON.stringify(sniffData.headers || {}));
-              const downloadUrl = `${backendBase}/api/download?url=${encodeURIComponent(sniffData.url)}&filename=${encodeURIComponent(this.generateFilename(downloadInfo))}&headers=${encodedHeaders}`;
-              window.open(downloadUrl, '_blank');
+              // Use /api/ytdl which handles ALL auth/session issues automatically
+              // This is far more reliable than manually passing headers to /api/download
+              const ytdlUrl = `${backendBase}/api/ytdl?url=${encodeURIComponent(sniffData.url)}&filename=${encodeURIComponent(this.generateFilename(downloadInfo))}`;
+              window.open(ytdlUrl, '_blank');
               return;
             }
           }
