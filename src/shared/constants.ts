@@ -169,6 +169,8 @@ export interface SportsFixtureConfig {
   poster_path?: string; // Added for variety compatibility
   title?: string; // Added for variety compatibility
   sportsCategory?: string; // Added for categorization
+  youtubeId?: string; // Added for instant trailer playback
+  isYouTube?: boolean; // Flag for YT content
   homeProb?: number;
   // Pro Stats & Details
   stats?: {

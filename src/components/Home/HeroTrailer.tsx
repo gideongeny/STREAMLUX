@@ -2,17 +2,18 @@ import { FC, useEffect, useState } from "react";
 import { getVideo } from "../../services/home";
 
 interface HeroTrailerProps {
-    mediaId: number;
-    mediaType: "movie" | "tv";
+    mediaId?: number;
+    mediaType?: "movie" | "tv";
     isActive: boolean;
+    youtubeId?: string; // Direct key if available
 }
 
-const HeroTrailer: FC<HeroTrailerProps> = ({ mediaId, mediaType, isActive }) => {
-    const [videoKey, setVideoKey] = useState<string | null>(null);
+const HeroTrailer: FC<HeroTrailerProps> = ({ mediaId, mediaType, isActive, youtubeId }) => {
+    const [videoKey, setVideoKey] = useState<string | null>(youtubeId || null);
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        if (isActive && !videoKey) {
+        if (isActive && !videoKey && mediaId && mediaType) {
             getVideo(mediaType, mediaId).then((key) => {
                 if (key) {
                     setVideoKey(key);

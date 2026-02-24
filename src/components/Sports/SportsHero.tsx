@@ -40,6 +40,7 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
                         mediaId={numericId}
                         mediaType="movie" // Sports can reuse movie trailer logic for YT search
                         isActive={true}
+                        youtubeId={featuredMatch.youtubeId}
                     />
                 </div>
 

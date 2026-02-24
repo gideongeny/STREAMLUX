@@ -118,8 +118,9 @@ const SportsMainContent: FC = () => {
 
         // Final fallback: Use a variety item as spotlight (e.g. Football Highlights or Documentary)
         if (varietySports.length > 0) {
-            const spotlight = varietySports.find(s => s.sportsCategory === "Replay") ||
+            const spotlight = varietySports.find(s => s.sportsCategory === "Replay" && s.youtubeId) ||
                 varietySports.find(s => s.sportsCategory === "Documentary") ||
+                varietySports.find(s => s.youtubeId) ||
                 varietySports[0];
             return spotlight as SportsFixtureConfig;
         }
