@@ -1,3 +1,7 @@
+import { FC } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MdPlayArrow, MdInfoOutline, MdNotificationsActive } from "react-icons/md";
+import { SportsFixtureConfig } from "../../shared/constants";
 import SportsHeroTrailer from "../Home/HeroTrailer";
 
 interface SportsHeroProps {
