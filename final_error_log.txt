@@ -1,0 +1,22 @@
+npm warn using --force Recommended protections disabled.
+
+> streamlux@0.1.0 build
+> react-scripts build
+
+Creating an optimized production build...
+Failed to compile.
+
+TS2322: Type 'Item[]' is not assignable to type '{ media_type: "movie" | "tv"; poster_path: string; overview: string; genre_ids: number[]; id: number; original_language: string; backdrop_path: string; popularity: number; vote_count: number; ... 19 more ...; profile_path?: string | undefined; }[]'.
+  Type 'Item' is not assignable to type '{ media_type: "movie" | "tv"; poster_path: string; overview: string; genre_ids: number[]; id: number; original_language: string; backdrop_path: string; popularity: number; vote_count: number; ... 19 more ...; profile_path?: string | undefined; }'.
+    Types of property 'media_type' are incompatible.
+      Type '"movie" | "tv" | "person" | "sports" | "youtube"' is not assignable to type '"movie" | "tv"'.
+        Type '"person"' is not assignable to type '"movie" | "tv"'.
+  [0m [90m  98 |[39m           console[33m.[39mwarn([32m`Query for ${region || 'global'} returned 0 results. Falling back to popular.`[39m)[33m;[39m
+   [90m  99 |[39m           [36mconst[39m fallback [33m=[39m mediaType [33m===[39m [32m"movie"[39m [33m?[39m [36mawait[39m getExploreMovie([35m1[39m[33m,[39m {}) [33m:[39m [36mawait[39m getExploreTV([35m1[39m[33m,[39m {})[33m;[39m
+  [31m[1m>[22m[39m[90m 100 |[39m           filteredResults [33m=[39m (fallback[33m?[39m[33m.[39mresults [33m||[39m [])[33m.[39mslice([35m0[39m[33m,[39m [35m20[39m)[33m;[39m
+   [90m     |[39m           [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+   [90m 101 |[39m         }
+   [90m 102 |[39m
+   [90m 103 |[39m         setData(filteredResults)[33m;[39m[0m
+
+

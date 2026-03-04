@@ -1,0 +1,77 @@
+{
+    "functions": {
+        "source": "functions",
+        "runtime": "nodejs18",
+        "predeploy": [
+            "npm --prefix \"$RESOURCE_DIR\" run build"
+        ]
+    },
+    "hosting": {
+        "public": "build",
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
+        ],
+        "rewrites": [
+            {
+                "source": "/api/**",
+                "function": "api"
+            },
+            {
+                "source": "**",
+                "destination": "/index.html"
+            }
+        ],
+        "redirects": [
+            {
+                "source": "/streamlux.apk",
+                "destination": "https://github.com/gideongeny/STREAMLUX/releases/latest/download/streamlux.apk",
+                "type": 301
+            }
+        ],
+        "headers": [
+            {
+                "source": "**/index.html",
+                "headers": [
+                    {
+                        "key": "Cache-Control",
+                        "value": "no-cache, no-store, must-revalidate"
+                    }
+                ]
+            },
+            {
+                "source": "**/*.@(js|css|png|jpg|jpeg|gif|webp|svg|ico|json|txt|woff|woff2|ttf|otf)",
+                "headers": [
+                    {
+                        "key": "Cache-Control",
+                        "value": "max-age=60"
+                    }
+                ]
+            },
+            {
+                "source": "**/*.@(mp4|webm|m3u8|ts)",
+                "headers": [
+                    {
+                        "key": "Access-Control-Allow-Origin",
+                        "value": "*"
+                    },
+                    {
+                        "key": "Access-Control-Allow-Methods",
+                        "value": "GET, HEAD, OPTIONS"
+                    },
+                    {
+                        "key": "Cache-Control",
+                        "value": "max-age=3600"
+                    }
+                ]
+            }
+        ]
+    },
+    "firestore": {
+        "rules": "firestore.rules"
+    },
+    "storage": {
+        "rules": "storage.rules"
+    }
+}

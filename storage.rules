@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow authenticated users to read/write their own offline media
+    match /users/{userId}/offline/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // File size limit: 5GB per file
+    match /{allPaths=**} {
+      allow write: if request.resource.size < 5 * 1024 * 1024 * 1024;
+    }
+
+    // Content type validation for media files
+    match /users/{userId}/offline/{fileName} {
+      allow write: if request.resource.contentType.matches('video/.*') ||
+                      request.resource.contentType.matches('application/x-mpegURL');
+    }
+
+    // Prevent unauthorized access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
