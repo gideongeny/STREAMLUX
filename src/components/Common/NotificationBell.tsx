@@ -2,6 +2,8 @@ import { FC, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdNotifications, MdNotificationsNone, MdClose, MdMovieFilter, MdSportsSoccer, MdNewReleases } from 'react-icons/md';
 import { Link } from 'react-router-dom';
+import { notificationHub, Notification as HubNotification } from '../../services/notificationHub';
+import { hapticImpact, hapticNotification } from '../../shared/utils';
 
 interface Notification {
     id: string;
@@ -53,10 +55,35 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     },
 ];
 
-const NotificationBell: FC = () => {
+interface NotificationBellProps {
+    position?: 'left' | 'right' | 'bottom-right';
+}
+
+const NotificationBell: FC<NotificationBellProps> = ({ position = 'left' }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
+    const [notifications, setNotifications] = useState<HubNotification[]>(() => {
+        const existing = notificationHub.getNotifications();
+        if (existing.length === 0) {
+            // Seed with elite defaults
+            const defaults: HubNotification[] = [
+                { id: 'e1', type: 'new_release', title: '🎬 Released Today: The Super Mario Movie', body: 'The galaxy awaits! Experience the magic of Mario & Luigi now.', time: 'Just now', read: false },
+                { id: 'e2', type: 'trending', title: '🔥 Trending: John Wick: Chapter 4', body: 'Action movie fans are hailing this as a masterpiece. Join the buzz.', time: '1 hr ago', read: false },
+                { id: 'e3', type: 'sports', title: '⚽ Champions League Final', body: 'Real Madrid vs Man City. Tactical breakdown and highlights ready.', time: '3 hrs ago', read: true }
+            ];
+            // Don't save to storage yet, just for first view or let hub handle it
+            return defaults;
+        }
+        return existing;
+    });
     const [isPulsing, setIsPulsing] = useState(true);
+
+    useEffect(() => {
+        const unsubscribe = notificationHub.subscribe((updated) => {
+            setNotifications(updated);
+            if (updated.some(n => !n.read)) setIsPulsing(true);
+        });
+        return () => unsubscribe();
+    }, []);
     const panelRef = useRef<HTMLDivElement>(null);
 
     const unreadCount = notifications.filter(n => !n.read).length;
@@ -80,11 +107,11 @@ const NotificationBell: FC = () => {
     }, [isOpen]);
 
     const markAllRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        notificationHub.markAllAsRead();
     };
 
     const deleteNotification = (id: string) => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
+        notificationHub.delete(id);
     };
 
     const getIcon = (type: Notification['type']) => {
@@ -136,7 +163,10 @@ const NotificationBell: FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.18, ease: 'easeOut' }}
-                        className="absolute left-0 rtl:left-auto rtl:right-0 top-12 w-80 bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/60 z-50 overflow-hidden"
+                        className={`absolute top-12 w-80 bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/60 z-50 overflow-hidden ${position === 'right' ? 'left-full ml-4' :
+                            position === 'bottom-right' ? 'right-0 top-auto bottom-12' :
+                                'left-0 rtl:left-auto rtl:right-0'
+                            }`}
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">

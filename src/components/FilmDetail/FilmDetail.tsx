@@ -41,6 +41,10 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { isMobile } = useCurrentViewportView();
   const [isSidebarActive, setIsSidebarActive] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+
+  // Sync with global banner mute state if possible, or keep local
+  const [showMuteButton, setShowMuteButton] = useState(false);
   useEffect(() => {
     if (!currentUser) {
       return;
@@ -173,21 +177,41 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
 
   const handleWatchInApp = () => {
     hapticNotification();
-    // Deep link logic placeholder as requested for "Watch in App" feature
-    const appSchema = "streamlux://watch";
     const mediaId = detail?.id;
     const mediaType = detail?.media_type;
 
-    console.log(`[Elite Experience] Deep linking to: ${appSchema}/${mediaType}/${mediaId}`);
+    // 1. Attempt to open via Custom URL Scheme
+    const appScheme = `streamlux://watch/${mediaType}/${mediaId}`;
 
-    toast.info("Transitioning to StreamLux Mobile...", {
+    toast.info("Opening StreamLux Mobile...", {
       icon: "📱",
       position: "bottom-center",
-      autoClose: 3000,
+      autoClose: 2500,
     });
 
-    // In a production environment with Capacitor/Cordova or deep linking:
-    // window.location.href = `${appSchema}/${mediaType}/${mediaId}`;
+    // Detect if app opened by checking if window loses focus
+    let didOpen = false;
+    const onBlur = () => {
+      didOpen = true;
+      window.removeEventListener('blur', onBlur);
+    };
+    window.addEventListener('blur', onBlur);
+
+    // Try to trigger the app
+    window.location.href = appScheme;
+
+    // 2. Fallback to APK Download if app didn't open within 2.5s
+    setTimeout(() => {
+      window.removeEventListener('blur', onBlur);
+      if (!didOpen) {
+        toast.warning("App not installed. Triggering download...", {
+          icon: "📥",
+          position: "bottom-center",
+        });
+        // Direct link to the hosted APK
+        window.location.href = "/streamlux.apk";
+      }
+    }, 2500);
   };
 
   return (
@@ -244,7 +268,22 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                 mediaId={detail.id}
                 mediaType={detail.media_type as "movie" | "tv"}
                 isActive={true}
+                muted={isMuted}
               />
+
+              {/* Mute/Unmute Toggle - Detail Page Overlay */}
+              <div className="absolute bottom-6 right-6 z-50">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setIsMuted(!isMuted)}
+                  className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-primary/80 transition-all duration-300"
+                  title={isMuted ? "Unmute Trailer" : "Mute Trailer"}
+                >
+                  <BsShareFill size={16} className="hidden" /> {/* Spacer/Reference */}
+                  {isMuted ? <span className="text-xl">🔇</span> : <span className="text-xl">🔊</span>}
+                </motion.button>
+              </div>
 
               <div className="bg-gradient-to-br from-transparent to-black/70 h-full rounded-bl-2xl relative z-10">
                 <div className="flex flex-col md:flex-row bottom-[-40%] md:bottom-[-20%]  items-start tw-absolute-center-horizontal w-full max-w-[1000px]">

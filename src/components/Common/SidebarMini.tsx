@@ -46,7 +46,7 @@ const SidebarMini: FunctionComponent = () => {
               className="w-10 h-10"
             />
           </Link>
-          <NotificationBell />
+          <NotificationBell position="right" />
         </div>
         <div className="flex flex-col gap-7">
           <Link
