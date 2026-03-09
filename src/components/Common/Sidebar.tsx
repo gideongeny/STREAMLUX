@@ -130,8 +130,8 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
         </div>
 
         <div
-          className={`text-white text-lg font-medium ${isSidebarActive ? "-mt-6" : "mt-12"
-            }`}
+          className={`text-white text-lg font-bold uppercase tracking-widest ${isSidebarActive ? "mt-4" : "mt-12"
+            } px-4 flex items-center gap-3 border-l-4 border-primary`}
         >
           {t('MENU')}
         </div>
@@ -143,7 +143,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               } hover:text-white transition duration-300`}
           >
             <AiOutlineHome size={25} />
-            <p>{t('Home')}</p>
+            <p className="font-bold tracking-tight">{t('Home')}</p>
           </Link>
 
           <a
@@ -153,7 +153,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             className="flex gap-6 items-center hover:text-white transition duration-300"
           >
             <MdSportsSoccer size={25} />
-            <p>{t('Sports')}</p>
+            <p className="font-bold tracking-tight">{t('Sports')}</p>
           </a>
 
           <Link
@@ -163,7 +163,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               } hover:text-white transition duration-300`}
           >
             <MdOutlineExplore size={25} />
-            <p>{t('Explore')}</p>
+            <p className="font-bold tracking-tight">{t('Explore')}</p>
           </Link>
 
           <Link
@@ -173,14 +173,14 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               } hover:text-white transition duration-300`}
           >
             <BiSearch size={25} />
-            <p>{t('Search')}</p>
+            <p className="font-bold tracking-tight">{t('Search')}</p>
           </Link>
         </div>
 
 
 
 
-        <div className="text-white text-lg font-medium mt-12">{t('PERSONAL')}</div>
+        <div className="text-white text-lg font-bold uppercase tracking-widest mt-12 px-4 flex items-center gap-3 border-l-4 border-primary">{t('PERSONAL')}</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
           {!currentUser && (
             <div className="mb-4 p-3 bg-primary/10 border border-primary/30 rounded-lg">
@@ -202,7 +202,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             title={!currentUser ? t("Sign in to access bookmarks") : ""}
           >
             <BsBookmarkHeart size={25} />
-            <p>{t('Bookmarked')}</p>
+            <p className="font-bold tracking-tight">{t('Bookmarked')}</p>
           </button>
 
           <Link
@@ -212,7 +212,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               } hover:text-white transition duration-300`}
           >
             <MdFolderSpecial size={25} />
-            <p>{t('Watchlist')}</p>
+            <p className="font-bold tracking-tight">{t('Watchlist')}</p>
           </Link>
 
           <button
@@ -224,7 +224,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             title={!currentUser ? t("Sign in to access library") : ""}
           >
             <MdFolderSpecial size={25} />
-            <p>{t('My Library')}</p>
+            <p className="font-bold tracking-tight">{t('My Library')}</p>
           </button>
 
           <button
@@ -236,11 +236,11 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             title={!currentUser ? t("Sign in to access history") : ""}
           >
             <AiOutlineHistory size={25} />
-            <p>{t('History')}</p>
+            <p className="font-bold tracking-tight">{t('History')}</p>
           </button>
         </div>
 
-        <div className="text-white text-lg font-medium mt-12">{t('GENERAL')}</div>
+        <div className="text-white text-lg font-bold uppercase tracking-widest mt-12 px-4 flex items-center gap-3 border-l-4 border-primary">{t('GENERAL')}</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
           <a
             href="/streamlux.apk"
@@ -248,7 +248,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             download
           >
             <FaDownload size={25} />
-            <p>{t('Download')}</p>
+            <p className="font-bold tracking-tight">{t('Download')}</p>
           </a>
 
           <Link
@@ -261,7 +261,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <p>{t('Settings')}</p>
+            <p className="font-bold tracking-tight">{t('Settings')}</p>
           </Link>
 
 
@@ -275,7 +275,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             title={!currentUser ? t("Sign in to access profile") : ""}
           >
             <BiUserCircle size={25} />
-            <p>{t('Profile')}</p>
+            <p className="font-bold tracking-tight">{t('Profile')}</p>
           </button>
 
           {!currentUser && (
@@ -294,7 +294,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               className="flex gap-5 items-center"
             >
               <HiOutlineLogout size={30} />
-              <p>{t('Logout')}</p>
+              <p className="font-bold tracking-tight">{t('Logout')}</p>
             </button>
           )}
 

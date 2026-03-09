@@ -3,11 +3,13 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 interface UIState {
     isCinemaMode: boolean;
     isSpotlightOpen: boolean;
+    isFullscreen: boolean;
 }
 
 const initialState: UIState = {
     isCinemaMode: false,
     isSpotlightOpen: false,
+    isFullscreen: false,
 };
 
 export const uiSlice = createSlice({
@@ -26,9 +28,15 @@ export const uiSlice = createSlice({
         toggleSpotlight: (state) => {
             state.isSpotlightOpen = !state.isSpotlightOpen;
         },
+        setFullscreen: (state, action: PayloadAction<boolean>) => {
+            state.isFullscreen = action.payload;
+        },
+        toggleFullscreen: (state) => {
+            state.isFullscreen = !state.isFullscreen;
+        },
     },
 });
 
-export const { setCinemaMode, toggleCinemaMode, setSpotlightOpen, toggleSpotlight } = uiSlice.actions;
+export const { setCinemaMode, toggleCinemaMode, setSpotlightOpen, toggleSpotlight, setFullscreen, toggleFullscreen } = uiSlice.actions;
 
 export default uiSlice.reducer;

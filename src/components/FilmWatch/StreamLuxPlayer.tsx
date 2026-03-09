@@ -15,6 +15,8 @@ import VisionCastOverlay from './VisionCastOverlay';
 import { HiSparkles } from 'react-icons/hi';
 import { safeStorage } from '../../utils/safeStorage';
 import { backgroundAudioService } from '../../services/backgroundAudio';
+import { setFullscreen } from '../../store/slice/uiSlice';
+import { useTranslation } from 'react-i18next';
 
 export interface VideoSource {
     name: string;
@@ -79,6 +81,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     mediaType,
 }) => {
     const dispatch = useAppDispatch();
+    const { t } = useTranslation();
     const { isCinemaMode } = useAppSelector((state) => state.ui);
     const normalizedSources: VideoSource[] = sources.map((s) =>
         typeof s === 'string' ? { name: 'Default', url: s } : s
@@ -110,6 +113,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     // Ad-skip overlay state
     const [showAdSkip, setShowAdSkip] = useState(false);
     const [showVisionCast, setShowVisionCast] = useState(false);
+    const [showMagicMenu, setShowMagicMenu] = useState(false); // Magic Menu state
     const adTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Gesture / Indicator state
@@ -134,14 +138,17 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     useEffect(() => {
         if (isFullscreen) {
             resetHideTimer();
+            dispatch(setFullscreen(true));
         } else {
             setControlsVisible(true);
+            dispatch(setFullscreen(false));
             if (controlsHideTimer.current) clearTimeout(controlsHideTimer.current);
         }
         return () => {
             if (controlsHideTimer.current) clearTimeout(controlsHideTimer.current);
+            dispatch(setFullscreen(false));
         };
-    }, [isFullscreen, resetHideTimer]);
+    }, [isFullscreen, resetHideTimer, dispatch]);
 
     // Track pointer/touch movement to reveal controls
     useEffect(() => {
@@ -403,7 +410,13 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     }, [isDirect]);
 
     useEffect(() => {
-        const handler = () => { setShowSourceMenu(false); setShowSpeedMenu(false); setShowAudioMenu(false); setShowSubtitleMenu(false); };
+        const handler = () => {
+            setShowSourceMenu(false);
+            setShowSpeedMenu(false);
+            setShowAudioMenu(false);
+            setShowSubtitleMenu(false);
+            setShowMagicMenu(false);
+        };
         document.addEventListener('click', handler);
         return () => document.removeEventListener('click', handler);
     }, []);
@@ -470,47 +483,82 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                 </div>
             )}
 
-            {!isDirect && showAdSkip && (
-                <div className="absolute top-4 right-4 z-40 flex flex-col gap-2">
-                    <button onClick={handleSkipAd} className="flex items-center gap-2 px-4 py-2 bg-black/80 backdrop-blur border border-white/20 rounded-xl text-white text-sm hover:bg-primary hover:border-primary transition shadow-lg font-bold">
-                        <RiSkipForwardFill size={18} /> Skip Ad →
-                    </button>
-                    {normalizedSources.length > 1 && (
-                        <button onClick={handleCleanSource} className="flex items-center gap-2 px-4 py-2 bg-black/80 backdrop-blur border border-white/20 rounded-xl text-white text-sm hover:bg-green-600 transition shadow-lg text-xs">
-                            🚫 Switch to Clean Source
-                        </button>
-                    )}
-                </div>
-            )}
+            {/* Top Right Source Controls removed to prevent bombardment - Moved to Magic Menu */}
 
             <div
                 className="absolute bottom-3 right-3 z-50 transition-opacity duration-500 flex gap-2"
                 style={{ opacity: controlsVisible ? 1 : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}
                 onClick={(e) => e.stopPropagation()}
             >
-                <button
-                    onClick={() => setShowVisionCast(!showVisionCast)}
-                    title="Vision AI: Cast Identification"
-                    className={`flex items-center gap-1.5 px-3 py-2 ${showVisionCast ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)]' : 'bg-black/80 text-white'} backdrop-blur border border-white/20 rounded-xl hover:bg-indigo-500 transition shadow-xl font-bold text-xs group`}
-                >
-                    <HiSparkles size={18} className={showVisionCast ? "animate-spin text-white" : "text-indigo-400 group-hover:text-white transition"} />
-                    <span className="ml-1 tracking-tighter uppercase text-[10px]">Vision Cast</span>
-                </button>
-                <button
-                    onClick={() => dispatch(toggleCinemaMode())}
-                    title={isCinemaMode ? 'Exit Cinema Mode' : 'Enter Cinema Mode'}
-                    className={`flex items-center gap-1.5 px-3 py-2 ${isCinemaMode ? 'bg-primary text-black' : 'bg-black/80 text-white'} backdrop-blur border border-white/20 rounded-xl hover:bg-white hover:text-black transition shadow-xl font-bold text-xs`}
-                >
-                    {isCinemaMode ? <FiXCircle size={18} /> : <MdMovieFilter size={18} />}
-                    <span className="ml-1">{isCinemaMode ? 'Exit Cinema' : 'Cinema Mode'}</span>
-                </button>
+                <div className="relative">
+                    <button
+                        onClick={() => setShowMagicMenu(!showMagicMenu)}
+                        title={t('Magic Menu')}
+                        className={`flex items-center gap-1.5 px-3 py-2 ${showMagicMenu ? 'bg-primary text-black' : 'bg-black/80 text-white'} backdrop-blur border border-white/20 rounded-xl hover:bg-white hover:text-black transition shadow-xl font-bold text-xs group`}
+                    >
+                        <HiSparkles size={18} className={showMagicMenu ? "animate-spin" : "text-primary group-hover:text-black transition"} />
+                        <span className="ml-1 tracking-tighter uppercase text-[10px]">{t('Magic Menu')}</span>
+                    </button>
+
+                    <AnimatePresence>
+                        {showMagicMenu && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                                className="absolute bottom-full right-0 mb-3 w-56 bg-[#0a0a1a]/95 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-2 z-[100]"
+                            >
+                                <div className="px-4 py-2 text-[10px] text-gray-500 uppercase tracking-widest font-black flex items-center gap-2">
+                                    <HiSparkles className="text-primary" /> {t('Elevate Experience')}
+                                </div>
+
+                                <button
+                                    onClick={() => { setShowVisionCast(!showVisionCast); setShowMagicMenu(false); }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 text-xs transition-all ${showVisionCast ? 'text-primary bg-primary/10' : 'text-gray-300 hover:bg-white/5'}`}
+                                >
+                                    <HiSparkles size={16} className={showVisionCast ? "text-primary" : "text-indigo-400"} />
+                                    <span className="font-bold">{t('Vision Cast')}</span>
+                                </button>
+
+                                <button
+                                    onClick={() => { dispatch(toggleCinemaMode()); setShowMagicMenu(false); }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 text-xs transition-all ${isCinemaMode ? 'text-primary bg-primary/10' : 'text-gray-300 hover:bg-white/5'}`}
+                                >
+                                    {isCinemaMode ? <FiXCircle size={16} /> : <MdMovieFilter size={16} />}
+                                    <span className="font-bold">{isCinemaMode ? t('Exit Cinema Mode') : t('Cinema Mode')}</span>
+                                </button>
+
+                                {!isDirect && showAdSkip && (
+                                    <button
+                                        onClick={() => { handleSkipAd(); setShowMagicMenu(false); }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-xs text-green-400 hover:bg-green-400/10 transition-all font-bold"
+                                    >
+                                        <RiSkipForwardFill size={16} />
+                                        <span>{t('Skip Ad')}</span>
+                                    </button>
+                                )}
+
+                                {normalizedSources.length > 1 && !isDirect && (
+                                    <button
+                                        onClick={() => { handleCleanSource(); setShowMagicMenu(false); }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-xs text-amber-400 hover:bg-amber-400/10 transition-all font-bold"
+                                    >
+                                        <FaServer size={14} />
+                                        <span>{t('Switch to Clean Source')}</span>
+                                    </button>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
                 <button
                     onClick={handleFullscreen}
-                    title={isFullscreen ? 'Exit Fullscreen (Esc)' : 'Immersive Fullscreen'}
+                    title={isFullscreen ? t('Exit Fullscreen') : t('Immersive Fullscreen')}
                     className="flex items-center gap-1.5 px-3 py-2 bg-black/80 backdrop-blur border border-white/20 rounded-xl text-white hover:bg-primary hover:border-primary transition shadow-xl font-bold text-xs"
                 >
                     {isFullscreen ? <MdFullscreenExit size={18} /> : <MdFullscreen size={18} />}
-                    <span className="ml-1">{isFullscreen ? 'Exit' : 'Fullscreen'}</span>
+                    <span className="ml-1">{isFullscreen ? t('Exit') : t('Fullscreen')}</span>
                 </button>
             </div>
 

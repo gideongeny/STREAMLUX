@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { HiSparkles } from "react-icons/hi";
 import { IoMdSend, IoMdClose, IoMdCompass, IoMdMic, IoMdMicOff } from "react-icons/io";
 import { hapticImpact } from "../../shared/utils";
-import { useAppDispatch } from "../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setSpotlightOpen } from "../../store/slice/uiSlice";
 import { toast } from "react-toastify";
 import { voiceControl } from "../../services/voiceControl";
@@ -161,10 +161,18 @@ const VisionAssistant: FC = () => {
         hapticImpact();
     };
 
+    const { isFullscreen } = useAppSelector((state) => state.ui);
+    const [isAppReady, setIsAppReady] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setIsAppReady(true), 3500); // Sync with MasterReveal
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
         <>
             <AnimatePresence>
-                {!isOpen && (
+                {!isOpen && isAppReady && !isFullscreen && (
                     <motion.button
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
