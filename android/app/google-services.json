@@ -1,0 +1,29 @@
+{
+    "project_info": {
+        "project_number": "242283846154",
+        "project_id": "streamlux-67a84",
+        "storage_bucket": "streamlux-67a84.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:242283846154:android:c25b7416322f092cc49df3",
+                "android_client_info": {
+                    "package_name": "com.streamlux.app"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}
