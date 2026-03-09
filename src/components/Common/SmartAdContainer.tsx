@@ -32,6 +32,20 @@ const SmartAdContainer: FC<SmartAdContainerProps> = ({
   // Don't render anything until minimum view time has passed
   if (!showAd) return null;
 
+  const Fallback = () => (
+    <div className={`relative overflow-hidden rounded-xl border border-white/5 bg-gradient-to-br from-white/5 to-transparent p-6 text-center ${className}`}>
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-1 w-12 rounded-full bg-primary/20" />
+        <p className="text-xs font-black uppercase tracking-widest text-white/40">Premium Experience</p>
+        <h4 className="text-sm font-bold text-white">Enjoying StreamLux?</h4>
+        <p className="max-w-[200px] text-[10px] text-gray-500">Download our mobile app for an even faster and ad-free cinematic experience.</p>
+        <a href="/download" className="mt-2 rounded-full bg-white/10 px-4 py-1.5 text-[10px] font-bold text-white hover:bg-white/20 transition-colors">
+          Get the App
+        </a>
+      </div>
+    </div>
+  );
+
   // Sidebar gets a fixed-size rectangle
   if (position === 'sidebar') {
     return (
@@ -80,7 +94,7 @@ const SmartAdContainer: FC<SmartAdContainerProps> = ({
   }
 
   // Toast and other positions — don't render
-  return null;
+  return <Fallback />;
 };
 
 export default SmartAdContainer;

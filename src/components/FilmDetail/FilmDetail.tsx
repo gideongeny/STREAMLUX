@@ -10,6 +10,7 @@ import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import { AiFillHeart } from "react-icons/ai";
 import { BsFillPlayFill, BsShareFill, BsThreeDots } from "react-icons/bs";
 import { GiHamburgerMenu } from "react-icons/gi";
+import { MdSmartphone } from "react-icons/md";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -170,6 +171,25 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
     }
   };
 
+  const handleWatchInApp = () => {
+    hapticNotification();
+    // Deep link logic placeholder as requested for "Watch in App" feature
+    const appSchema = "streamlux://watch";
+    const mediaId = detail?.id;
+    const mediaType = detail?.media_type;
+
+    console.log(`[Elite Experience] Deep linking to: ${appSchema}/${mediaType}/${mediaId}`);
+
+    toast.info("Transitioning to StreamLux Mobile...", {
+      icon: "📱",
+      position: "bottom-center",
+      autoClose: 3000,
+    });
+
+    // In a production environment with Capacitor/Cordova or deep linking:
+    // window.location.href = `${appSchema}/${mediaType}/${mediaId}`;
+  };
+
   return (
     <>
       {detail && (
@@ -234,12 +254,12 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                       <LazyLoadImage
                         src={resizeImage(detail.poster_path, "w185")}
                         effect="opacity"
-                        className="w-full h-full object-cover rounded-md"
+                        className="w-full h-full object-cover rounded-md shadow-2xl scale-[1.1] origin-bottom"
                         alt="Poster"
                       />
                     </div>
                     {isMobile && (
-                      <div className="flex flex-col gap-3 mt-4 ml-3 md:ml-0 w-full">
+                      <div className="flex flex-col gap-3 mt-4 ml-3 md:ml-0 w-full pr-6">
                         <motion.div
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -248,12 +268,20 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                           <Link
                             to="watch"
                             onClick={() => hapticImpact()}
-                            className="flex gap-2 items-center justify-center px-4 py-2.5 rounded-full bg-primary text-white hover:bg-blue-600 shadow-lg shadow-primary/20 transition duration-300 w-full"
+                            className="flex gap-2 items-center justify-center px-4 py-3 rounded-full bg-primary text-white hover:bg-blue-600 shadow-lg shadow-primary/20 transition duration-300 w-full"
                           >
-                            <BsFillPlayFill size={18} />
-                            <span className="text-sm font-medium">WATCH</span>
+                            <BsFillPlayFill size={24} />
+                            <span className="text-sm font-black uppercase tracking-widest">Watch Now</span>
                           </Link>
                         </motion.div>
+
+                        <button
+                          onClick={handleWatchInApp}
+                          className="flex gap-2 items-center justify-center px-4 py-3 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20 transition duration-300 w-full"
+                        >
+                          <MdSmartphone size={20} />
+                          <span className="text-sm font-black uppercase tracking-widest">Watch in App</span>
+                        </button>
 
                         {detail && (
                           <DownloadButton
@@ -262,7 +290,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                               detail.media_type as "movie" | "tv"
                             )}
                             variant="outline"
-                            size="sm"
+                            size="lg"
                             className="w-full justify-center"
                           />
                         )}
@@ -273,7 +301,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                   {/* FILM TITLE */}
                   <div className="flex-grow md:ml-14 ml-6 mt-6 md:mt-0">
                     <div className="md:h-28 flex items-end">
-                      <h1 className=" text-white text-[45px] font-bold leading-tight">
+                      <h1 className=" text-white text-[45px] font-black leading-tight tracking-tighter uppercase drop-shadow-2xl">
                         {(detail as DetailMovie).title ||
                           (detail as DetailTV).name}
                       </h1>
@@ -293,7 +321,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                         <li key={genre.id} className="mb-3">
                           <Link
                             to={`/explore?genre=${genre.id}`}
-                            className="md:px-5 px-3 md:py-2 py-1 rounded-full uppercase font-medium border border-gray-300 md:text-white hover:brightness-75 transition duration-300"
+                            className="md:px-5 px-3 md:py-2 py-1 rounded-full uppercase font-black tracking-widest border border-white/20 md:text-white bg-white/5 backdrop-blur-sm hover:bg-primary/20 hover:border-primary transition duration-300 text-[10px]"
                           >
                             {genre.name}
                           </Link>
@@ -302,48 +330,59 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                     </ul>
                   </div>
 
-                  {/* WATCH NOW */}
+                  {/* WATCH NOW SECTION */}
                   {!isMobile && (
-                    <div className="flex gap-4 items-center mt-24">
-                      <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        animate={{
-                          boxShadow: ["0 0 0px rgba(255,107,53,0)", "0 0 20px rgba(255,107,53,0.4)", "0 0 0px rgba(255,107,53,0)"]
-                        }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        <Link
-                          to="watch"
-                          onClick={() => hapticImpact()}
-                          className="flex gap-6 items-center pl-6 pr-12 py-3 rounded-full bg-primary text-white hover:bg-blue-600 shadow-xl shadow-primary/30 transition duration-300"
+                    <div className="flex flex-col gap-4 items-center mt-24">
+                      <div className="flex gap-4 items-center">
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          animate={{
+                            boxShadow: ["0 0 0px rgba(59,130,246,0)", "0 0 25px rgba(59,130,246,0.5)", "0 0 0px rgba(59,130,246,0)"]
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
                         >
-                          <BsFillPlayFill size={25} />
-                          <span className="text-lg font-medium">WATCH</span>
-                        </Link>
-                      </motion.div>
+                          <Link
+                            to="watch"
+                            onClick={() => hapticImpact()}
+                            className="flex gap-6 items-center pl-6 pr-12 py-3.5 rounded-full bg-primary text-white hover:bg-blue-600 shadow-2xl shadow-primary/40 transition duration-300"
+                          >
+                            <BsFillPlayFill size={28} />
+                            <span className="text-xl font-black uppercase tracking-[0.2em]">Watch</span>
+                          </Link>
+                        </motion.div>
 
-                      {detail && (
-                        <DownloadButton
-                          downloadInfo={downloadService.generateDownloadInfo(
-                            detail,
-                            detail.media_type as "movie" | "tv"
-                          )}
-                          variant="outline"
-                          size="lg"
-                        />
-                      )}
+                        {detail && (
+                          <DownloadButton
+                            downloadInfo={downloadService.generateDownloadInfo(
+                              detail,
+                              detail.media_type as "movie" | "tv"
+                            )}
+                            variant="outline"
+                            size="lg"
+                          />
+                        )}
+                      </div>
+
+                      <motion.button
+                        whileHover={{ y: -2 }}
+                        onClick={handleWatchInApp}
+                        className="flex gap-2 items-center justify-center px-10 py-3 rounded-full bg-white/10 backdrop-blur-xl text-white border border-white/10 hover:bg-white/20 transition-all duration-300 group"
+                      >
+                        <MdSmartphone size={20} className="group-hover:scale-110 transition-transform" />
+                        <span className="text-xs font-black uppercase tracking-[0.15em]">Watch in App</span>
+                      </motion.button>
                     </div>
                   )}
                 </div>
 
                 {/* BOOKMARK BUTTONS */}
-                <div className="flex gap-3 absolute top-[5%] right-[3%]">
+                <div className="flex gap-3 absolute top-[5%] right-[3%] z-50">
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={bookmarkedHandler}
-                    className={`tw-flex-center h-12 w-12 rounded-full border-[3px] border-white shadow-lg hover:border-primary transition duration-300 group ${isBookmarked && "!border-primary"
+                    className={`tw-flex-center h-12 w-12 rounded-full border-[3px] border-white/30 backdrop-blur-xl shadow-lg hover:border-primary transition duration-300 group ${isBookmarked && "!border-primary"
                       }`}
                   >
                     <AnimatePresence mode="wait">
@@ -368,17 +407,22 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={handleShareExperience}
-                        className="tw-flex-center h-12 w-12 rounded-full border-[3px] border-white shadow-lg hover:border-primary transition duration-300 group"
+                        className="tw-flex-center h-12 w-12 rounded-full border-[3px] border-white/30 backdrop-blur-xl shadow-lg hover:border-primary transition duration-300 group"
                       >
                         <BsShareFill
-                          size={20}
+                          size={18}
                           className="text-white group-hover:text-primary transition duration-300"
                         />
                       </motion.button>
-                      <button className="tw-flex-center h-12 w-12 rounded-full border-[3px] border-white shadow-lg hover:border-primary transition duration-300 group">
-                        <BsThreeDots
-                          size={20}
-                          className="text-white group-hover:text-primary transition duration-300"
+                      <button className="tw-flex-center h-12 w-12 rounded-full border-[3px] border-white/30 backdrop-blur-xl shadow-lg hover:border-primary transition duration-300 group text-white">
+                        <QuickWatchlist
+                          item={{
+                            id: detail.id,
+                            title: (detail as DetailMovie).title || (detail as DetailTV).name,
+                            posterPath: detail.poster_path,
+                            mediaType: detail.media_type as 'movie' | 'tv'
+                          }}
+                          size="md"
                         />
                       </button>
                     </>
@@ -389,11 +433,11 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
           )}
 
           {/* DETAIL INFORMATION */}
-          <div className="flex z-20 relative flex-col md:flex-row mt-32 md:mt-0">
+          <div className="flex z-20 relative flex-col md:flex-row mt-48 md:mt-0">
             {!isMobile && (
               <div className="shrink-0 md:max-w-[150px] w-full flex items-center md:flex-col justify-center flex-row gap-20 mt-20 md:border-r border-dark-lighten pt-16">
                 <div className="flex flex-col gap-6 items-center">
-                  <p className="text-white font-medium text-lg">RATING</p>
+                  <p className="text-white/40 font-black text-xs uppercase tracking-[0.2em]">RATING</p>
                   {!isMobile && (
                     <div className="w-16">
                       {detail && (
@@ -402,12 +446,11 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                           maxValue={10}
                           text={`${detail.vote_average.toFixed(1)}`}
                           styles={buildStyles({
-                            textSize: "25px",
-                            pathColor: `rgba(81, 121, 255, ${(detail.vote_average * 10) / 100
-                              })`,
+                            textSize: "30px",
+                            pathColor: `#3b82f6`,
                             textColor: "#fff",
-                            trailColor: "transparent",
-                            backgroundColor: "#5179ff",
+                            trailColor: "rgba(255,255,255,0.05)",
+                            backgroundColor: "transparent",
                           })}
                         />
                       )}
@@ -427,7 +470,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                     </div>
                   )}
                   {isMobile && detail && (
-                    <p className="text-2xl -mt-3">
+                    <p className="text-2xl font-black text-white">
                       {detail.vote_average.toFixed(1)}
                     </p>
                   )}
@@ -436,23 +479,23 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                 <div className="flex flex-col gap-3 items-center">
                   {detail && (
                     <>
-                      <p className="text-white font-medium text-lg">
+                      <p className="text-white/40 font-black text-xs uppercase tracking-[0.2em]">
                         {detail.media_type === "movie"
                           ? "RUNTIME"
                           : "EP LENGTH"}
                       </p>
-                      <div className="flex gap-2 items-center">
+                      <div className="flex flex-col items-center">
                         {detail.media_type === "movie" && (
-                          <p className="text-2xl">
+                          <p className="text-3xl font-black text-white">
                             {(detail as DetailMovie).runtime}
                           </p>
                         )}
                         {detail.media_type === "tv" && (
-                          <p className="text-2xl">
+                          <p className="text-3xl font-black text-white">
                             {(detail as DetailTV).episode_run_time[0]}
                           </p>
                         )}
-                        <span>min</span>
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-1">minutes</span>
                       </div>
                     </>
                   )}
@@ -472,16 +515,12 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
             </div>
 
             <div className="shrink-0 md:max-w-[300px] w-full px-6 pt-6">
-              <p className="text-white font-medium text-lg mb-5">MEDIA</p>
-              <ul className="flex flex-col md:gap-[30px] gap-6">
+              <p className="text-white/40 font-black text-xs uppercase tracking-[0.2em] mb-8">MEDIA GALLERY</p>
+              <ul className="flex flex-col md:gap-[40px] gap-8">
                 {videos &&
-                  videos.slice(0, 2).map((video) => (
-                    <li key={video.id}>
-                      <div className="relative h-0 pb-[56.25%]">
-                        {/* <YouTube
-                          videoId={video.key}
-                          opts={{ height: "100%", width: "100%" }}
-                        /> */}
+                  videos.slice(0, 3).map((video) => (
+                    <li key={video.id} className="group">
+                      <div className="relative h-0 pb-[56.25%] rounded-2xl overflow-hidden border border-white/5 shadow-2xl transition-transform duration-500 group-hover:scale-[1.05] group-hover:border-primary/30">
                         <iframe
                           frameBorder="0"
                           allowFullScreen
@@ -489,12 +528,12 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                           title="Video trailer"
                           width="100%"
                           height="100%"
-                          src={`https://www.youtube.com/embed/${video.key}?enablejsapi=1&amp;origin=http%3A%2F%2Flocalhost%3A3000&amp;widgetid=1`}
-                          id="widget2"
-                          className="absolute top-0 left-0 !w-full !h-full"
+                          src={`https://www.youtube.com/embed/${video.key}?enablejsapi=1&amp;origin=https%3A%2F%2Fstreamlux.vercel.app&amp;widgetid=1`}
+                          id={`widget-${video.id}`}
+                          className="absolute top-0 left-0 w-full h-full"
                         ></iframe>
                       </div>
-                      <p className="mt-3 text-lg whitespace-nowrap overflow-hidden text-ellipsis">
+                      <p className="mt-4 text-sm font-black uppercase tracking-tight line-clamp-2 text-white/60 group-hover:text-primary transition-colors">
                         {video.name}
                       </p>
                     </li>
@@ -503,74 +542,49 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                   [...new Array(2)].map((_, index) => (
                     <li key={index}>
                       <div className="w-full h-0 pb-[56.25%] relative">
-                        <Skeleton className="absolute w-full h-full" />
+                        <Skeleton className="absolute w-full h-full rounded-2xl" />
                       </div>
-                      <Skeleton className="h-6 w-[70%] mt-3" />
+                      <Skeleton className="h-4 w-[70%] mt-4" />
                     </li>
                   ))}
               </ul>
             </div>
 
             {isMobile && (
-              <div className="shrink-0 md:max-w-[150px] w-full flex items-center md:flex-col justify-center flex-row gap-20  md:border-r border-dark-lighten md:pt-16 pt-0 md:mt-20 mt-8">
+              <div className="shrink-0 md:max-w-[150px] w-full flex items-center md:flex-col justify-center flex-row gap-20  md:border-r border-dark-lighten md:pt-16 pt-0 md:mt-20 mt-12 bg-white/5 py-10 rounded-t-[3rem] border border-white/10">
                 <div className="flex flex-col gap-6 items-center">
-                  <p className="text-white font-medium text-lg">RATING</p>
-                  {!isMobile && (
-                    <div className="w-16">
-                      {detail && (
-                        <CircularProgressbar
-                          value={detail.vote_average}
-                          maxValue={10}
-                          text={`${detail.vote_average.toFixed(1)}`}
-                          styles={buildStyles({
-                            textSize: "25px",
-                            pathColor: `rgba(81, 121, 255, ${(detail.vote_average * 10) / 100
-                              })`,
-                            textColor: "#fff",
-                            trailColor: "transparent",
-                            backgroundColor: "#5179ff",
-                          })}
-                        />
-                      )}
-                      {!detail && (
-                        <Skeleton className="w-16 h-16 rounded-full" />
-                      )}
-                    </div>
-                  )}
+                  <p className="text-white/40 font-black text-xs uppercase tracking-widest">RATING</p>
                   {isMobile && detail && (
-                    <p className="text-2xl -mt-3">
-                      {detail.vote_average.toFixed(1)}
-                    </p>
+                    <div className="flex items-baseline gap-1">
+                      <p className="text-4xl font-black text-white">
+                        {detail.vote_average.toFixed(1)}
+                      </p>
+                      <span className="text-xs text-primary font-black">/ 10</span>
+                    </div>
                   )}
                 </div>
 
                 <div className="flex flex-col gap-3 items-center">
                   {detail && (
                     <>
-                      <p className="text-white font-medium text-lg">
+                      <p className="text-white/40 font-black text-xs uppercase tracking-widest">
                         {detail.media_type === "movie"
                           ? "RUNTIME"
                           : "EP LENGTH"}
                       </p>
-                      <div className="flex gap-2 items-center">
+                      <div className="flex gap-2 items-baseline">
                         {detail.media_type === "movie" && (
-                          <p className="text-2xl">
+                          <p className="text-3xl font-black text-white">
                             {(detail as DetailMovie).runtime}
                           </p>
                         )}
                         {detail.media_type === "tv" && (
-                          <p className="text-2xl">
+                          <p className="text-3xl font-black text-white">
                             {(detail as DetailTV).episode_run_time[0]}
                           </p>
                         )}
-                        <span>min</span>
+                        <span className="text-xs font-bold text-gray-500">MIN</span>
                       </div>
-                    </>
-                  )}
-                  {!detail && (
-                    <>
-                      <p className="text-white font-medium text-lg">RUNTIME</p>
-                      <Skeleton className="w-14 h-6" />
                     </>
                   )}
                 </div>
@@ -579,15 +593,15 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
           </div>
         </div>
 
-        <div className="shrink-0 md:max-w-[310px] w-full relative px-6">
+        <div className="shrink-0 md:max-w-[310px] w-full relative px-6 bg-dark/40 backdrop-blur-xl md:bg-transparent">
           {!isMobile && <SearchBox />}
           {/* <RecommendGenres /> */}
           <RightbarFilms
-            name="Similar"
+            name="Elite Suggestions"
             films={similar?.filter((item) => item.id !== detail?.id)}
-            limitNumber={4}
+            limitNumber={5}
             isLoading={!similar}
-            className="md:mt-24 mt-12"
+            className="md:mt-24 mt-12 pb-10"
           />
         </div>
       </div>

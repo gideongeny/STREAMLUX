@@ -136,7 +136,7 @@ const NotificationBell: FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.18, ease: 'easeOut' }}
-                        className="absolute right-0 top-12 w-80 bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/60 z-50 overflow-hidden"
+                        className="absolute left-0 rtl:left-auto rtl:right-0 top-12 w-80 bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/60 z-50 overflow-hidden"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
