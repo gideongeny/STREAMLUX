@@ -31,10 +31,11 @@ const HeroTrailer: FC<HeroTrailerProps> = ({ mediaId, mediaType, isActive, youtu
         <div className={`absolute inset-0 w-full h-full overflow-hidden transition-opacity duration-1000 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
             <iframe
                 className="w-full h-[150%] -mt-[12%] pointer-events-none scale-125"
-                src={`https://www.youtube.com/embed/${videoKey}?autoplay=1&mute=${muted ? 1 : 0}&controls=0&loop=1&playlist=${videoKey}&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&enablejsapi=1`}
+                src={`https://www.youtube.com/embed/${videoKey}?autoplay=1&mute=${muted ? 1 : 0}&controls=0&loop=1&playlist=${videoKey}&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&enablejsapi=1&origin=${window.location.origin}`}
                 title="Hero Trailer"
                 frameBorder="0"
-                allow="autoplay; encrypted-media"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                referrerPolicy="strict-origin-when-cross-origin"
                 onLoad={() => {
                     setTimeout(() => setIsLoaded(true), 1000);
                 }}

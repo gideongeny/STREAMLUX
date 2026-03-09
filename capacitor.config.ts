@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'StreamLux',
   webDir: 'build',
   server: {
-    androidScheme: 'streamlux',
+    androidScheme: 'https',
     allowNavigation: [
       'https://vidsrc.me',
       'https://2embed.org',
