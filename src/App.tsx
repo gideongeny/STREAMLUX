@@ -38,6 +38,7 @@ import SpotlightSearch from "./components/Common/SpotlightSearch";
 import MasterReveal from "./components/Common/MasterReveal";
 import VisionAssistant from "./components/Common/VisionAssistant";
 import Library from "./pages/Library";
+import WatchlistPage from "./pages/WatchlistPage";
 import AtmosphericBackground from "./components/Common/AtmosphericBackground";
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
@@ -422,6 +423,7 @@ function App() {
                 <Route path="disclaimer" element={<Disclaimer />} />
                 <Route path="download" element={<Download />} />
                 <Route path="library" element={<Library />} />
+                <Route path="watchlist" element={<WatchlistPage />} />
                 <Route
                   path="bookmarked"
                   element={

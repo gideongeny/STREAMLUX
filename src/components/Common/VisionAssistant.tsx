@@ -6,6 +6,8 @@ import { hapticImpact } from "../../shared/utils";
 import { useAppDispatch } from "../../store/hooks";
 import { setSpotlightOpen } from "../../store/slice/uiSlice";
 import { toast } from "react-toastify";
+import { voiceControl } from "../../services/voiceControl";
+import { useNavigate } from "react-router-dom";
 
 // Vision AI 2.0: Knowledge Nodes & Personas
 const QUICK_PROMPTS = [
@@ -25,7 +27,7 @@ const VisionAssistant: FC = () => {
     const dispatch = useAppDispatch();
     const [isOpen, setIsOpen] = useState(false);
     const [isListening, setIsListening] = useState(false);
-    const recognitionRef = useRef<any>(null);
+    const navigate = useNavigate();
     const [input, setInput] = useState("");
     const [persona, setPersona] = useState(PERSONAS.BUTLER);
     const [messages, setMessages] = useState<any[]>([]);
@@ -50,39 +52,77 @@ const VisionAssistant: FC = () => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
+    // Register GLOBAL App Commands via Vision Assistant
     useEffect(() => {
-        const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-        if (SpeechRecognition) {
-            recognitionRef.current = new SpeechRecognition();
-            recognitionRef.current.continuous = false;
-            recognitionRef.current.interimResults = false;
-            recognitionRef.current.lang = "en-US";
-
-            recognitionRef.current.onresult = (event: any) => {
-                const transcript = event.results[0][0].transcript;
-                setInput(transcript);
-                setIsListening(false);
-                hapticImpact();
-                setTimeout(() => handleSend(transcript), 500);
-            };
-
-            recognitionRef.current.onerror = () => setIsListening(false);
-            recognitionRef.current.onend = () => setIsListening(false);
-        }
-    }, []);
+        voiceControl.registerCommands([
+            {
+                command: /go home|navigate to home/i,
+                callback: () => {
+                    navigate("/");
+                    setIsOpen(false);
+                    toast.success("Navigating Home", { icon: "🏠" });
+                },
+                description: "Go to homepage"
+            },
+            {
+                command: /open settings|go to settings/i,
+                callback: () => {
+                    navigate("/settings");
+                    setIsOpen(false);
+                    toast.success("Opening Settings", { icon: "⚙️" });
+                },
+                description: "Open app settings"
+            },
+            {
+                command: /show watchlist|my watchlist/i,
+                callback: () => {
+                    navigate("/watchlist");
+                    setIsOpen(false);
+                    toast.success("Opening Watchlist", { icon: "📂" });
+                },
+                description: "Open your watchlist"
+            },
+            {
+                command: /search for (.+)/i,
+                callback: (match) => {
+                    const query = match[1];
+                    navigate(`/search?q=${encodeURIComponent(query)}`);
+                    setIsOpen(false);
+                    toast.success(`Searching for ${query}`, { icon: "🔍" });
+                },
+                description: "Search for content"
+            },
+            {
+                command: /.+/, // Catch-all for AI Chat when assistant is open
+                callback: (match) => {
+                    if (isOpen) {
+                        const transcript = match[0];
+                        setInput(transcript);
+                        setTimeout(() => handleSend(transcript), 500);
+                    }
+                },
+                description: "Voice chat with Vision"
+            }
+        ]);
+    }, [navigate, isOpen]);
 
     const toggleListening = () => {
-        if (!recognitionRef.current) {
-            toast.warning("Voice discovery is not supported.");
-            return;
-        }
         if (isListening) {
-            recognitionRef.current.stop();
+            voiceControl.stop();
+            setIsListening(false);
         } else {
             setInput("");
-            recognitionRef.current.start();
+            voiceControl.start();
             setIsListening(true);
             hapticImpact();
+
+            // Sync local state when voice engine stops
+            const checkInterval = setInterval(() => {
+                if (!voiceControl.getIsListening()) {
+                    setIsListening(false);
+                    clearInterval(checkInterval);
+                }
+            }, 500);
         }
     };
 

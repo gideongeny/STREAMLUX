@@ -15,7 +15,7 @@ import { UserProfile } from "../shared/types";
 import { safeStorage } from "../utils/safeStorage";
 import { biometricAuthService } from "../services/biometricAuth";
 import { backgroundAudioService } from "../services/backgroundAudio";
-import { themeService } from "../services/theme";
+import { themeService, themes } from "../services/theme";
 
 interface SettingsProps { }
 
@@ -243,20 +243,37 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                             </div>
                         </div>
 
-                        {/* Theme Section */}
+                        {/* Cinema Moods Section */}
                         <div className="bg-dark p-6 rounded-xl border border-white/5 shadow-lg mb-8">
-                            <h2 className="text-xl text-white font-bold mb-4">Appearance</h2>
-                            <p className="text-gray-400 text-sm mb-4">Customize the accent color of the application.</p>
+                            <h2 className="text-xl text-white font-bold mb-1">Cinema Moods</h2>
+                            <p className="text-gray-400 text-sm mb-6">Shift the app's atmosphere with premium lighting presets.</p>
 
-                            <div className="flex flex-wrap gap-4">
-                                {THEME_COLORS.map((color) => (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {themes.map((mood) => (
                                     <button
-                                        key={color.name}
-                                        onClick={() => handleThemeChange(color.value)}
-                                        className="w-10 h-10 rounded-full cursor-pointer transition-transform hover:scale-110 border-2 border-transparent hover:border-white focus:outline-none focus:border-white"
-                                        style={{ backgroundColor: color.value }}
-                                        title={color.name}
-                                    />
+                                        key={mood.name}
+                                        onClick={() => themeService.setThemeByName(mood.name)}
+                                        className="group relative overflow-hidden rounded-xl border border-white/10 p-4 font-bold transition-all hover:border-white/20 active:scale-95 text-left"
+                                        style={{ backgroundColor: "rgba(255,255,255,0.03)" }}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className="w-8 h-8 rounded-full shadow-lg"
+                                                style={{
+                                                    backgroundColor: mood.color,
+                                                    boxShadow: `0 0 15px ${mood.glow}`
+                                                }}
+                                            />
+                                            <div>
+                                                <p className="text-white text-sm uppercase tracking-wider">{mood.name}</p>
+                                                <p className="text-[10px] text-gray-500 font-normal">Apply cinematic lighting</p>
+                                            </div>
+                                        </div>
+                                        <div
+                                            className="absolute top-0 right-0 w-16 h-16 opacity-10 blur-xl transition-opacity group-hover:opacity-30"
+                                            style={{ backgroundColor: mood.color }}
+                                        />
+                                    </button>
                                 ))}
                             </div>
                         </div>

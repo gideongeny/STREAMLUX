@@ -205,6 +205,16 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             <p>{t('Bookmarked')}</p>
           </button>
 
+          <Link
+            to="/watchlist"
+            className={`flex gap-6 items-center  ${location.pathname === "/watchlist" &&
+              "!text-primary border-r-4 border-primary font-medium"
+              } hover:text-white transition duration-300`}
+          >
+            <MdFolderSpecial size={25} />
+            <p>{t('Watchlist')}</p>
+          </Link>
+
           <button
             onClick={() => personalPageHandler("/library")}
             className={`flex gap-6 items-center  ${location.pathname === "/library" &&

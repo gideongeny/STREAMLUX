@@ -77,15 +77,15 @@ const SidebarMini: FunctionComponent = () => {
             className={`hover:text-primary transition duration-300 ${location.pathname === "/search" && "text-primary"
               }`}
           >
-            <BiSearch size={25} />
           </Link>
-          <button
-            onClick={() => personalPageHandler("/bookmarked")}
-            className={`hover:text-primary transition duration-300 ${location.pathname === "/bookmarked" && "text-primary"
+          <Link
+            to="/watchlist"
+            className={`hover:text-primary transition duration-300 ${location.pathname === "/watchlist" && "text-primary"
               }`}
+            title="My Watchlist"
           >
-            <BsBookmarkHeart size={25} />
-          </button>
+            <MdFolderSpecial size={25} />
+          </Link>
           <button
             onClick={() => personalPageHandler("/library")}
             className={`hover:text-primary transition duration-300 ${location.pathname === "/library" && "text-primary"
@@ -121,7 +121,7 @@ const SidebarMini: FunctionComponent = () => {
             className="w-10 h-10 rounded-full"
           />
         </button>
-      </div>
+      </div >
     </>
   );
 };

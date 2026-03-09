@@ -267,7 +267,10 @@ const Profile: FunctionComponent<ProfileProps> = () => {
                       onClick={() => themeService.setThemeByName(theme.name)}
                       className="group relative aspect-video rounded-2xl overflow-hidden border border-white/5 hover:border-primary transition"
                     >
-                      <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-40 group-hover:opacity-60 transition`} />
+                      <div
+                        className="absolute inset-0 opacity-40 group-hover:opacity-60 transition"
+                        style={{ backgroundColor: theme.color }}
+                      />
                       <span className="absolute inset-0 flex items-center justify-center text-white text-[10px] font-black uppercase tracking-widest">{theme.name}</span>
                     </button>
                   ))}
