@@ -163,7 +163,7 @@ const NotificationBell: FC<NotificationBellProps> = ({ position = 'left' }) => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.95 }}
                         transition={{ duration: 0.18, ease: 'easeOut' }}
-                        className={`absolute top-12 w-80 bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/60 z-50 overflow-hidden ${position === 'right' ? 'left-full ml-4' :
+                        className={`absolute top-12 w-80 bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/60 z-[110] overflow-hidden ${position === 'right' ? 'left-full ml-4' :
                             position === 'bottom-right' ? 'right-0 top-auto bottom-12' :
                                 'left-0 rtl:left-auto rtl:right-0'
                             }`}

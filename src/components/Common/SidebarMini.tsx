@@ -37,7 +37,7 @@ const SidebarMini: FunctionComponent = () => {
     <>
       <ToastContainer />
 
-      <div className="shrink-0 max-w-[80px] w-full py-8 flex flex-col items-center justify-between h-screen sticky top-0 bg-dark/20 tw-glass shadow-2xl transition duration-500">
+      <div className="shrink-0 max-w-[80px] w-full py-8 flex flex-col items-center justify-between h-screen sticky top-0 bg-dark/20 tw-glass shadow-2xl transition duration-500 z-[100]">
         <div className="flex flex-col items-center gap-3">
           <Link to="/">
             <img
