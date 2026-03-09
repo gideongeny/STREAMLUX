@@ -9,7 +9,6 @@ import { AiOutlineMail } from "react-icons/ai";
 import { FaFacebookF } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { RiLockPasswordLine } from "react-icons/ri";
-import { Capacitor } from "@capacitor/core";
 import { auth } from "../../shared/firebase";
 import { convertErrorCodeToMessage } from "../../shared/utils";
 import { useAppSelector } from "../../store/hooks";
@@ -26,23 +25,10 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
   const passwordRef = useRef<HTMLInputElement>(null!);
   const currentUser = useAppSelector((state) => state.auth.user);
   const [error, setError] = useState("");
-  // Check if we're returning from a redirect login
-  const [isRedirectPending, setIsRedirectPending] = useState(() => {
-    try { return localStorage.getItem('auth_redirect_pending') === 'true'; } catch { return false; }
-  });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get("redirect");
-  const isNative = Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios';
-
-  // Clear redirect pending when auth state resolves
-  useEffect(() => {
-    if (currentUser || error) {
-      setIsRedirectPending(false);
-      try { localStorage.removeItem('auth_redirect_pending'); } catch { }
-    }
-  }, [currentUser, error]);
 
   // Redirect after successful sign in
   useEffect(() => {
@@ -54,17 +40,6 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
       }
     }
   }, [currentUser, navigate, redirect]);
-
-  // Safety timeout: clear redirect pending after 20s in case something fails
-  useEffect(() => {
-    if (!isRedirectPending) return;
-    const t = setTimeout(() => {
-      setIsRedirectPending(false);
-      try { localStorage.removeItem('auth_redirect_pending'); } catch { }
-      toast.error('Sign-in timed out. Please try again.');
-    }, 20000);
-    return () => clearTimeout(t);
-  }, [isRedirectPending]);
 
   const signInHandler = (e: FormEvent) => {
     e.preventDefault();
@@ -99,28 +74,6 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
       })
       .finally(() => setIsLoading(false));
   };
-
-  // Show redirect-pending screen instead of frozen spinner
-  if (isRedirectPending) {
-    return (
-      <div className="z-10 tw-flex-center flex-col gap-6 h-screen relative">
-        <div className="w-20 h-20 border-[8px] rounded-full border-primary border-t-transparent animate-spin" />
-        <div className="text-center">
-          <p className="text-white text-xl font-bold">Completing sign-in...</p>
-          <p className="text-gray-400 text-sm mt-1">Please wait while we verify your account</p>
-        </div>
-        <button
-          onClick={() => {
-            setIsRedirectPending(false);
-            try { localStorage.removeItem('auth_redirect_pending'); } catch { }
-          }}
-          className="text-gray-500 text-xs underline mt-4"
-        >
-          Cancel
-        </button>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -165,13 +118,9 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
               onClick={async () => {
                 setIsLoading(true);
                 setError("");
-                // Safety timeout to ensure spinner doesn't get stuck
-                const timeoutId = setTimeout(() => setIsLoading(false), 15000);
                 try {
                   await signInWithProvider(new GoogleAuthProvider(), "google");
-                  clearTimeout(timeoutId);
                 } catch (err: any) {
-                  clearTimeout(timeoutId);
                   setError(err.message || "Failed to sign in with Google");
                 } finally {
                   setIsLoading(false);
@@ -184,24 +133,14 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
               <span className="text-black font-semibold text-lg tracking-wide">Continue with Google</span>
             </button>
 
-            <div className="flex items-center gap-4 w-full">
-              <div className="h-[1px] bg-white/10 flex-1"></div>
-              <span className="text-white/30 text-xs uppercase tracking-widest font-bold">Recommended for Android</span>
-              <div className="h-[1px] bg-white/10 flex-1"></div>
-            </div>
-
             <button
               type="button"
               onClick={async () => {
                 setIsLoading(true);
                 setError("");
-                // Safety timeout to ensure spinner doesn't get stuck
-                const timeoutId = setTimeout(() => setIsLoading(false), 15000);
                 try {
                   await signInWithProvider(new FacebookAuthProvider(), "facebook");
-                  clearTimeout(timeoutId);
                 } catch (err: any) {
-                  clearTimeout(timeoutId);
                   setError(err.message || "Failed to sign in with Facebook");
                 } finally {
                   setIsLoading(false);

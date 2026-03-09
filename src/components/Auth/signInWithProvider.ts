@@ -1,6 +1,5 @@
-import { FacebookAuthProvider, signInWithPopup, signInWithRedirect } from "firebase/auth";
+import { FacebookAuthProvider, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import { Capacitor } from "@capacitor/core";
 import { toast } from "react-toastify";
 import { auth, db } from "../../shared/firebase";
 import { convertErrorCodeToMessage } from "../../shared/utils";
@@ -12,40 +11,22 @@ export const signInWithProvider = async (provider: any, type: string) => {
   }
 
   try {
-    const platform = Capacitor.getPlatform();
-    const isNative = platform === 'android' || platform === 'ios';
+    toast.info(`Opening ${type} login...`);
 
-    if (isNative) {
-      toast.info(`Initiating ${type} login...`);
-      try {
-        // Set flag BEFORE redirect so when we return, SignIn.tsx shows the pending screen
-        try { localStorage.setItem('auth_redirect_pending', 'true'); } catch { }
-        await signInWithRedirect(auth, provider);
-        // On native, execution typically stops here as the browser takes over
-        console.log('[Auth] Redirect initiated');
-      } catch (err: any) {
-        // If redirect fails, clear the flag
-        try { localStorage.removeItem('auth_redirect_pending'); } catch { }
-        console.error('[Auth] Redirect error:', err);
-        toast.error(`Auth Error: ${err.message}`);
-        throw err;
-      }
-      return;
-    }
-
-    toast.info(`Opening ${type} login popup...`);
+    // Use signInWithPopup for ALL platforms.
+    // On Android/Capacitor, the WebView handles the popup inline without leaving the app.
+    // signInWithRedirect was causing "localhost" / DNS issues because it navigated
+    // the external browser to a non-existent domain on return.
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
-    // Optimized: Check if user exists by directly accessing the document instead of querying all users
-    // This reduces Firestore quota usage significantly
+    // Check if user document already exists in Firestore
     let isStored = false;
     try {
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
       isStored = userDoc.exists();
     } catch (error) {
-      // If quota exceeded or other error, assume user doesn't exist and continue
       console.warn("Error checking user existence:", error);
       isStored = false;
     }
@@ -60,7 +41,6 @@ export const signInWithProvider = async (provider: any, type: string) => {
 
     let token;
     if (type === "facebook") {
-      // If logined with facebook, I need to store additional info about "token" because I can only get profile picture "photoURL" from FB API when I add "?access_token={someToken}", so I store that "someToken" is my FireStore
       const credential = FacebookAuthProvider.credentialFromResult(result);
       token = credential?.accessToken;
     }
@@ -75,6 +55,7 @@ export const signInWithProvider = async (provider: any, type: string) => {
       bookmarks: [],
       recentlyWatch: [],
       ...(type === "facebook" && { token }),
+      createdAt: new Date().toISOString(),
     });
 
     toast.success("Account created and signed in successfully!", {
@@ -91,5 +72,6 @@ export const signInWithProvider = async (provider: any, type: string) => {
       pauseOnHover: true,
       draggable: true,
     });
+    throw error;
   }
 };
