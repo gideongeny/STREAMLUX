@@ -40,6 +40,10 @@ const config: CapacitorConfig = {
       'https://*.facebook.com',
       'https://streamlux-67a84.firebaseapp.com',
       'https://streamlux-67a84.web.app',
+      'https://*.youtube.com',
+      'https://*.googlevideo.com',
+      'https://*.ytimg.com',
+      'https://youtube.com',
     ],
   },
   android: {

@@ -31,11 +31,11 @@ const SignUp: FunctionComponent<SignUpProps> = ({ setIsShowSignInBox }) => {
     try {
       setIsLoading(true);
       setError("");
-      
+
       if (!auth || !db) {
         throw new Error("Authentication service is not available. Please refresh the page.");
       }
-      
+
       const user = (
         await createUserWithEmailAndPassword(
           auth,
@@ -111,7 +111,7 @@ const SignUp: FunctionComponent<SignUpProps> = ({ setIsShowSignInBox }) => {
             </div>
           </div>
 
-          <div className="flex gap-4 mb-8">
+          <div className="flex flex-col gap-4 w-full mb-8">
             <button
               type="button"
               onClick={async () => {
@@ -126,10 +126,12 @@ const SignUp: FunctionComponent<SignUpProps> = ({ setIsShowSignInBox }) => {
                 }
               }}
               disabled={isLoading}
-              className="h-12 w-12 rounded-full bg-white tw-flex-center hover:brightness-75 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-14 w-full rounded-xl bg-white flex items-center justify-center gap-3 hover:bg-gray-100 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed group shadow-lg"
             >
-              <FcGoogle size={25} className="text-primary" />
+              <FcGoogle size={24} className="group-hover:scale-110 transition-transform" />
+              <span className="text-black font-semibold text-lg tracking-wide">Sign up with Google</span>
             </button>
+
             <button
               type="button"
               onClick={async () => {
@@ -144,9 +146,10 @@ const SignUp: FunctionComponent<SignUpProps> = ({ setIsShowSignInBox }) => {
                 }
               }}
               disabled={isLoading}
-              className="h-12 w-12 rounded-full bg-white tw-flex-center hover:brightness-75 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-14 w-full rounded-xl bg-[#1877F2] flex items-center justify-center gap-3 hover:brightness-110 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed group shadow-lg"
             >
-              <FaFacebookF size={25} className="text-primary" />
+              <FaFacebookF size={22} className="text-white group-hover:scale-110 transition-transform" />
+              <span className="text-white font-semibold text-lg tracking-wide">Sign up with Facebook</span>
             </button>
           </div>
 

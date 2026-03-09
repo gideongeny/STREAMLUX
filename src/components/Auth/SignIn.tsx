@@ -159,7 +159,7 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
               Sign In To StreamLux
             </div>
           </div>
-          <div className="flex gap-4 mb-8">
+          <div className="flex flex-col gap-4 w-full mb-8">
             <button
               type="button"
               onClick={async () => {
@@ -178,10 +178,18 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
                 }
               }}
               disabled={isLoading}
-              className="h-12 w-12 rounded-full bg-white tw-flex-center hover:brightness-75 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-14 w-full rounded-xl bg-white flex items-center justify-center gap-3 hover:bg-gray-100 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed group shadow-lg"
             >
-              <FcGoogle size={25} className="text-primary" />
+              <FcGoogle size={24} className="group-hover:scale-110 transition-transform" />
+              <span className="text-black font-semibold text-lg tracking-wide">Continue with Google</span>
             </button>
+
+            <div className="flex items-center gap-4 w-full">
+              <div className="h-[1px] bg-white/10 flex-1"></div>
+              <span className="text-white/30 text-xs uppercase tracking-widest font-bold">Recommended for Android</span>
+              <div className="h-[1px] bg-white/10 flex-1"></div>
+            </div>
+
             <button
               type="button"
               onClick={async () => {
@@ -200,9 +208,10 @@ const SignIn: FunctionComponent<SignInProps> = ({ setIsShowSignInBox }) => {
                 }
               }}
               disabled={isLoading}
-              className="h-12 w-12 rounded-full bg-white tw-flex-center hover:brightness-75 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-14 w-full rounded-xl bg-[#1877F2] flex items-center justify-center gap-3 hover:brightness-110 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed group shadow-lg"
             >
-              <FaFacebookF size={25} className="text-primary" />
+              <FaFacebookF size={22} className="text-white group-hover:scale-110 transition-transform" />
+              <span className="text-white font-semibold text-lg tracking-wide">Continue with Facebook</span>
             </button>
           </div>
           <p className="text-lg">or use your email account: </p>
