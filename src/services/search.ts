@@ -54,7 +54,7 @@ export const getSearchResult: (
 
   // Merge with FZMovies results
   const combined = [...tmdbResults, ...fzResults];
-  const seen = new Set<number>();
+  const seen = new Set<string | number>();
   const results = combined.filter((item) => {
     if (seen.has(item.id)) return false;
     seen.add(item.id);

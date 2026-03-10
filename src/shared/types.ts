@@ -2,7 +2,7 @@ export interface Item {
   poster_path: string;
   overview: string;
   genre_ids: number[];
-  id: number;
+  id: number | string;
   original_language: string;
   backdrop_path: string;
   popularity: number;
@@ -13,6 +13,9 @@ export interface Item {
   media_type: "movie" | "tv" | "person" | "sports" | "youtube" | "sports_video";
   isYouTube?: boolean;
   youtubeId?: string;
+  isLive?: boolean;
+  isExternal?: boolean;
+  url?: string;
 
   // Sports specific
   homeTeam?: string;

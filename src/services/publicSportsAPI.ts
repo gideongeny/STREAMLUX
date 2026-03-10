@@ -62,13 +62,14 @@ const getLeagueIdFromName = (leagueName: string): string => {
  * Fetch live data from ESPN's hidden public APIs.
  * No API key required.
  */
-export const getESPNScores = async (): Promise<SportsFixtureConfig[]> => {
+export const getESPNScores = async (date?: string): Promise<SportsFixtureConfig[]> => {
   const allFixtures: SportsFixtureConfig[] = [];
+  const dateParam = date ? `?dates=${date.replace(/-/g, '')}` : "";
 
   try {
     const responses = await Promise.allSettled(
       ESPN_ENDPOINTS.map(endpoint =>
-        axios.get(`${ESPN_BASE}${endpoint}`, { timeout: 8000 })
+        axios.get(`${ESPN_BASE}${endpoint}${dateParam}`, { timeout: 8000 })
       )
     );
 
@@ -110,9 +111,35 @@ export const getESPNScores = async (): Promise<SportsFixtureConfig[]> => {
   }
 };
 
+/**
+ * BBC Sports & Sky Sports Scraper Logic (Predictive feeds)
+ */
+export const getBBCNewsScores = async (): Promise<SportsFixtureConfig[]> => {
+  // Simulator for BBC news feed
+  return []; // Placeholder for real scraping logic if needed since they are heavily protected
+};
+
+export const getSkySportsScores = async (): Promise<SportsFixtureConfig[]> => {
+  // Simulator for Sky news feed 
+  return [];
+};
+
 // Get live fixtures from multiple public sources
 export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
   const fixtures: SportsFixtureConfig[] = [];
+
+  // Parallel fetch from all news sources
+  const newsResults = await Promise.allSettled([
+    getESPNScores(),
+    getBBCNewsScores(),
+    getSkySportsScores(),
+  ]);
+
+  newsResults.forEach(res => {
+    if (res.status === 'fulfilled') fixtures.push(...res.value);
+  });
+
+  if (fixtures.length > 5) return fixtures;
 
   // Try TheSportsDB first (most reliable, no key needed)
   try {
@@ -224,7 +251,29 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
 export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
   const allFixtures: SportsFixtureConfig[] = [];
 
-  // Try TheSportsDB first
+  // Try ESPN first for upcoming matches (it provides better metadata)
+  try {
+    const dates: string[] = [];
+    for (let i = 0; i <= 3; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      dates.push(date.toISOString().split('T')[0]);
+    }
+
+    const espnResults = await Promise.allSettled(
+      dates.map(date => getESPNScores(date))
+    );
+
+    espnResults.forEach(res => {
+      if (res.status === 'fulfilled') {
+        allFixtures.push(...res.value);
+      }
+    });
+  } catch (error) {
+    console.warn("ESPN upcoming error:", error);
+  }
+
+  // Try TheSportsDB as fallback
   try {
     const dates: string[] = [];
     for (let i = 0; i <= 7; i++) {

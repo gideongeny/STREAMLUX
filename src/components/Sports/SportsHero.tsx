@@ -5,6 +5,7 @@ import { SportsFixtureConfig } from "../../shared/constants";
 import SportsHeroTrailer from "../Home/HeroTrailer";
 import MatchVisualizer from "./MatchVisualizer";
 import LiveBuzz from "./LiveBuzz";
+import MatchCenterModal from "./MatchCenterModal";
 import { getMatchEvents, getMatchStatistics } from "../../services/sportsAPI";
 
 interface SportsHeroProps {
@@ -84,10 +85,10 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
 
                             <div className="absolute inset-0 z-10">
                                 <SportsHeroTrailer
-                                    mediaId={numericId}
+                                    mediaId={typeof featuredMatch.id === 'number' ? featuredMatch.id : 999999}
                                     mediaType="movie"
                                     isActive={true}
-                                    youtubeId={featuredMatch.youtubeId}
+                                    youtubeId={featuredMatch.youtubeId || "OP5tMURXRbI"} // High-quality CL Highlights fallback
                                 />
                             </div>
                         </motion.div>
@@ -113,12 +114,6 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
                                     <LiveBuzz matchId={featuredMatch.id} />
                                 </div>
                             )}
-                            <button
-                                onClick={() => setShowVisualizer(false)}
-                                className="absolute top-10 right-10 w-12 h-12 rounded-full bg-white/10 backdrop-blur-3xl flex items-center justify-center text-white hover:bg-white/20 transition z-50 border border-white/10"
-                            >
-                                <MdClose size={24} />
-                            </button>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -232,6 +227,14 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
                     <span className="text-sm font-black text-white tracking-widest">STREAMLUX <span className="text-primary italic">ULTRA</span></span>
                 </div>
             </div>
+
+            {/* Match Center Integration */}
+            {showVisualizer && featuredMatch.id && (
+                <MatchCenterModal
+                    fixtureId={String(featuredMatch.id)}
+                    onClose={() => setShowVisualizer(false)}
+                />
+            )}
         </section>
     );
 };

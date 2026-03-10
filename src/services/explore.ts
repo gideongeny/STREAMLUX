@@ -77,7 +77,7 @@ export const getExploreMovie: (
     ...((popularData as any).data?.results ?? []),
   ];
 
-  const seen = new Set<number>();
+  const seen = new Set<string | number>();
   const finalItems = allItems
     .filter((item: Item) => item && item.poster_path && !seen.has(item.id))
     .map(item => { seen.add(item.id); return { ...item, media_type: "movie" as const }; });
@@ -125,7 +125,7 @@ export const getExploreTV: (
     ...((popularData as any).data?.results ?? []),
   ];
 
-  const seen = new Set<number>();
+  const seen = new Set<string | number>();
   const finalItems = allItems
     .filter((item: Item) => item && item.poster_path && !seen.has(item.id))
     .map(item => { seen.add(item.id); return { ...item, media_type: "tv" as const }; });

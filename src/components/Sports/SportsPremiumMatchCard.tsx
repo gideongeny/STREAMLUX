@@ -43,12 +43,13 @@ const SportsPremiumMatchCard: FC<MatchCardPremiumProps> = ({ fixture, isExternal
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">
                         {fixture.leagueName || fixture.leagueId.toUpperCase()}
                     </span>
-                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black tracking-tighter uppercase border ${fixture.status === "live"
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black tracking-tighter uppercase border ${(fixture as any).isUpcomingMarquee
+                        ? "bg-amber-500/20 text-amber-500 border-amber-500/40"
+                        : fixture.status === "live"
                             ? "bg-red-500/20 text-red-500 border-red-500/40 animate-pulse"
                             : "bg-white/5 text-gray-400 border-white/10"
                         }`}>
-                        {fixture.status === "live" && <span className="w-1 h-1 rounded-full bg-red-500" />}
-                        {fixture.status}
+                        {(fixture as any).isUpcomingMarquee ? "Upcoming Marquee" : fixture.status}
                     </div>
                 </div>
 

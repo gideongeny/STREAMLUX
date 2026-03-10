@@ -243,7 +243,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
         <div className="text-white text-lg font-bold uppercase tracking-widest mt-12 px-4 flex items-center gap-3 border-l-4 border-primary">{t('GENERAL')}</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
           <a
-            href="/streamlux.apk"
+            href="https://github.com/gideongeny/STREAMLUX/releases/latest/download/StreamLux.apk"
             className={`flex gap-6 items-center hover:text-white transition duration-300`}
             download
           >
@@ -301,6 +301,9 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           {/* Buy Me a Coffee */}
           <div className="mt-6 pt-6 border-t border-gray-800">
             <BuyMeACoffee variant="button" className="w-full justify-center" />
+            <div className="mt-4 text-center text-[10px] text-gray-500 font-mono tracking-tighter opacity-50">
+              v0.1.1-SYNC
+            </div>
           </div>
         </div>
       </div>

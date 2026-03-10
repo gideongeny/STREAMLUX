@@ -90,6 +90,13 @@ const config: CapacitorConfig = {
         android: 'ca-app-pub-1281448884303417~9595144052',
       },
     } as any,
+    // Native Google Sign-In via @codetrix-studio/capacitor-google-auth
+    // Uses the web client ID from google-services.json for requestIdToken
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: '242283846154-t9ji7cvhfbobegog438kgdvedf2nq5ra.apps.googleusercontent.com',
+      forceCodeForRefreshToken: true,
+    },
   },
 };
 

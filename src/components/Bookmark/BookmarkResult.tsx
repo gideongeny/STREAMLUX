@@ -7,7 +7,7 @@ import FilmItem from "../Common/FilmItem";
 interface BookmarkResultProps {
   films: Item[];
   isEditing: boolean;
-  selections: number[];
+  selections: (string | number)[];
   setSelections: any;
   isLoading: boolean;
   pageType: string;
@@ -47,19 +47,18 @@ const BookmarkResult: FunctionComponent<BookmarkResultProps> = ({
             {isEditing && (
               <button
                 onClick={() =>
-                  setSelections((prev: number[]) =>
+                  setSelections((prev: any[]) =>
                     prev.includes(item.id)
-                      ? prev.filter((id: number) => id !== item.id)
-                      : prev.concat(item.id)
+                      ? prev.filter((id: any) => id !== item.id)
+                      : [...prev, item.id]
                   )
                 }
                 className="w-6 h-6 border-primary border-[3px] tw-absolute-center-horizontal mt-2 tw-flex-center"
               >
                 <HiCheck
                   size={20}
-                  className={`${
-                    selections.includes(item.id) ? "opacity-100" : "opacity-0"
-                  } transition duration-300 text-white`}
+                  className={`${selections.includes(item.id) ? "opacity-100" : "opacity-0"
+                    } transition duration-300 text-white`}
                 />
               </button>
             )}

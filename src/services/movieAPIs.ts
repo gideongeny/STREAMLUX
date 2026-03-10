@@ -4,9 +4,30 @@
 import axios from "axios";
 import { Item } from "../shared/types";
 import { API_URL } from "../shared/constants";
+import { fetchYouTubeVideos } from "./youtube";
 
 const TMDB_API_KEY = process.env.REACT_APP_API_KEY || "8c247ea0b4b56ed2ff7d41c9a833aa77";
 const OMDB_API_KEY = process.env.REACT_APP_OMDB_API_KEY || "eb87a867"; // OMDB API key (uses IMDB data)
+
+/**
+ * Searches YouTube for metadata/trailers when TMDB data is sparse
+ */
+export const getMovieYouTubeSupplements = async (item: Item): Promise<Partial<Item>> => {
+  try {
+    const query = `${item.title || item.name} ${item.release_date?.split("-")[0] || ""} official trailer`;
+    const { videos } = await fetchYouTubeVideos(query).catch(() => ({ videos: [] }));
+
+    if (videos && videos.length > 0) {
+      return {
+        youtubeId: videos[0].id,
+        isYouTube: true
+      };
+    }
+    return {};
+  } catch (error) {
+    return {};
+  }
+};
 
 // Helper to convert API response to Item format
 const convertToItem = (item: any, mediaType: "movie" | "tv"): Item => {

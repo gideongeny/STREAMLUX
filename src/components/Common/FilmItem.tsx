@@ -90,15 +90,23 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
   return (
     <Link
       to={
-        item.isYouTube && item.youtubeId
-          ? `/youtube/${item.youtubeId}`
-          : item.media_type === "movie"
-            ? `/movie/${item.id}`
-            : item.media_type === "tv"
-              ? `/tv/${item.id}`
-              : `/`
+        item.url && item.isExternal
+          ? "#"
+          : item.isYouTube && item.youtubeId
+            ? `/youtube/${item.youtubeId}`
+            : item.media_type === "movie"
+              ? `/movie/${item.id}`
+              : item.media_type === "tv"
+                ? `/tv/${item.id}`
+                : `/`
       }
-      onClick={() => hapticImpact()}
+      onClick={(e) => {
+        if (item.url && item.isExternal) {
+          e.preventDefault();
+          window.open(item.url, '_blank');
+        }
+        hapticImpact();
+      }}
       className="block w-full"
     >
       <motion.div
@@ -177,8 +185,8 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
         </p>
 
         <div className="bg-primary/90 backdrop-blur-sm px-1.5 py-0.5 rounded absolute top-[5%] left-[8%] z-20 flex items-center gap-0.5 text-white text-[10px] font-bold">
-          {item.vote_average?.toFixed(1) || "7.0"}
-          <AiFillStar size={10} />
+          {item.isLive ? <span className="animate-pulse">LIVE</span> : (item.vote_average?.toFixed(1) || "7.0")}
+          {!item.isLive && <AiFillStar size={10} />}
         </div>
 
         {item.vote_average > 8 && !isUnreleased && (
@@ -187,7 +195,7 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
           </div>
         )}
       </motion.div>
-    </Link>
+    </Link >
   );
 };
 

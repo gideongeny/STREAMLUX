@@ -10,10 +10,14 @@ import SportsHero from "./SportsHero";
 import LeagueBentoGrid from "./LeagueBentoGrid";
 import SportsPremiumMatchCard from "./SportsPremiumMatchCard";
 import SectionSlider from "../Slider/SectionSlider";
+import MatchCenterModal from "./MatchCenterModal";
+import TeamScheduleWidget from "./TeamScheduleWidget";
 import { safeStorage } from "../../utils/safeStorage";
 
 // Unified calendar row
 const UpcomingCalendar = lazy(() => import("../Home/UpcomingCalendar"));
+
+const CACHE_VERSION = "v2.1_elite"; // Force refresh
 
 const SportsMainContent: FC = () => {
     const { t } = useTranslation();
@@ -24,17 +28,18 @@ const SportsMainContent: FC = () => {
     const [upcomingFixtures, setUpcomingFixtures] = useState<SportsFixtureConfig[]>([]);
     const [varietySports, setVarietySports] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
 
     // Fetch real live data with Caching
     useEffect(() => {
         const fetchRealData = async () => {
             setIsLoading(true);
             // 1. Check Cache
-            const cachedLive = safeStorage.get("sports_live_fixtures");
-            const cachedUpcoming = safeStorage.get("sports_upcoming_fixtures");
-            const cachedTime = safeStorage.get("sports_cache_time");
+            const cachedLive = safeStorage.get(`sports_live_fixtures_${CACHE_VERSION}`);
+            const cachedUpcoming = safeStorage.get(`sports_upcoming_fixtures_${CACHE_VERSION}`);
+            const cachedTime = safeStorage.get(`sports_cache_time_${CACHE_VERSION}`);
             const now = Date.now();
-            const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+            const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
             if (cachedLive && cachedUpcoming && cachedTime && (now - Number(cachedTime) < CACHE_DURATION)) {
                 try {
@@ -43,12 +48,13 @@ const SportsMainContent: FC = () => {
                     setLiveFixtures(live);
                     setUpcomingFixtures(upcoming);
                     setIsLoading(false);
-                    if (live.length === 0 && upcoming.length > 0) setActiveStatus("upcoming");
 
                     // Still fetch variety in background
                     getVarietySports().then(setVarietySports);
                     return;
-                } catch (e) { }
+                } catch (e) {
+                    safeStorage.clear();
+                }
             }
 
             // 2. Fetch Fresh Data
@@ -63,15 +69,9 @@ const SportsMainContent: FC = () => {
                 setUpcomingFixtures(upcoming);
                 setVarietySports(variety);
 
-                if (live.length === 0 && upcoming.length > 0) {
-                    setActiveStatus("upcoming");
-                } else if (live.length > 0) {
-                    setActiveStatus("live");
-                }
-
-                safeStorage.set("sports_live_fixtures", JSON.stringify(live));
-                safeStorage.set("sports_upcoming_fixtures", JSON.stringify(upcoming));
-                safeStorage.set("sports_cache_time", String(now));
+                safeStorage.set(`sports_live_fixtures_${CACHE_VERSION}`, JSON.stringify(live));
+                safeStorage.set(`sports_upcoming_fixtures_${CACHE_VERSION}`, JSON.stringify(upcoming));
+                safeStorage.set(`sports_cache_time_${CACHE_VERSION}`, String(now));
 
             } catch (error) {
                 console.error("Error fetching sports data:", error);
@@ -84,7 +84,6 @@ const SportsMainContent: FC = () => {
 
         const unsubscribe = subscribeToLiveScores((fixtures) => {
             setLiveFixtures(fixtures);
-            if (fixtures.length > 0 && activeStatus !== "live") setActiveStatus("live");
         }, 60000);
 
         return () => unsubscribe();
@@ -104,11 +103,23 @@ const SportsMainContent: FC = () => {
     }, [liveFixtures, upcomingFixtures]);
 
     const filteredFixtures = useMemo(
-        () => allFixtures.filter((f) => {
-            const matchLeague = activeLeague === "all" || f.leagueId === activeLeague;
-            const matchStatus = f.status === activeStatus;
-            return matchLeague && matchStatus;
-        }),
+        () => {
+            const matches = allFixtures.filter((f) => {
+                const matchLeague = activeLeague === "all" || f.leagueId === activeLeague;
+                const matchStatus = f.status === activeStatus;
+                return matchLeague && matchStatus;
+            });
+
+            // FORCE LOGIC: If Live tab is empty, show top upcoming marquee matches instead of "No Events Found"
+            if (activeStatus === "live" && matches.length === 0) {
+                return allFixtures
+                    .filter(f => activeLeague === "all" || f.leagueId === activeLeague)
+                    .slice(0, 6)
+                    .map(f => ({ ...f, status: "live" as any, isUpcomingMarquee: true }));
+            }
+
+            return matches;
+        },
         [activeLeague, activeStatus, allFixtures]
     );
 
@@ -142,13 +153,27 @@ const SportsMainContent: FC = () => {
                 <div className="max-w-2xl">
                     <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter mb-4 flex items-center gap-4">
                         <MdFlashOn className="text-primary animate-pulse" />
-                        {t('Arena Dashboard').split(' ')[0]} <span className="text-primary italic">{t('Arena Dashboard').split(' ')[1]}</span>
+                        {t('Arena Dashboard').includes(' ') ? (
+                            <>
+                                {t('Arena Dashboard').split(' ')[0]} <span className="text-primary italic">{t('Arena Dashboard').split(' ')[1]}</span>
+                            </>
+                        ) : (
+                            <span className="text-primary italic">{t('Arena Dashboard')}</span>
+                        )}
                     </h2>
                     <p className="text-gray-400 font-medium text-lg leading-relaxed">
                         {t('Experience sports in ultra-high definition. From the Premier League to the UFC octagon, witness every legendary moment in real-time.')}
                     </p>
                 </div>
-                {!isMobile && <div className="w-full max-w-sm"><SearchBox relative={true} /></div>}
+                {!isMobile && (
+                    <div className="flex flex-col items-end gap-4 w-full max-w-sm">
+                        <SearchBox relative={true} />
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+                            <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                            <span className="text-[10px] font-black text-primary uppercase tracking-widest">Sportmonks Real-time Data Active</span>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* League Navigation Grid */}
@@ -170,7 +195,7 @@ const SportsMainContent: FC = () => {
                         key={tab.id}
                         onClick={() => setActiveStatus(tab.id as any)}
                         className={`flex items-center gap-3 px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-sm transition-all duration-300 border ${activeStatus === tab.id
-                            ? `${tab.bg} ${tab.color} border-${tab.id === 'live' ? 'red' : tab.id === 'upcoming' ? 'amber' : 'emerald'}-500/50 shadow-2xl scale-105`
+                            ? `${tab.bg} ${tab.color} border-primary shadow-2xl scale-105`
                             : "border-white/5 text-gray-500 hover:text-white hover:border-white/20"
                             }`}
                     >
@@ -180,21 +205,39 @@ const SportsMainContent: FC = () => {
                 ))}
             </div>
 
-            {/* Main Match Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-20">
-                {filteredFixtures.map((fixture) => (
-                    <SportsPremiumMatchCard
-                        key={fixture.id}
-                        fixture={fixture}
-                        isExternal={!!(fixture.matchId || (fixture.streamSources?.length || 0) > 0)}
-                        getMatchLink={getMatchLink}
-                    />
-                ))}
-                {filteredFixtures.length === 0 && !isLoading && (
-                    <div className="col-span-full py-32 text-center rounded-[3rem] bg-dark-lighten/20 border border-dashed border-white/10">
-                        <MdCalendarToday size={48} className="mx-auto text-gray-700 mb-6" />
-                        <h3 className="text-2xl font-black text-white mb-2">NO EVENTS FOUND</h3>
-                        <p className="text-gray-500 max-w-sm mx-auto">No matches currently match your criteria. Try selecting another competition.</p>
+            <div className="flex flex-col lg:flex-row gap-10 mb-20">
+                {/* Main Match Grid */}
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {filteredFixtures.map((fixture) => (
+                        <div key={fixture.id} onClick={() => String(fixture.id).startsWith("sm-") && setSelectedFixtureId(String(fixture.id))} className={String(fixture.id).startsWith("sm-") ? "cursor-pointer" : ""}>
+                            <SportsPremiumMatchCard
+                                fixture={fixture}
+                                isExternal={!!(fixture.matchId || (fixture.streamSources?.length || 0) > 0)}
+                                getMatchLink={getMatchLink}
+                            />
+                        </div>
+                    ))}
+                    {filteredFixtures.length === 0 && !isLoading && (
+                        <div className="col-span-full py-32 text-center rounded-[3rem] bg-dark-lighten/20 border border-dashed border-white/10">
+                            <MdCalendarToday size={48} className="mx-auto text-gray-700 mb-6" />
+                            <h3 className="text-2xl font-black text-white mb-2">NO EVENTS FOUND</h3>
+                            <p className="text-gray-500 max-w-sm mx-auto">No matches currently match your criteria. Try selecting another competition.</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Sidebar Widget */}
+                {!isMobile && (
+                    <div className="w-full lg:w-80 space-y-8">
+                        <TeamScheduleWidget teamId="3468" />
+                        <div className="p-8 rounded-[2rem] bg-gradient-to-br from-primary to-indigo-900 shadow-2xl relative overflow-hidden group">
+                            <div className="relative z-10">
+                                <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-2">Streaming <span className="opacity-60 italic">Elite</span></h3>
+                                <p className="text-xs text-white/70 font-bold mb-6">Install the StreamLux APK for zero-buffer 4K sports experience.</p>
+                                <a href="/streamlux.apk" className="inline-block px-6 py-3 rounded-full bg-white text-black text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">Get APK</a>
+                            </div>
+                            <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+                        </div>
                     </div>
                 )}
             </div>
@@ -205,21 +248,21 @@ const SportsMainContent: FC = () => {
                     <Suspense fallback={null}>
                         <SectionSlider
                             title={t('Elite Football Highlights')}
-                            films={varietySports.filter(s => s.sportsCategory === "Replay")}
+                            films={varietySports.filter(s => s.sportsCategory === "Elite Football")}
                         />
                         <SectionSlider
                             title={t('NCAA Collegiate Specials')}
-                            films={varietySports.filter(s => s.sportsCategory === "NCAA")}
+                            films={varietySports.filter(s => s.sportsCategory === "NCAA Collegiate")}
                         />
                         <SectionSlider
                             title={t('Pro Wrestling Highlights')}
-                            films={varietySports.filter(s => s.sportsCategory === "Wrestling")}
+                            films={varietySports.filter(s => s.sportsCategory === "Pro Wrestling")}
                         />
                         <div className="relative group">
                             <div className="absolute -inset-10 bg-primary/5 rounded-[5rem] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                             <SectionSlider
                                 title={t('Combat Sports')}
-                                films={varietySports.filter(s => s.sportsCategory === "MMA")}
+                                films={varietySports.filter(s => s.sportsCategory === "Combat Sports")}
                             />
                         </div>
                         <SectionSlider
@@ -237,6 +280,13 @@ const SportsMainContent: FC = () => {
                 <div className="py-20 text-center">
                     <p className="text-gray-500">{t('Try another competition')}</p>
                 </div>
+            )}
+
+            {selectedFixtureId && (
+                <MatchCenterModal
+                    fixtureId={selectedFixtureId}
+                    onClose={() => setSelectedFixtureId(null)}
+                />
             )}
         </div>
     );

@@ -7,12 +7,17 @@
     "client": [
         {
             "client_info": {
-                "mobilesdk_app_id": "1:242283846154:android:c25b7416322f092cc49df3",
+                "mobilesdk_app_id": "1:242283846154:android:1598c6d306a52c26c49df3",
                 "android_client_info": {
                     "package_name": "com.streamlux.app"
                 }
             },
-            "oauth_client": [],
+            "oauth_client": [
+                {
+                    "client_id": "242283846154-t9ji7cvhfbobegog438kgdvedf2nq5ra.apps.googleusercontent.com",
+                    "client_type": 3
+                }
+            ],
             "api_key": [
                 {
                     "current_key": "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY"
@@ -20,7 +25,12 @@
             ],
             "services": {
                 "appinvite_service": {
-                    "other_platform_oauth_client": []
+                    "other_platform_oauth_client": [
+                        {
+                            "client_id": "242283846154-t9ji7cvhfbobegog438kgdvedf2nq5ra.apps.googleusercontent.com",
+                            "client_type": 3
+                        }
+                    ]
                 }
             }
         }

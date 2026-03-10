@@ -163,7 +163,7 @@ const Explore = () => {
                 combinedResults.push(...converted);
               }
 
-              const seen = new Set<number>();
+              const seen = new Set<string | number>();
               const finalData = combinedResults.filter(item => {
                 if (!item || seen.has(item.id)) return false;
                 seen.add(item.id);

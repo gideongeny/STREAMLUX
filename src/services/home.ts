@@ -100,7 +100,7 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
     }
 
     // Deduplicate by ID and ensure posters or backdrops exist (or allow items with valid image URLs)
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return combined.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
@@ -237,6 +237,13 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
     if (filipino.length > 0) data["Filipino Cinema"] = filipino;
     if (latinAm.length > 0) data["Latin Cinema"] = latinAm;
     if (middleEast.length > 0) data["Middle Eastern"] = middleEast;
+
+    // Dedicated Scraper Sliders (Fill Everywhere)
+    if (scraperMovies.length > 5) {
+      data["Soap2Day Trending"] = scraperMovies.slice(0, 20);
+      data["LookMovie2 Elite"] = scraperMovies.slice(20, 40);
+      data["MyFlixer Originals"] = scraperMovies.slice(40, 60);
+    }
 
   } catch (error) {
     console.warn("Home movie extras failed:", error);
@@ -378,7 +385,7 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
     }
 
     // Deduplicate by ID and ensure posters or backdrops exist (or allow items with valid image URLs)
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return combined.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
@@ -494,6 +501,13 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
     if (latinAm.length > 0) data["Latin TV Series"] = latinAm;
     if (middleEast.length > 0) data["Middle East TV"] = middleEast;
 
+    // Dedicated Scraper Sliders (TV)
+    if (scraperTV.length > 5) {
+      data["Soap2Day Series"] = scraperTV.slice(0, 20);
+      data["LookMovie2 TV"] = scraperTV.slice(20, 40);
+      data["MyFlixer Shows"] = scraperTV.slice(40, 60);
+    }
+
   } catch (error) {
     console.warn("Home TV extras failed:", error);
   }
@@ -563,7 +577,7 @@ export const getTrendingNow = async (): Promise<Item[]> => {
       }
     }).catch(() => { });
 
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return tmdbItems.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
@@ -596,7 +610,7 @@ export const getHorrorMovies = async (): Promise<Item[]> => {
       media_type: "movie" as const,
     }));
 
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return tmdbItems.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
@@ -625,7 +639,7 @@ export const getActionMovies = async (): Promise<Item[]> => {
       media_type: "movie" as const,
     }));
 
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return tmdbItems.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
@@ -653,7 +667,7 @@ export const getComedyMovies = async (): Promise<Item[]> => {
       media_type: "movie" as const,
     }));
 
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return tmdbItems.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
@@ -680,7 +694,7 @@ export const getDramaMovies = async (): Promise<Item[]> => {
       media_type: "movie" as const,
     }));
 
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return tmdbItems.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
@@ -735,7 +749,7 @@ const getGenreMoviesOptimized = async (genreId: number, genreName?: string): Pro
       ...(scraperItems as Item[])
     ];
 
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     // MAX LIMIT: Return everything we found, deduplicated
     return combined.filter((item) => {
       if (seen.has(item.id)) return false;
@@ -877,7 +891,7 @@ const getGenreTVOptimized = async (genreId: number, genreName?: string): Promise
       ...(scraperItems as Item[])
     ];
 
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return combined.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
@@ -2210,7 +2224,7 @@ export const getAfricanCinema = async (type: "movie" | "tv" = "movie"): Promise<
       ...za.data.results.map((i: any) => ({ ...i, media_type: type })),
     ];
 
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return combined.filter(i => {
       if (seen.has(i.id)) return false;
       seen.add(i.id);
@@ -2250,7 +2264,7 @@ export const getAwardWinners = async (type: "movie" | "tv" = "movie"): Promise<I
       ...page1.data.results.map((i: any) => ({ ...i, media_type: type })),
       ...page2.data.results.map((i: any) => ({ ...i, media_type: type })),
     ];
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return combined.filter(i => {
       if (seen.has(i.id)) return false;
       seen.add(i.id);
@@ -2286,7 +2300,7 @@ export const getAsianDrama = async (type: "movie" | "tv" = "tv"): Promise<Item[]
       ...cn.data.results.map((i: any) => ({ ...i, media_type: type })),
     ];
 
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return combined.filter(i => {
       if (seen.has(i.id)) return false;
       seen.add(i.id);

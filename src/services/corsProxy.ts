@@ -10,7 +10,7 @@
  */
 
 // Firebase project ID — ensure this matches .firebaserc
-const FIREBASE_PROJECT_ID = 'streamlux-app'; // update if different
+const FIREBASE_PROJECT_ID = 'streamlux-67a84';
 const PROXY_BASE = `https://us-central1-${FIREBASE_PROJECT_ID}.cloudfunctions.net/proxy`;
 
 /**
@@ -50,6 +50,11 @@ export const StreamingProxies = {
      */
     movieBox: (tmdbId: number, type: 'movie' | 'tv' = 'movie') =>
         proxyUrl(`https://moviebox.ng/api/source/${type}/${tmdbId}`),
+
+    /**
+     * Build a proxied Sportmonks API URL.
+     */
+    sportmonks: (url: string) => proxyUrl(url),
 
     /**
      * Generic proxy — use for any URL.

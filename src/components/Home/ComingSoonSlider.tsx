@@ -30,7 +30,7 @@ const getComingSoonMovies = async (): Promise<Item[]> => {
         });
 
         // Deduplicate
-        const seen = new Set<number>();
+        const seen = new Set<string | number>();
         return future.filter(i => {
             if (seen.has(i.id)) return false;
             seen.add(i.id);

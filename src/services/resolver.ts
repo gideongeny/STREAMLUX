@@ -364,6 +364,72 @@ export class ResolverService {
                 status: "active",
                 type: "embed",
                 priority: 15
+            },
+            // 16. Vidmov (NEW)
+            {
+                name: "Vidmov",
+                url: `https://vidmov.com/embed/${mediaType}/${tmdbId}${mediaType === 'tv' ? `/${season}/${episode}` : ''}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 16
+            },
+            // 17. MyCloud (NEW)
+            {
+                name: "MyCloud",
+                url: `https://mycloud.click/embed/${mediaType}/${tmdbId}${mediaType === 'tv' ? `/${season}/${episode}` : ''}`,
+                quality: "1080p", speed: "medium", status: "active", type: "embed", priority: 17
+            },
+            // 18. MoviNow (NEW)
+            {
+                name: "MoviNow",
+                url: `https://movinow.com/embed/${tmdbId}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 18
+            },
+            // 19. WatchNow (NEW)
+            {
+                name: "WatchNow",
+                url: `https://watchnow.to/embed/${mediaType}/${tmdbId}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 19
+            },
+            // 20. MApi (NEW)
+            {
+                name: "MApi",
+                url: `https://api.myfilestorage.xyz/embed/${mediaType}/${tmdbId}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 20
+            },
+            // 21. Cinemaous (NEW)
+            {
+                name: "Cinemaous",
+                url: `https://cinemaous.com/embed/${tmdbId}`,
+                quality: "1080p", speed: "medium", status: "active", type: "embed", priority: 21
+            },
+            // 22. Rive (NEW)
+            {
+                name: "Rive",
+                url: `https://rive.stream/embed/${mediaType}/${tmdbId}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 22
+            },
+            // 23. VidEasy (NEW)
+            {
+                name: "VidEasy",
+                url: `https://videasy.to/embed/${mediaType}/${tmdbId}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 23
+            },
+            // 24. LookMovie2 (Scraper)
+            {
+                name: "LookMovie2",
+                url: `https://lookmovie2.to/search?q=${encodeURIComponent(title || '')}`,
+                quality: "HD", speed: "medium", status: "active", type: "embed", priority: 50
+            },
+            // 25. SOAP2Day (Scraper)
+            {
+                name: "SOAP2Day",
+                url: `https://soap2day.rs/search/${encodeURIComponent(title || '')}`,
+                quality: "HD", speed: "medium", status: "active", type: "embed", priority: 51
+            },
+            // 26. MyFlixer (Scraper)
+            {
+                name: "MyFlixer",
+                url: `https://myflixer.to/search/${encodeURIComponent(title || '')}`,
+                quality: "HD", speed: "medium", status: "active", type: "embed", priority: 52
             }
         );
 

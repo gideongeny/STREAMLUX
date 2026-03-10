@@ -2,24 +2,10 @@
 import { fetchYouTubeVideos, getYouTubeVideoDetail, YouTubeVideo } from "./youtube";
 import { Item } from "../shared/types";
 
-// Helper to generate a stable numeric ID from an alphanumeric string (like YouTube IDs)
-const hashString = (str: string): number => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-    }
-    return Math.abs(hash);
-};
-
 // Convert YouTube video to Item format for sliders
 export const convertYouTubeToItem = (video: YouTubeVideo, index: number): Item => {
-    // Crucial: Use hashing instead of just parsing digits to avoid NaN
-    const id = hashString(video.id);
-
     return {
-        id,
+        id: video.id,
         title: video.title,
         name: video.title,
         overview: video.description,

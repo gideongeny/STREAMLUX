@@ -44,9 +44,9 @@ export const getLetterboxdContent = async (type: "movie" | "tv" = "movie"): Prom
     // Since there's no official API, we'll use TMDB with Letterboxd-style filtering
     // (highly rated, diverse genres)
     const genres = [18, 28, 35, 53, 80, 99, 878, 10749, 10751]; // Drama, Action, Comedy, Thriller, Crime, Documentary, Sci-Fi, Romance, Family
-    
+
     const allItems: Item[] = [];
-    
+
     // Fetch from multiple genres to get variety (like Letterboxd's diverse selection)
     for (const genreId of genres.slice(0, 5)) {
       try {
@@ -60,21 +60,21 @@ export const getLetterboxdContent = async (type: "movie" | "tv" = "movie"): Prom
           },
           timeout: 5000,
         });
-        
+
         const items = (response.data.results || []).map((item: any) => ({
           ...convertToItem(item, "movie"),
           media_type: "movie" as const,
         }));
-        
+
         allItems.push(...items);
-        
+
         // Small delay to avoid rate limits
         await new Promise(resolve => setTimeout(resolve, 100));
       } catch (e) {
         continue; // Move to next genre if this one fails
       }
     }
-    
+
     // Remove duplicates
     return allItems.filter((item: Item, index: number, self: Item[]) =>
       index === self.findIndex((i: Item) => i.id === item.id)
@@ -91,12 +91,12 @@ export const getRottenTomatoesContent = async (type: "movie" | "tv" = "movie"): 
   try {
     // Rotten Tomatoes focuses on both movies and TV, but movies are primary
     const allItems: Item[] = [];
-    
+
     // Fetch popular content (RT focuses on box office and popular releases)
-    const categories = type === "movie" 
+    const categories = type === "movie"
       ? ["popular", "top_rated", "now_playing", "upcoming"]
       : ["popular", "top_rated", "on_the_air"];
-    
+
     for (const category of categories.slice(0, 2)) {
       try {
         let endpoint = "";
@@ -111,7 +111,7 @@ export const getRottenTomatoesContent = async (type: "movie" | "tv" = "movie"): 
         } else if (category === "on_the_air" && type === "tv") {
           endpoint = `/tv/on_the_air`;
         }
-        
+
         if (endpoint) {
           const response = await axios.get(`${API_URL}${endpoint}`, {
             params: {
@@ -120,22 +120,22 @@ export const getRottenTomatoesContent = async (type: "movie" | "tv" = "movie"): 
             },
             timeout: 5000,
           });
-          
+
           const items = (response.data.results || []).map((item: any) => ({
             ...convertToItem(item, type),
             media_type: type,
           }));
-          
+
           allItems.push(...items);
         }
-        
+
         // Small delay to avoid rate limits
         await new Promise(resolve => setTimeout(resolve, 100));
       } catch (e) {
         continue; // Move to next category if this one fails
       }
     }
-    
+
     // Remove duplicates
     return allItems.filter((item: Item, index: number, self: Item[]) =>
       index === self.findIndex((i: Item) => i.id === item.id)
@@ -153,19 +153,19 @@ export const getEnhancedTMDBContent = async (
 ): Promise<Item[]> => {
   try {
     const allItems: Item[] = [];
-    
+
     // Fetch from multiple pages and categories for variety
     const pages = [1, 2];
     const categories = type === "movie"
       ? ["popular", "top_rated", "trending", "now_playing"]
       : ["popular", "top_rated", "trending", "on_the_air"];
-    
+
     const fetchPromises: Promise<any>[] = [];
-    
+
     for (const cat of categories.slice(0, 3)) {
       for (const page of pages) {
         let endpoint = "";
-        
+
         if (cat === "trending") {
           endpoint = `/trending/${type}/day?page=${page}`;
         } else if (cat === "popular") {
@@ -179,7 +179,7 @@ export const getEnhancedTMDBContent = async (
         } else if (cat === "on_the_air" && type === "tv") {
           endpoint = `/tv/on_the_air?page=${page}`;
         }
-        
+
         if (endpoint) {
           fetchPromises.push(
             axios.get(`${API_URL}${endpoint}`, {
@@ -190,7 +190,7 @@ export const getEnhancedTMDBContent = async (
         }
       }
     }
-    
+
     const responses = await Promise.allSettled(fetchPromises);
     responses.forEach((result) => {
       if (result.status === "fulfilled") {
@@ -201,7 +201,7 @@ export const getEnhancedTMDBContent = async (
         allItems.push(...items);
       }
     });
-    
+
     // Remove duplicates
     return allItems.filter((item: Item, index: number, self: Item[]) =>
       index === self.findIndex((i: Item) => i.id === item.id)
@@ -218,8 +218,8 @@ export const getContentWithFallback = async (
   category: "popular" | "top_rated" | "trending" = "popular"
 ): Promise<Item[]> => {
   const allItems: Item[] = [];
-  const seenIds = new Set<number>();
-  
+  const seenIds = new Set<string | number>();
+
   // Helper to add items without duplicates
   const addItems = (items: Item[]) => {
     items.forEach((item) => {
@@ -229,17 +229,17 @@ export const getContentWithFallback = async (
       }
     });
   };
-  
+
   try {
     // Step 1: Try IMDB first (with fast timeout)
     const imdbPromise = Promise.race([
       import("./movieAPIs").then(m => m.getIMDBContent(undefined, type)),
       new Promise<Item[]>((resolve) => setTimeout(() => resolve([]), 1500)), // 1.5s timeout
     ]);
-    
+
     const imdbResult = await imdbPromise;
     addItems(imdbResult);
-    
+
     // Step 2: If IMDB succeeded fast (returned results), follow up with Letterboxd, Rotten Tomatoes, TMDB
     if (imdbResult.length > 0) {
       // Follow up with Letterboxd, Rotten Tomatoes, and TMDB in parallel
@@ -248,9 +248,9 @@ export const getContentWithFallback = async (
         getRottenTomatoesContent(type).catch(() => []),
         getEnhancedTMDBContent(type, category).catch(() => []),
       ]);
-      
+
       const followUpResults = await followUpPromises;
-      
+
       followUpResults.forEach((result) => {
         if (result.status === "fulfilled" && Array.isArray(result.value)) {
           addItems(result.value);
@@ -268,7 +268,7 @@ export const getContentWithFallback = async (
       } catch (e) {
         // Continue to next
       }
-      
+
       // Try Rotten Tomatoes
       try {
         const rtResult = await Promise.race([
@@ -279,7 +279,7 @@ export const getContentWithFallback = async (
       } catch (e) {
         // Continue to next
       }
-      
+
       // Try Enhanced TMDB (most reliable fallback)
       try {
         const tmdbResult = await Promise.race([
@@ -290,7 +290,7 @@ export const getContentWithFallback = async (
       } catch (e) {
         // Last resort - use basic TMDB
         try {
-          const basicTMDB = await import("./movieAPIs").then(m => 
+          const basicTMDB = await import("./movieAPIs").then(m =>
             m.getTMDBContent(type, category, 1)
           );
           addItems(basicTMDB);
@@ -299,13 +299,13 @@ export const getContentWithFallback = async (
         }
       }
     }
-    
+
     return allItems;
   } catch (error) {
     console.error("Error in getContentWithFallback:", error);
     // Final fallback: try basic TMDB
     try {
-      const basicTMDB = await import("./movieAPIs").then(m => 
+      const basicTMDB = await import("./movieAPIs").then(m =>
         m.getTMDBContent(type, category, 1)
       );
       return basicTMDB;

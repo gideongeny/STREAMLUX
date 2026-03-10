@@ -54,7 +54,7 @@ export const enhancedSearch = async (
     ];
 
     // Remove duplicates and rank by relevance + score
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     const uniqueResults = allResults
       .filter((item) => {
         if (seen.has(item.id)) return false;
@@ -108,7 +108,7 @@ export const getSmartRecommendations = async (
     }
 
     // Extract genres from watched items
-    const genreIds = new Set<number>();
+    const genreIds = new Set<any>();
     watchedItems.forEach((item) => {
       if (item.genre_ids) {
         item.genre_ids.forEach((id) => genreIds.add(id));
@@ -141,7 +141,7 @@ export const getSmartRecommendations = async (
 
     // Remove watched items and duplicates
     const watchedIds = new Set(watchedItems.map((item) => item.id));
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return recommendations
       .filter((item) => {
         if (watchedIds.has(item.id) || seen.has(item.id)) return false;
@@ -244,7 +244,7 @@ export const getTrendingAllCategories = async (): Promise<{
     }));
 
     const all = [...movies, ...tv, ...fzTrending];
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     const uniqueAll = all.filter((item) => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);

@@ -40,7 +40,7 @@ export interface OMDBSearchResponse {
 // Convert OMDB title to Item format
 export const convertOMDBToItem = (title: OMDBTitle, index: number = 0): Item => {
   const year = parseInt(title.Year?.substring(0, 4) || new Date().getFullYear().toString());
-  
+
   return {
     id: parseInt(title.imdbID?.replace(/\D/g, '').substring(0, 8)) || Date.now() + index,
     title: title.Title,
@@ -82,7 +82,7 @@ export const searchOMDBTitles = async (
     });
 
     if (response.data?.Response === "True" && response.data?.Search) {
-      return response.data.Search.map((title: OMDBTitle, index: number) => 
+      return response.data.Search.map((title: OMDBTitle, index: number) =>
         convertOMDBToItem(title, index)
       );
     }
@@ -106,14 +106,14 @@ export const getOMDBPopular = async (
     }
 
     // Popular search queries for OMDB
-    const queries = year 
+    const queries = year
       ? [`${year} popular ${type}`]
       : type === "movie"
         ? ["popular movies", "top movies", "best movies", "latest movies"]
         : ["popular series", "top series", "best series", "latest series"];
 
     const allResults: Item[] = [];
-    
+
     for (const query of queries.slice(0, 2)) { // Limit to 2 queries
       try {
         const response = await axios.get(OMDB_BASE_URL, {
@@ -127,7 +127,7 @@ export const getOMDBPopular = async (
         });
 
         if (response.data?.Response === "True" && response.data?.Search) {
-          const items = response.data.Search.map((title: OMDBTitle, index: number) => 
+          const items = response.data.Search.map((title: OMDBTitle, index: number) =>
             convertOMDBToItem(title, index)
           );
           allResults.push(...items);
@@ -138,7 +138,7 @@ export const getOMDBPopular = async (
     }
 
     // Deduplicate by ID
-    const seen = new Set<number>();
+    const seen = new Set<string | number>();
     return allResults.filter(item => {
       if (seen.has(item.id)) return false;
       seen.add(item.id);
@@ -163,7 +163,7 @@ export const getOMDBByGenre = async (
     }
 
     const query = `${genre} ${type || "movie"}`;
-    
+
     const response = await axios.get(OMDB_BASE_URL, {
       params: {
         apikey: OMDB_API_KEY,
@@ -176,10 +176,10 @@ export const getOMDBByGenre = async (
 
     if (response.data?.Response === "True" && response.data?.Search) {
       return response.data.Search
-        .filter((title: OMDBTitle) => 
+        .filter((title: OMDBTitle) =>
           title.Genre?.toLowerCase().includes(genre.toLowerCase())
         )
-        .map((title: OMDBTitle, index: number) => 
+        .map((title: OMDBTitle, index: number) =>
           convertOMDBToItem(title, index)
         );
     }

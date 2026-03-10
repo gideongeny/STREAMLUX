@@ -26,7 +26,7 @@
         "redirects": [
             {
                 "source": "/streamlux.apk",
-                "destination": "https://github.com/gideongeny/STREAMLUX/releases/latest/download/streamlux.apk",
+                "destination": "https://github.com/gideongeny/STREAMLUX/releases/latest/download/StreamLux.apk",
                 "type": 301
             }
         ],
