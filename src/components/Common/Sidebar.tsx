@@ -146,15 +146,15 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             <p className="font-bold tracking-tight">{t('Home')}</p>
           </Link>
 
-          <a
-            href="https://sportslive.run/live?utm_source=MB_Website&sportType=football"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex gap-6 items-center hover:text-white transition duration-300"
+          <Link
+            to="/sports"
+            className={`flex gap-6 items-center  ${location.pathname === "/sports" &&
+              "!text-primary border-r-4 border-primary font-medium"
+              } hover:text-white transition duration-300`}
           >
             <MdSportsSoccer size={25} />
             <p className="font-bold tracking-tight">{t('Sports')}</p>
-          </a>
+          </Link>
 
           <Link
             to="/explore"
@@ -243,7 +243,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
         <div className="text-white text-lg font-bold uppercase tracking-widest mt-12 px-4 flex items-center gap-3 border-l-4 border-primary">{t('GENERAL')}</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
           <a
-            href="https://github.com/gideongeny/STREAMLUX/releases/latest/download/StreamLux.apk"
+            href="/streamlux.apk"
             className={`flex gap-6 items-center hover:text-white transition duration-300`}
             download
           >

@@ -29,7 +29,7 @@ const AppDownloadPopup: FC = () => {
     };
 
     const handleDownload = async () => {
-        window.location.href = "https://github.com/gideongeny/STREAMLUX/releases/latest/download/StreamLux.apk";
+        window.location.href = "/streamlux.apk";
         handleDismiss();
     };
 
