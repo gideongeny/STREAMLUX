@@ -13,7 +13,7 @@ const TVInfo: FC = () => {
   const { i18n } = useTranslation();
 
   const { data, isError, isLoading } = useQuery<FilmInfo, Error>(["tvDetail", id, i18n.language], () =>
-    getTVFullDetail(Number(id as string))
+    getTVFullDetail(id as string)
   );
 
   // if (isError) return <div>ERROR: {error.message}</div>;

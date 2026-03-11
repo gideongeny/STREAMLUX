@@ -26,8 +26,7 @@ export const convertYouTubeToItem = (video: YouTubeVideo, index: number): Item =
 
 
 
-// Basic Caching System to save YouTube Quota
-const CACHE_KEY_PREFIX = 'yt_cache_';
+const CACHE_KEY_PREFIX = 'yt_cache_v2_';
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 const getCachedItems = (key: string): Item[] | null => {

@@ -127,7 +127,7 @@ function parseDuration(duration: string): number {
     return hours * 3600 + minutes * 60 + seconds;
 }
 
-export async function getYouTubeVideoDetail(videoId: string): Promise<YouTubeVideoExtended | null> {
+export async function getYouTubeVideoDetail(videoId: string, retryCount = 0): Promise<YouTubeVideoExtended | null> {
     try {
         if (!getActiveKey()) {
             console.warn('YouTube API key not configured');
@@ -157,7 +157,12 @@ export async function getYouTubeVideoDetail(videoId: string): Promise<YouTubeVid
             duration: parseDuration(duration),
             type: classifyVideo(title, description, parseDuration(duration)),
         };
-    } catch (error) {
+    } catch (error: any) {
+        if (error?.response?.status === 403 && retryCount < API_KEYS.length) {
+            rotateKey();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return getYouTubeVideoDetail(videoId, retryCount + 1);
+        }
         console.error("Error fetching video detail", error);
         return null;
     }
@@ -174,7 +179,7 @@ export async function getRelatedVideos(videoId: string): Promise<YouTubeVideo[]>
     }
 }
 
-export async function getYouTubeComments(videoId: string): Promise<any[]> {
+export async function getYouTubeComments(videoId: string, retryCount = 0): Promise<any[]> {
     try {
         const url = `${BASE_URL}/commentThreads?key=${getActiveKey()}&part=snippet&videoId=${videoId}&maxResults=10`;
         const response = await axios.get(url);
@@ -185,12 +190,17 @@ export async function getYouTubeComments(videoId: string): Promise<any[]> {
             createdAt: item.snippet.topLevelComment.snippet.publishedAt,
             avatar: item.snippet.topLevelComment.snippet.authorProfileImageUrl,
         }));
-    } catch (error) {
+    } catch (error: any) {
+        if (error?.response?.status === 403 && retryCount < API_KEYS.length) {
+            rotateKey();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return getYouTubeComments(videoId, retryCount + 1);
+        }
         return [];
     }
 }
 
-export async function getYouTubeSeriesEpisodes(seriesTitle: string, channelId: string): Promise<YouTubeVideo[]> {
+export async function getYouTubeSeriesEpisodes(seriesTitle: string, channelId: string, retryCount = 0): Promise<YouTubeVideo[]> {
     try {
         const url = `${BASE_URL}/search?key=${getActiveKey()}&part=snippet&channelId=${channelId}&q=${encodeURIComponent(seriesTitle)}&type=video&maxResults=50&order=date`;
         const response = await axios.get(url);
@@ -209,7 +219,12 @@ export async function getYouTubeSeriesEpisodes(seriesTitle: string, channelId: s
                 type: 'tv' as VideoType,
             };
         });
-    } catch (error) {
+    } catch (error: any) {
+        if (error?.response?.status === 403 && retryCount < API_KEYS.length) {
+            rotateKey();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return getYouTubeSeriesEpisodes(seriesTitle, channelId, retryCount + 1);
+        }
         console.error("Error fetching series episodes", error);
         return [];
     }

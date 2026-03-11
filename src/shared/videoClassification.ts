@@ -21,11 +21,7 @@ export function classifyVideo(title: string, description: string, duration?: num
 
     // Keywords for Movies
     const movieKeywords = [
-        "full movie",
-        "official movie",
-        "animated film",
-        "film complete",
-        "movie 2024", "movie 2025"
+        "full", "official", "animated", "complete", "movie", "film", "cinema", "trailer", "teaser"
     ];
 
     // Heuristic: If duration is long (> 3600s / 1 hour), it's more likely a movie or full show
@@ -42,6 +38,6 @@ export function classifyVideo(title: string, description: string, duration?: num
         return "movie";
     }
 
-    // Default to 'other' or a heuristic based on length/description
-    return "other";
+    // Default to 'movie' so we don't accidentally drop valid YouTube content from the UI lists
+    return "movie";
 }

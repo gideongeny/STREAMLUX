@@ -12,7 +12,7 @@ const MovieInfo: FC = () => {
   const { id } = useParams();
   const { i18n } = useTranslation();
   const { data, isError, isLoading } = useQuery<FilmInfo, Error>(["movieDetail", id, i18n.language], () =>
-    getMovieFullDetail(Number(id as string))
+    getMovieFullDetail(id as string)
   );
 
   // if (isError) return <div>ERROR: {error.message}</div>;

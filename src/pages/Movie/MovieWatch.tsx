@@ -10,7 +10,7 @@ const MovieWatch: FC = () => {
   const { id } = useParams();
   const { data, error } = useQuery<getWatchReturnedType, Error>(
     ["watchMovie", id],
-    () => getWatchMovie(Number(id as string))
+    () => getWatchMovie(id as string)
   );
 
   // if (error) return <div>ERROR: {error.message}</div>;

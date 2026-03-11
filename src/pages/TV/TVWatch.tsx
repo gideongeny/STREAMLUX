@@ -14,7 +14,7 @@ const TVWatch: FC = () => {
 
   const { data, error } = useQuery<getWatchReturnedType, Error>(
     ["watchTV", id, seasonId], // Include seasonId in key
-    () => getWatchTV(Number(id as string), seasonId)
+    () => getWatchTV(id as string, seasonId)
   );
 
   // if (error) return <div>ERROR: {error.message}</div>;
