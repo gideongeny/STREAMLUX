@@ -17,10 +17,28 @@ const SportsPremiumMatchCard: FC<MatchCardPremiumProps> = ({ fixture, isExternal
     useEffect(() => {
         if ((fixture as any).isUpcomingMarquee) {
             const query = `${fixture.homeTeam} vs ${fixture.awayTeam} highlights`;
+            const cacheKey = `sports_bg_${query.replace(/\s+/g, '_')}`;
+            
+            // 1. Check permanent cache first
+            try {
+                const cachedBg = localStorage.getItem(cacheKey);
+                if (cachedBg) {
+                    setBgImage(cachedBg);
+                    return; // Skip API call entirely
+                }
+            } catch (e) {}
+
+            // 2. Fetch if not cached
             searchYouTube(query, "multi")
                 .then(res => {
                     if (res && res.length > 0) {
-                        setBgImage(res[0].backdrop_path || res[0].poster_path || null);
+                        const img = res[0].backdrop_path || res[0].poster_path || null;
+                        if (img) {
+                            setBgImage(img);
+                            try {
+                                localStorage.setItem(cacheKey, img); // Save permanently
+                            } catch (e) {}
+                        }
                     }
                 })
                 .catch(() => {});
