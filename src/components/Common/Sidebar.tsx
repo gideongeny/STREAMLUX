@@ -243,7 +243,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
         <div className="text-white text-lg font-bold uppercase tracking-widest mt-12 px-4 flex items-center gap-3 border-l-4 border-primary">{t('GENERAL')}</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
           <a
-            href="/streamlux.apk"
+            href="https://github.com/gideongeny/STREAMLUX/releases/latest/download/app-release-unsigned.apk"
             className={`flex gap-6 items-center hover:text-white transition duration-300`}
             download
           >

@@ -48,7 +48,7 @@ const Footer: FunctionComponent<FooterProps> = () => {
                 </Link>
               </li>
               <li>
-                <a href="/streamlux.apk" className="text-gray-400 hover:text-primary transition" download>
+                <a href="https://github.com/gideongeny/STREAMLUX/releases/latest/download/app-release-unsigned.apk" className="text-gray-400 hover:text-primary transition">
                   {t('Download App')}
                 </a>
               </li>

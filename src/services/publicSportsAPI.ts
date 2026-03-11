@@ -77,9 +77,13 @@ export const getESPNScores = async (date?: string): Promise<SportsFixtureConfig[
       if (res.status === 'fulfilled' && res.value.data?.events) {
         const events = res.value.data.events;
         events.forEach((event: any) => {
+          if (!event.competitions || !event.competitions[0] || !event.competitions[0].competitors) return;
+          
           const competitorHome = event.competitions[0].competitors.find((c: any) => c.homeAway === 'home');
           const competitorAway = event.competitions[0].competitors.find((c: any) => c.homeAway === 'away');
-          const status = event.status.type.name;
+          if (!competitorHome || !competitorAway) return;
+          
+          const status = event.status?.type?.name || 'STATUS_SCHEDULED';
 
           // Only show live or very recent/upcoming
           if (status === 'STATUS_FINAL' || status === 'STATUS_CANCELED') return;

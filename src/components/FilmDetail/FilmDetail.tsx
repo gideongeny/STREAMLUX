@@ -209,7 +209,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
           position: "bottom-center",
         });
         // Direct link to the hosted APK
-        window.location.href = "/streamlux.apk";
+        window.location.href = "https://github.com/gideongeny/STREAMLUX/releases/latest/download/app-release-unsigned.apk";
       }
     }, 2500);
   };
