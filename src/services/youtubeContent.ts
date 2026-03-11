@@ -52,13 +52,8 @@ const setCachedItems = (key: string, data: Item[]) => {
     } catch { }
 };
 
-// Global flag to track if we've hit quota limits in the current session
-let isQuotaExhausted = false;
-
 // Fetch YouTube movies
 export const getYouTubeMovies = async (): Promise<Item[]> => {
-    if (isQuotaExhausted) return [];
-
     const cached = getCachedItems('movies');
     if (cached) return cached;
 
@@ -94,7 +89,6 @@ export const getYouTubeMovies = async (): Promise<Item[]> => {
         if (items.length > 0) setCachedItems('movies', items);
         return items.length > 0 ? items : getFallbackMovies();
     } catch (error: any) {
-        if (error?.response?.status === 403) isQuotaExhausted = true;
         console.error('Error fetching YouTube movies:', error);
         return getFallbackMovies();
     }
@@ -112,8 +106,6 @@ const getFallbackMovies = (): Item[] => {
 
 // Fetch YouTube TV shows
 export const getYouTubeTVShows = async (): Promise<Item[]> => {
-    if (isQuotaExhausted) return [];
-
     const cached = getCachedItems('tv');
     if (cached) return cached;
 
@@ -150,7 +142,6 @@ export const getYouTubeTVShows = async (): Promise<Item[]> => {
         if (items.length > 0) setCachedItems('tv', items);
         return items.length > 0 ? items : getFallbackTVShows();
     } catch (error: any) {
-        if (error?.response?.status === 403) isQuotaExhausted = true;
         console.error('Error fetching YouTube TV shows:', error);
         return getFallbackTVShows();
     }
@@ -165,10 +156,7 @@ const getFallbackTVShows = (): Item[] => {
     return shows.map((v, i) => convertYouTubeToItem({ ...v, description: '', thumbnail: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`, channelTitle: 'StreamLux' } as any, i));
 };
 
-// Fetch YouTube by Genre
 export const getYouTubeByGenre = async (genreName: string, type: "movie" | "tv" = "movie"): Promise<Item[]> => {
-    if (isQuotaExhausted) return [];
-
     const cacheKey = `genre_${genreName}_${type}`;
     const cached = getCachedItems(cacheKey);
     if (cached) return cached;
@@ -198,15 +186,11 @@ export const getYouTubeByGenre = async (genreName: string, type: "movie" | "tv" 
         if (items.length > 0) setCachedItems(cacheKey, items);
         return items;
     } catch (error: any) {
-        if (error?.response?.status === 403) isQuotaExhausted = true;
         console.error(`Error fetching YouTube genre ${genreName}:`, error);
         return [];
     }
 };
-// Fetch YouTube Must-Watch Shorts (properly filtered for actual YouTube Shorts)
 export const getYouTubeShorts = async (): Promise<Item[]> => {
-    if (isQuotaExhausted) return [];
-
     const cached = getCachedItems('shorts');
     if (cached) return cached;
 
@@ -288,7 +272,6 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
         if (filteredShorts.length > 0) setCachedItems('shorts', filteredShorts);
         return filteredShorts;
     } catch (error: any) {
-        if (error?.response?.status === 403) isQuotaExhausted = true;
         console.error('Error fetching YouTube shorts:', error);
         return [];
     }
@@ -296,8 +279,6 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
 
 // Search YouTube by Query
 export const searchYouTube = async (query: string, type: "multi" | "movie" | "tv" = "multi"): Promise<Item[]> => {
-    if (isQuotaExhausted) return [];
-
     const cacheKey = `search_${query}_${type}`;
     const cached = getCachedItems(cacheKey);
     if (cached) return cached;
@@ -330,7 +311,6 @@ export const searchYouTube = async (query: string, type: "multi" | "movie" | "tv
         if (items.length > 0) setCachedItems(cacheKey, items);
         return items;
     } catch (error: any) {
-        if (error?.response?.status === 403) isQuotaExhausted = true;
         console.error(`Error searching YouTube for ${query}:`, error);
         return [];
     }
