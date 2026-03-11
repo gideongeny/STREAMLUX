@@ -97,7 +97,7 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
             : item.media_type === "tv"
               ? `/tv/${item.id}`
               : item.isYouTube && item.youtubeId
-                ? `/youtube/${item.youtubeId}` // Fallback if media_type is missing
+                ? `/movie/${item.youtubeId}` // Use the new cinematic unified route for all YouTube items (Sports, Shorts, etc)
                 : `/`
       }
       onClick={(e) => {

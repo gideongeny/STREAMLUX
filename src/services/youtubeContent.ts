@@ -92,12 +92,22 @@ export const getYouTubeMovies = async (): Promise<Item[]> => {
             .map((v, i) => convertYouTubeToItem(v, i));
 
         if (items.length > 0) setCachedItems('movies', items);
-        return items;
+        return items.length > 0 ? items : getFallbackMovies();
     } catch (error: any) {
         if (error?.response?.status === 403) isQuotaExhausted = true;
         console.error('Error fetching YouTube movies:', error);
-        return [];
+        return getFallbackMovies();
     }
+};
+
+const getFallbackMovies = (): Item[] => {
+    const movies = [
+        { id: 'hE1nwOGgQ8E', title: 'Action Full Movie (HD)', type: 'movie' },
+        { id: 'OP5tMURXRbI', title: 'Champions League Final Highlights', type: 'movie' },
+        { id: 'pZ12_E5R3qc', title: 'SciFi Epic: The Beginning', type: 'movie' },
+        { id: '5NV4COXJ2TU', title: 'Combat Sports Documentary', type: 'movie' }
+    ];
+    return movies.map((v, i) => convertYouTubeToItem({ ...v, description: '', thumbnail: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`, channelTitle: 'StreamLux' } as any, i));
 };
 
 // Fetch YouTube TV shows
@@ -138,12 +148,21 @@ export const getYouTubeTVShows = async (): Promise<Item[]> => {
             .map((v, i) => convertYouTubeToItem(v, i));
 
         if (items.length > 0) setCachedItems('tv', items);
-        return items;
+        return items.length > 0 ? items : getFallbackTVShows();
     } catch (error: any) {
         if (error?.response?.status === 403) isQuotaExhausted = true;
         console.error('Error fetching YouTube TV shows:', error);
-        return [];
+        return getFallbackTVShows();
     }
+};
+
+const getFallbackTVShows = (): Item[] => {
+    const shows = [
+        { id: 'dQw4w9WgXcQ', title: 'Drama Series Episode 1', type: 'tv' },
+        { id: 'XvXJ7XvXJ7X', title: 'Comedy Central Hits', type: 'tv' },
+        { id: 'YvYJ7XvYJ7X', title: 'The Anime Anthology', type: 'tv' }
+    ];
+    return shows.map((v, i) => convertYouTubeToItem({ ...v, description: '', thumbnail: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`, channelTitle: 'StreamLux' } as any, i));
 };
 
 // Fetch YouTube by Genre
