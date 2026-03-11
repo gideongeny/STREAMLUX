@@ -274,3 +274,45 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
         return [];
     }
 };
+
+// Search YouTube by Query
+export const searchYouTube = async (query: string, type: "multi" | "movie" | "tv" = "multi"): Promise<Item[]> => {
+    if (isQuotaExhausted) return [];
+
+    const cacheKey = `search_${query}_${type}`;
+    const cached = getCachedItems(cacheKey);
+    if (cached) return cached;
+
+    try {
+        let ytQuery = query;
+        if (type === 'movie') ytQuery += ' full movie';
+        else if (type === 'tv') ytQuery += ' full episodes';
+
+        const result = await fetchYouTubeVideos(ytQuery);
+        let allVideos = result.videos;
+
+        if (type !== 'multi') {
+            allVideos = allVideos.filter(v => v.type === type);
+        }
+
+        const seen = new Set<string>();
+        const items = allVideos
+            .filter(v => {
+                if (seen.has(v.id)) return false;
+                seen.add(v.id);
+                return true;
+            })
+            .map((v, i) => {
+                const item = convertYouTubeToItem(v, i);
+                (item as any).youtubeId = v.id;
+                return item;
+            });
+
+        if (items.length > 0) setCachedItems(cacheKey, items);
+        return items;
+    } catch (error: any) {
+        if (error?.response?.status === 403) isQuotaExhausted = true;
+        console.error(`Error searching YouTube for ${query}:`, error);
+        return [];
+    }
+};

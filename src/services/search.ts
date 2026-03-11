@@ -1,6 +1,7 @@
 import axios from "../shared/axios";
 import { getRecommendGenres2Type, Item, ItemsPage } from "../shared/types";
 import { searchFZMovies } from "./fzmovies";
+import { searchYouTube } from "./youtubeContent";
 
 export const getSearchKeyword = async (query: string): Promise<string[]> => {
   return (
@@ -31,7 +32,7 @@ export const getSearchResult: (
   query: string,
   page: number
 ) => Promise<ItemsPage> = async (typeSearch, query, page) => {
-  const [tmdbData, fzResults] = await Promise.all([
+  const [tmdbData, fzResults, ytResults] = await Promise.all([
     axios.get(`/search/${typeSearch}`, {
       params: {
         query,
@@ -43,6 +44,11 @@ export const getSearchResult: (
       query,
       typeSearch === "multi" ? "all" : typeSearch as "movie" | "tv"
     ),
+    // Search YouTube as well
+    searchYouTube(
+      query,
+      typeSearch as "multi" | "movie" | "tv"
+    )
   ]);
 
   const tmdbResults = tmdbData.data.results
@@ -52,8 +58,8 @@ export const getSearchResult: (
     }))
     .filter((item: Item) => item.poster_path || item.profile_path);
 
-  // Merge with FZMovies results
-  const combined = [...tmdbResults, ...fzResults];
+  // Merge with FZMovies and YouTube results
+  const combined = [...tmdbResults, ...ytResults, ...fzResults];
   const seen = new Set<string | number>();
   const results = combined.filter((item) => {
     if (seen.has(item.id)) return false;
