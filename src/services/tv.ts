@@ -7,8 +7,13 @@ import {
   Reviews,
   Video,
 } from "../shared/types";
+import { getYouTubeTVFullDetail, getYouTubeTVWatch } from "./youtubeMapping";
 
-export const getTVFullDetail = async (id: number): Promise<FilmInfo> => {
+export const getTVFullDetail = async (id: number | string): Promise<FilmInfo> => {
+  if (typeof id === 'string' && isNaN(Number(id))) {
+      return getYouTubeTVFullDetail(id);
+  }
+
   const response = await Promise.all([
     axios.get(`/tv/${id}`),
     axios.get(`/tv/${id}/credits`),
@@ -56,7 +61,11 @@ export const getTVFullDetail = async (id: number): Promise<FilmInfo> => {
   return tvInfo;
 };
 
-export const getWatchTV = async (id: number, seasonNumber: number = 1): Promise<getWatchReturnedType> => {
+export const getWatchTV = async (id: number | string, seasonNumber: number = 1): Promise<getWatchReturnedType> => {
+  if (typeof id === 'string' && isNaN(Number(id))) {
+      return getYouTubeTVWatch(id, seasonNumber);
+  }
+
   const res = await Promise.all([
     axios.get(`/tv/${id}`),
     axios.get(`/tv/${id}/recommendations`),

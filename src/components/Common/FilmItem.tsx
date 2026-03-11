@@ -92,12 +92,12 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
       to={
         item.url && item.isExternal
           ? "#"
-          : item.isYouTube && item.youtubeId
-            ? `/youtube/${item.youtubeId}`
-            : item.media_type === "movie"
-              ? `/movie/${item.id}`
-              : item.media_type === "tv"
-                ? `/tv/${item.id}`
+          : item.media_type === "movie"
+            ? `/movie/${item.id}`
+            : item.media_type === "tv"
+              ? `/tv/${item.id}`
+              : item.isYouTube && item.youtubeId
+                ? `/youtube/${item.youtubeId}` // Fallback if media_type is missing
                 : `/`
       }
       onClick={(e) => {

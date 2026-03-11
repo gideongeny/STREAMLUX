@@ -72,7 +72,8 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
           seasonId,
           episodeId,
           imdbId,
-          title || (detail as any)?.title || (detail as any)?.name
+          title || (detail as any)?.title || (detail as any)?.name,
+          currentEpisode
         );
 
         setSources(resolved.map(s => ({

@@ -123,8 +123,27 @@ export class ResolverService {
         season?: number,
         episode?: number,
         imdbId?: string,
-        title?: string
+        title?: string,
+        currentEpisode?: any
     ): Promise<ResolvedSource[]> {
+        // Intercept YouTube String IDs
+        let ytId = id.toString();
+        if (currentEpisode && currentEpisode.production_code && isNaN(Number(currentEpisode.production_code))) {
+            ytId = currentEpisode.production_code;
+        }
+
+        if (isNaN(Number(ytId)) && ytId.length >= 10 && !ytId.includes(" ")) {
+            return [{
+                 name: "YouTube Full Stream",
+                 url: `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`,
+                 quality: "4K/1080p",
+                 speed: "fast",
+                 status: "active",
+                 type: "embed",
+                 priority: 0
+            }];
+        }
+
         let sources: ResolvedSource[] = [];
 
         // 1. Unified Backend Resolver (Priority: High)
