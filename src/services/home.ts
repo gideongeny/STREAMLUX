@@ -256,16 +256,16 @@ export const getMovieBannerInfo = async (
   movies: Item[]
 ): Promise<BannerInfo[]> => {
   const detailRes = await Promise.all(
-    movies.map((movie) => axios.get(`/movie/${movie.id}`))
+    movies.map((movie) => axios.get(`/movie/${movie.id}`).catch(() => null))
   );
 
   const translationRes = await Promise.all(
-    movies.map((movie) => axios.get(`/movie/${movie.id}/translations`))
+    movies.map((movie) => axios.get(`/movie/${movie.id}/translations`).catch(() => null))
   );
 
   const translations: string[][] = translationRes.map((item: any) =>
-    item.data.translations
-      .filter((translation: any) =>
+    item?.data?.translations
+      ?.filter((translation: any) =>
         ["en", "sw", "fr", "es", "pt", "de", "it", "ru", "ja", "ko", "zh", "ar", "hi"].includes(translation.iso_639_1)
       )
       .reduce((acc: any, element: any) => {
@@ -276,26 +276,26 @@ export const getMovieBannerInfo = async (
         }
         return [...acc, element];
       }, [] as any)
-      .map((translation: any) => translation.data.title)
+      .map((translation: any) => translation.data.title) || []
   );
 
   // translations will look like: [["Doctor Strange", "Daktari Strange", "Doctor Strange", "Dr. Strange"],["Spider Man Far From Home", "Spider Man Mbali na Nyumbani", "Spider-Man Lejos de Casa"],...]
 
   const genres: { name: string; id: number }[][] = detailRes.map((item: any) =>
-    item.data.genres.filter((_: any, index: number) => index < 3)
+    item?.data?.genres?.filter((_: any, index: number) => index < 3) || []
   );
 
   // genres will look like: [[{name: "action", id: 14}, {name: "wild", id: 19}, {name: "love", ket: 23}],[{name: "fantasy", id: 22}, {name: "science", id: 99}],...]
 
   const videoRes = await Promise.all(
-    movies.map((movie) => axios.get(`/movie/${movie.id}/videos`))
+    movies.map((movie) => axios.get(`/movie/${movie.id}/videos`).catch(() => null))
   );
 
   // we have translations.length = genres.length, so let's merge these 2 arrays together
   return genres.map((genre, index) => ({
     genre,
     translation: translations[index],
-    trailer: videoRes[index].data.results.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key,
+    trailer: videoRes[index]?.data?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key || (movies[index].isYouTube ? movies[index].youtubeId : undefined),
   })) as BannerInfo[];
 
   // yeah I admit that it's hard to understand my code :)
@@ -517,16 +517,16 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
 
 export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
   const detailRes = await Promise.all(
-    tvs.map((tv) => axios.get(`/tv/${tv.id}`))
+    tvs.map((tv) => axios.get(`/tv/${tv.id}`).catch(() => null))
   );
 
   const translationRes = await Promise.all(
-    tvs.map((tv) => axios.get(`/tv/${tv.id}/translations`))
+    tvs.map((tv) => axios.get(`/tv/${tv.id}/translations`).catch(() => null))
   );
 
   const translations = translationRes.map((item: any) =>
-    item.data.translations
-      .filter((translation: any) =>
+    item?.data?.translations
+      ?.filter((translation: any) =>
         ["en", "sw", "fr", "es", "pt", "de", "it", "ru", "ja", "ko", "zh", "ar", "hi"].includes(translation.iso_639_1)
       )
       .reduce((acc: any, element: any) => {
@@ -537,21 +537,21 @@ export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
         }
         return [...acc, element];
       }, [] as any)
-      .map((translation: any) => translation.data.name)
+      .map((translation: any) => translation.data.name) || []
   );
 
   const genres = detailRes.map((item: any) =>
-    item.data.genres.filter((_: any, index: number) => index < 3)
+    item?.data?.genres?.filter((_: any, index: number) => index < 3) || []
   );
 
   const videoRes = await Promise.all(
-    tvs.map((tv) => axios.get(`/tv/${tv.id}/videos`))
+    tvs.map((tv) => axios.get(`/tv/${tv.id}/videos`).catch(() => null))
   );
 
   return genres.map((genre, index) => ({
     genre,
     translation: translations[index],
-    trailer: videoRes[index].data.results.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key,
+    trailer: videoRes[index]?.data?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key || (tvs[index].isYouTube ? tvs[index].youtubeId : undefined),
   })) as BannerInfo[];
 };
 

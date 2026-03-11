@@ -1,8 +1,9 @@
-import { FC } from "react";
+import { FC, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MdOutlineStadium, MdAccessTime, MdTrendingUp } from "react-icons/md";
 import { SportsFixtureConfig } from "../../shared/constants";
 import { hapticImpact } from "../../shared/utils";
+import { searchYouTube } from "../../services/youtubeContent";
 
 interface MatchCardPremiumProps {
     fixture: SportsFixtureConfig;
@@ -11,6 +12,21 @@ interface MatchCardPremiumProps {
 }
 
 const SportsPremiumMatchCard: FC<MatchCardPremiumProps> = ({ fixture, isExternal, getMatchLink }) => {
+    const [bgImage, setBgImage] = useState<string | null>(null);
+
+    useEffect(() => {
+        if ((fixture as any).isUpcomingMarquee) {
+            const query = `${fixture.homeTeam} vs ${fixture.awayTeam} highlights`;
+            searchYouTube(query, "multi")
+                .then(res => {
+                    if (res && res.length > 0) {
+                        setBgImage(res[0].backdrop_path || res[0].poster_path || null);
+                    }
+                })
+                .catch(() => {});
+        }
+    }, [fixture.homeTeam, fixture.awayTeam, fixture]);
+
     const handlePress = () => {
         hapticImpact();
     };
@@ -30,8 +46,16 @@ const SportsPremiumMatchCard: FC<MatchCardPremiumProps> = ({ fixture, isExternal
             whileHover={{ y: -5, scale: 1.02 }}
             className="group relative block w-full aspect-[4/5] md:aspect-[3/4] rounded-3xl overflow-hidden bg-dark-lighten/20 border border-white/5 shadow-2xl transition-all duration-500 hover:shadow-primary/20"
         >
+            {/* Dynamic Background Image for Marquee */}
+            {bgImage && (
+                <div 
+                    className="absolute inset-0 bg-cover bg-center opacity-50 group-hover:opacity-75 transition-opacity duration-700"
+                    style={{ backgroundImage: `url(${bgImage})` }}
+                />
+            )}
+
             {/* Ambient Background Glow */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-30 group-hover:opacity-60 transition-opacity duration-700" />
+            <div className={`absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-30 group-hover:opacity-60 transition-opacity duration-700 ${bgImage ? 'mix-blend-overlay' : ''}`} />
 
             {/* Texture Overlay */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
