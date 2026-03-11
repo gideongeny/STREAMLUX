@@ -2,23 +2,39 @@ import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { API_URL } from "./constants";
 import { apiCache } from "./apiCache";
 
+// Use the new Firebase Cloud Function proxy for all TMDB requests
+// This secures the API key on the backend
+const FIREBASE_REGION = "us-central1"; // Matches functions deployment
+const PROJECT_ID = "streamlux-67a84"; // Ensure this matches your Firebase project ID
+const PROXY_URL = `https://${FIREBASE_REGION}-${PROJECT_ID}.cloudfunctions.net/proxyTMDB`;
+
 const instance = axios.create({
-  baseURL: API_URL,
-  params: {
-    api_key: process.env.REACT_APP_API_KEY || "8c247ea0b4b56ed2ff7d41c9a833aa77", // TMDB API key
-  },
+  baseURL: PROXY_URL,
 });
 
-export const setLanguage = (lang: string) => {
-  instance.defaults.params = {
-    ...instance.defaults.params,
-    language: lang
-  };
-};
-
-// Request interceptor - Add caching and rate limiting
+// Request interceptor - Add caching, rate limiting, and format the proxy payload
 instance.interceptors.request.use(
   async (config: AxiosRequestConfig) => {
+    // 1. Transform the standard TMDB config to the Proxy Payload format
+    // proxyTMDB expects { data: { endpoint: string, params: object } }
+    
+    // Extract the original endpoint (e.g., /movie/popular)
+    const originalEndpoint = config.url || '';
+    
+    // Only wrap it if it hasn't been wrapped yet (avoid double wrapping on retries)
+    if (!config.data?.endpoint) {
+        config.data = {
+            endpoint: originalEndpoint,
+            params: { ...config.params } // Pass the frontend params (like language, page)
+        };
+        
+        // Clear the URL and Params since they are now in the POST body to the proxy
+        config.url = ''; 
+        config.params = {};
+        
+        // HttpsCallable functions must be POST requests
+        config.method = 'POST'; 
+    }
     // Check cache first
     const cacheKey = config.url || '';
     const cachedData = apiCache.get(cacheKey, config.params);
@@ -40,32 +56,45 @@ instance.interceptors.request.use(
 );
 
 // Response interceptor - Cache successful responses and handle errors
+// Response interceptor - Handle successful responses, unwrap proxy data, and handle errors
 instance.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Cache successful responses
-    const config = response.config;
-    const url = config.url || '';
-    const params = config.params;
-
-    // Different TTL for different endpoints
-    let ttl = 5 * 60 * 1000; // 5 minutes default
-
-    if (url.includes('/trending')) {
-      ttl = 10 * 60 * 1000; // 10 minutes for trending (changes less frequently)
-    } else if (url.includes('/popular') || url.includes('/top_rated')) {
-      ttl = 15 * 60 * 1000; // 15 minutes for popular/top rated
-    } else if (url.includes('/discover')) {
-      ttl = 5 * 60 * 1000; // 5 minutes for discover
-    } else if (url.includes('/search')) {
-      ttl = 2 * 60 * 1000; // 2 minutes for search (more dynamic)
+    // Firebase HttpsCallable functions return data wrapped in { data: { result } }
+    // Our proxy returns { data: { success: true, data: { TMDB_RESULTS } } }
+    
+    let actualData = response.data;
+    
+    // Unwrap Firebase Callable layer
+    if (actualData?.result) {
+        actualData = actualData.result;
+    }
+    
+    // Unwrap our custom Proxy layer
+    if (actualData && actualData.success && actualData.data) {
+        actualData = actualData.data;
     }
 
-    apiCache.set(url, params, response.data, ttl);
+    // Set unpacked data back to response so frontend services don't break
+    response.data = actualData;
+
+    // Cache successful responses
+    const config = response.config;
+    // Recover original endpoint for caching from the payload we built
+    const url = typeof config.data === 'string' ? JSON.parse(config.data).data?.endpoint : config.data?.data?.endpoint || '';
+    const params = typeof config.data === 'string' ? JSON.parse(config.data).data?.params : config.data?.data?.params || {};
+
+    let ttl = 5 * 60 * 1000;
+    if (url.includes('/trending')) ttl = 10 * 60 * 1000;
+    else if (url.includes('/popular') || url.includes('/top_rated')) ttl = 15 * 60 * 1000;
+    else if (url.includes('/discover')) ttl = 5 * 60 * 1000;
+    else if (url.includes('/search')) ttl = 2 * 60 * 1000;
+
+    apiCache.set(url, params, actualData, ttl);
 
     return response;
   },
   (error) => {
-    // Handle cached data
+    // Handle cached data shortcut
     if (error.__cached) {
       return Promise.resolve({
         data: error.data,
@@ -76,16 +105,15 @@ instance.interceptors.response.use(
       });
     }
 
-    // Handle quota exceeded errors
-    if (error.response?.status === 429 ||
-      error.message?.includes('quota') ||
-      error.message?.includes('Quota Exceeded')) {
+    // Handle quota failures from the proxy (or TMDB directly)
+    if (error.response?.status === 429 || error.message?.includes('quota')) {
       console.error('API quota exceeded. Using cached data if available.');
-
-      // Try to get cached data as fallback
+      
       const config = error.config;
-      const url = config?.url || '';
-      const cachedData = apiCache.get(url, config?.params);
+      const url = typeof config.data === 'string' ? JSON.parse(config.data).data?.endpoint : '';
+      const params = typeof config.data === 'string' ? JSON.parse(config.data).data?.params : {};
+      
+      const cachedData = apiCache.get(url, params);
 
       if (cachedData) {
         return Promise.resolve({
@@ -97,7 +125,6 @@ instance.interceptors.response.use(
         });
       }
 
-      // If no cache, return empty results to prevent app crash
       return Promise.resolve({
         data: { results: [], page: 1, total_pages: 1, total_results: 0 },
         status: 200,
@@ -110,5 +137,16 @@ instance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const setLanguage = (lang: string) => {
+  // Since we removed instance.defaults.params to use POST bodies,
+  // we add an Axios interceptor to globally append language to every request payload
+  instance.interceptors.request.use((config) => {
+      if (config.data && config.data.params) {
+          config.data.params.language = lang;
+      }
+      return config;
+  });
+};
 
 export default instance;

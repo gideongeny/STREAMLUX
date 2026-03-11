@@ -14,41 +14,35 @@ export interface YouTubeVideo {
     viewCount?: string;
 }
 
-// Fallback to Firebase API key if dedicated YouTube key is missing
-// The user provided multiple keys to rotate when quota limits are reached
-const API_KEYS = [
-    "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc",
-    "AIzaSyAQOFn1SVkbrQDJn7VeRMs5vAV1mYErImM",
-    "AIzaSyDbTHAbBxPWdvKWjbWG_xcd8-09t3w-CCI",
-    process.env.REACT_APP_YOUTUBE_API_KEY || "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY" // Default fallback
-];
-let currentKeyIndex = 0;
-
-const getActiveKey = () => API_KEYS[currentKeyIndex];
-
-const rotateKey = () => {
-    currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
-    console.warn(`[YouTube API] Quota exceeded. Rotating to key index ${currentKeyIndex}`);
-};
-
-const BASE_URL = "https://www.googleapis.com/youtube/v3";
-
-if (!process.env.REACT_APP_YOUTUBE_API_KEY) {
-    console.info("[ShortsEngine] Using fallback API keys for YouTube services.");
-}
+// Redirect all YouTube requests to the secure Firebase Proxy
+const FIREBASE_REGION = "us-central1";
+const PROJECT_ID = "streamlux-67a84"; 
+const PROXY_URL = `https://${FIREBASE_REGION}-${PROJECT_ID}.cloudfunctions.net/proxyYouTube`;
 
 /**
- * Build a search query for a given region or genre.
- * The `region` parameter maps to a YouTube channel or a search keyword.
+ * Build a proxy execution payload for a given region or genre.
  */
-function buildQueryParams(params: Record<string, string | number>, keyOverride?: string) {
-    const url = new URL(BASE_URL + "/search");
-    url.searchParams.append("key", keyOverride || getActiveKey());
-    url.searchParams.append("part", "snippet");
-    url.searchParams.append("type", "video");
-    url.searchParams.append("maxResults", "20");
-    Object.entries(params).forEach(([k, v]) => url.searchParams.append(k, String(v)));
-    return url.toString();
+async function executeYouTubeProxy(endpoint: string, params: Record<string, string | number>) {
+    const payload = {
+        data: {
+            endpoint,
+            params
+        }
+    };
+    
+    // HttpsCallable functions require POST
+    const response = await axios.post(PROXY_URL, payload);
+    
+    // Unwrap Firebase wrapper
+    let actualData = response.data;
+    if (actualData?.result) actualData = actualData.result;
+    
+    // Unwrap Proxy Wrapper
+    if (actualData && actualData.success && actualData.data) {
+        return actualData.data;
+    }
+    
+    return actualData;
 }
 
 /**
@@ -58,17 +52,22 @@ function buildQueryParams(params: Record<string, string | number>, keyOverride?:
 export async function fetchYouTubeVideos(
     query: string,
     pageToken?: string,
-    videoDuration?: 'any' | 'long' | 'medium' | 'short',
-    retryCount = 0
+    videoDuration?: 'any' | 'long' | 'medium' | 'short'
 ): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string }> {
     try {
-        const params: Record<string, string | number> = { q: query };
+        const params: Record<string, string | number> = { 
+            q: query,
+            part: "snippet",
+            type: "video",
+            maxResults: 20
+        };
+        
         if (pageToken) params["pageToken"] = pageToken;
         if (videoDuration) params["videoDuration"] = videoDuration;
 
-        const url = buildQueryParams(params);
-        const response = await axios.get(url, { timeout: 10000 });
-        const items = response.data.items as any[];
+        const data = await executeYouTubeProxy("/search", params);
+        const items = data.items as any[];
+        
         const videos: YouTubeVideo[] = items.map((item) => {
             const { videoId } = item.id;
             const { title, description, thumbnails, channelTitle } = item.snippet;
@@ -81,15 +80,10 @@ export async function fetchYouTubeVideos(
                 type: classifyVideo(title, description),
             };
         });
-        return { videos, nextPageToken: response.data.nextPageToken };
+        return { videos, nextPageToken: data.nextPageToken };
     } catch (error: any) {
-        if (error?.response?.status === 403 && retryCount < API_KEYS.length) {
-            rotateKey();
-            // Wait briefly before retrying
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return fetchYouTubeVideos(query, pageToken, videoDuration, retryCount + 1);
-        }
-        console.error('YouTube API error:', error?.message || error);
+        console.error('YouTube Proxy API error:', error?.message || error);
+        // Quota rotation is now handled automatically on the backend!
         // Return empty array instead of throwing
         return { videos: [], nextPageToken: undefined };
     }
@@ -127,15 +121,15 @@ function parseDuration(duration: string): number {
     return hours * 3600 + minutes * 60 + seconds;
 }
 
-export async function getYouTubeVideoDetail(videoId: string, retryCount = 0): Promise<YouTubeVideoExtended | null> {
+export async function getYouTubeVideoDetail(videoId: string): Promise<YouTubeVideoExtended | null> {
     try {
-        if (!getActiveKey()) {
-            console.warn('YouTube API key not configured');
-            return null;
-        }
-        const url = `${BASE_URL}/videos?key=${getActiveKey()}&part=snippet,statistics,contentDetails&id=${videoId}`;
-        const response = await axios.get(url, { timeout: 10000 });
-        const item = response.data.items[0];
+        const params = {
+            part: "snippet,statistics,contentDetails",
+            id: videoId
+        };
+        const data = await executeYouTubeProxy("/videos", params);
+        
+        const item = data.items?.[0];
         if (!item) return null;
 
         const { title, description, thumbnails, channelTitle, channelId, publishedAt, tags } = item.snippet;
@@ -158,11 +152,6 @@ export async function getYouTubeVideoDetail(videoId: string, retryCount = 0): Pr
             type: classifyVideo(title, description, parseDuration(duration)),
         };
     } catch (error: any) {
-        if (error?.response?.status === 403 && retryCount < API_KEYS.length) {
-            rotateKey();
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return getYouTubeVideoDetail(videoId, retryCount + 1);
-        }
         console.warn("[Quota Failsafe] Returning mock detail for", videoId);
         
         // Failsafe: Return a mock valid YouTubeVideoExtended so the watch page doesn't crash on 403/404
@@ -170,7 +159,7 @@ export async function getYouTubeVideoDetail(videoId: string, retryCount = 0): Pr
             id: videoId,
             title: "YouTube Content", // Basic fallback title
             description: "This video details are temporarily restricted by API quotas, but you can still watch the video below.",
-            thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+            thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
             channelTitle: "YouTube Stream",
             channelId: "UC",
             publishedAt: new Date().toISOString(),
@@ -194,11 +183,16 @@ export async function getRelatedVideos(videoId: string): Promise<YouTubeVideo[]>
     }
 }
 
-export async function getYouTubeComments(videoId: string, retryCount = 0): Promise<any[]> {
+export async function getYouTubeComments(videoId: string): Promise<any[]> {
     try {
-        const url = `${BASE_URL}/commentThreads?key=${getActiveKey()}&part=snippet&videoId=${videoId}&maxResults=10`;
-        const response = await axios.get(url);
-        return response.data.items.map((item: any) => ({
+        const params = {
+            part: "snippet",
+            videoId: videoId,
+            maxResults: 10
+        };
+        const data = await executeYouTubeProxy("/commentThreads", params);
+        
+        return data.items.map((item: any) => ({
             id: item.id,
             author: item.snippet.topLevelComment.snippet.authorDisplayName,
             content: item.snippet.topLevelComment.snippet.textDisplay,
@@ -206,20 +200,24 @@ export async function getYouTubeComments(videoId: string, retryCount = 0): Promi
             avatar: item.snippet.topLevelComment.snippet.authorProfileImageUrl,
         }));
     } catch (error: any) {
-        if (error?.response?.status === 403 && retryCount < API_KEYS.length) {
-            rotateKey();
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return getYouTubeComments(videoId, retryCount + 1);
-        }
+        console.error("YouTube Proxy Comments Error:", error.message);
         return [];
     }
 }
 
-export async function getYouTubeSeriesEpisodes(seriesTitle: string, channelId: string, retryCount = 0): Promise<YouTubeVideo[]> {
+export async function getYouTubeSeriesEpisodes(seriesTitle: string, channelId: string): Promise<YouTubeVideo[]> {
     try {
-        const url = `${BASE_URL}/search?key=${getActiveKey()}&part=snippet&channelId=${channelId}&q=${encodeURIComponent(seriesTitle)}&type=video&maxResults=50&order=date`;
-        const response = await axios.get(url);
-        const items = response.data.items as any[];
+        const params = {
+            part: "snippet",
+            channelId: channelId,
+            q: seriesTitle,
+            type: "video",
+            maxResults: 50,
+            order: "date"
+        };
+        const data = await executeYouTubeProxy("/search", params);
+        
+        const items = data.items as any[];
         return items.map((item) => {
             const { videoId } = item.id;
             const { title, description, thumbnails, channelTitle, publishedAt } = item.snippet;
@@ -235,12 +233,7 @@ export async function getYouTubeSeriesEpisodes(seriesTitle: string, channelId: s
             };
         });
     } catch (error: any) {
-        if (error?.response?.status === 403 && retryCount < API_KEYS.length) {
-            rotateKey();
-            await new Promise(resolve => setTimeout(resolve, 500));
-            return getYouTubeSeriesEpisodes(seriesTitle, channelId, retryCount + 1);
-        }
-        console.error("Error fetching series episodes", error);
+        console.error("YouTube Proxy Episodes Error:", error.message);
         return [];
     }
 }
@@ -258,7 +251,7 @@ export function calculateRating(views?: string, likes?: string): number {
 
 export async function validateYouTubeKey(key: string): Promise<boolean> {
     try {
-        const url = `${BASE_URL}/videos?key=${key}&part=snippet&chart=mostPopular&maxResults=1`;
+        const url = `https://www.googleapis.com/youtube/v3/videos?key=${key}&part=snippet&chart=mostPopular&maxResults=1`;
         await axios.get(url);
         return true;
     } catch (error) {

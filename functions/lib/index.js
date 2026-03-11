@@ -33,10 +33,14 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.proxy = exports.healthCheck = exports.resolveStream = void 0;
+exports.proxy = exports.healthCheck = exports.resolveStream = exports.proxyYouTube = exports.proxyTMDB = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const resolver_1 = require("./resolver");
+var tmdbProxy_1 = require("./tmdbProxy");
+Object.defineProperty(exports, "proxyTMDB", { enumerable: true, get: function () { return tmdbProxy_1.proxyTMDB; } });
+var youtubeProxy_1 = require("./youtubeProxy");
+Object.defineProperty(exports, "proxyYouTube", { enumerable: true, get: function () { return youtubeProxy_1.proxyYouTube; } });
 // Initialize Firebase Admin
 admin.initializeApp();
 /**
