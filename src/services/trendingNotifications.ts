@@ -1,8 +1,8 @@
+import axios from "../shared/axios";
 import { pushNotificationService } from "./pushNotifications";
 import { safeStorage } from "../utils/safeStorage";
 import { notificationHub } from "./notificationHub";
 import { getBackendBase } from "./download";
-import axios from "axios";
 
 const TMDB_API_KEY = process.env.REACT_APP_API_KEY;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";

@@ -2,7 +2,7 @@
 // Letterboxd, Rotten Tomatoes, and enhanced TMDB
 // These APIs help populate the website with movies from different sources
 
-import axios from "axios";
+import axios from "../shared/axios";
 import { Item } from "../shared/types";
 import { getBackendBase } from "./download";
 
@@ -53,7 +53,7 @@ export const getLetterboxdContent = async (type: "movie" | "tv" = "movie"): Prom
     // Fetch from multiple genres to get variety (like Letterboxd's diverse selection)
     for (const genreId of genres.slice(0, 5)) {
       try {
-        const response = await axios.get(`${getApiBase()}/tmdb`, {
+          const response = await axios.get("/tmdb", {
           params: {
             endpoint: `/discover/movie`,
             with_genres: genreId,
@@ -116,7 +116,7 @@ export const getRottenTomatoesContent = async (type: "movie" | "tv" = "movie"): 
         }
 
         if (endpoint) {
-          const response = await axios.get(`${getApiBase()}/tmdb`, {
+            const response = await axios.get("/tmdb", {
             params: {
               endpoint,
               page: 1,
@@ -185,7 +185,7 @@ export const getEnhancedTMDBContent = async (
 
         if (endpoint) {
           fetchPromises.push(
-            axios.get(`${getApiBase()}/tmdb`, {
+            axios.get("/tmdb", {
               params: { endpoint },
               timeout: 5000,
             }).catch(() => ({ data: { results: [] } }))

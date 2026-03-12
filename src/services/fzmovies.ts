@@ -1,5 +1,5 @@
 import { Item } from "../shared/types";
-import axios from "axios";
+import axios from "../shared/axios";
 
 // FZMovies CMS API integration - Force fetch from multiple sources
 // Similar to how moviebox.ph sources content
@@ -105,7 +105,12 @@ export const getFZMovies = async (
     }
 
     // Fetch from TMDB (this always works)
-    const tmdbResponse = await axios.get("/discover/movie", { params: tmdbParams });
+    const tmdbResponse = await axios.get("/tmdb", { 
+      params: {
+        endpoint: "/discover/movie",
+        ...tmdbParams
+      }
+    });
     const tmdbItems = (tmdbResponse.data.results || []).map((item: any) => ({
       ...item,
       media_type: "movie" as const,
@@ -155,7 +160,12 @@ export const getFZTVShows = async (
     }
 
     // Fetch from TMDB (this always works)
-    const tmdbResponse = await axios.get("/discover/tv", { params: tmdbParams });
+    const tmdbResponse = await axios.get("/tmdb", { 
+      params: {
+        endpoint: "/discover/tv",
+        ...tmdbParams
+      }
+    });
     const tmdbItems = (tmdbResponse.data.results || []).map((item: any) => ({
       ...item,
       media_type: "tv" as const,

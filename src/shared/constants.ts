@@ -1,4 +1,5 @@
-export const API_URL = "https://api.themoviedb.org/3";
+// Redirect legacy TMDB calls to our unified proxy by default
+export const API_URL = "/api/proxy/tmdb"; 
 export const IMAGE_URL = "https://image.tmdb.org/t/p";
 export const EMBED_URL = "https://2embed.org/embed";
 export const EMBED_VIDSRC = "https://vidsrc.me/embed";

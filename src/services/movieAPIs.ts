@@ -248,7 +248,7 @@ export const getTMDBByGenre = async (
     const fetchPromises = [];
     for (let page = 1; page <= pages; page++) {
       fetchPromises.push(
-        axios.get(`${getApiBase()}/tmdb`, {
+        axios.get("/tmdb", {
           params: {
             endpoint: `/discover/${type}`,
             with_genres: genreId,
@@ -405,7 +405,7 @@ export const getPersonalizedRecommendations = async (
     // Get unique IDs from history to filter out things they've already watched
     const watchedIds = new Set(history.map(item => item.id));
 
-    const response = await axios.get(`${getApiBase()}/proxy/tmdb`, {
+    const response = await axios.get("/proxy/tmdb", {
       params: {
         endpoint: `/discover/${type}`,
         with_genres: genreQuery,
