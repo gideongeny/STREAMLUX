@@ -1,4 +1,4 @@
-const TMDB_API_KEY = "69ef02da25ccfbc48bfd094eb8e348f9";
+const TMDB_API_KEY = "a09e6f0e213603b1cda6f489987cff74";
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 module.exports = async (req, res) => {
