@@ -6,13 +6,20 @@ const PRODUCTION_BACKEND_BASE = "https://us-central1-streamlux-67a84.cloudfuncti
 
 /** Use for all backend API URLs (sniff, download, resolve). */
 export function getBackendBase(): string {
-  // In the browser, we use the current origin. 
-  // This works for Vercel Serverless Functions and local development.
+  // Check if we're running locally
   if (typeof window !== 'undefined') {
-    return window.location.origin;
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+    // Use localhost in development, otherwise point directly to Vercel
+    if (isLocalhost) {
+      return window.location.origin;
+    } else {
+      // Hardcoded Vercel URL to bypass Firebase Hosting limitations
+      return "https://streamlux.vercel.app";
+    }
   }
 
-  return ""; 
+  return "https://streamlux.vercel.app"; 
 }
 
 export interface DownloadInfo {
