@@ -175,35 +175,35 @@ export const getNCAAFixtures = async (): Promise<any[]> => {
 // ============================================================
 const CURATED_SPORTS_VIDEOS: Record<string, Array<{ id: string; ytId: string; title: string; thumb: string; isLive?: boolean; channelId?: string; url?: string }>> = {
   "Elite Football": [
-    { id: "ef-1", ytId: "OP5tMURXRbI", title: "Champions League Best Goals", thumb: "https://img.youtube.com/vi/OP5tMURXRbI/mqdefault.jpg" },
-    { id: "ef-2", ytId: "0XC9mJhJFw8", title: "Premier League Top 10 Goals", thumb: "https://img.youtube.com/vi/0XC9mJhJFw8/mqdefault.jpg" },
-    { id: "ef-3", ytId: "NlQ3-BqTJuA", title: "La Liga Weekly Highlights", thumb: "https://img.youtube.com/vi/NlQ3-BqTJuA/mqdefault.jpg" },
-    { id: "ef-4", ytId: "pJoNZnpuB8A", title: "Bundesliga Goals of the Season", thumb: "https://img.youtube.com/vi/pJoNZnpuB8A/mqdefault.jpg" },
+    { id: "ef-1", ytId: "OP5tMURXRbI", title: "Champions League Best Goals", thumb: "https://i.ytimg.com/vi/OP5tMURXRbI/hqdefault.jpg" },
+    { id: "ef-2", ytId: "0XC9mJhJFw8", title: "Premier League Top 10 Goals", thumb: "https://i.ytimg.com/vi/0XC9mJhJFw8/hqdefault.jpg" },
+    { id: "ef-3", ytId: "NlQ3-BqTJuA", title: "La Liga Weekly Highlights", thumb: "https://i.ytimg.com/vi/NlQ3-BqTJuA/hqdefault.jpg" },
+    { id: "ef-4", ytId: "pJoNZnpuB8A", title: "Bundesliga Goals of the Season", thumb: "https://i.ytimg.com/vi/pJoNZnpuB8A/hqdefault.jpg" },
   ],
   "Pro Wrestling": [
-    { id: "pw-1", ytId: "S4vS-T68YPk", title: "WWE Greatest Moments 2024", thumb: "https://img.youtube.com/vi/S4vS-T68YPk/mqdefault.jpg" },
-    { id: "pw-2", ytId: "VwI7sYD_38g", title: "AEW Best Matches", thumb: "https://img.youtube.com/vi/VwI7sYD_38g/mqdefault.jpg" },
-    { id: "pw-3", ytId: "lmD3FQwQJoE", title: "WWE Royal Rumble Highlights", thumb: "https://img.youtube.com/vi/lmD3FQwQJoE/mqdefault.jpg" },
+    { id: "pw-1", ytId: "S4vS-T68YPk", title: "WWE Greatest Moments 2024", thumb: "https://i.ytimg.com/vi/S4vS-T68YPk/hqdefault.jpg" },
+    { id: "pw-2", ytId: "VwI7sYD_38g", title: "AEW Best Matches", thumb: "https://i.ytimg.com/vi/VwI7sYD_38g/hqdefault.jpg" },
+    { id: "pw-3", ytId: "lmD3FQwQJoE", title: "WWE Royal Rumble Highlights", thumb: "https://i.ytimg.com/vi/lmD3FQwQJoE/hqdefault.jpg" },
   ],
   "Combat Sports": [
-    { id: "cs-1", ytId: "8cJhHiBJGZI", title: "UFC Best Knockouts 2024", thumb: "https://img.youtube.com/vi/8cJhHiBJGZI/mqdefault.jpg" },
-    { id: "cs-2", ytId: "T3nzAxvqjTA", title: "Boxing Greatest Knockouts", thumb: "https://img.youtube.com/vi/T3nzAxvqjTA/mqdefault.jpg" },
-    { id: "cs-3", ytId: "5NV4COXJ2TU", title: "MMA Highlights Compilation", thumb: "https://img.youtube.com/vi/5NV4COXJ2TU/mqdefault.jpg" },
+    { id: "cs-1", ytId: "8cJhHiBJGZI", title: "UFC Best Knockouts 2024", thumb: "https://i.ytimg.com/vi/8cJhHiBJGZI/hqdefault.jpg" },
+    { id: "cs-2", ytId: "T3nzAxvqjTA", title: "Boxing Greatest Knockouts", thumb: "https://i.ytimg.com/vi/T3nzAxvqjTA/hqdefault.jpg" },
+    { id: "cs-3", ytId: "5NV4COXJ2TU", title: "MMA Highlights Compilation", thumb: "https://i.ytimg.com/vi/5NV4COXJ2TU/hqdefault.jpg" },
     { id: "cs-pluto", ytId: "", title: "Pluto TV: MMA Live", thumb: "https://images.unsplash.com/photo-1552072805-2a9039d00e57", isLive: true, channelId: "5e70f69a53609a001b9736c5" },
   ],
   "Red Bull TV": [
-    { id: "rb-1", ytId: "", title: "Red Bull TV: Adventure Sports", thumb: "https://images.unsplash.com/photo-1533107862482-0e6974b06ec4", isLive: true, url: "https://www.redbull.com/int-en/live-events" },
+    { id: "rb-1", ytId: "", title: "Red Bull TV Live", thumb: "https://images.unsplash.com/photo-1533107862482-0e6974b06ec4", isLive: true, url: "https://www.redbull.com/int-en/live-events" },
   ],
   "NCAA Collegiate": [
-    { id: "nc-1", ytId: "_gRFmBzZzOQ", title: "March Madness Best Plays", thumb: "https://img.youtube.com/vi/_gRFmBzZzOQ/mqdefault.jpg" },
-    { id: "nc-2", ytId: "XH-vUYUEDEI", title: "NCAA Basketball Top Moments", thumb: "https://img.youtube.com/vi/XH-vUYUEDEI/mqdefault.jpg" },
+    { id: "nc-1", ytId: "_gRFmBzZzOQ", title: "March Madness Best Plays", thumb: "https://i.ytimg.com/vi/_gRFmBzZzOQ/hqdefault.jpg" },
+    { id: "nc-2", ytId: "XH-vUYUEDEI", title: "NCAA Basketball Top Moments", thumb: "https://i.ytimg.com/vi/XH-vUYUEDEI/hqdefault.jpg" },
   ],
   "Classic": [
-    { id: "cl-1", ytId: "nJ7KFEMREeI", title: "Champions League Legendary Finals", thumb: "https://img.youtube.com/vi/nJ7KFEMREeI/mqdefault.jpg" },
-    { id: "cl-2", ytId: "T4_W5pddF7A", title: "World Cup Greatest Goals", thumb: "https://img.youtube.com/vi/T4_W5pddF7A/mqdefault.jpg" },
+    { id: "cl-1", ytId: "nJ7KFEMREeI", title: "Champions League Legendary Finals", thumb: "https://i.ytimg.com/vi/nJ7KFEMREeI/hqdefault.jpg" },
+    { id: "cl-2", ytId: "T4_W5pddF7A", title: "World Cup Greatest Goals", thumb: "https://i.ytimg.com/vi/T4_W5pddF7A/hqdefault.jpg" },
   ],
   "Documentary": [
-    { id: "doc-1", ytId: "x0rS-x_48pM", title: "The History of Football", thumb: "https://img.youtube.com/vi/x0rS-x_48pM/mqdefault.jpg" },
+    { id: "doc-1", ytId: "x0rS-x_48pM", title: "The History of Football", thumb: "https://i.ytimg.com/vi/x0rS-x_48pM/hqdefault.jpg" },
   ],
 };
 

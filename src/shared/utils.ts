@@ -25,7 +25,7 @@ export const resizeImage = (
   imageUrl: string,
   width: string = "original"
 ): string => {
-  if (!imageUrl) return "/defaultPoster.jpg";
+  if (!imageUrl) return "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?q=80&w=2070&auto=format&fit=crop";
 
   if (imageUrl.startsWith("http") || imageUrl.startsWith("//")) {
     return imageUrl;
