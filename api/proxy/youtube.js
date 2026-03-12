@@ -15,13 +15,13 @@ module.exports = async (req, res) => {
 
   const query = req.query || {};
   const body = req.body || {};
-  const endpoint = body.endpoint || query.endpoint;
+  let endpoint = body.endpoint || query.endpoint;
   const bodyParams = body.params || {};
   const extraQueryParams = { ...query };
   delete extraQueryParams.endpoint;
   const mergedParams = { ...extraQueryParams, ...bodyParams };
 
-  if (!endpoint) return res.status(400).json({ error: 'YouTube endpoint is required' });
+  if (!endpoint) return res.status(400).json({ success: false, error: 'YouTube endpoint is required' });
 
   let lastError;
   for (let i = 0; i < API_KEYS.length; i++) {
@@ -29,12 +29,31 @@ module.exports = async (req, res) => {
     const key = API_KEYS[keyIndex];
     try {
       const qs = new URLSearchParams({ ...mergedParams, key }).toString();
-      const response = await fetch(`${BASE_URL}${endpoint}?${qs}`);
+      const separator = endpoint.includes('?') ? '&' : '?';
+      const fullUrl = `${BASE_URL}${endpoint}${separator}${qs}`;
+      
+      const response = await fetch(fullUrl);
       const data = await response.json();
-      if (response.status === 403) { lastError = { status: 403 }; continue; }
+      
+      if (response.status === 403) { 
+          lastError = { status: 403, message: 'Quota exceeded or unauthorized' }; 
+          continue; 
+      }
+      
       activeKeyIndex = keyIndex;
-      return res.status(response.status).json(data);
-    } catch (err) { lastError = err; break; }
+      return res.status(response.status).json({
+          success: response.ok,
+          data: data
+      });
+    } catch (err) { 
+        lastError = err; 
+        break; 
+    }
   }
-  return res.status(lastError?.status || 500).json({ error: 'Failed to fetch from YouTube', details: lastError?.message });
+  
+  return res.status(lastError?.status || 500).json({ 
+      success: false, 
+      error: 'Failed to fetch from YouTube', 
+      details: lastError?.message 
+  });
 };

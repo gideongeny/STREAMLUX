@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
   const merged = { ...query, ...body };
   const { provider, endpoint, params } = merged;
 
-  if (!provider) return res.status(400).json({ error: "Missing 'provider' parameter." });
+  if (!provider) return res.status(400).json({ success: false, error: "Missing 'provider' parameter." });
 
   let url, finalParams = { ...(params || {}) }, headers = {};
   switch (provider) {
@@ -38,16 +38,26 @@ module.exports = async (req, res) => {
       finalParams.api_token = "pWJ9QW6z7Y6U0uI4R8K9O2Q7L5V3M1N0";
       break;
     default:
-      return res.status(400).json({ error: `Unsupported provider: ${provider}` });
+      return res.status(400).json({ success: false, error: `Unsupported provider: ${provider}` });
   }
 
   try {
     const qs = new URLSearchParams(finalParams).toString();
-    const fullUrl = `${url}${url.includes('?') ? '&' : '?'}${qs}`;
+    const separator = url.includes('?') ? '&' : '?';
+    const fullUrl = `${url}${separator}${qs}`;
+    
     const response = await fetch(fullUrl, { headers });
     const data = await response.json();
-    return res.status(response.status).json(data);
+    
+    return res.status(response.status).json({
+        success: response.ok,
+        data: data
+    });
   } catch (error) {
-    return res.status(500).json({ error: `Failed to fetch from ${provider}`, details: error.message });
+    return res.status(500).json({ 
+        success: false, 
+        error: `Failed to fetch from ${provider}`, 
+        details: error.message 
+    });
   }
 };

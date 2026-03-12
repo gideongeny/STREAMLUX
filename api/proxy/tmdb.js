@@ -13,25 +13,52 @@ module.exports = async (req, res) => {
   const query = req.query || {};
   const body = req.body || {};
 
-  const endpoint = body.endpoint || query.endpoint;
+  // Extract endpoint from body or query param
+  let endpoint = body.endpoint || query.endpoint;
+  
+  // If still no endpoint, try to extract from req.url (supports direct paths)
+  if (!endpoint && req.url) {
+      const urlParts = req.url.split('?');
+      const path = urlParts[0];
+      if (path.startsWith('/api/proxy/tmdb/')) {
+          endpoint = path.replace('/api/proxy/tmdb', '');
+      }
+  }
+
+  if (!endpoint) {
+    return res.status(400).json({ success: false, error: 'TMDB endpoint is required' });
+  }
+
   const bodyParams = body.params || {};
   const extraQueryParams = { ...query };
   delete extraQueryParams.endpoint;
 
   const mergedParams = { ...extraQueryParams, ...bodyParams, api_key: TMDB_API_KEY };
 
-  if (!endpoint) {
-    return res.status(400).json({ error: 'TMDB endpoint is required' });
-  }
-
   try {
     const qs = new URLSearchParams(mergedParams).toString();
-    const response = await fetch(`${BASE_URL}${endpoint}?${qs}`, {
+    // Handle cases where endpoint might already have query params
+    const separator = endpoint.includes('?') ? '&' : '?';
+    const fullUrl = `${BASE_URL}${endpoint}${separator}${qs}`;
+    
+    console.log(`Fetching from: ${fullUrl}`);
+
+    const response = await fetch(fullUrl, {
       headers: { 'Accept': 'application/json' }
     });
+    
     const data = await response.json();
-    return res.status(response.status).json(data);
+    
+    // Wrap the response in { success: true, data } as expected by the frontend
+    return res.status(response.status).json({
+        success: response.ok,
+        data: data
+    });
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to fetch from TMDB', details: error.message });
+    return res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch from TMDB', 
+        details: error.message 
+    });
   }
 };
