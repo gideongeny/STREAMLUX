@@ -56,6 +56,7 @@ import { pushNotificationService } from "./services/pushNotifications";
 import { trendingNotificationService } from "./services/trendingNotifications";
 import { setLanguage } from "./shared/axios";
 
+// Final deployment heartbeat for unified Vercel backend propagation
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
