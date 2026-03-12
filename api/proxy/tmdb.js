@@ -1,4 +1,5 @@
 const TMDB_API_KEY = "a09e6f0e213603b1cda6f489987cff74";
+const TMDB_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhMDllNmYwZTIxMzYwM2IxY2RhNmY0ODk5ODdjZmY3NCIsIm5iZiI6MTc1NDgyNjU1Mi4zMTcsInN1YiI6IjY4OTg4NzM4NzczZjAxYzIzNDVkMGRlYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.G0DnSMJ9PjLOM8Q9uBf6YruODK27kipmcFshPn0VfL0";
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 module.exports = async (req, res) => {
@@ -13,15 +14,14 @@ module.exports = async (req, res) => {
   const query = req.query || {};
   const body = req.body || {};
 
-  // Extract endpoint from body or query param
+  // Extract endpoint
   let endpoint = body.endpoint || query.endpoint;
   
-  // If still no endpoint, try to extract from req.url (supports direct paths)
   if (!endpoint && req.url) {
       const urlParts = req.url.split('?');
       const path = urlParts[0];
-      if (path.startsWith('/api/proxy/tmdb/')) {
-          endpoint = path.replace('/api/proxy/tmdb', '');
+      if (path.includes('/api/proxy/tmdb/')) {
+          endpoint = path.split('/api/proxy/tmdb')[1];
       }
   }
 
@@ -29,27 +29,29 @@ module.exports = async (req, res) => {
     return res.status(400).json({ success: false, error: 'TMDB endpoint is required' });
   }
 
-  const bodyParams = body.params || {};
-  const extraQueryParams = { ...query };
-  delete extraQueryParams.endpoint;
+  // Ensure endpoint starts with /
+  if (!endpoint.startsWith('/')) endpoint = '/' + endpoint;
 
-  const mergedParams = { ...extraQueryParams, ...bodyParams, api_key: TMDB_API_KEY };
+  const params = { ...(body.params || {}), ...(query || {}) };
+  delete params.endpoint;
+
+  // We append api_key anyway as a fallback, but primary is Bearer
+  params.api_key = TMDB_API_KEY;
 
   try {
-    const qs = new URLSearchParams(mergedParams).toString();
-    // Handle cases where endpoint might already have query params
+    const qs = new URLSearchParams(params).toString();
     const separator = endpoint.includes('?') ? '&' : '?';
     const fullUrl = `${BASE_URL}${endpoint}${separator}${qs}`;
     
-    console.log(`Fetching from: ${fullUrl}`);
-
     const response = await fetch(fullUrl, {
-      headers: { 'Accept': 'application/json' }
+      headers: { 
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${TMDB_BEARER_TOKEN}`
+      }
     });
     
     const data = await response.json();
     
-    // Wrap the response in { success: true, data } as expected by the frontend
     return res.status(response.status).json({
         success: response.ok,
         data: data
