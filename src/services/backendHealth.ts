@@ -39,7 +39,7 @@ class BackendHealthService {
 
             // Simple health check endpoint - just needs to wake the server
             // Using /api/proxy/tmdb with a dummy endpoint
-            await axios.get(`${backendBase}/api/proxy/tmdb?endpoint=/movie/76341`, {
+            await axios.get(`${backendBase}/api/tmdb?endpoint=/movie/76341`, {
                 timeout: 10000, // 10 seconds is plenty for Vercel
             });
 

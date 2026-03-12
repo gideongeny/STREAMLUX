@@ -11,27 +11,27 @@
   "rewrites": [
     {
       "source": "/api/proxy/tmdb",
-      "destination": "/api/proxy/tmdb"
+      "destination": "/api/tmdb"
     },
     {
       "source": "/api/proxy/tmdb/(.*)",
-      "destination": "/api/proxy/tmdb?endpoint=/$1"
+      "destination": "/api/tmdb?endpoint=/$1"
     },
     {
       "source": "/api/proxy/youtube",
-      "destination": "/api/proxy/youtube"
+      "destination": "/api/youtube"
     },
     {
       "source": "/api/proxy/youtube/(.*)",
-      "destination": "/api/proxy/youtube?endpoint=/$1"
+      "destination": "/api/youtube?endpoint=/$1"
     },
     {
       "source": "/api/proxy/external",
-      "destination": "/api/proxy/external"
+      "destination": "/api/external"
     },
     {
       "source": "/api/proxy/external/(.*)",
-      "destination": "/api/proxy/external?endpoint=/$1"
+      "destination": "/api/external?endpoint=/$1"
     },
     {
       "source": "/api/scrapers",

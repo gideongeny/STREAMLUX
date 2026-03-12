@@ -5,7 +5,7 @@ import { apiCache } from "./apiCache";
 import { getBackendBase } from "../services/download";
 
 // Use the new Vercel Serverless Proxy for all TMDB requests
-const PROXY_URL = `${getBackendBase()}/api/proxy/tmdb`;
+const PROXY_URL = `${getBackendBase()}/api/tmdb`;
 
 const instance = axios.create({
   baseURL: PROXY_URL,

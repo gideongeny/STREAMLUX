@@ -112,7 +112,7 @@ const HARDCODED_UPCOMING_FIXTURES: SportsFixtureConfig[] = [
 export const getMatchEvents = async (fixtureId: string): Promise<any[]> => {
   try {
     const rawId = fixtureId.replace("live-", "").replace("up-", "");
-    const response = await axios.post(`${getBackendBase()}/api/proxy/external`, {
+    const response = await axios.post(`${getBackendBase()}/api/external`, {
       provider: "apisports",
       endpoint: "/fixtures/events",
       params: { fixture: rawId }
@@ -126,7 +126,7 @@ export const getMatchEvents = async (fixtureId: string): Promise<any[]> => {
 export const getMatchStatistics = async (fixtureId: string): Promise<any[]> => {
   try {
     const rawId = fixtureId.replace("live-", "").replace("up-", "");
-    const response = await axios.post(`${getBackendBase()}/api/proxy/external`, {
+    const response = await axios.post(`${getBackendBase()}/api/external`, {
       provider: "apisports",
       endpoint: "/fixtures/statistics",
       params: { fixture: rawId }
@@ -140,7 +140,7 @@ export const getMatchStatistics = async (fixtureId: string): Promise<any[]> => {
 export const getMatchLineups = async (fixtureId: string): Promise<any[]> => {
   try {
     const rawId = fixtureId.replace("live-", "").replace("up-use-", "");
-    const response = await axios.post(`${getBackendBase()}/api/proxy/external`, {
+    const response = await axios.post(`${getBackendBase()}/api/external`, {
       provider: "apisports",
       endpoint: "/fixtures/lineups",
       params: { fixture: rawId }
@@ -181,7 +181,7 @@ export const getScorebatHighlights = async (): Promise<any[]> => {
 
 export const getNCAAFixtures = async (): Promise<any[]> => {
   try {
-    const response = await axios.post(`${getBackendBase()}/api/proxy/external`, {
+    const response = await axios.post(`${getBackendBase()}/api/external`, {
       provider: "espn",
       endpoint: "/basketball/mens-college-basketball/scoreboard",
       params: {}
@@ -294,7 +294,7 @@ export const getVarietyYT = async (): Promise<any[]> => {
 // Sports Movies & Docs from TMDB
 export const getSportsMovies = async (): Promise<any[]> => {
   try {
-    const docResponse = await axios.get(`${getApiBase()}/proxy/tmdb`, {
+    const docResponse = await axios.get(`${getApiBase()}/tmdb`, {
       params: {
         endpoint: "/discover/movie",
         with_genres: 99,
@@ -385,7 +385,7 @@ export const getVarietySports = async (): Promise<any[]> => {
 // API Sports Fallback Helpers (Internal)
 const getLiveFixturesAPISports = async (signal?: AbortSignal): Promise<SportsFixtureConfig[]> => {
   try {
-    const response = await axios.post(`${getBackendBase()}/api/proxy/external`, {
+    const response = await axios.post(`${getBackendBase()}/api/external`, {
       provider: "apisports",
       endpoint: "/fixtures",
       params: { live: "all" }
@@ -413,7 +413,7 @@ const getLiveFixturesAPISports = async (signal?: AbortSignal): Promise<SportsFix
 const getUpcomingFixturesAPISports = async (signal?: AbortSignal): Promise<SportsFixtureConfig[]> => {
   try {
     const dateStr = new Date().toISOString().split('T')[0];
-    const response = await axios.post(`${getBackendBase()}/api/proxy/external`, {
+    const response = await axios.post(`${getBackendBase()}/api/external`, {
       provider: "apisports",
       endpoint: "/fixtures",
       params: { date: dateStr }
