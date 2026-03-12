@@ -258,287 +258,312 @@ export class ResolverService {
         const tmdbId = id.toString();
 
         sources.push(
-            // 0. VidSrc.me (Clean Alternative - NEW DEFAULT)
+            // T1 - Premier (No/Low Ads, High Success)
+            {
+                name: "AutoEmbed",
+                url: mediaType === "movie"
+                    ? `https://autoembed.cc/movie/tmdb/${tmdbId}`
+                    : `https://autoembed.cc/tv/tmdb/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "4K/1080p", speed: "fast", status: "active", type: "embed", priority: 0
+            },
             {
                 name: "VidSrc.me",
                 url: mediaType === "movie"
                     ? `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`
                     : `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${season || 1}&episode=${episode || 1}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 0
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 1
             },
-            // 1. VidLink (Premium Ad-Free / Low Ads)
             {
                 name: "VidLink",
                 url: mediaType === "movie"
                     ? `https://vidlink.pro/embed/movie/${tmdbId}`
                     : `https://vidlink.pro/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "1080p+",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 1 // shifted
+                quality: "1080p+", speed: "fast", status: "active", type: "embed", priority: 2
             },
-            // 2. VidSrc.to (Priority 2 - Real Working VidSrc)
+            {
+                name: "SmashyStream",
+                url: mediaType === "movie"
+                    ? `https://embed.smashystream.com/playerjsMovie.php?tmdb=${tmdbId}`
+                    : `https://embed.smashystream.com/playerjs.php?tmdb=${tmdbId}&season=${season || 1}&episode=${episode || 1}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 3
+            },
+            {
+                name: "MovieAPI",
+                url: mediaType === "movie"
+                    ? `https://moviesapi.club/movie/${tmdbId}`
+                    : `https://moviesapi.club/tv/${tmdbId}-${season || 1}-${episode || 1}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 4
+            },
+            // T2 - Standard Quality
             {
                 name: "VidSrc",
                 url: mediaType === "movie"
                     ? `https://vidsrc.to/embed/movie/${tmdbId}`
                     : `https://vidsrc.to/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 2
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 5
             },
-            // 3. VidSrc.vip (Low Ads)
             {
                 name: "VidSrc.vip",
                 url: mediaType === "movie"
                     ? `https://vidsrc.vip/embed/movie/${tmdbId}`
                     : `https://vidsrc.vip/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 3
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 6
             },
-            // 4. VidSrc.pro (Alt)
             {
                 name: "VidSrc (Alt)",
                 url: mediaType === "movie"
                     ? `https://vidsrc.pro/embed/movie/${tmdbId}`
                     : `https://vidsrc.pro/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 4
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 7
             },
-            // 5. Vidplay (via VidSrc.to)
-            {
-                name: "Vidplay",
-                url: mediaType === "movie"
-                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=vidplay`
-                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season || 1}/${episode || 1}?server=vidplay`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 5
-            },
-            // 6. Upcloud (via VidSrc.to)
-            {
-                name: "Upcloud",
-                url: mediaType === "movie"
-                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=upcloud`
-                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season || 1}/${episode || 1}?server=upcloud`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 6
-            },
-            // 7. Topish (Nollywood/African)
-            {
-                name: "Topish",
-                url: `https://topish.to/embed/${embedId}`,
-                quality: "720p",
-                speed: "medium",
-                status: "active",
-                type: "embed",
-                priority: 7
-            },
-            // 5. Embed.su (International)
-            {
-                name: "Embed.su",
-                url: mediaType === "movie"
-                    ? `https://embed.su/embed/movie/${tmdbId}`
-                    : `https://embed.su/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 5
-            },
-            // 6. VidSrc.xyz (YouTube Aggregator)
             {
                 name: "VidSrc.xyz",
                 url: mediaType === "movie"
                     ? `https://vidsrc.xyz/embed/movie/${tmdbId}`
                     : `https://vidsrc.xyz/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 6
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 8
             },
-            // 7. HiAnime (Anime Specialist)
             {
-                name: "HiAnime",
-                url: mediaType === "tv" // Typically Anime is TV
-                    ? `https://hianime.to/embed/episode/${tmdbId}`
-                    : `https://hianime.to/embed/movie/${tmdbId}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 7
+                name: "Embed.su",
+                url: mediaType === "movie"
+                    ? `https://embed.su/embed/movie/${tmdbId}`
+                    : `https://embed.su/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 9
             },
-            // 8. AniWatch (Anime)
             {
-                name: "AniWatch",
-                url: `https://aniwatch.to/embed?id=${tmdbId}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 8
+                name: "Vidplay",
+                url: mediaType === "movie"
+                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=vidplay`
+                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season || 1}/${episode || 1}?server=vidplay`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 10
             },
-            // 9. KissKH (Asian Drama)
             {
-                name: "KissKH",
-                url: `https://kisskh.co/Embed/${embedId}?type=${mediaType === 'movie' ? 1 : 2}`,
-                quality: "720p",
-                speed: "medium",
-                status: "active",
-                type: "embed",
-                priority: 9
+                name: "Upcloud",
+                url: mediaType === "movie"
+                    ? `https://vidsrc.to/embed/movie/${tmdbId}?server=upcloud`
+                    : `https://vidsrc.to/embed/tv/${tmdbId}/${season || 1}/${episode || 1}?server=upcloud`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 11
             },
-            // 10. AsianEmbed
-            {
-                name: "AsianEmbed",
-                url: `https://asianembed.io/streaming.php?id=${embedId}`,
-                quality: "720p",
-                speed: "medium",
-                status: "active",
-                type: "embed",
-                priority: 10
-            },
-            // 11. DoodStream (Regional Mirror)
-            {
-                name: "DoodStream",
-                url: `https://d000d.com/e/${tmdbId}`,
-                quality: "SD",
-                speed: "slow",
-                status: "active",
-                type: "embed",
-                priority: 11
-            },
-            // 12. MixDrop
-            {
-                name: "MixDrop",
-                url: `https://mixdrop.co/e/${tmdbId}`,
-                quality: "SD",
-                speed: "slow",
-                status: "active",
-                type: "embed",
-                priority: 12
-            },
-            // 13. FileMoon
-            {
-                name: "FileMoon",
-                url: `https://filemoon.sx/e/${tmdbId}`,
-                quality: "HD",
-                speed: "medium",
-                status: "active",
-                type: "embed",
-                priority: 13
-            },
-            // 14. 2Embed (Fallback)
             {
                 name: "2Embed",
                 url: mediaType === "movie"
                     ? `https://www.2embed.cc/embed/${tmdbId}`
                     : `https://www.2embed.cc/embedtv/${tmdbId}?s=${season || 1}&e=${episode || 1}`,
-                quality: "1080p",
-                speed: "medium",
-                status: "active",
-                type: "embed",
-                priority: 14
+                quality: "1080p", speed: "medium", status: "active", type: "embed", priority: 12
             },
-            // 15. SuperEmbed (Fallback)
             {
                 name: "SuperEmbed",
                 url: mediaType === "movie"
                     ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`
                     : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=${season || 1}&e=${episode || 1}`,
-                quality: "1080p",
-                speed: "fast",
-                status: "active",
-                type: "embed",
-                priority: 15
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 13
             },
-            // 16. Vidmov (NEW)
+            // T3 — New Fast Embeds
+            {
+                name: "VidFast",
+                url: mediaType === "movie"
+                    ? `https://vidfast.pro/movie/${tmdbId}`
+                    : `https://vidfast.pro/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 14
+            },
+            {
+                name: "FlixHQ",
+                url: mediaType === "movie"
+                    ? `https://flixhq.to/tmdb-movie/${tmdbId}`
+                    : `https://flixhq.to/tmdb-tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 15
+            },
+            {
+                name: "Nontongo",
+                url: mediaType === "movie"
+                    ? `https://nontongo.win/embed/movie?id=${tmdbId}`
+                    : `https://nontongo.win/embed/tv?id=${tmdbId}&s=${season || 1}&e=${episode || 1}`,
+                quality: "720p", speed: "medium", status: "active", type: "embed", priority: 16
+            },
+            {
+                name: "EmbedRise",
+                url: mediaType === "movie"
+                    ? `https://embedrise.xyz/movie/${tmdbId}`
+                    : `https://embedrise.xyz/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 17
+            },
+            {
+                name: "WatchX",
+                url: mediaType === "movie"
+                    ? `https://watchx.top/embed/movie/${tmdbId}`
+                    : `https://watchx.top/embed/tv/${tmdbId}?s=${season || 1}&e=${episode || 1}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 18
+            },
+            {
+                name: "CineZone",
+                url: mediaType === "movie"
+                    ? `https://cinezone.to/embed/movie?id=${tmdbId}`
+                    : `https://cinezone.to/embed/tv?id=${tmdbId}&s=${season || 1}&e=${episode || 1}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 19
+            },
+            {
+                name: "Frembed",
+                url: mediaType === "movie"
+                    ? `https://frembed.fun/api/film?id=${tmdbId}`
+                    : `https://frembed.fun/api/serie?id=${tmdbId}&sa=${season || 1}&epi=${episode || 1}`,
+                quality: "1080p", speed: "medium", status: "active", type: "embed", priority: 20
+            },
+            // Regional Specialists
+            {
+                name: "MyAsianTV",
+                url: `https://myasiantv.to/embed/${tmdbId}`,
+                quality: "720p", speed: "medium", status: "active", type: "embed", priority: 21
+            },
+            {
+                name: "DramaCool",
+                url: `https://dramacool.com.tr/embed/${tmdbId}`,
+                quality: "720p", speed: "medium", status: "active", type: "embed", priority: 22
+            },
+            {
+                name: "KissKH",
+                url: `https://kisskh.co/Embed/${embedId}?type=${mediaType === 'movie' ? 1 : 2}`,
+                quality: "720p", speed: "medium", status: "active", type: "embed", priority: 23
+            },
+            {
+                name: "AsianEmbed",
+                url: `https://asianembed.io/streaming.php?id=${embedId}`,
+                quality: "720p", speed: "medium", status: "active", type: "embed", priority: 24
+            },
+            {
+                name: "HiAnime",
+                url: mediaType === "tv"
+                    ? `https://hianime.to/embed/episode/${tmdbId}`
+                    : `https://hianime.to/embed/movie/${tmdbId}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 25
+            },
+            {
+                name: "AniWatch",
+                url: `https://aniwatch.to/embed?id=${tmdbId}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 26
+            },
+            {
+                name: "Topish",
+                url: `https://topish.to/embed/${embedId}`,
+                quality: "720p", speed: "medium", status: "active", type: "embed", priority: 27
+            },
+            // Latin/Spanish
+            {
+                name: "NaniPlay (Latin)",
+                url: mediaType === "movie"
+                    ? `https://naniplay.com/api/movie?tmdb=${tmdbId}`
+                    : `https://naniplay.com/api/serie?tmdb=${tmdbId}&temp=${season || 1}&cap=${episode || 1}`,
+                quality: "720p", speed: "medium", status: "active", type: "embed", priority: 28
+            },
+            {
+                name: "CineTux (LatAm)",
+                url: `https://cinetux.org/embed/${tmdbId}`,
+                quality: "720p", speed: "medium", status: "active", type: "embed", priority: 29
+            },
+            {
+                name: "PelisPlus (ES)",
+                url: `https://pelisplus.io/embed/${tmdbId}`,
+                quality: "720p", speed: "medium", status: "active", type: "embed", priority: 30
+            },
+            // Legacy / CDN backups
             {
                 name: "Vidmov",
                 url: `https://vidmov.com/embed/${mediaType}/${tmdbId}${mediaType === 'tv' ? `/${season}/${episode}` : ''}`,
-                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 16
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 31
             },
-            // 17. MyCloud (NEW)
             {
                 name: "MyCloud",
                 url: `https://mycloud.click/embed/${mediaType}/${tmdbId}${mediaType === 'tv' ? `/${season}/${episode}` : ''}`,
-                quality: "1080p", speed: "medium", status: "active", type: "embed", priority: 17
+                quality: "1080p", speed: "medium", status: "active", type: "embed", priority: 32
             },
-            // 18. MoviNow (NEW)
             {
                 name: "MoviNow",
                 url: `https://movinow.com/embed/${tmdbId}`,
-                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 18
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 33
             },
-            // 19. WatchNow (NEW)
             {
                 name: "WatchNow",
                 url: `https://watchnow.to/embed/${mediaType}/${tmdbId}`,
-                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 19
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 34
             },
-            // 20. MApi (NEW)
             {
                 name: "MApi",
                 url: `https://api.myfilestorage.xyz/embed/${mediaType}/${tmdbId}`,
-                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 20
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 35
             },
-            // 21. Cinemaous (NEW)
-            {
-                name: "Cinemaous",
-                url: `https://cinemaous.com/embed/${tmdbId}`,
-                quality: "1080p", speed: "medium", status: "active", type: "embed", priority: 21
-            },
-            // 22. Rive (NEW)
             {
                 name: "Rive",
                 url: `https://rive.stream/embed/${mediaType}/${tmdbId}`,
-                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 22
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 36
             },
-            // 23. VidEasy (NEW)
             {
                 name: "VidEasy",
                 url: `https://videasy.to/embed/${mediaType}/${tmdbId}`,
-                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 23
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 37
             },
-            // 24. LookMovie2 (Scraper)
+            {
+                name: "Cinemaous",
+                url: `https://cinemaous.com/embed/${tmdbId}`,
+                quality: "1080p", speed: "medium", status: "active", type: "embed", priority: 38
+            },
+            {
+                name: "StreamTape",
+                url: `https://streamtape.com/e/${tmdbId}`,
+                quality: "720p", speed: "slow", status: "active", type: "embed", priority: 39
+            },
+            {
+                name: "StreamWish",
+                url: `https://streamwish.com/e/${tmdbId}`,
+                quality: "720p", speed: "medium", status: "active", type: "embed", priority: 40
+            },
+            {
+                name: "DoodStream",
+                url: `https://d000d.com/e/${tmdbId}`,
+                quality: "SD", speed: "slow", status: "active", type: "embed", priority: 41
+            },
+            {
+                name: "FileMoon",
+                url: `https://filemoon.sx/e/${tmdbId}`,
+                quality: "HD", speed: "medium", status: "active", type: "embed", priority: 42
+            },
+            {
+                name: "MixDrop",
+                url: `https://mixdrop.co/e/${tmdbId}`,
+                quality: "SD", speed: "slow", status: "active", type: "embed", priority: 43
+            },
+            // Scraper search fallbacks
             {
                 name: "LookMovie2",
                 url: `https://lookmovie2.to/search?q=${encodeURIComponent(title || '')}`,
                 quality: "HD", speed: "medium", status: "active", type: "embed", priority: 50
             },
-            // 25. SOAP2Day (Scraper)
             {
                 name: "SOAP2Day",
                 url: `https://soap2day.rs/search/${encodeURIComponent(title || '')}`,
                 quality: "HD", speed: "medium", status: "active", type: "embed", priority: 51
             },
-            // 26. MyFlixer (Scraper)
             {
                 name: "MyFlixer",
                 url: `https://myflixer.to/search/${encodeURIComponent(title || '')}`,
                 quality: "HD", speed: "medium", status: "active", type: "embed", priority: 52
+            },
+            {
+                name: "FMovies",
+                url: `https://fmovies.to/search/${encodeURIComponent(title || '')}`,
+                quality: "HD", speed: "medium", status: "active", type: "embed", priority: 53
+            },
+            {
+                name: "123Movies",
+                url: `https://123movies.ai/search/${encodeURIComponent(title || '')}`,
+                quality: "HD", speed: "medium", status: "active", type: "embed", priority: 54
+            },
+            {
+                name: "Putlocker",
+                url: `https://putlocker.vip/search/${encodeURIComponent(title || '')}`,
+                quality: "HD", speed: "medium", status: "active", type: "embed", priority: 55
             }
         );
+
+
 
         // Simulate network delay for "Resolving" feel
         await new Promise(resolve => setTimeout(resolve, 800));

@@ -22,6 +22,7 @@ import VerticalShorts from "../components/Home/VerticalShorts";
 import UpcomingCalendar from "../components/Home/UpcomingCalendar";
 import NewReleases from "../components/Home/NewReleases";
 import ComingSoonSlider from "../components/Home/ComingSoonSlider";
+import GlobalWorldTV from "../components/Home/GlobalWorldTV";
 import SectionErrorBoundary from "../components/Common/SectionErrorBoundary";
 import SmartAdContainer from "../components/Common/SmartAdContainer";
 import AdBanner from "../components/Ads/AdBanner";
@@ -363,6 +364,11 @@ const Home: FC = () => {
 
               {/* Inline Ad - Non-intrusive (only shows after 10 seconds) */}
               <SmartAdContainer position="inline" minViewTime={10000} />
+
+              {/* Global World TV — Content from 40+ Nations */}
+              <ErrorBoundary fallback={null}>
+                <GlobalWorldTV />
+              </ErrorBoundary>
 
               {/* Discover World navigation */}
               <DiverseNavigation />
