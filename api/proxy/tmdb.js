@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
     });
     return res.status(200).json(response.data);
   } catch (error) {
-    console.error(`TMDB Proxy Error [${endpoint}]:`, error.message);
+    console.error(`TMDB Proxy Error:`, error.message);
     const status = error.response?.status || 500;
     return res.status(status).json({ 
       error: 'Failed to fetch from TMDB', 
