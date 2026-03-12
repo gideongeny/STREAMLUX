@@ -16,10 +16,11 @@ import { getWatchModePopular, searchWatchModeTitles } from "./watchmode";
 import { searchStreamingTitles, getStreamingTitles } from "./rapidapi-streaming";
 import { searchOMDBTitles, getOMDBPopular } from "./omdb";
 import { sanitizeString } from "../utils/security";
+import { getPersonalizedRecommendations } from "./movieAPIs";
 
 // MOVIE TAB
 ///////////////////////////////////////////////////////////////
-export const getHomeMovies = async (): Promise<HomeFilms> => {
+export const getHomeMovies = async (history?: Item[]): Promise<HomeFilms> => {
   const endpoints: { [key: string]: string } = {
     Trending: "/trending/movie/day",
     Popular: "/movie/popular",
@@ -249,6 +250,23 @@ export const getHomeMovies = async (): Promise<HomeFilms> => {
     console.warn("Home movie extras failed:", error);
   }
 
+  // Vision AI 3.0: Inject Personalized Recommendations at the very top
+  if (history && history.length > 0) {
+    try {
+      const personalized = await getPersonalizedRecommendations(history, "movie");
+      if (personalized && personalized.length > 0) {
+        // Reconstruct object to put personalized at the top
+        const newData: HomeFilms = {
+          "✨ Personalized for You": personalized,
+          ...data
+        };
+        return newData;
+      }
+    } catch (e) {
+      console.warn("Failed to generate personalized movies:", e);
+    }
+  }
+
   return data;
 };
 
@@ -304,7 +322,7 @@ export const getMovieBannerInfo = async (
 // TV TAB
 ///////////////////////////////////////////////////////////////
 
-export const getHomeTVs = async (): Promise<HomeFilms> => {
+export const getHomeTVs = async (history?: Item[]): Promise<HomeFilms> => {
   const endpoints: { [key: string]: string } = {
     Trending: "/trending/tv/day",
     Popular: "/tv/popular",
@@ -510,6 +528,23 @@ export const getHomeTVs = async (): Promise<HomeFilms> => {
 
   } catch (error) {
     console.warn("Home TV extras failed:", error);
+  }
+
+  // Vision AI 3.0: Inject Personalized Recommendations at the very top
+  if (history && history.length > 0) {
+    try {
+      const personalized = await getPersonalizedRecommendations(history, "tv");
+      if (personalized && personalized.length > 0) {
+        // Reconstruct object to put personalized at the top
+        const newData: HomeFilms = {
+          "✨ Personalized for You": personalized,
+          ...data
+        };
+        return newData;
+      }
+    } catch (e) {
+      console.warn("Failed to generate personalized tv shows:", e);
+    }
   }
 
   return data;

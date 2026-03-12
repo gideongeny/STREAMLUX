@@ -10,7 +10,7 @@ import {
 import { BannerInfo, HomeFilms, Item } from "../shared/types";
 import { safeStorage } from "../utils/safeStorage";
 
-export const useHomeData = (type: "movie" | "tv") => {
+export const useHomeData = (type: "movie" | "tv", history?: Item[]) => {
   const { i18n } = useTranslation();
   const queryClient = useQueryClient();
   const cacheKey = `home-cache-${type}-${i18n.language}`;
@@ -20,9 +20,9 @@ export const useHomeData = (type: "movie" | "tv") => {
   const initialData = safeStorage.getParsed<HomeFilms | undefined>(cacheKey, undefined);
 
   const { data, isLoading, isError, error } = useQuery<HomeFilms, Error>(
-    [`home-${type}`, i18n.language],
+    [`home-${type}`, i18n.language, history?.length], // Refetch if history length changes significantly
     async () => {
-      const result = await getData();
+      const result = await getData(history);
       safeStorage.set(cacheKey, JSON.stringify(result));
       return result;
     },

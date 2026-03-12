@@ -1,5 +1,6 @@
 import { getBackendBase } from "./download";
-
+import { doc, getDoc, setDoc, updateDoc, increment } from "firebase/firestore";
+import { db } from "../shared/firebase";
 // Proxy Helpers - backend expects /api/proxy, /api/download, /api/resolve
 const getApiBase = () => getBackendBase() + "/api";
 
@@ -39,7 +40,14 @@ export interface ResolvedSource {
 export class ResolverService {
     private static instance: ResolverService;
     private healthCache: Map<string, { status: "active" | "slow" | "down", timestamp: number }> = new Map();
+    private globalHealth: Map<string, { success: number, failure: number }> = new Map();
     private readonly HEALTH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+    private constructor() {
+        this.syncGlobalHealth();
+        // Sync every 5 minutes
+        setInterval(() => this.syncGlobalHealth(), this.HEALTH_CACHE_TTL);
+    }
 
     static getInstance(): ResolverService {
         if (!ResolverService.instance) {
@@ -96,11 +104,91 @@ export class ResolverService {
     }
 
     /**
-     * Get the first healthy source from the list
+     * Sync global health stats from Firestore
+     */
+    private async syncGlobalHealth() {
+        if (!db) return;
+        try {
+            const healthDoc = await getDoc(doc(db, "system", "health"));
+            if (healthDoc.exists()) {
+                const data = healthDoc.data();
+                Object.keys(data).forEach(key => {
+                    this.globalHealth.set(key, data[key]);
+                });
+            }
+        } catch (error) {
+            console.warn("Failed to sync global health:", error);
+        }
+    }
+
+    /**
+     * Report successful playback for a source
+     */
+    async reportPlaybackSuccess(sourceName: string) {
+        if (!db) return;
+        try {
+            const docRef = doc(db, "system", "health");
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) {
+                await setDoc(docRef, { [sourceName]: { success: 1, failure: 0 } });
+            } else {
+                await updateDoc(docRef, {
+                    [`${sourceName}.success`]: increment(1)
+                });
+            }
+            const current = this.globalHealth.get(sourceName) || { success: 0, failure: 0 };
+            this.globalHealth.set(sourceName, { ...current, success: current.success + 1 });
+        } catch (error) {
+            console.warn("Failed to report success:", error);
+        }
+    }
+
+    /**
+     * Report failed playback for a source
+     */
+    async reportPlaybackFailure(sourceName: string) {
+        if (!db) return;
+        try {
+            const docRef = doc(db, "system", "health");
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) {
+                await setDoc(docRef, { [sourceName]: { success: 0, failure: 1 } });
+            } else {
+                await updateDoc(docRef, {
+                    [`${sourceName}.failure`]: increment(1)
+                });
+            }
+            const current = this.globalHealth.get(sourceName) || { success: 0, failure: 0 };
+            this.globalHealth.set(sourceName, { ...current, failure: current.failure + 1 });
+        } catch (error) {
+            console.warn("Failed to report failure:", error);
+        }
+    }
+
+    /**
+     * Get the first healthy source from the list, prioritizing community success
      */
     async getHealthySource(sources: ResolvedSource[]): Promise<ResolvedSource | null> {
-        // Sort by priority first
-        const sortedSources = [...sources].sort((a, b) => a.priority - b.priority);
+        // Sort by priority and community health
+        const sortedSources = [...sources].sort((a, b) => {
+            const healthA = this.globalHealth.get(a.name);
+            const healthB = this.globalHealth.get(b.name);
+            
+            // Calculate success ratio (default to 0.5 if unknown)
+            const ratioA = healthA ? (healthA.success + 1) / (healthA.success + healthA.failure + 2) : 0.5;
+            const ratioB = healthB ? (healthB.success + 1) / (healthB.success + healthB.failure + 2) : 0.5;
+
+            // If a source has a horrible ratio (< 20%), penalize its priority heavily
+            const effectivePriorityA = ratioA < 0.2 ? a.priority + 100 : a.priority;
+            const effectivePriorityB = ratioB < 0.2 ? b.priority + 100 : b.priority;
+
+            if (effectivePriorityA !== effectivePriorityB) {
+                return effectivePriorityA - effectivePriorityB; // Lower priority number is better
+            }
+            
+            // If priorities are equal, sort by success ratio (higher is better)
+            return ratioB - ratioA;
+        });
 
         for (const source of sortedSources) {
             const health = await this.pingSource(source.url);

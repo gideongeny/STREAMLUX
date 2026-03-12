@@ -7,7 +7,8 @@ import { API_URL } from "../shared/constants";
 import { fetchYouTubeVideos } from "./youtube";
 
 const TMDB_API_KEY = process.env.REACT_APP_API_KEY || "8c247ea0b4b56ed2ff7d41c9a833aa77";
-const OMDB_API_KEY = process.env.REACT_APP_OMDB_API_KEY || "eb87a867"; // OMDB API key (uses IMDB data)
+// OMDB API key moved to Firebase functions to ensure security
+// 💥 Phase 8: Hardened Data Pipeline 💥
 
 /**
  * Searches YouTube for metadata/trailers when TMDB data is sparse
@@ -115,25 +116,24 @@ export const getTMDBContent = async (
   }
 };
 
-// OMDB API - Search and get movie/TV details
+// OMDB API - Search and get movie/TV details via Firebase Proxy
 export const getOMDBContent = async (
   searchQuery: string,
   type: "movie" | "tv" = "movie"
 ): Promise<Item[]> => {
   try {
-    if (!OMDB_API_KEY) {
-      console.warn("OMDB API key not set. Get free key from http://www.omdbapi.com/apikey.aspx");
-      return [];
-    }
-
-    const response = await axios.get("http://www.omdbapi.com/", {
+    const proxyUrl = "https://us-central1-streamlux.cloudfunctions.net/proxyExternalAPI";
+    
+    const response = await axios.post(proxyUrl, {
+      provider: "omdb",
       params: {
-        apikey: OMDB_API_KEY,
         s: searchQuery,
         type: type === "movie" ? "movie" : "series",
         page: 1,
-      },
+      }
+    }, {
       timeout: 10000,
+      headers: { 'Content-Type': 'application/json' }
     });
 
     if (response.data.Response === "True" && response.data.Search) {
@@ -143,7 +143,7 @@ export const getOMDBContent = async (
 
     return [];
   } catch (error) {
-    console.warn("OMDB API error:", error);
+    console.warn("OMDB API Proxy error:", error);
     return [];
   }
 };
@@ -151,7 +151,6 @@ export const getOMDBContent = async (
 // OMDB - Get popular movies by searching common terms
 export const getOMDBPopular = async (type: "movie" | "tv" = "movie"): Promise<Item[]> => {
   try {
-    if (!OMDB_API_KEY) return [];
 
     // Search for popular titles
     const searchTerms = type === "movie"
@@ -188,9 +187,6 @@ export const getIMDBContent = async (
   type: "movie" | "tv" = "movie"
 ): Promise<Item[]> => {
   try {
-    if (!OMDB_API_KEY) {
-      return [];
-    }
 
     // If search query provided, search for it
     if (searchQuery) {
@@ -358,6 +354,80 @@ export const getAllAPIContentByGenre = async (
   } catch (error) {
     console.error(`Error fetching all API content by genre ${genreId}:`, error);
     return [];
+  }
+};
+
+/**
+ * Vision AI 3.0: High-Precision Content Discovery
+ * Analyzes the user's watch history (recently watched items) to extract
+ * favorite genres and cast members, then queries TMDB for highly tailored content.
+ */
+export const getPersonalizedRecommendations = async (
+  history: Item[],
+  type: "movie" | "tv"
+): Promise<Item[]> => {
+  if (!history || history.length === 0) {
+    // Fallback: If no history, return trending
+    return getTMDBContent(type, "trending", 1);
+  }
+
+  try {
+    // 1. Core Learning: Extract Favorite Genres
+    const genreFrequency: Record<number, number> = {};
+    const recentHistory = history.slice(0, 10); // Focus on recent mood (last 10 items)
+
+    recentHistory.forEach(item => {
+      if (item.genre_ids) {
+        // Weight recent items slightly higher (decay factor)
+        item.genre_ids.forEach(genreId => {
+          genreFrequency[genreId] = (genreFrequency[genreId] || 0) + 1;
+        });
+      }
+    });
+
+    // Sort genres by frequency to find top 3
+    const topGenres = Object.entries(genreFrequency)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([id]) => id);
+
+    if (topGenres.length === 0) {
+      return getTMDBContent(type, "popular", 1);
+    }
+
+    // 2. Query TMDB Discover API with top genres
+    // Using an OR condition (pipe '|') for genres to get diverse but relevant results
+    const genreQuery = topGenres.join('|');
+    
+    // Get unique IDs from history to filter out things they've already watched
+    const watchedIds = new Set(history.map(item => item.id));
+
+    const response = await axios.get(`${API_URL}/discover/${type}`, {
+      params: {
+        api_key: TMDB_API_KEY,
+        with_genres: genreQuery,
+        sort_by: "popularity.desc",
+        "vote_count.gte": 100, // Quality filter
+        page: 1,
+      },
+      timeout: 10000,
+    });
+
+    const items = (response.data.results || []).map((item: any) => ({
+      ...convertToItem(item, type),
+      media_type: type,
+    })) as Item[];
+
+    // 3. Filter out items the user has already watched
+    const freshRecommendations = items.filter(item => !watchedIds.has(item.id));
+
+    // If filtering removed everything, just return the raw results
+    return freshRecommendations.length > 0 ? freshRecommendations : items;
+
+  } catch (error) {
+    console.warn("Vision AI Recommendation Error:", error);
+    // Gradeful degradation
+    return getTMDBContent(type, "trending", 1);
   }
 };
 

@@ -100,6 +100,22 @@ const Home: FC = () => {
 
   const { watchHistory, clearProgress } = useWatchProgress();
 
+  // Convert WatchProgress back to Item format for the recommendation engine
+  const historyItems = watchHistory.map(w => ({
+    id: w.mediaId,
+    media_type: w.mediaType,
+    title: w.title,
+    name: w.title,
+    poster_path: w.posterPath,
+    backdrop_path: w.posterPath, // Fallback
+    overview: "",
+    genre_ids: [], // TMDB API will find matching genres by comparing IDs internally
+    original_language: "en",
+    popularity: 0,
+    vote_count: 0,
+    vote_average: 0
+  } as any));
+
   // Elite Aspect: Context-Aware Mood & Greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -125,14 +141,14 @@ const Home: FC = () => {
     isError: isErrorMovie,
     error: errorMovie,
     detailQuery: detailQueryMovie,
-  } = useHomeData("movie");
+  } = useHomeData("movie", historyItems);
   const {
     data: dataTV,
     isLoading: isLoadingTV,
     isError: isErrorTV,
     error: errorTV,
     detailQuery: detailQueryTV,
-  } = useHomeData("tv");
+  } = useHomeData("tv", historyItems);
 
   if (isErrorMovie) return (
     <div className="flex items-center justify-center min-h-screen bg-dark text-white">

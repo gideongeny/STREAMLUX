@@ -35,6 +35,16 @@ import AmbientGlow from "../Common/AmbientGlow";
 import { vibeService } from "../../services/vibe";
 import StarRating from "../Common/StarRating";
 import QuickWatchlist from "../Common/QuickWatchlist";
+import { useWatchProgress } from "../../hooks/useWatchProgress";
+
+const formatTime = (seconds: number) => {
+  if (!seconds) return "0:00";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+};
 
 const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
   const currentUser = useAppSelector((state) => state.auth.user);
@@ -42,6 +52,24 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
   const { isMobile } = useCurrentViewportView();
   const [isSidebarActive, setIsSidebarActive] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+
+  // Resume Anywhere logic
+  const { getProgress } = useWatchProgress();
+  const [resumeData, setResumeData] = useState<{ time: number, s?: number, e?: number } | null>(null);
+
+  useEffect(() => {
+    if (detail?.id && detail?.media_type) {
+      getProgress(Number(detail.id), detail.media_type as 'movie' | 'tv').then(prog => {
+        if (prog && prog.progress > 0.01 && prog.progress < 0.95) { // 1% to 95% watched
+          setResumeData({
+            time: prog.currentTime,
+            s: prog.seasonNumber,
+            e: prog.episodeNumber
+          });
+        }
+      });
+    }
+  }, [detail, getProgress]);
 
   // Sync with global banner mute state if possible, or keep local
   const [showMuteButton, setShowMuteButton] = useState(false);
@@ -305,12 +333,18 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                           className="w-full"
                         >
                           <Link
-                            to="watch"
+                            to={resumeData 
+                              ? `watch?time=${resumeData.time}${resumeData.s ? `&season=${resumeData.s}&episode=${resumeData.e}` : ''}` 
+                              : "watch"}
                             onClick={() => hapticImpact()}
                             className="flex gap-2 items-center justify-center px-4 py-3 rounded-full bg-primary text-white hover:bg-blue-600 shadow-lg shadow-primary/20 transition duration-300 w-full"
                           >
                             <BsFillPlayFill size={24} />
-                            <span className="text-sm font-black uppercase tracking-widest">Watch Now</span>
+                            <span className="text-sm font-black uppercase tracking-widest">
+                               {resumeData 
+                                  ? `Resume ${resumeData.s ? `S${resumeData.s}E${resumeData.e}` : formatTime(resumeData.time)}` 
+                                  : "Watch Now"}
+                            </span>
                           </Link>
                         </motion.div>
 
@@ -382,12 +416,18 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                           transition={{ duration: 2, repeat: Infinity }}
                         >
                           <Link
-                            to="watch"
+                            to={resumeData 
+                              ? `watch?time=${resumeData.time}${resumeData.s ? `&season=${resumeData.s}&episode=${resumeData.e}` : ''}` 
+                              : "watch"}
                             onClick={() => hapticImpact()}
                             className="flex gap-6 items-center pl-6 pr-12 py-3.5 rounded-full bg-primary text-white hover:bg-blue-600 shadow-2xl shadow-primary/40 transition duration-300"
                           >
                             <BsFillPlayFill size={28} />
-                            <span className="text-xl font-black uppercase tracking-[0.2em]">Watch</span>
+                            <span className="text-xl font-black uppercase tracking-[0.2em]">
+                              {resumeData 
+                                  ? `Resume ${resumeData.s ? `S${resumeData.s}E${resumeData.e}` : formatTime(resumeData.time)}` 
+                                  : "Watch"}
+                            </span>
                           </Link>
                         </motion.div>
 

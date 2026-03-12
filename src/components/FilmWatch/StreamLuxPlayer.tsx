@@ -12,11 +12,13 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { toggleCinemaMode } from '../../store/slice/uiSlice';
 import AmbiFlowGlow from './AmbiFlowGlow';
 import VisionCastOverlay from './VisionCastOverlay';
+import { resolverService } from '../../services/resolver';
 import { HiSparkles } from 'react-icons/hi';
 import { safeStorage } from '../../utils/safeStorage';
 import { backgroundAudioService } from '../../services/backgroundAudio';
 import { setFullscreen } from '../../store/slice/uiSlice';
 import { useTranslation } from 'react-i18next';
+import LiveBuzz from './LiveBuzz';
 
 export interface VideoSource {
     name: string;
@@ -45,6 +47,7 @@ interface VideoPlayerProps {
     subtitleTracks?: SubtitleTrack[];
     id?: number | string;
     mediaType?: "movie" | "tv";
+    startAt?: number;
 }
 
 const getSetting = (key: string, defaultValue: boolean): boolean => {
@@ -79,6 +82,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     subtitleTracks = [],
     id,
     mediaType,
+    startAt = 0,
 }) => {
     const dispatch = useAppDispatch();
     const { t } = useTranslation();
@@ -252,10 +256,25 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
             }
         }
 
+        // Handle Resume Anywhere for direct videos
+        if (direct && videoRef.current && startAt > 0) {
+            const handleMetadata = () => {
+                if (videoRef.current && videoRef.current.duration > startAt) {
+                    videoRef.current.currentTime = startAt;
+                    videoRef.current.removeEventListener('loadedmetadata', handleMetadata);
+                }
+            };
+            videoRef.current.addEventListener('loadedmetadata', handleMetadata);
+            // Fallback if metadata already loaded
+            if (videoRef.current.readyState >= 1) {
+                 handleMetadata();
+            }
+        }
+
         return () => {
             if (adTimerRef.current) clearTimeout(adTimerRef.current);
         };
-    }, [currentIndex, currentSource?.url, title]);
+    }, [currentIndex, currentSource?.url, title, startAt]);
 
     useEffect(() => {
         if (normalizedSources.length > 0) {
@@ -309,8 +328,18 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         setShowSubtitleMenu(false);
     };
 
-    const handleVideoError = () => { setVideoError(true); setIsLoading(false); if (onError) onError(); };
-    const handleVideoLoad = () => { setIsLoading(false); if (videoRef.current) videoRef.current.playbackRate = playbackRate; };
+    const handleVideoError = () => { 
+        setVideoError(true); 
+        setIsLoading(false); 
+        if (currentSource?.name) resolverService.reportPlaybackFailure(currentSource.name);
+        if (onError) onError(); 
+    };
+    
+    const handleVideoLoad = () => { 
+        setIsLoading(false); 
+        if (currentSource?.name) resolverService.reportPlaybackSuccess(currentSource.name);
+        if (videoRef.current) videoRef.current.playbackRate = playbackRate; 
+    };
     const handleSpeedChange = (rate: number) => { setPlaybackRate(rate); if (videoRef.current) videoRef.current.playbackRate = rate; setShowSpeedMenu(false); };
 
     const handlePiPToggle = async () => {
@@ -731,6 +760,15 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                 isOpen={showVisionCast}
                 onClose={() => setShowVisionCast(false)}
             />
+
+            {/* Elite Feature: Social Collective (LiveBuzz) */}
+            {id && mediaType && (
+                <LiveBuzz 
+                    mediaId={id} 
+                    mediaType={mediaType} 
+                    isVisible={controlsVisible && !isPiP} 
+                />
+            )}
         </div>
     );
 };

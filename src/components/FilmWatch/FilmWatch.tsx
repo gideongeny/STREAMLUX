@@ -14,6 +14,7 @@ import {
 } from "../../shared/types";
 import { useAppSelector } from "../../store/hooks";
 import { usePlayer } from "../../context/PlayerContext";
+import { useSearchParams } from "react-router-dom";
 import { downloadService } from "../../services/download";
 import { ResolverService } from "../../services/resolver";
 import ReadMore from "../Common/ReadMore";
@@ -49,6 +50,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const { isMobile } = useCurrentViewportView();
   const [isSidebarActive, setIsSidebarActive] = useState(false);
   const [downloadInfo, setDownloadInfo] = useState<any>(null);
+  const [searchParams] = useSearchParams();
 
   const [sources, setSources] = useState<any[]>([]);
   const [isResolving, setIsResolving] = useState(true);
@@ -203,6 +205,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     title={title}
                     id={detail?.id}
                     mediaType={media_type}
+                    startAt={Number(searchParams.get("time")) || 0}
                     onError={() => console.log("Video playback error")}
                   />
                 )}
