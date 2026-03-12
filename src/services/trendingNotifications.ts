@@ -1,6 +1,7 @@
 import { pushNotificationService } from "./pushNotifications";
 import { safeStorage } from "../utils/safeStorage";
 import { notificationHub } from "./notificationHub";
+import { getBackendBase } from "./download";
 import axios from "axios";
 
 const TMDB_API_KEY = process.env.REACT_APP_API_KEY;
@@ -15,8 +16,11 @@ export const trendingNotificationService = {
                 if (parsed.trending === false) return;
             }
 
-            const url = `${TMDB_BASE_URL}/trending/all/day?api_key=${TMDB_API_KEY}`;
-            const response = await axios.get(url);
+            const response = await axios.get(`${getBackendBase()}/api/proxy/tmdb`, {
+                params: {
+                    endpoint: `/trending/all/day`,
+                }
+            });
             const topItem = response.data.results[0];
 
             if (!topItem) return;

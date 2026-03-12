@@ -24,7 +24,7 @@ const getApiBase = () => getBackendBase() + "/api";
  * Build a proxy execution payload for a given region or genre.
  */
 async function executeYouTubeProxy(endpoint: string, params: Record<string, string | number>) {
-    const response = await axios.get(`${getApiBase()}/proxy/youtube`, {
+    const response = await axios.get(`${getBackendBase()}/api/proxy/youtube`, {
         params: {
             ...params,
             endpoint

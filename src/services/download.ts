@@ -6,17 +6,13 @@ const PRODUCTION_BACKEND_BASE = "https://us-central1-streamlux-67a84.cloudfuncti
 
 /** Use for all backend API URLs (sniff, download, resolve). */
 export function getBackendBase(): string {
-  // If we are on Firebase Hosting, we can use relative paths via rewrites
-  if (window.location.hostname.includes("streamlux-67a84.web.app")) {
-     return window.location.origin;
+  // In the browser, we use the current origin. 
+  // This works for Vercel Serverless Functions and local development.
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
   }
 
-  const env = process.env.REACT_APP_BACKEND_URL;
-  if (env && typeof env === "string") {
-    const base = env.replace(/\/api\/?$/, "");
-    if (base && !/your-render-backend|localhost/i.test(base)) return base;
-  }
-  return PRODUCTION_BACKEND_BASE;
+  return ""; 
 }
 
 export interface DownloadInfo {

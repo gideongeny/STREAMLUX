@@ -1,7 +1,7 @@
 // Comprehensive Movie/TV API Integration
 // Integrates TMDB, OMDB, and MUBI to populate website with content
 
-import axios from "axios";
+import axios from "../shared/axios";
 import { Item } from "../shared/types";
 import { API_URL } from "../shared/constants";
 import { fetchYouTubeVideos } from "./youtube";
@@ -89,7 +89,7 @@ export const getTMDBContent = async (
 
       if (endpoint) {
         fetchPromises.push(
-          axios.get(`${getApiBase()}/tmdb`, {
+          axios.get("", {
             params: {
               endpoint,
               language
@@ -127,7 +127,7 @@ export const getOMDBContent = async (
   type: "movie" | "tv" = "movie"
 ): Promise<Item[]> => {
   try {
-    const response = await axios.post(`${getApiBase()}/proxy/external`, {
+    const response = await axios.post(`${getBackendBase()}/api/proxy/external`, {
       provider: "omdb",
       params: {
         s: searchQuery,

@@ -2,11 +2,10 @@ import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { API_URL } from "./constants";
 import { apiCache } from "./apiCache";
 
-// Use the new Firebase Cloud Function proxy for all TMDB requests
-// This secures the API key on the backend
-const FIREBASE_REGION = "us-central1"; // Matches functions deployment
-const PROJECT_ID = "streamlux-67a84"; // Ensure this matches your Firebase project ID
-const PROXY_URL = `https://${FIREBASE_REGION}-${PROJECT_ID}.cloudfunctions.net/proxyTMDB`;
+import { getBackendBase } from "../services/download";
+
+// Use the new Vercel Serverless Proxy for all TMDB requests
+const PROXY_URL = `${getBackendBase()}/api/proxy/tmdb`;
 
 const instance = axios.create({
   baseURL: PROXY_URL,
@@ -18,14 +17,16 @@ instance.interceptors.request.use(
     // 1. Transform the standard TMDB config to the Proxy Payload format
     // proxyTMDB expects { data: { endpoint: string, params: object } }
     
-    // Extract the original endpoint (e.g., /movie/popular)
-    const originalEndpoint = config.url || '';
+    // Only wrap if it's a request to the TMDB proxy (default baseURL or empty URL)
+    const isTmdbProxy = !config.url || config.url === PROXY_URL || config.url.startsWith('/tmdb');
     
-    // Only wrap it if it hasn't been wrapped yet (avoid double wrapping on retries)
-    if (!config.data?.endpoint) {
+    if (isTmdbProxy && !config.data?.endpoint) {
+        // Extract the original endpoint (e.g., /movie/popular)
+        const originalEndpoint = config.url || '';
+        
         config.data = {
             endpoint: originalEndpoint,
-            params: { ...config.params } // Pass the frontend params (like language, page)
+            params: { ...config.params } // Pass the frontend params
         };
         
         // Clear the URL and Params since they are now in the POST body to the proxy
@@ -56,25 +57,19 @@ instance.interceptors.request.use(
 );
 
 // Response interceptor - Cache successful responses and handle errors
-// Response interceptor - Handle successful responses, unwrap proxy data, and handle errors
 instance.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Firebase HttpsCallable functions return data wrapped in { data: { result } }
-    // Our proxy returns { data: { success: true, data: { TMDB_RESULTS } } }
+    // Vercel Serverless Functions return standard JSON
+    // Our proxy returns { success: true, data: { TMDB_RESULTS } }
     
     let actualData = response.data;
     
-    // Unwrap Firebase Callable layer
-    if (actualData?.result) {
-        actualData = actualData.result;
-    }
-    
-    // Unwrap our custom Proxy layer
-    if (actualData && actualData.success && actualData.data) {
+    // Unwrap our custom Proxy layer (only if it looks like a TMDB proxy response)
+    if (actualData && actualData.success && actualData.data && !response.config.url?.includes('proxy/external')) {
         actualData = actualData.data;
     }
 
-    // Set unpacked data back to response so frontend services don't break
+    // Set unpacked data back to response
     response.data = actualData;
 
     // Cache successful responses

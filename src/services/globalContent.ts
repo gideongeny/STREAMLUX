@@ -17,7 +17,7 @@ const fetchByCountry = async (
     const fetchPromises = [];
     for (let page = 1; page <= pages; page++) {
       fetchPromises.push(
-        axios.get(`${getApiBase()}/proxy/tmdb`, {
+        axios.get("", {
           params: {
             endpoint: `/discover/${type}`,
             with_origin_country: countryCode,
