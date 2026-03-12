@@ -1,8 +1,8 @@
 import { FC, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdDownload, MdPlayArrow, MdDelete, MdCloudOff, MdFolderSpecial, MdArrowBack } from 'react-icons/md';
+import { MdDownload, MdPlayArrow, MdDelete, MdCloudOff, MdFolderSpecial, MdArrowBack, MdPause, MdPlayCircle } from 'react-icons/md';
 import { GiHamburgerMenu } from 'react-icons/gi';
-import { offlineService, OfflineItem } from '../services/offline';
+import { offlineDownloadService, DownloadItem } from '../services/offlineDownload';
 import { useAppDispatch } from '../store/hooks';
 import { setSource } from '../store/slice/movieSlice';
 import { useNavigate, Link } from 'react-router-dom';
@@ -12,9 +12,11 @@ import { useCurrentViewportView } from '../hooks/useCurrentViewportView';
 import SEO from '../components/Common/SEO';
 import Title from '../components/Common/Title';
 import Footer from '../components/Footer/Footer';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 const Library: FC = () => {
-    const [items, setItems] = useState<OfflineItem[]>([]);
+    const [items, setItems] = useState<DownloadItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSidebarActive, setIsSidebarActive] = useState(false);
     const { isMobile } = useCurrentViewportView();
@@ -23,26 +25,33 @@ const Library: FC = () => {
 
     useEffect(() => {
         loadLibrary();
-        const interval = setInterval(loadLibrary, 5000); // Poll for progress updates
+        const interval = setInterval(loadLibrary, 1000); // Poll for precise progress updates
         return () => clearInterval(interval);
     }, []);
 
-    const loadLibrary = async () => {
-        const library = await offlineService.getLibrary();
-        setItems(library.sort((a, b) => b.addedAt - a.addedAt));
+    const loadLibrary = () => {
+        // offlineDownloadService handles internal state, just get the current values
+        const library = offlineDownloadService.getDownloads();
+        setItems(library);
         setIsLoading(false);
     };
 
     const handleDelete = async (id: string) => {
-        await offlineService.deleteItem(id);
+        await offlineDownloadService.cancelDownload(id);
         loadLibrary();
     };
 
-    const handlePlay = async (item: OfflineItem) => {
-        if (item.status !== 'completed') return;
+    const handlePlay = async (item: DownloadItem) => {
+        if (item.status !== 'completed' || !item.filePath) return;
 
         try {
-            const localUrl = await offlineService.getLocalUrl(item.localPath);
+            // Convert Capacitor virtual path to usable src
+            const file = await Filesystem.getUri({
+                path: item.filePath,
+                directory: Directory.Data
+            });
+            const localUrl = Capacitor.convertFileSrc(file.uri);
+            
             dispatch(setSource(localUrl));
             navigate('/watch');
         } catch (error) {
@@ -147,14 +156,14 @@ const Library: FC = () => {
                                         {/* Poster */}
                                         <div className="aspect-[2/3] relative overflow-hidden">
                                             <img
-                                                src={item.posterPath || "https://images.unsplash.com/photo-1485846234645-a62644f84728"}
+                                                src={item.thumbnail || "https://images.unsplash.com/photo-1485846234645-a62644f84728"}
                                                 alt={item.title}
                                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
 
                                             {/* Action Overlays */}
-                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40 backdrop-blur-[2px]">
+                                            <div className="absolute inset-0 flex mb-2 items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40 backdrop-blur-[2px]">
                                                 {item.status === 'completed' ? (
                                                     <button
                                                         onClick={() => handlePlay(item)}
@@ -162,27 +171,50 @@ const Library: FC = () => {
                                                     >
                                                         <MdPlayArrow size={36} />
                                                     </button>
-                                                ) : (
-                                                    <div className="flex flex-col items-center gap-3">
-                                                        <div className="w-14 h-14 rounded-full border-4 border-primary border-t-transparent animate-spin shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
-                                                        <span className="text-xs font-black text-white uppercase tracking-widest drop-shadow-lg">{item.progress}%</span>
+                                                ) : item.status === 'downloading' ? (
+                                                    <div className="flex gap-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                                                        <button 
+                                                            onClick={() => offlineDownloadService.pauseDownload(item.id)}
+                                                            className="w-12 h-12 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/40 transition-colors backdrop-blur-md"
+                                                        >
+                                                            <MdPause size={24} />
+                                                        </button>
                                                     </div>
-                                                )}
+                                                ) : item.status === 'paused' || item.status === 'queued' ? (
+                                                    <div className="flex gap-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                                                        <button 
+                                                            onClick={() => offlineDownloadService.resumeDownload(item.id)}
+                                                            className="w-12 h-12 rounded-full bg-primary text-black flex items-center justify-center hover:bg-blue-500 transition-colors shadow-lg"
+                                                        >
+                                                            <MdPlayArrow size={24} />
+                                                        </button>
+                                                    </div>
+                                                ) : null}
                                             </div>
 
                                             {/* Delete Button */}
                                             <button
                                                 onClick={() => handleDelete(item.id)}
-                                                className="absolute top-4 right-4 p-2.5 rounded-2xl bg-black/60 backdrop-blur-md text-white/40 hover:text-red-500 hover:bg-black transition-all duration-300 border border-white/10"
+                                                className="absolute top-4 right-4 p-2.5 rounded-2xl bg-black/60 backdrop-blur-md text-white/40 hover:text-red-500 hover:bg-black transition-all duration-300 border border-white/10 z-10"
                                             >
                                                 <MdDelete size={20} />
                                             </button>
 
-                                            {/* Progress Info Overlay */}
-                                            {item.status === 'downloading' && (
-                                                <div className="absolute top-4 left-4">
-                                                    <div className="bg-primary/20 backdrop-blur-md border border-primary/40 px-3 py-1 rounded-full">
-                                                        <span className="text-[10px] font-black text-primary uppercase tracking-tighter">Syncing...</span>
+                                            {/* Status Info Overlay */}
+                                            {item.status !== 'completed' && (
+                                                <div className="absolute top-4 left-4 z-10">
+                                                    <div className={`backdrop-blur-md border px-3 py-1 rounded-full ${
+                                                        item.status === 'paused' ? 'bg-orange-500/20 border-orange-500/40' :
+                                                        item.status === 'queued' ? 'bg-gray-500/20 border-gray-500/40' :
+                                                        'bg-primary/20 border-primary/40'
+                                                    }`}>
+                                                        <span className={`text-[10px] font-black uppercase tracking-tighter ${
+                                                            item.status === 'paused' ? 'text-orange-500' :
+                                                            item.status === 'queued' ? 'text-gray-400' :
+                                                            'text-primary'
+                                                        }`}>
+                                                            {item.status === 'paused' ? 'Paused' : item.status === 'queued' ? 'Queued' : 'Syncing...'}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             )}
@@ -192,16 +224,15 @@ const Library: FC = () => {
                                         <div className="p-5">
                                             <h3 className="text-[15px] font-black text-white line-clamp-1 group-hover:text-primary transition-colors tracking-tight uppercase">{item.title}</h3>
                                             <div className="flex items-center justify-between mt-3">
-                                                <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">{item.type}</span>
+                                                <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">{item.type} {item.seasonNumber ? `S${item.seasonNumber}E${item.episodeNumber}` : ''}</span>
                                                 {item.status === 'completed' ? (
                                                     <div className="flex items-center gap-1.5 text-[9px] font-black text-primary uppercase tracking-widest">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                                                         Ready Offline
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-500 uppercase tracking-widest">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-gray-500 animate-pulse" />
-                                                        Downloading
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-black text-white uppercase tracking-widest">
+                                                        {Math.round(item.progress)}%
                                                     </div>
                                                 )}
                                             </div>

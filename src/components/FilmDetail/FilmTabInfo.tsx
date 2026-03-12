@@ -46,7 +46,14 @@ const FilmTabInfo: FC<FilmTabInfoProps> = ({ detail, credits, reviews }) => {
               </p>
             )}
             {!detail && <Skeleton className="h-6 w-[350px] mx-auto mb-8" />}
-            <p className="text-white font-medium  mb-3">STORY</p>
+            <div className="flex items-center gap-3 mb-3">
+              <p className="text-white font-medium">STORY</p>
+              {detail?.overview.includes("API quotas") && (
+                <span className="bg-orange-500/20 text-orange-400 text-xs px-2 py-1 rounded-md border border-orange-500/30 flex items-center gap-1">
+                  <i className="fas fa-exclamation-circle"></i> Heavy Load: Some details simplified
+                </span>
+              )}
+            </div>
             {detail && (
               <ReadMore limitTextLength={250}>{detail.overview}</ReadMore>
             )}

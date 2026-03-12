@@ -3,7 +3,7 @@ import { AiOutlineDownload } from 'react-icons/ai';
 import { toast } from 'react-toastify';
 import { DownloadInfo } from '../../services/download';
 import { useDownloadManager } from '../../contexts/DownloadManagerContext';
-import { offlineService } from '../../services/offline';
+import { offlineDownloadService } from '../../services/offlineDownload';
 import { Capacitor } from '@capacitor/core';
 import { MdOutlineLibraryAdd } from 'react-icons/md';
 
@@ -72,24 +72,31 @@ const EliteDownload: React.FC<EliteDownloadProps> = ({ downloadInfo, className =
     setIsStarting(true);
     try {
       const sources = downloadInfo.sources || [];
-      const foundUrl = sources[0]; // Take primary source for sync
+      const foundUrl = sources.find((s: string) => s.toLowerCase().indexOf(".mp4") !== -1) || sources[0];
 
       if (!foundUrl) {
-        toast.error("No syncable source found");
+        toast.error("No valid syncable source found");
         return;
       }
 
-      await offlineService.startDownload(
-        downloadInfo.title.replace(/\s+/g, '-').toLowerCase() + (downloadInfo.episodeId ? `-${downloadInfo.seasonId}-${downloadInfo.episodeId}` : ''),
-        label,
-        foundUrl,
-        downloadInfo.posterPath || "",
-        downloadInfo.mediaType
-      );
+      const safeTitle = downloadInfo.title.replace(/\s+/g, '-').toLowerCase();
+      const itemId = `${safeTitle}-${Date.now()}`;
 
-      toast.success("Syncing to Library...");
-    } catch (err) {
-      toast.error("Sync failed");
+      await offlineDownloadService.addToQueue({
+        id: itemId,
+        title: label,
+        type: downloadInfo.mediaType as 'movie' | 'tv',
+        thumbnail: downloadInfo.posterPath || "https://image.tmdb.org/t/p/w200" + downloadInfo.posterPath,
+        url: foundUrl,
+        quality: '1080p',
+        size: 500 * 1024 * 1024, // Assuming average size 500MB if unknown
+        seasonNumber: downloadInfo.seasonId,
+        episodeNumber: downloadInfo.episodeId
+      });
+
+      toast.success("Added to Offline Library Queue!");
+    } catch (err: any) {
+      toast.error(err?.message || "Sync failed");
     } finally {
       setIsStarting(false);
     }

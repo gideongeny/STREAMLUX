@@ -1,6 +1,7 @@
 // src/services/youtube.ts
 import axios from "axios";
 import { classifyVideo, VideoType } from "../shared/videoClassification";
+import { getCachedYouTubeResults, setCachedYouTubeResults } from "./youtubeCache";
 
 export interface YouTubeVideo {
     id: string;
@@ -55,6 +56,15 @@ export async function fetchYouTubeVideos(
     videoDuration?: 'any' | 'long' | 'medium' | 'short'
 ): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string }> {
     try {
+        // Only cache the first page of broad searches
+        if (!pageToken && !videoDuration) {
+            const cachedParams = await getCachedYouTubeResults(query);
+            if (cachedParams) {
+                console.log(`[YouTube Cache Hit]: ${query}`);
+                return cachedParams;
+            }
+        }
+
         const params: Record<string, string | number> = { 
             q: query,
             part: "snippet",
@@ -66,13 +76,17 @@ export async function fetchYouTubeVideos(
         if (videoDuration) params["videoDuration"] = videoDuration;
 
         const data = await executeYouTubeProxy("/search", params);
+        if (!data || !data.items) {
+             console.warn("YouTube proxy returned empty items for queries: ", query);
+             return { videos: [], nextPageToken: undefined };
+        }
         const items = data.items as any[];
         
         const videos: YouTubeVideo[] = items.map((item) => {
             const { videoId } = item.id;
             const { title, description, thumbnails, channelTitle } = item.snippet;
             return {
-                id: videoId,
+                id: videoId || Math.random().toString(36).substring(7),
                 title,
                 description,
                 thumbnail: thumbnails?.high?.url ?? thumbnails?.default?.url ?? "",
@@ -80,6 +94,12 @@ export async function fetchYouTubeVideos(
                 type: classifyVideo(title, description),
             };
         });
+        
+        // Cache the successful result if it's a first-page broad search
+        if (!pageToken && !videoDuration && videos.length > 0) {
+            await setCachedYouTubeResults(query, videos, data.nextPageToken);
+        }
+
         return { videos, nextPageToken: data.nextPageToken };
     } catch (error: any) {
         console.error('YouTube Proxy API error:', error?.message || error);

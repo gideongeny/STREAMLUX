@@ -60,8 +60,13 @@ const YouTubeGrid: React.FC<YouTubeGridProps> = ({ videos, loading, error }) => 
                                 </svg>
                             </div>
                         </div>
+                        {video.title?.includes("YouTube Content") && video.channelTitle === "YouTube Stream" && (
+                             <div className="absolute top-2 left-2 bg-orange-500/90 text-xs font-bold px-2 py-1 rounded text-white flex items-center gap-1 shadow-lg backdrop-blur-sm z-10">
+                                <i className="fas fa-bolt"></i> Heavy Load
+                            </div>
+                        )}
                         {video.type && (
-                            <div className="absolute top-2 right-2 bg-black/70 text-xs font-bold px-2 py-1 rounded text-primary uppercase">
+                            <div className="absolute top-2 right-2 bg-black/70 text-xs font-bold px-2 py-1 rounded text-primary uppercase z-10">
                                 {video.type}
                             </div>
                         )}
