@@ -1,5 +1,3 @@
-const axios = require('axios');
-
 const TMDB_API_KEY = "69ef02da25ccfbc48bfd094eb8e348f9";
 const BASE_URL = 'https://api.themoviedb.org/3';
 
@@ -15,7 +13,7 @@ module.exports = async (req, res) => {
   const query = req.query || {};
   const body = req.body || {};
 
-  const endpoint = (body.endpoint || query.endpoint);
+  const endpoint = body.endpoint || query.endpoint;
   const bodyParams = body.params || {};
   const extraQueryParams = { ...query };
   delete extraQueryParams.endpoint;
@@ -27,18 +25,13 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const response = await axios.get(`${BASE_URL}${endpoint}`, {
-      params: mergedParams,
+    const qs = new URLSearchParams(mergedParams).toString();
+    const response = await fetch(`${BASE_URL}${endpoint}?${qs}`, {
       headers: { 'Accept': 'application/json' }
     });
-    return res.status(200).json(response.data);
+    const data = await response.json();
+    return res.status(response.status).json(data);
   } catch (error) {
-    console.error(`TMDB Proxy Error:`, error.message);
-    const status = error.response?.status || 500;
-    return res.status(status).json({ 
-      error: 'Failed to fetch from TMDB', 
-      details: error.message,
-      endpoint: endpoint
-    });
+    return res.status(500).json({ error: 'Failed to fetch from TMDB', details: error.message });
   }
 };
