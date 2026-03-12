@@ -2,6 +2,7 @@
 import axios from "axios";
 import { classifyVideo, VideoType } from "../shared/videoClassification";
 import { getCachedYouTubeResults, setCachedYouTubeResults } from "./youtubeCache";
+import { getBackendBase } from "./download";
 
 export interface YouTubeVideo {
     id: string;
@@ -14,11 +15,6 @@ export interface YouTubeVideo {
     publishedAt?: string;
     viewCount?: string;
 }
-
-import { getBackendBase } from "./download";
-
-// Use the project's unified backend entry point
-const getApiBase = () => getBackendBase() + "/api";
 
 /**
  * Build a proxy execution payload for a given region or genre.

@@ -1,0 +1,21 @@
+
+C:\Users\mukht\Desktop\VS projects\STREAMLUX-main\src\App.tsx
+   1:49  warning  'GoogleAuthProvider' is defined but never used    @typescript-eslint/no-unused-vars
+  11:10  warning  'MdMovieFilter' is defined but never used         @typescript-eslint/no-unused-vars
+  45:10  warning  'setCinemaMode' is defined but never used         @typescript-eslint/no-unused-vars
+  47:8   warning  'BuyMeACoffee' is defined but never used          @typescript-eslint/no-unused-vars
+  54:10  warning  'useScrollPersistence' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mukht\Desktop\VS projects\STREAMLUX-main\src\services\movieAPIs.ts
+   6:10  warning  'API_URL' is defined but never used                @typescript-eslint/no-unused-vars
+   9:7   warning  'TMDB_API_KEY' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  56:1   error    Import in body of module; reorder to top           import/first
+  59:7   warning  'getApiBase' is assigned a value but never used    @typescript-eslint/no-unused-vars
+
+C:\Users\mukht\Desktop\VS projects\STREAMLUX-main\src\services\trendingNotifications.ts
+  7:7  warning  'TMDB_API_KEY' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  8:7  warning  'TMDB_BASE_URL' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+??? 11 problems (1 error, 10 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+

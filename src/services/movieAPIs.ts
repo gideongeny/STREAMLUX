@@ -3,10 +3,9 @@
 
 import axios from "../shared/axios";
 import { Item } from "../shared/types";
-import { API_URL } from "../shared/constants";
 import { fetchYouTubeVideos } from "./youtube";
+import { getBackendBase } from "./download";
 
-const TMDB_API_KEY = process.env.REACT_APP_API_KEY || "8c247ea0b4b56ed2ff7d41c9a833aa77";
 // OMDB API key moved to Firebase functions to ensure security
 // 💥 Phase 8: Hardened Data Pipeline 💥
 
@@ -53,10 +52,7 @@ const convertToItem = (item: any, mediaType: "movie" | "tv"): Item => {
   };
 };
 
-import { getBackendBase } from "./download";
-
 // Use the project's unified backend entry point
-const getApiBase = () => getBackendBase() + "/api";
 
 // Enhanced TMDB fetching - fetch multiple pages for more content
 export const getTMDBContent = async (

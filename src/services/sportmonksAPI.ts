@@ -1,4 +1,5 @@
 import { getBackendBase } from "./download";
+import axios from "axios";
 
 // Use the project's unified backend entry point
 const getApiBase = () => getBackendBase() + "/api";

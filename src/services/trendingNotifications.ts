@@ -4,9 +4,6 @@ import { safeStorage } from "../utils/safeStorage";
 import { notificationHub } from "./notificationHub";
 import { getBackendBase } from "./download";
 
-const TMDB_API_KEY = process.env.REACT_APP_API_KEY;
-const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-
 export const trendingNotificationService = {
     checkAndNotifyTrending: async () => {
         try {

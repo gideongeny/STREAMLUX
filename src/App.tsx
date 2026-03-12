@@ -1,4 +1,4 @@
-import { onAuthStateChanged, getRedirectResult, GoogleAuthProvider, FacebookAuthProvider, getAdditionalUserInfo } from "firebase/auth";
+import { onAuthStateChanged, getRedirectResult, FacebookAuthProvider, getAdditionalUserInfo } from "firebase/auth";
 import { doc, onSnapshot, setDoc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { DownloadManagerProvider } from "./contexts/DownloadManagerContext";
 import DownloadTray from "./components/Common/DownloadTray";
-import { MdMovieFilter } from "react-icons/md";
 
 import Protected from "./components/Common/Protected";
 import Auth from "./pages/Auth";
@@ -42,16 +41,13 @@ import AtmosphericBackground from "./components/Common/AtmosphericBackground";
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
-import { setCinemaMode } from "./store/slice/uiSlice";
 import { backendHealthService } from "./services/backendHealth";
-import BuyMeACoffee from "./components/Common/BuyMeACoffee";
 import { safeStorage } from "./utils/safeStorage";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 import { MdWifiOff } from "react-icons/md";
 import { initializeAdMob } from "./services/capacitorAds";
 import { App as CapApp } from "@capacitor/app";
 import { themeService } from "./services/theme";
-import { useScrollPersistence } from "./hooks/useScrollPersistence";
 import { pushNotificationService } from "./services/pushNotifications";
 import { trendingNotificationService } from "./services/trendingNotifications";
 import { setLanguage } from "./shared/axios";
