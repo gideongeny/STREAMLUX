@@ -1,52 +1,23 @@
-import type { IncomingMessage, ServerResponse } from 'http';
 import axios from 'axios';
 
 const OMDB_API_KEY = "eb87a867";
 
-async function getBody(req: IncomingMessage & { body?: any }): Promise<any> {
-  if (req.body) return req.body;
-  return new Promise((resolve) => {
-    let data = '';
-    req.on('data', (chunk) => { data += chunk; });
-    req.on('end', () => {
-      try { resolve(JSON.parse(data)); } catch { resolve({}); }
-    });
-    req.on('error', () => resolve({}));
-  });
-}
-
-function parseQuery(url: string = ''): Record<string, string> {
-  const queryStart = url.indexOf('?');
-  if (queryStart === -1) return {};
-  const qs = url.slice(queryStart + 1);
-  const result: Record<string, string> = {};
-  qs.split('&').forEach(pair => {
-    const [k, v] = pair.split('=');
-    if (k) result[decodeURIComponent(k)] = decodeURIComponent(v || '');
-  });
-  return result;
-}
-
-export default async function handler(req: IncomingMessage & { query?: any; body?: any }, res: ServerResponse) {
+export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
-    res.writeHead(204);
-    res.end();
-    return;
+    return res.status(204).end();
   }
 
-  const query = req.query || parseQuery(req.url);
-  const body = req.method === "POST" ? await getBody(req) : {};
+  const query = req.query || {};
+  const body = req.body || {};
   const merged = { ...query, ...body };
   const { provider, endpoint, params } = merged;
 
   if (!provider) {
-    res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: "Missing 'provider' parameter.", query, body }));
-    return;
+    return res.status(400).json({ error: "Missing 'provider' parameter.", query, body });
   }
 
   try {
@@ -85,7 +56,7 @@ export default async function handler(req: IncomingMessage & { query?: any; body
         break;
       }
       case "sportmonks": {
-        const sportmonksKey = "pWJ9QW6z7Y6U0uI4R8K9O2Q7L5V3M1N0"; // Hardcoded for fixed deployment
+        const sportmonksKey = "pWJ9QW6z7Y6U0uI4R8K9O2Q7L5V3M1N0";
         const sportmonksBase = "https://api.sportmonks.com/v3/football";
         response = await axios.get(`${sportmonksBase}${endpoint}`, {
           params: { ...(params || {}), api_token: sportmonksKey }
@@ -93,17 +64,13 @@ export default async function handler(req: IncomingMessage & { query?: any; body
         break;
       }
       default:
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: `Unsupported provider: ${provider}` }));
-        return;
+        return res.status(400).json({ error: `Unsupported provider: ${provider}` });
     }
 
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(response.data));
+    return res.status(200).json(response.data);
   } catch (error: any) {
     console.error(`Error proxying to ${provider}:`, error.message);
     const status = error.response?.status || 500;
-    res.writeHead(status, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: `Failed to fetch from ${provider}`, details: error.message }));
+    return res.status(status).json({ error: `Failed to fetch from ${provider}`, details: error.message });
   }
 }

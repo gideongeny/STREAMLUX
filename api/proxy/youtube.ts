@@ -1,4 +1,3 @@
-import type { IncomingMessage, ServerResponse } from 'http';
 import axios from 'axios';
 
 const API_KEYS = [
@@ -19,55 +18,27 @@ function getActiveKey(): string {
   return API_KEYS[0];
 }
 
-async function getBody(req: IncomingMessage & { body?: any }): Promise<any> {
-  if (req.body) return req.body;
-  return new Promise((resolve) => {
-    let data = '';
-    req.on('data', (chunk) => { data += chunk; });
-    req.on('end', () => {
-      try { resolve(JSON.parse(data)); } catch { resolve({}); }
-    });
-    req.on('error', () => resolve({}));
-  });
-}
-
-function parseQuery(url: string = ''): Record<string, string> {
-  const queryStart = url.indexOf('?');
-  if (queryStart === -1) return {};
-  const qs = url.slice(queryStart + 1);
-  const result: Record<string, string> = {};
-  qs.split('&').forEach(pair => {
-    const [k, v] = pair.split('=');
-    if (k) result[decodeURIComponent(k)] = decodeURIComponent(v || '');
-  });
-  return result;
-}
-
-export default async function handler(req: IncomingMessage & { query?: any; body?: any }, res: ServerResponse) {
+export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return;
+    return res.status(204).end();
   }
 
-  const query = req.query || parseQuery(req.url);
-  const body = req.method === 'POST' ? await getBody(req) : {};
+  const query = req.query || {};
+  const body = req.body || {};
 
   const endpoint = (body.endpoint || query.endpoint) as string;
-  const bodyParams: Record<string, any> = body.params || {};
-  const extraQueryParams: Record<string, any> = { ...query };
+  const bodyParams = body.params || {};
+  const extraQueryParams = { ...query };
   delete extraQueryParams.endpoint;
 
-  const mergedParams: Record<string, any> = { ...extraQueryParams, ...bodyParams };
+  const mergedParams = { ...extraQueryParams, ...bodyParams };
 
   if (!endpoint) {
-    res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'YouTube endpoint is required' }));
-    return;
+    return res.status(400).json({ error: 'YouTube endpoint is required' });
   }
 
   let lastError: any;
@@ -77,9 +48,7 @@ export default async function handler(req: IncomingMessage & { query?: any; body
       const response = await axios.get(`${BASE_URL}${endpoint}`, {
         params: { ...mergedParams, key }
       });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(response.data));
-      return;
+      return res.status(200).json(response.data);
     } catch (error: any) {
       lastError = error;
       if (error?.response?.status === 403) {
@@ -90,8 +59,6 @@ export default async function handler(req: IncomingMessage & { query?: any; body
     }
   }
 
-  console.error('YouTube Proxy Error:', lastError?.message);
   const status = lastError?.response?.status || 500;
-  res.writeHead(status, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ error: 'Failed to fetch from YouTube', details: lastError?.message, endpoint }));
+  return res.status(status).json({ error: 'Failed to fetch from YouTube', details: lastError?.message, endpoint });
 }
