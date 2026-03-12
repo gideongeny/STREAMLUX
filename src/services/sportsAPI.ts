@@ -258,20 +258,22 @@ export const getVarietyYT = async (): Promise<any[]> => {
 // Sports Movies & Docs from TMDB
 export const getSportsMovies = async (): Promise<any[]> => {
   try {
-    const docResponse = await axios.get("/discover/movie", {
-      params: {
-        with_genres: 99,
-        with_keywords: "6075", // Sports keyword
-        sort_by: "popularity.desc",
-        include_adult: false,
-        page: 1
-      }
-    }).catch(() => ({ data: { results: [] } }));
+    const [p1, p2] = await Promise.all([
+      axios.get("/discover/movie", {
+        params: { with_genres: 99, with_keywords: "6075", sort_by: "popularity.desc", page: 1 }
+      }),
+      axios.get("/discover/movie", {
+        params: { with_genres: 99, with_keywords: "6075", sort_by: "popularity.desc", page: 2 }
+      })
+    ]).catch(() => [{ data: { results: [] } }, { data: { results: [] } }]);
 
-    return (docResponse.data.results || []).map((item: any) => ({
+    const results = [...(p1.data?.results || []), ...(p2.data?.results || [])];
+    return results.map((item: any) => ({
       ...item,
       media_type: "movie",
       sportsCategory: "Documentary",
+      poster_path: item.poster_path, // Keep original for resizeImage
+      backdrop_path: item.backdrop_path,
       thumb: item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : "https://images.unsplash.com/photo-1540747913346-ad966a9a9ed0"
     }));
   } catch (error) {

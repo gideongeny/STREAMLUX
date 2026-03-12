@@ -65,12 +65,15 @@ const SportsPremiumMatchCard: FC<MatchCardPremiumProps> = ({ fixture, isExternal
             className="group relative block w-full aspect-[4/5] md:aspect-[3/4] rounded-3xl overflow-hidden bg-dark-lighten/20 border border-white/5 shadow-2xl transition-all duration-500 hover:shadow-primary/20"
         >
             {/* Dynamic Background Image for Marquee */}
-            {bgImage && (
-                <div 
-                    className="absolute inset-0 bg-cover bg-center opacity-50 group-hover:opacity-75 transition-opacity duration-700"
-                    style={{ backgroundImage: `url(${bgImage})` }}
-                />
-            )}
+            <div 
+                className="absolute inset-0 bg-cover bg-center opacity-50 group-hover:opacity-75 transition-opacity duration-700 bg-slate-900"
+                style={{ 
+                    backgroundImage: bgImage 
+                        ? `url(${bgImage})` 
+                        : `url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=2070&auto=format&fit=crop')`,
+                    backgroundBlendMode: "overlay"
+                }}
+            />
 
             {/* Ambient Background Glow */}
             <div className={`absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-30 group-hover:opacity-60 transition-opacity duration-700 ${bgImage ? 'mix-blend-overlay' : ''}`} />

@@ -40,7 +40,7 @@ const SectionSlider: FC<SectionSliderProps> = ({
     }
   };
 
-  if (!films && !isLoading) return null;
+  if ((!films || films.length === 0) && !isLoading) return null;
 
   return (
     <div className="mb-8">
