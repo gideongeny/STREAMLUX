@@ -47,16 +47,17 @@ const GlobalWorldTV: FC = () => {
       // Fetch in batches to avoid hitting rate limits
       const [korean, japanese, african, turkish, indian, asian, british, latin, nollywood, bollywood] =
         await Promise.allSettled([
-          getKoreanContent(),
-          getJapaneseContent(),
-          getAfricanContent(),
-          getTurkishContent(),
-          getIndianContent(),
-          getAsianDramas(),
-          getBritishContent(),
-          getLatinContent(),
-          getNollywoodMovies(),
-          getBollywoodMovies(),
+        await Promise.allSettled([
+          getKoreanContent().then(res => res.slice(0, 30)),
+          getJapaneseContent().then(res => res.slice(0, 30)),
+          getAfricanContent().then(res => res.slice(0, 30)),
+          getTurkishContent().then(res => res.slice(0, 30)),
+          getIndianContent().then(res => res.slice(0, 30)),
+          getAsianDramas().then(res => res.slice(0, 30)),
+          getBritishContent().then(res => res.slice(0, 30)),
+          getLatinContent().then(res => res.slice(0, 30)),
+          getNollywoodMovies().then(res => res.slice(0, 30)),
+          getBollywoodMovies().then(res => res.slice(0, 30)),
         ]);
 
       setSliders([

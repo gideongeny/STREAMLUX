@@ -299,24 +299,12 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
         if (filteredShorts.length === 0) {
             console.warn("[ShortsEngine] Still 0 shorts. Using Evergreen high-quality fallback.");
             const evergreenShorts: YouTubeVideo[] = [
-                { id: 'S4vS-T68YPk', title: 'Top Movie Moments', description: 'Cinematic shorts', thumbnail: 'https://i.ytimg.com/vi/S4vS-T68YPk/maxresdefault.jpg', channelTitle: 'StreamLux', type: 'movie' },
-                { id: 'dQw4w9WgXcQ', title: 'New Official Trailer', description: 'Trending trailer', thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg', channelTitle: 'StreamLux', type: 'movie' },
-                { id: 'XvXJ7XvXJ7X', title: 'Action Cinema #shorts', description: 'Action movie shorts', thumbnail: 'https://i.ytimg.com/vi/XvXJ7XvXJ7X/maxresdefault.jpg', channelTitle: 'Cinema', type: 'movie' },
-                { id: 'YvYJ7XvYJ7X', title: 'Epic Drama #shorts', description: 'Drama movie shorts', thumbnail: 'https://i.ytimg.com/vi/YvYJ7XvYJ7X/maxresdefault.jpg', channelTitle: 'Drama', type: 'movie' },
-                { id: 'hE1nwOGgQ8E', title: 'Best Action Scenes #shorts', description: 'Action highlights', thumbnail: 'https://i.ytimg.com/vi/hE1nwOGgQ8E/maxresdefault.jpg', channelTitle: 'Cinema', type: 'movie' },
-                { id: 'OP5tMURXRbI', title: 'Incredible Sports #shorts', description: 'Sports highlights', thumbnail: 'https://i.ytimg.com/vi/OP5tMURXRbI/maxresdefault.jpg', channelTitle: 'Sports', type: 'movie' },
-                { id: 'pZ12_E5R3qc', title: 'Mind-Blowing SciFi #shorts', description: 'SciFi scenes', thumbnail: 'https://i.ytimg.com/vi/pZ12_E5R3qc/maxresdefault.jpg', channelTitle: 'SciFi', type: 'movie' },
-                { id: '5NV4COXJ2TU', title: 'Funny Moments #shorts', description: 'Comedy shorts', thumbnail: 'https://i.ytimg.com/vi/5NV4COXJ2TU/maxresdefault.jpg', channelTitle: 'Comedy', type: 'movie' },
-                { id: 'Z1BCujX3pw8', title: 'Anime Fights #shorts', description: 'Anime shorts', thumbnail: 'https://i.ytimg.com/vi/Z1BCujX3pw8/maxresdefault.jpg', channelTitle: 'Anime', type: 'movie' },
-                { id: 'eMruJbbL2Gk', title: 'Space Edit #shorts', description: 'Space shorts', thumbnail: 'https://i.ytimg.com/vi/eMruJbbL2Gk/maxresdefault.jpg', channelTitle: 'Space', type: 'movie' },
-                { id: 't433PEQGErc', title: 'Historical Edits #shorts', description: 'History shorts', thumbnail: 'https://i.ytimg.com/vi/t433PEQGErc/maxresdefault.jpg', channelTitle: 'History', type: 'movie' },
-                { id: 'FwFzU6h0Jp4', title: 'Scary Jump Scares #shorts', description: 'Horror shorts', thumbnail: 'https://i.ytimg.com/vi/FwFzU6h0Jp4/maxresdefault.jpg', channelTitle: 'Horror', type: 'movie' },
-                { id: '7TavVZMewpY', title: 'Cyberpunk Edits #shorts', description: 'Cyberpunk shorts', thumbnail: 'https://i.ytimg.com/vi/7TavVZMewpY/maxresdefault.jpg', channelTitle: 'Cyberpunk', type: 'movie' },
-                { id: '1T1X2S_zEqs', title: 'Martial Arts Edits #shorts', description: 'Martial Arts shorts', thumbnail: 'https://i.ytimg.com/vi/1T1X2S_zEqs/maxresdefault.jpg', channelTitle: 'Martial Arts', type: 'movie' },
-                { id: '8mP5xOg7igs', title: 'Nature Views #shorts', description: 'Nature shorts', thumbnail: 'https://i.ytimg.com/vi/8mP5xOg7igs/maxresdefault.jpg', channelTitle: 'Nature', type: 'movie' },
-                { id: 'd27gTrPPAyk', title: 'Car Meets #shorts', description: 'Automotive shorts', thumbnail: 'https://i.ytimg.com/vi/d27gTrPPAyk/maxresdefault.jpg', channelTitle: 'Cars', type: 'movie' },
-                { id: 'X4bF_quwNtw', title: 'Spooky Stories #shorts', description: 'Paranormal shorts', thumbnail: 'https://i.ytimg.com/vi/X4bF_quwNtw/maxresdefault.jpg', channelTitle: 'Spooky', type: 'movie' },
-                { id: 'B18R8lK0Nxs', title: 'Concert Highlights #shorts', description: 'Music shorts', thumbnail: 'https://i.ytimg.com/vi/B18R8lK0Nxs/maxresdefault.jpg', channelTitle: 'Music', type: 'movie' }
+                { id: 'Tf0pD67Q7XU', title: 'Epic Movie Scenes', description: 'Cinematic shorts', thumbnail: 'https://i.ytimg.com/vi/Tf0pD67Q7XU/maxresdefault.jpg', channelTitle: 'StreamLux', type: 'movie' },
+                { id: 'jT_U7NIm7Uo', title: 'Top Action Reels', description: 'Action highlights', thumbnail: 'https://i.ytimg.com/vi/jT_U7NIm7Uo/maxresdefault.jpg', channelTitle: 'Cinema', type: 'movie' },
+                { id: '6v2L2UGZJAM', title: 'Sci-Fi Marvels', description: 'SciFi scenes', thumbnail: 'https://i.ytimg.com/vi/6v2L2UGZJAM/maxresdefault.jpg', channelTitle: 'SciFi', type: 'movie' },
+                { id: 'M7lc1UVf-VE', title: 'Classic Cinema Shorts', description: 'Historical movie moments', thumbnail: 'https://i.ytimg.com/vi/M7lc1UVf-VE/maxresdefault.jpg', channelTitle: 'History', type: 'movie' },
+                { id: '3AtDnEC4zak', title: 'Must Watch Moments', description: 'Trending cinematic clips', thumbnail: 'https://i.ytimg.com/vi/3AtDnEC4zak/maxresdefault.jpg', channelTitle: 'StreamLux', type: 'movie' },
+                { id: 'vM-Bja2Gy04', title: 'Horror Thrills #shorts', description: 'Jump scares', thumbnail: 'https://i.ytimg.com/vi/vM-Bja2Gy04/maxresdefault.jpg', channelTitle: 'Horror', type: 'movie' },
             ];
 
             return evergreenShorts.map((v, i) => {

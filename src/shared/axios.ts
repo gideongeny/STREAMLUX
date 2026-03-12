@@ -20,21 +20,24 @@ instance.interceptors.request.use(
     // Only wrap if it's a request to the TMDB proxy (default baseURL or empty URL)
     const isTmdbProxy = !config.url || config.url === PROXY_URL || config.url.startsWith('/tmdb');
     
-    if (isTmdbProxy && !config.data?.endpoint) {
+    if (isTmdbProxy) {
         // Extract the original endpoint (e.g., /movie/popular)
-        const originalEndpoint = config.url || '';
+        // If config.url is empty/default, check if it's already in config.data
+        const originalEndpoint = config.url || config.data?.endpoint || '';
         
-        config.data = {
-            endpoint: originalEndpoint,
-            params: { ...config.params } // Pass the frontend params
-        };
+        if (originalEndpoint && !config.data?.endpoint) {
+            config.data = {
+                endpoint: originalEndpoint,
+                params: { ...config.params }
+            };
+        }
         
-        // Clear the URL and Params since they are now in the POST body to the proxy
-        config.url = ''; 
-        config.params = {};
-        
-        // HttpsCallable functions must be POST requests
-        config.method = 'POST'; 
+        // Clear the URL and Params since they are now in the POST body
+        if (config.data?.endpoint) {
+            config.url = ''; 
+            config.params = {};
+            config.method = 'POST';
+        }
     }
     // Check cache first
     const cacheKey = config.url || '';

@@ -7,42 +7,52 @@ const getApiBase = () => getBackendBase() + "/api";
 
 // Fetches TV or movie content for a specific origin country from TMDB Discover
 const fetchByCountry = async (
-  type: "movie" | "tv",
+  type: "movie" | "tv" | "all",
   countryCode: string,
   language: string = "en-US",
-  pages: number = 3
+  pages: number = 2
 ): Promise<Item[]> => {
   try {
-    const allItems: Item[] = [];
-    const fetchPromises = [];
-    for (let page = 1; page <= pages; page++) {
-      fetchPromises.push(
-        axios.get("", {
-          params: {
-            endpoint: `/discover/${type}`,
-            with_origin_country: countryCode,
-            language,
-            sort_by: "popularity.desc",
-            "vote_count.gte": 5,
-            page,
-          },
-          timeout: 10000,
-        }).catch(() => null)
-      );
-    }
-    const responses = await Promise.all(fetchPromises);
-    responses.forEach((response) => {
-      if (!response) return;
-      const items = (response.data.results || []).map((item: any) => ({
-        ...item,
-        media_type: type,
-      }));
-      allItems.push(...items);
-    });
+    const fetchResults = async (contentType: "movie" | "tv") => {
+      const items: Item[] = [];
+      const fetchPromises = [];
+      for (let page = 1; page <= pages; page++) {
+        fetchPromises.push(
+          axios.get(contentType === "movie" ? "/discover/movie" : "/discover/tv", {
+            params: {
+              with_origin_country: countryCode,
+              language,
+              sort_by: "popularity.desc",
+              "vote_count.gte": 1, // Relaxed to ensure content exists
+              page,
+            },
+            timeout: 10000,
+          }).catch(() => null)
+        );
+      }
+      const responses = await Promise.all(fetchPromises);
+      responses.forEach((response) => {
+        if (!response) return;
+        const results = (response.data.results || []).map((item: any) => ({
+          ...item,
+          media_type: contentType,
+        }));
+        items.push(...results);
+      });
+      return items;
+    };
+
+    const [movies, tvShows] = await Promise.all([
+      fetchResults("movie"),
+      fetchResults("tv")
+    ]);
+
+    const allItems = [...movies, ...tvShows];
     const unique = allItems.filter(
       (item: Item, index: number, self: Item[]) =>
-        index === self.findIndex((i: Item) => i.id === item.id)
-    );
+        index === self.findIndex((i: Item) => i.id === item.id) && item.poster_path
+    ).sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+
     return unique;
   } catch {
     return [];

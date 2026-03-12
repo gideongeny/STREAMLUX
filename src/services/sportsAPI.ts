@@ -51,61 +51,25 @@ const HARDCODED_UPCOMING_FIXTURES: SportsFixtureConfig[] = [
     id: "h-1",
     leagueId: "epl",
     leagueName: "Premier League",
-    homeTeam: "Arsenal",
-    awayTeam: "Man City",
-    homeTeamLogo: "https://media.api-sports.io/football/teams/42.png",
-    awayTeamLogo: "https://media.api-sports.io/football/teams/50.png",
+    homeTeam: "Liverpool",
+    awayTeam: "Chelsea",
+    homeTeamLogo: "https://media.api-sports.io/football/teams/40.png",
+    awayTeamLogo: "https://media.api-sports.io/football/teams/49.png",
     status: "upcoming",
     kickoffTimeFormatted: new Date(Date.now() + 86400000).toISOString(),
-    venue: "Emirates Stadium",
+    venue: "Anfield",
   },
   {
     id: "h-2",
     leagueId: "ucl",
     leagueName: "Champions League",
-    homeTeam: "Real Madrid",
-    awayTeam: "Bayern Munich",
-    homeTeamLogo: "https://media.api-sports.io/football/teams/541.png",
-    awayTeamLogo: "https://media.api-sports.io/football/teams/157.png",
+    homeTeam: "PSG",
+    awayTeam: "Inter Milan",
+    homeTeamLogo: "https://media.api-sports.io/football/teams/85.png",
+    awayTeamLogo: "https://media.api-sports.io/football/teams/505.png",
     status: "upcoming",
     kickoffTimeFormatted: new Date(Date.now() + 172800000).toISOString(),
-    venue: "Santiago Bernabéu",
-  },
-  {
-    id: "h-3",
-    leagueId: "laliga",
-    leagueName: "La Liga",
-    homeTeam: "Barcelona",
-    awayTeam: "Atletico Madrid",
-    homeTeamLogo: "https://media.api-sports.io/football/teams/529.png",
-    awayTeamLogo: "https://media.api-sports.io/football/teams/530.png",
-    status: "upcoming",
-    kickoffTimeFormatted: new Date(Date.now() + 259200000).toISOString(),
-    venue: "Camp Nou",
-  },
-  {
-    id: "h-4",
-    leagueId: "seriea",
-    leagueName: "Serie A",
-    homeTeam: "Inter Milan",
-    awayTeam: "AC Milan",
-    homeTeamLogo: "https://media.api-sports.io/football/teams/505.png",
-    awayTeamLogo: "https://media.api-sports.io/football/teams/489.png",
-    status: "upcoming",
-    kickoffTimeFormatted: new Date(Date.now() + 345600000).toISOString(),
-    venue: "San Siro",
-  },
-  {
-    id: "h-5",
-    leagueId: "bundesliga",
-    leagueName: "Bundesliga",
-    homeTeam: "Bayer Leverkusen",
-    awayTeam: "Dortmund",
-    homeTeamLogo: "https://media.api-sports.io/football/teams/168.png",
-    awayTeamLogo: "https://media.api-sports.io/football/teams/165.png",
-    status: "upcoming",
-    kickoffTimeFormatted: new Date(Date.now() + 432000000).toISOString(),
-    venue: "BayArena",
+    venue: "Parc des Princes",
   },
 ];
 
@@ -294,19 +258,21 @@ export const getVarietyYT = async (): Promise<any[]> => {
 // Sports Movies & Docs from TMDB
 export const getSportsMovies = async (): Promise<any[]> => {
   try {
-    const docResponse = await axios.get(`${getApiBase()}/proxy/tmdb`, {
+    const docResponse = await axios.get("/discover/movie", {
       params: {
-        endpoint: "/discover/movie",
         with_genres: 99,
-        with_keywords: "6075", // Sports
-        sort_by: "popularity.desc"
+        with_keywords: "6075", // Sports keyword
+        sort_by: "popularity.desc",
+        include_adult: false,
+        page: 1
       }
     }).catch(() => ({ data: { results: [] } }));
 
     return (docResponse.data.results || []).map((item: any) => ({
       ...item,
       media_type: "movie",
-      sportsCategory: "Documentary"
+      sportsCategory: "Documentary",
+      thumb: item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : "https://images.unsplash.com/photo-1540747913346-ad966a9a9ed0"
     }));
   } catch (error) {
     return [];
