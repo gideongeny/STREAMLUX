@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/proxy/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "buildCommand": "CI=false npm install --force --legacy-peer-deps && CI=false npm run build",
   "outputDirectory": "build",
   "installCommand": "npm install --force --legacy-peer-deps --no-optional",

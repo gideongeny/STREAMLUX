@@ -1,14 +1,14 @@
-import axios from 'axios';
-
 const OMDB_API_KEY = "eb87a867";
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
-    return res.status(204).end();
+    res.statusCode = 204;
+    res.end();
+    return;
   }
 
   const query = req.query || {};
@@ -17,60 +17,66 @@ export default async function handler(req: any, res: any) {
   const { provider, endpoint, params } = merged;
 
   if (!provider) {
-    return res.status(400).json({ error: "Missing 'provider' parameter.", query, body });
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ error: "Missing 'provider' parameter." }));
+    return;
   }
 
   try {
     let response;
+    let url;
+    let finalParams = { ...(params || {}) };
+    let headers = {};
 
     switch (provider) {
       case "omdb": {
-        const omdbUrl = (endpoint as string) || "http://www.omdbapi.com/";
-        response = await axios.get(omdbUrl, { params: { ...(params || {}), apikey: OMDB_API_KEY } });
+        url = (endpoint) || "http://www.omdbapi.com/";
+        finalParams.apikey = OMDB_API_KEY;
         break;
       }
       case "apisports": {
-        const apiSportsKey = "418210481bfff05ff4c1a61d285a0942";
-        const apiSportsBase = "https://v3.football.api-sports.io";
-        response = await axios.get(`${apiSportsBase}${endpoint}`, {
-          params: params || {},
-          headers: { "x-apisports-key": apiSportsKey }
-        });
+        url = `https://v3.football.api-sports.io${endpoint}`;
+        headers["x-apisports-key"] = "418210481bfff05ff4c1a61d285a0942";
         break;
       }
       case "scorebat": {
-        const scorebatToken = "Mjc3ODY0XzE3NzE3NjU0MTNfZWFiMWQ1NGRmOTkxNTY3ZjgxNjQ4Y2IyNDMyMTYxYjU2NmZiZjZhMA==";
-        response = await axios.get("https://www.scorebat.com/video-api/v3/feed/", {
-          params: { ...(params || {}), token: scorebatToken }
-        });
+        url = "https://www.scorebat.com/video-api/v3/feed/";
+        finalParams.token = "Mjc3ODY0XzE3NzE3NjU0MTNfZWFiMWQ1NGRmOTkxNTY3ZjgxNjQ4Y2IyNDMyMTYxYjU2NmZiZjZhMA==";
         break;
       }
       case "espn": {
-        const espnBase = "https://site.api.espn.com/apis/site/v2/sports";
-        response = await axios.get(`${espnBase}${endpoint}`, { params: params || {} });
+        url = `https://site.api.espn.com/apis/site/v2/sports${endpoint}`;
         break;
       }
       case "thesportsdb": {
-        const sportsDBBase = "https://www.thesportsdb.com/api/v1/json/3";
-        response = await axios.get(`${sportsDBBase}${endpoint}`, { params: params || {} });
+        url = `https://www.thesportsdb.com/api/v1/json/3${endpoint}`;
         break;
       }
       case "sportmonks": {
-        const sportmonksKey = "pWJ9QW6z7Y6U0uI4R8K9O2Q7L5V3M1N0";
-        const sportmonksBase = "https://api.sportmonks.com/v3/football";
-        response = await axios.get(`${sportmonksBase}${endpoint}`, {
-          params: { ...(params || {}), api_token: sportmonksKey }
-        });
+        url = `https://api.sportmonks.com/v3/football${endpoint}`;
+        finalParams.api_token = "pWJ9QW6z7Y6U0uI4R8K9O2Q7L5V3M1N0";
         break;
       }
       default:
-        return res.status(400).json({ error: `Unsupported provider: ${provider}` });
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: `Unsupported provider: ${provider}` }));
+        return;
     }
 
-    return res.status(200).json(response.data);
-  } catch (error: any) {
+    const qs = new URLSearchParams(finalParams).toString();
+    const fullUrl = `${url}${url.includes('?') ? '&' : '?'}${qs}`;
+    
+    response = await fetch(fullUrl, { headers });
+    const data = await response.json();
+
+    res.statusCode = response.status;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(data));
+  } catch (error) {
     console.error(`Error proxying to ${provider}:`, error.message);
-    const status = error.response?.status || 500;
-    return res.status(status).json({ error: `Failed to fetch from ${provider}`, details: error.message });
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ error: `Failed to fetch from ${provider}`, details: error.message }));
   }
 }

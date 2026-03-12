@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 const API_KEYS = [
   "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc",
   "AIzaSyAQOFn1SVkbrQDJn7VeRMs5vAV1mYErImM",
@@ -8,29 +6,23 @@ const API_KEYS = [
 ];
 
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
-const deadKeys = new Set<string>();
+let activeKeyIndex = 0;
 
-function getActiveKey(): string {
-  for (const key of API_KEYS) {
-    if (!deadKeys.has(key)) return key;
-  }
-  deadKeys.clear();
-  return API_KEYS[0];
-}
-
-export default async function handler(req: any, res: any) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
-    return res.status(204).end();
+    res.statusCode = 204;
+    res.end();
+    return;
   }
 
   const query = req.query || {};
   const body = req.body || {};
 
-  const endpoint = (body.endpoint || query.endpoint) as string;
+  const endpoint = (body.endpoint || query.endpoint);
   const bodyParams = body.params || {};
   const extraQueryParams = { ...query };
   delete extraQueryParams.endpoint;
@@ -38,27 +30,38 @@ export default async function handler(req: any, res: any) {
   const mergedParams = { ...extraQueryParams, ...bodyParams };
 
   if (!endpoint) {
-    return res.status(400).json({ error: 'YouTube endpoint is required' });
+    res.statusCode = 400;
+    res.end(JSON.stringify({ error: 'YouTube endpoint is required' }));
+    return;
   }
 
-  let lastError: any;
-  for (let attempt = 0; attempt < API_KEYS.length; attempt++) {
-    const key = getActiveKey();
+  let lastError;
+  for (let i = 0; i < API_KEYS.length; i++) {
+    const keyIndex = (activeKeyIndex + i) % API_KEYS.length;
+    const key = API_KEYS[keyIndex];
+    
     try {
-      const response = await axios.get(`${BASE_URL}${endpoint}`, {
-        params: { ...mergedParams, key }
-      });
-      return res.status(200).json(response.data);
-    } catch (error: any) {
-      lastError = error;
-      if (error?.response?.status === 403) {
-        deadKeys.add(key);
-      } else {
-        break;
+      const qs = new URLSearchParams({ ...mergedParams, key }).toString();
+      const response = await fetch(`${BASE_URL}${endpoint}?${qs}`);
+      const data = await response.json();
+      
+      if (response.status === 403) {
+        lastError = { status: 403, message: 'Quota exceeded for key' };
+        continue; // Try next key
       }
+
+      activeKeyIndex = keyIndex;
+      res.statusCode = response.status;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(data));
+      return;
+    } catch (error) {
+      lastError = error;
+      break;
     }
   }
 
-  const status = lastError?.response?.status || 500;
-  return res.status(status).json({ error: 'Failed to fetch from YouTube', details: lastError?.message, endpoint });
+  res.statusCode = lastError?.status || 500;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ error: 'Failed to fetch from YouTube', details: lastError?.message }));
 }
