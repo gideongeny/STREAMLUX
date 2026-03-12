@@ -1,3 +1,5 @@
+const axios = require('axios');
+
 const API_KEYS = [
   "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc",
   "AIzaSyAQOFn1SVkbrQDJn7VeRMs5vAV1mYErImM",
@@ -8,15 +10,13 @@ const API_KEYS = [
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 let activeKeyIndex = 0;
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
-    res.statusCode = 204;
-    res.end();
-    return;
+    return res.status(204).end();
   }
 
   const query = req.query || {};
@@ -30,9 +30,7 @@ export default async function handler(req, res) {
   const mergedParams = { ...extraQueryParams, ...bodyParams };
 
   if (!endpoint) {
-    res.statusCode = 400;
-    res.end(JSON.stringify({ error: 'YouTube endpoint is required' }));
-    return;
+    return res.status(400).json({ error: 'YouTube endpoint is required' });
   }
 
   let lastError;
@@ -41,27 +39,20 @@ export default async function handler(req, res) {
     const key = API_KEYS[keyIndex];
     
     try {
-      const qs = new URLSearchParams({ ...mergedParams, key }).toString();
-      const response = await fetch(`${BASE_URL}${endpoint}?${qs}`);
-      const data = await response.json();
-      
-      if (response.status === 403) {
-        lastError = { status: 403, message: 'Quota exceeded for key' };
-        continue;
-      }
-
+      const response = await axios.get(`${BASE_URL}${endpoint}`, {
+        params: { ...mergedParams, key }
+      });
       activeKeyIndex = keyIndex;
-      res.statusCode = response.status;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify(data));
-      return;
+      return res.status(200).json(response.data);
     } catch (error) {
       lastError = error;
+      if (error.response?.status === 403) {
+        continue;
+      }
       break;
     }
   }
 
-  res.statusCode = lastError?.status || 500;
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify({ error: 'Failed to fetch from YouTube', details: lastError?.message }));
-}
+  const status = lastError?.response?.status || 500;
+  return res.status(status).json({ error: 'Failed to fetch from YouTube', details: lastError?.message });
+};
