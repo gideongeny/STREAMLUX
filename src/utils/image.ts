@@ -1,4 +1,4 @@
-import { TMDB_IMAGE_BASE } from "../shared/constants";
+// Utility for resolving image URLs
 
 /**
  * Robust image URL resolver that handles:

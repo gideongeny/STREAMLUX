@@ -1,0 +1,15 @@
+
+> streamlux@0.1.1 build
+> react-scripts build
+
+Creating an optimized production build...
+Failed to compile.
+
+TS2305: Module '"../shared/constants"' has no exported member 'TMDB_IMAGE_BASE'.
+  [0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { [33mTMDB_IMAGE_BASE[39m } [36mfrom[39m [32m"../shared/constants"[39m[33m;[39m
+   [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+   [90m 2 |[39m
+   [90m 3 |[39m [90m/**[39m
+   [90m 4 |[39m [90m * Robust image URL resolver that handles:[39m[0m
+
+
