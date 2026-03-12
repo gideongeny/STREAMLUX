@@ -1,18 +1,14 @@
-import axios from "axios";
-import { proxyUrl } from "./corsProxy";
+import { getBackendBase } from "./download";
 
-const SPORTMONKS_TOKEN = "Vgv86BZzG0YVUQCYdXT16Xxzr1qCSVxxntce0-UYXmcqJ_aodkoq39Fv2E6f";
-const BASE_URL = "https://api.sportmonks.com/v3/football";
+// Use the project's unified backend entry point
+const getApiBase = () => getBackendBase() + "/api";
 
 const fetchFromSportmonks = async (endpoint: string, params: Record<string, string> = {}) => {
-    const url = new URL(`${BASE_URL}${endpoint}`);
-    url.searchParams.append("api_token", SPORTMONKS_TOKEN);
-    Object.entries(params).forEach(([key, value]) => {
-        url.searchParams.append(key, value);
+    const response = await axios.post(`${getApiBase()}/external`, {
+        provider: "sportmonks",
+        endpoint,
+        params
     });
-
-    const proxiedUrl = proxyUrl(url.toString());
-    const response = await axios.get(proxiedUrl);
     return response.data;
 };
 

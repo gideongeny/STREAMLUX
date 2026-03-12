@@ -4,7 +4,10 @@
 
 import axios from "axios";
 import { Item } from "../shared/types";
-import { API_URL } from "../shared/constants";
+import { getBackendBase } from "./download";
+
+// Use the project's unified backend entry point
+const getApiBase = () => getBackendBase() + "/api";
 
 const TMDB_API_KEY = process.env.REACT_APP_API_KEY || "8c247ea0b4b56ed2ff7d41c9a833aa77";
 
@@ -50,9 +53,9 @@ export const getLetterboxdContent = async (type: "movie" | "tv" = "movie"): Prom
     // Fetch from multiple genres to get variety (like Letterboxd's diverse selection)
     for (const genreId of genres.slice(0, 5)) {
       try {
-        const response = await axios.get(`${API_URL}/discover/movie`, {
+        const response = await axios.get(`${getApiBase()}/tmdb`, {
           params: {
-            api_key: TMDB_API_KEY,
+            endpoint: `/discover/movie`,
             with_genres: genreId,
             sort_by: "vote_average.desc", // Letterboxd focuses on quality
             "vote_count.gte": 100, // Only well-rated films
@@ -113,9 +116,9 @@ export const getRottenTomatoesContent = async (type: "movie" | "tv" = "movie"): 
         }
 
         if (endpoint) {
-          const response = await axios.get(`${API_URL}${endpoint}`, {
+          const response = await axios.get(`${getApiBase()}/tmdb`, {
             params: {
-              api_key: TMDB_API_KEY,
+              endpoint,
               page: 1,
             },
             timeout: 5000,
@@ -182,8 +185,8 @@ export const getEnhancedTMDBContent = async (
 
         if (endpoint) {
           fetchPromises.push(
-            axios.get(`${API_URL}${endpoint}`, {
-              params: { api_key: TMDB_API_KEY },
+            axios.get(`${getApiBase()}/tmdb`, {
+              params: { endpoint },
               timeout: 5000,
             }).catch(() => ({ data: { results: [] } }))
           );

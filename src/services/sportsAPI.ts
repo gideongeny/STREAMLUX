@@ -9,9 +9,10 @@ import {
 import { fetchYouTubeVideos } from "./youtube";
 import { convertYouTubeToItem } from "./youtubeContent";
 
-// Hardened constants
-const API_SPORTS_BASE = "https://v3.football.api-sports.io";
-const API_SPORTS_KEY = "418210481bfff05ff4c1a61d285a0942";
+import { getBackendBase } from "./download";
+
+// Use the project's unified backend entry point
+const getApiBase = () => getBackendBase() + "/api";
 
 // Helper to map league names to our league IDs
 const getLeagueIdFromName = (leagueName: string): string => {
@@ -111,9 +112,10 @@ const HARDCODED_UPCOMING_FIXTURES: SportsFixtureConfig[] = [
 export const getMatchEvents = async (fixtureId: string): Promise<any[]> => {
   try {
     const rawId = fixtureId.replace("live-", "").replace("up-", "");
-    const response = await axios.get(`${API_SPORTS_BASE}/fixtures/events`, {
-      params: { fixture: rawId },
-      headers: { "x-apisports-key": API_SPORTS_KEY }
+    const response = await axios.post(`${getApiBase()}/external`, {
+      provider: "apisports",
+      endpoint: "/fixtures/events",
+      params: { fixture: rawId }
     });
     return response.data?.response || [];
   } catch (error) {
@@ -124,9 +126,10 @@ export const getMatchEvents = async (fixtureId: string): Promise<any[]> => {
 export const getMatchStatistics = async (fixtureId: string): Promise<any[]> => {
   try {
     const rawId = fixtureId.replace("live-", "").replace("up-", "");
-    const response = await axios.get(`${API_SPORTS_BASE}/fixtures/statistics`, {
-      params: { fixture: rawId },
-      headers: { "x-apisports-key": API_SPORTS_KEY }
+    const response = await axios.post(`${getApiBase()}/external`, {
+      provider: "apisports",
+      endpoint: "/fixtures/statistics",
+      params: { fixture: rawId }
     });
     return response.data?.response || [];
   } catch (error) {
@@ -137,9 +140,10 @@ export const getMatchStatistics = async (fixtureId: string): Promise<any[]> => {
 export const getMatchLineups = async (fixtureId: string): Promise<any[]> => {
   try {
     const rawId = fixtureId.replace("live-", "").replace("up-use-", "");
-    const response = await axios.get(`${API_SPORTS_BASE}/fixtures/lineups`, {
-      params: { fixture: rawId },
-      headers: { "x-apisports-key": API_SPORTS_KEY }
+    const response = await axios.post(`${getApiBase()}/external`, {
+      provider: "apisports",
+      endpoint: "/fixtures/lineups",
+      params: { fixture: rawId }
     });
     return response.data?.response || [];
   } catch (error) {
@@ -147,16 +151,11 @@ export const getMatchLineups = async (fixtureId: string): Promise<any[]> => {
   }
 };
 
-// Scorebat Tokens
-const SCOREBAT_TOKEN = "Mjc3ODY0XzE3NzE3NjU0MTNfZWFiMWQ1NGRmOTkxNTY3ZjgxNjQ4Y2IyNDMyMTYxYjU2NmZiZjZhMA==";
-
-/**
- * Scorebat Highlights
- */
 export const getScorebatHighlights = async (): Promise<any[]> => {
   try {
-    const response = await axios.get("https://www.scorebat.com/video-api/v3/feed/", {
-      params: { token: SCOREBAT_TOKEN }
+    const response = await axios.post(`${getApiBase()}/external`, {
+      provider: "scorebat",
+      params: {}
     });
     if (!response.data?.response) return [];
 
@@ -180,11 +179,12 @@ export const getScorebatHighlights = async (): Promise<any[]> => {
   }
 };
 
-// NCAA / Collegiate Sports Fetcher (using ESPN hidden API)
 export const getNCAAFixtures = async (): Promise<any[]> => {
   try {
-    const response = await axios.get("https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard", {
-      timeout: 5000
+    const response = await axios.post(`${getApiBase()}/external`, {
+      provider: "espn",
+      endpoint: "/basketball/mens-college-basketball/scoreboard",
+      params: {}
     });
     if (!response.data?.events) return [];
 
@@ -294,8 +294,9 @@ export const getVarietyYT = async (): Promise<any[]> => {
 // Sports Movies & Docs from TMDB
 export const getSportsMovies = async (): Promise<any[]> => {
   try {
-    const docResponse = await axios.get("/discover/movie", {
+    const docResponse = await axios.get(`${getApiBase()}/tmdb`, {
       params: {
+        endpoint: "/discover/movie",
         with_genres: 99,
         with_keywords: "6075", // Sports
         sort_by: "popularity.desc"
@@ -384,11 +385,10 @@ export const getVarietySports = async (): Promise<any[]> => {
 // API Sports Fallback Helpers (Internal)
 const getLiveFixturesAPISports = async (signal?: AbortSignal): Promise<SportsFixtureConfig[]> => {
   try {
-    // Note: API Sports needs its own raw axios if baseURL is different
-    const response = await axios.get(`${API_SPORTS_BASE}/fixtures`, {
-      params: { live: "all" },
-      headers: { "x-apisports-key": API_SPORTS_KEY },
-      signal,
+    const response = await axios.post(`${getApiBase()}/external`, {
+      provider: "apisports",
+      endpoint: "/fixtures",
+      params: { live: "all" }
     });
     if (!response.data?.response) return [];
     return response.data.response.map((fixture: any) => ({
@@ -413,10 +413,10 @@ const getLiveFixturesAPISports = async (signal?: AbortSignal): Promise<SportsFix
 const getUpcomingFixturesAPISports = async (signal?: AbortSignal): Promise<SportsFixtureConfig[]> => {
   try {
     const dateStr = new Date().toISOString().split('T')[0];
-    const response = await axios.get(`${API_SPORTS_BASE}/fixtures`, {
-      params: { date: dateStr },
-      headers: { "x-apisports-key": API_SPORTS_KEY },
-      signal
+    const response = await axios.post(`${getApiBase()}/external`, {
+      provider: "apisports",
+      endpoint: "/fixtures",
+      params: { date: dateStr }
     });
     if (!response.data?.response) return [];
     return response.data.response.slice(0, 10).map((f: any) => ({

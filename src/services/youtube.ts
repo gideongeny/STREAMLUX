@@ -15,35 +15,23 @@ export interface YouTubeVideo {
     viewCount?: string;
 }
 
-// Redirect all YouTube requests to the secure Firebase Proxy
-const FIREBASE_REGION = "us-central1";
-const PROJECT_ID = "streamlux-67a84"; 
-const PROXY_URL = `https://${FIREBASE_REGION}-${PROJECT_ID}.cloudfunctions.net/proxyYouTube`;
+import { getBackendBase } from "./download";
+
+// Use the project's unified backend entry point
+const getApiBase = () => getBackendBase() + "/api";
 
 /**
  * Build a proxy execution payload for a given region or genre.
  */
 async function executeYouTubeProxy(endpoint: string, params: Record<string, string | number>) {
-    const payload = {
-        data: {
-            endpoint,
-            params
+    const response = await axios.get(`${getApiBase()}/youtube`, {
+        params: {
+            ...params,
+            endpoint
         }
-    };
+    });
     
-    // HttpsCallable functions require POST
-    const response = await axios.post(PROXY_URL, payload);
-    
-    // Unwrap Firebase wrapper
-    let actualData = response.data;
-    if (actualData?.result) actualData = actualData.result;
-    
-    // Unwrap Proxy Wrapper
-    if (actualData && actualData.success && actualData.data) {
-        return actualData.data;
-    }
-    
-    return actualData;
+    return response.data;
 }
 
 /**

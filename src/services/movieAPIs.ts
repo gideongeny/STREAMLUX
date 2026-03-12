@@ -53,6 +53,11 @@ const convertToItem = (item: any, mediaType: "movie" | "tv"): Item => {
   };
 };
 
+import { getBackendBase } from "./download";
+
+// Use the project's unified backend entry point
+const getApiBase = () => getBackendBase() + "/api";
+
 // Enhanced TMDB fetching - fetch multiple pages for more content
 export const getTMDBContent = async (
   type: "movie" | "tv",
@@ -84,12 +89,12 @@ export const getTMDBContent = async (
 
       if (endpoint) {
         fetchPromises.push(
-          axios.get(`${API_URL}${endpoint}`, {
+          axios.get(`${getApiBase()}/tmdb`, {
             params: {
-              api_key: TMDB_API_KEY,
+              endpoint,
               language
             },
-            timeout: 5000,
+            timeout: 8000,
           })
         );
       }
@@ -124,7 +129,7 @@ export const getOMDBContent = async (
   try {
     const proxyUrl = "https://us-central1-streamlux.cloudfunctions.net/proxyExternalAPI";
     
-    const response = await axios.post(proxyUrl, {
+    const response = await axios.post(`${getApiBase()}/external`, {
       provider: "omdb",
       params: {
         s: searchQuery,
@@ -245,9 +250,9 @@ export const getTMDBByGenre = async (
     const fetchPromises = [];
     for (let page = 1; page <= pages; page++) {
       fetchPromises.push(
-        axios.get(`${API_URL}/discover/${type}`, {
+        axios.get(`${getApiBase()}/tmdb`, {
           params: {
-            api_key: TMDB_API_KEY,
+            endpoint: `/discover/${type}`,
             with_genres: genreId,
             sort_by: "popularity.desc",
             page,
@@ -402,9 +407,9 @@ export const getPersonalizedRecommendations = async (
     // Get unique IDs from history to filter out things they've already watched
     const watchedIds = new Set(history.map(item => item.id));
 
-    const response = await axios.get(`${API_URL}/discover/${type}`, {
+    const response = await axios.get(`${getApiBase()}/tmdb`, {
       params: {
-        api_key: TMDB_API_KEY,
+        endpoint: `/discover/${type}`,
         with_genres: genreQuery,
         sort_by: "popularity.desc",
         "vote_count.gte": 100, // Quality filter

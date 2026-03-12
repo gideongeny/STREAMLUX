@@ -5,17 +5,23 @@ import { db } from "../shared/firebase";
 const getApiBase = () => getBackendBase() + "/api";
 
 export const getProxyUrl = (url: string, referer?: string) => {
+    // Standardizing backend expects /api/proxy?url=...
     return `${getApiBase()}/proxy?url=${encodeURIComponent(url)}${referer ? `&referer=${encodeURIComponent(referer)}` : ''}`;
 };
 
 export const getDownloadUrl = (url: string, filename?: string) => {
-    return `${getApiBase()}/download?url=${encodeURIComponent(url)}${filename ? `&filename=${encodeURIComponent(filename)}` : ''}`;
+    // Standardizing backend expects /api/download?url=... or through proxy
+    return `${getApiBase()}/proxy?url=${encodeURIComponent(url)}${filename ? `&filename=${encodeURIComponent(filename)}` : ''}`;
 };
 
 // Helper to get backend resolution
 const resolveBackend = async (type: string, id: string, s?: string, e?: string): Promise<any> => {
     try {
-        const query = new URLSearchParams({ type, id });
+        // Updated to use the unified /api/resolve (routed to resolveStream)
+        const query = new URLSearchParams({ 
+            tmdbId: id,
+            mediaType: type 
+        });
         if (s) query.append('s', s);
         if (e) query.append('e', e);
 

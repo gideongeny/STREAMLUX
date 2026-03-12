@@ -9,38 +9,47 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 
 export const proxyTMDB = functions
     .runWith({ memory: '256MB', timeoutSeconds: 60 })
-    .https.onCall(async (data) => {
+    .https.onRequest(async (req, res) => {
+        // Handle CORS
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+        if (req.method === 'OPTIONS') {
+            res.status(204).send('');
+            return;
+        }
+
         try {
-            const { endpoint, params = {} } = data;
+            const endpoint = req.query.endpoint as string || req.body.endpoint;
+            const params = req.body.params || req.query || {};
 
             if (!endpoint) {
-                throw new functions.https.HttpsError('invalid-argument', 'TMDB endpoint is required');
+                res.status(400).json({ error: 'TMDB endpoint is required' });
+                return;
             }
 
-            // Inject the private server key into the request
-            const queryParams = {
-                ...params,
-                api_key: TMDB_API_KEY,
-            };
+            // Remove internal proxy params if they leaked into query
+            delete (params as any).endpoint;
 
             const response = await axios.get(`${BASE_URL}${endpoint}`, {
-                params: queryParams,
+                params: {
+                    ...params,
+                    api_key: TMDB_API_KEY,
+                },
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 }
             });
 
-            return {
-                success: true,
-                data: response.data
-            };
+            res.status(200).json(response.data);
 
         } catch (error: any) {
             functions.logger.error('TMDB Proxy Error:', error.message);
-            throw new functions.https.HttpsError(
-                'internal',
-                `Failed to fetch from TMDB: ${error.message}`
-            );
+            res.status(error.response?.status || 500).json({
+                error: 'Failed to fetch from TMDB',
+                details: error.message
+            });
         }
     });

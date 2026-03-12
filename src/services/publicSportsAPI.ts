@@ -3,6 +3,10 @@
 
 import axios from "axios";
 import { SportsFixtureConfig } from "../shared/constants";
+import { getBackendBase } from "./download";
+
+// Use the project's unified backend entry point
+const getApiBase = () => getBackendBase() + "/api";
 
 // Livescore.com API (public, no key required)
 const LIVESCORE_BASE = "https://livescore-api.com/api-client";
@@ -16,9 +20,10 @@ const SPORTSDB_BASE = "https://www.thesportsdb.com/api/v1/json/3";
 // Get team logo from TheSportsDB
 export const getTeamLogo = async (teamName: string): Promise<string | null> => {
   try {
-    const response = await axios.get(`${SPORTSDB_BASE}/searchteams.php`, {
-      params: { t: teamName },
-      timeout: 5000,
+    const response = await axios.post(`${getApiBase()}/external`, {
+      provider: "thesportsdb",
+      endpoint: "/searchteams.php",
+      params: { t: teamName }
     });
 
     if (response.data?.teams && response.data.teams.length > 0) {
@@ -69,7 +74,11 @@ export const getESPNScores = async (date?: string): Promise<SportsFixtureConfig[
   try {
     const responses = await Promise.allSettled(
       ESPN_ENDPOINTS.map(endpoint =>
-        axios.get(`${ESPN_BASE}${endpoint}${dateParam}`, { timeout: 8000 })
+        axios.post(`${getApiBase()}/external`, {
+          provider: "espn",
+          endpoint: `${endpoint}${dateParam}`,
+          params: {}
+        })
       )
     );
 
@@ -150,9 +159,10 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0].replaceAll('-', '/');
 
-    const response = await axios.get(`${SPORTSDB_BASE}/eventsday.php`, {
-      params: { d: dateStr },
-      timeout: 8000,
+    const response = await axios.post(`${getApiBase()}/external`, {
+      provider: "thesportsdb",
+      endpoint: "/eventsday.php",
+      params: { d: dateStr }
     });
 
     if (response.data?.events && Array.isArray(response.data.events)) {

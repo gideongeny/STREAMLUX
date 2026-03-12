@@ -49,51 +49,88 @@ function markKeyAsDead(key: string) {
 
 export const proxyYouTube = functions
     .runWith({ memory: '256MB', timeoutSeconds: 60 })
-    .https.onCall(async (data) => {
-        const { endpoint, params = {}, retryCount = 0 } = data;
+    .https.onRequest(async (req, res) => {
+        // Handle CORS
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+        if (req.method === 'OPTIONS') {
+            res.status(204).send('');
+            return;
+        }
+
+        const endpoint = req.query.endpoint as string || req.body.endpoint;
+        const params = req.body.params || req.query || {};
+        const retryCount = parseInt(req.query.retryCount as string || req.body.retryCount || "0");
 
         if (!endpoint) {
-            throw new functions.https.HttpsError('invalid-argument', 'YouTube endpoint is required');
+            res.status(400).json({ error: 'YouTube endpoint is required' });
+            return;
         }
 
         const activeParams = getActiveKey();
         if (!activeParams) {
-             throw new functions.https.HttpsError('internal', 'No API keys configured or available.');
+             res.status(500).json({ error: 'No API keys configured or available.' });
+             return;
         }
 
         try {
-            // Inject the backend-only key
-            const queryParams = {
-                ...params,
-                key: activeParams.key,
-            };
+            // Remove internal proxy params
+            delete (params as any).endpoint;
+            delete (params as any).retryCount;
 
             const response = await axios.get(`${BASE_URL}${endpoint}`, {
-                params: queryParams
+                params: {
+                    ...params,
+                    key: activeParams.key,
+                }
             });
 
-            return {
-                success: true,
-                data: response.data
-            };
+            res.status(200).json(response.data);
 
         } catch (error: any) {
-            // Native Backend Quota Rotation logic
             const status = error?.response?.status;
             
             // 403 usually means Quota Exceeded for YouTube Data API
             if (status === 403 && retryCount < API_KEYS.length) {
                 markKeyAsDead(activeParams.key);
                 
-                // Recursively retry the backend request with the next healthy key
-                functions.logger.info(`[YouTube Proxy] Retrying request (${retryCount + 1}/${API_KEYS.length})...`);
-                return exports.proxyYouTube({ ...data, retryCount: retryCount + 1 });
+                // Recursively retry by calling a local version of our logic or just looping
+                // Since this is onRequest, we can just loop until success or exhaust keys
+                functions.logger.info(`[YouTube Proxy] Retrying internally (${retryCount + 1}/${API_KEYS.length})...`);
+                
+                // We'll redirect to ourself for the retry to keep the logic clean, 
+                // but incrementing retryCount to avoid infinite loops
+                const nextRetryCount = retryCount + 1;
+                
+                // For a more robust internal retry without a second HTTP hop:
+                let currentRetry = nextRetryCount;
+                let currentKeyParams = getActiveKey();
+                
+                while (currentRetry < API_KEYS.length && currentKeyParams) {
+                   try {
+                       const retryResponse = await axios.get(`${BASE_URL}${endpoint}`, {
+                           params: { ...params, key: currentKeyParams.key }
+                       });
+                       res.status(200).json(retryResponse.data);
+                       return;
+                   } catch (err: any) {
+                       if (err?.response?.status === 403) {
+                           markKeyAsDead(currentKeyParams.key);
+                           currentKeyParams = getActiveKey();
+                           currentRetry++;
+                       } else {
+                           throw err;
+                       }
+                   }
+                }
             }
 
             functions.logger.error('YouTube Proxy Error:', error.message);
-            throw new functions.https.HttpsError(
-                'internal',
-                `Failed to fetch from YouTube: ${error.message}`
-            );
+            res.status(error.response?.status || 500).json({
+                error: 'Failed to fetch from YouTube',
+                details: error.message
+            });
         }
     });

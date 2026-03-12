@@ -1,8 +1,9 @@
 import axios from "../shared/axios";
 import { Item } from "../shared/types";
-import { API_URL } from "../shared/constants";
+import { getBackendBase } from "./download";
 
-const TMDB_API_KEY = process.env.REACT_APP_API_KEY || "8c247ea0b4b56ed2ff7d41c9a833aa77";
+// Use the project's unified backend entry point
+const getApiBase = () => getBackendBase() + "/api";
 
 // Fetches TV or movie content for a specific origin country from TMDB Discover
 const fetchByCountry = async (
@@ -16,16 +17,16 @@ const fetchByCountry = async (
     const fetchPromises = [];
     for (let page = 1; page <= pages; page++) {
       fetchPromises.push(
-        axios.get(`${API_URL}/discover/${type}`, {
+        axios.get(`${getApiBase()}/tmdb`, {
           params: {
-            api_key: TMDB_API_KEY,
+            endpoint: `/discover/${type}`,
             with_origin_country: countryCode,
             language,
             sort_by: "popularity.desc",
             "vote_count.gte": 5,
             page,
           },
-          timeout: 8000,
+          timeout: 10000,
         }).catch(() => null)
       );
     }
