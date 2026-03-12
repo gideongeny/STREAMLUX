@@ -25,16 +25,13 @@ export const resizeImage = (
   imageUrl: string,
   width: string = "original"
 ): string => {
-  // If imageUrl is empty or undefined, return empty string
-  if (!imageUrl) return "";
+  if (!imageUrl) return "/defaultPoster.jpg";
 
-  // If imageUrl is already a full URL (http/https), return as is
-  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+  if (imageUrl.startsWith("http") || imageUrl.startsWith("//")) {
     return imageUrl;
   }
 
-  // Otherwise, treat as TMDB path and prepend IMAGE_URL
-  return `${IMAGE_URL}/${width}${imageUrl}`;
+  return `${IMAGE_URL}/${width}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
 };
 
 // export const embedMovie = (id: number): string =>

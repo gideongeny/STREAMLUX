@@ -17,6 +17,7 @@ import {
   getBollywoodMovies,
   getNollywoodMovies,
 } from "../../services/globalContent";
+import { resizeImage } from "../../shared/utils";
 
 interface RegionSlider {
   title: string;
@@ -24,8 +25,6 @@ interface RegionSlider {
   items: Item[];
   isLoading: boolean;
 }
-
-const TMDB_IMG_BASE = "https://image.tmdb.org/t/p/w342";
 
 const GlobalWorldTV: FC = () => {
   const navigate = useNavigate();
@@ -121,11 +120,7 @@ const GlobalWorldTV: FC = () => {
                   >
                     <div className="relative rounded-xl overflow-hidden shadow-lg">
                       <LazyLoadImage
-                        src={
-                          item.poster_path
-                            ? `${TMDB_IMG_BASE}${item.poster_path}`
-                            : "/defaultPoster.jpg"
-                        }
+                        src={resizeImage(item.poster_path, "w342")}
                         alt={item.title || item.name || ""}
                         className="w-32 h-48 object-cover"
                         effect="opacity"

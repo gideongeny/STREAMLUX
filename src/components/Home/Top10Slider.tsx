@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import { Item } from '../../shared/types';
 import { IMAGE_URL } from '../../shared/constants';
+import { resizeImage } from '../../shared/utils';
 
 interface Top10SliderProps {
     films: Item[];
@@ -57,7 +58,7 @@ const Top10Slider: FC<Top10SliderProps> = ({ films }) => {
                                 {/* Poster Card */}
                                 <div className="relative z-10 w-full rounded-xl overflow-hidden aspect-[2/3] shadow-2xl transition-transform duration-300 group-hover:scale-105 group-hover:z-20 border border-white/10 bg-dark-lighten">
                                     <LazyLoadImage
-                                        src={`${IMAGE_URL}/w342${item.poster_path}`}
+                                        src={resizeImage(item.poster_path, "w342")}
                                         alt={item.title || item.name}
                                         effect="opacity"
                                         className="w-full h-full object-cover"

@@ -10,6 +10,7 @@ import { AiOutlineRight } from "react-icons/ai";
 import axios from "../../shared/axios";
 import { Item } from "../../shared/types";
 import { getUpcomingFixturesAPI } from "../../services/sportsAPI";
+import { resizeImage } from "../../shared/utils";
 
 interface UpcomingCalendarProps {
     title?: string;
@@ -115,7 +116,7 @@ const UpcomingCalendar: FC<UpcomingCalendarProps> = ({
                                 <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-lg border border-white/5 transition duration-300 group-hover:scale-105 group-hover:border-primary/50 bg-gray-900">
                                     {item.poster_path ? (
                                         <LazyLoadImage
-                                            src={item.poster_path.startsWith('http') ? item.poster_path : `https://image.tmdb.org/t/p/w500${item.poster_path}`}
+                                            src={resizeImage(item.poster_path, "w500")}
                                             alt={item.title}
                                             className="w-full h-full object-cover"
                                             effect="opacity"
