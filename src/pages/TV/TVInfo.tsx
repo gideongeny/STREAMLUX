@@ -18,7 +18,7 @@ const TVInfo: FC = () => {
     () => getTVFullDetail(id as string)
   );
 
-  if (isError || (!isLoading && !data)) {
+  if (isError) {
     return (
       <div className="min-h-screen bg-dark flex items-center justify-center px-6">
         <motion.div
