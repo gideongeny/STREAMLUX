@@ -1,10 +1,10 @@
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001/api';
+import { getBackendBase } from './download';
 
 /**
  * Backend Health Check Service
- * Automatically wakes up the Render backend if it's sleeping
+ * Automatically wakes up the Vercel backend if it's sleeping
  */
 class BackendHealthService {
     private isWaking = false;
@@ -35,10 +35,12 @@ class BackendHealthService {
     private async performHealthCheck(): Promise<boolean> {
         try {
             const startTime = Date.now();
+            const backendBase = getBackendBase();
 
             // Simple health check endpoint - just needs to wake the server
-            await axios.get(BACKEND_URL.replace('/api', '') + '/api/proxy?url=https://httpbin.org/get', {
-                timeout: 35000, // 35 seconds to allow for wake-up time
+            // Using /api/proxy/tmdb with a dummy endpoint
+            await axios.get(`${backendBase}/api/proxy/tmdb?endpoint=/movie/76341`, {
+                timeout: 10000, // 10 seconds is plenty for Vercel
             });
 
             const duration = Date.now() - startTime;

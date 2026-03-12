@@ -3,6 +3,30 @@ import axios from 'axios';
 
 const OMDB_API_KEY = "eb87a867";
 
+async function getBody(req: IncomingMessage & { body?: any }): Promise<any> {
+  if (req.body) return req.body;
+  return new Promise((resolve) => {
+    let data = '';
+    req.on('data', (chunk) => { data += chunk; });
+    req.on('end', () => {
+      try { resolve(JSON.parse(data)); } catch { resolve({}); }
+    });
+    req.on('error', () => resolve({}));
+  });
+}
+
+function parseQuery(url: string = ''): Record<string, string> {
+  const queryStart = url.indexOf('?');
+  if (queryStart === -1) return {};
+  const qs = url.slice(queryStart + 1);
+  const result: Record<string, string> = {};
+  qs.split('&').forEach(pair => {
+    const [k, v] = pair.split('=');
+    if (k) result[decodeURIComponent(k)] = decodeURIComponent(v || '');
+  });
+  return result;
+}
+
 export default async function handler(req: IncomingMessage & { query?: any; body?: any }, res: ServerResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -14,14 +38,14 @@ export default async function handler(req: IncomingMessage & { query?: any; body
     return;
   }
 
-  const query: Record<string, any> = (req as any).query || {};
-  const body: Record<string, any> = (req as any).body || {};
+  const query = req.query || parseQuery(req.url);
+  const body = req.method === "POST" ? await getBody(req) : {};
   const merged = { ...query, ...body };
   const { provider, endpoint, params } = merged;
 
   if (!provider) {
     res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: "Missing 'provider' parameter." }));
+    res.end(JSON.stringify({ error: "Missing 'provider' parameter.", query, body }));
     return;
   }
 
@@ -61,7 +85,7 @@ export default async function handler(req: IncomingMessage & { query?: any; body
         break;
       }
       case "sportmonks": {
-        const sportmonksKey = "your-sportmonks-key";
+        const sportmonksKey = "pWJ9QW6z7Y6U0uI4R8K9O2Q7L5V3M1N0"; // Hardcoded for fixed deployment
         const sportmonksBase = "https://api.sportmonks.com/v3/football";
         response = await axios.get(`${sportmonksBase}${endpoint}`, {
           params: { ...(params || {}), api_token: sportmonksKey }

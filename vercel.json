@@ -9,12 +9,24 @@
       "destination": "/api/proxy/tmdb.ts"
     },
     {
+      "source": "/api/proxy/tmdb/(.*)",
+      "destination": "/api/proxy/tmdb.ts?endpoint=/$1"
+    },
+    {
       "source": "/api/proxy/youtube",
       "destination": "/api/proxy/youtube.ts"
     },
     {
+      "source": "/api/proxy/youtube/(.*)",
+      "destination": "/api/proxy/youtube.ts?endpoint=/$1"
+    },
+    {
       "source": "/api/proxy/external",
       "destination": "/api/proxy/external.ts"
+    },
+    {
+      "source": "/api/proxy/external/(.*)",
+      "destination": "/api/proxy/external.ts?endpoint=/$1"
     },
     {
       "source": "/api/scrapers",

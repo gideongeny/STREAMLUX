@@ -274,6 +274,19 @@ function App() {
                     })
                   );
                 }
+              },
+              (error) => {
+                console.warn("Firestore onSnapshot error (No Provider):", error);
+                // Fallback to basic user info from auth
+                dispatch(
+                  setCurrentUser({
+                    displayName: user.displayName || "",
+                    photoURL: user.photoURL || "",
+                    email: user.email || "",
+                    emailVerified: user.emailVerified,
+                    uid: user.uid,
+                  })
+                );
               }
             );
             return;
@@ -309,6 +322,18 @@ function App() {
                     })
                   );
                 }
+              },
+              (error) => {
+                console.warn("Firestore onSnapshot error (Google):", error);
+                dispatch(
+                  setCurrentUser({
+                    displayName: user.displayName || "",
+                    email: user.email || "",
+                    emailVerified: user.emailVerified,
+                    photoURL: user.photoURL || "",
+                    uid: user.uid,
+                  })
+                );
               }
             );
           } else {

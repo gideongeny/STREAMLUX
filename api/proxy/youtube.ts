@@ -19,7 +19,8 @@ function getActiveKey(): string {
   return API_KEYS[0];
 }
 
-function parseBody(req: IncomingMessage): Promise<any> {
+async function getBody(req: IncomingMessage & { body?: any }): Promise<any> {
+  if (req.body) return req.body;
   return new Promise((resolve) => {
     let data = '';
     req.on('data', (chunk) => { data += chunk; });
@@ -42,7 +43,7 @@ function parseQuery(url: string = ''): Record<string, string> {
   return result;
 }
 
-export default async function handler(req: IncomingMessage, res: ServerResponse) {
+export default async function handler(req: IncomingMessage & { query?: any; body?: any }, res: ServerResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -53,8 +54,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return;
   }
 
-  const query = parseQuery(req.url);
-  const body = req.method === 'POST' ? await parseBody(req) : {};
+  const query = req.query || parseQuery(req.url);
+  const body = req.method === 'POST' ? await getBody(req) : {};
 
   const endpoint = (body.endpoint || query.endpoint) as string;
   const bodyParams: Record<string, any> = body.params || {};
@@ -92,5 +93,5 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   console.error('YouTube Proxy Error:', lastError?.message);
   const status = lastError?.response?.status || 500;
   res.writeHead(status, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ error: 'Failed to fetch from YouTube', details: lastError?.message }));
+  res.end(JSON.stringify({ error: 'Failed to fetch from YouTube', details: lastError?.message, endpoint }));
 }

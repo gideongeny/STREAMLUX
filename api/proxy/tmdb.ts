@@ -4,8 +4,10 @@ import axios from 'axios';
 const TMDB_API_KEY = "69ef02da25ccfbc48bfd094eb8e348f9";
 const BASE_URL = 'https://api.themoviedb.org/3';
 
-// Helper to parse the raw body from the request
-function parseBody(req: IncomingMessage): Promise<any> {
+// Helper to parse body ONLY if not already parsed by Vercel
+async function getBody(req: IncomingMessage & { body?: any }): Promise<any> {
+  if (req.body) return req.body;
+  
   return new Promise((resolve) => {
     let data = '';
     req.on('data', (chunk) => { data += chunk; });
@@ -16,7 +18,6 @@ function parseBody(req: IncomingMessage): Promise<any> {
   });
 }
 
-// Helper to parse query string
 function parseQuery(url: string = ''): Record<string, string> {
   const queryStart = url.indexOf('?');
   if (queryStart === -1) return {};
@@ -29,7 +30,7 @@ function parseQuery(url: string = ''): Record<string, string> {
   return result;
 }
 
-export default async function handler(req: IncomingMessage, res: ServerResponse) {
+export default async function handler(req: IncomingMessage & { query?: any; body?: any }, res: ServerResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -40,12 +41,11 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return;
   }
 
-  const query = parseQuery(req.url);
-  const body = req.method === 'POST' ? await parseBody(req) : {};
+  const query = req.query || parseQuery(req.url);
+  const body = req.method === 'POST' ? await getBody(req) : {};
 
   // Support both: GET ?endpoint=... and POST body {endpoint, params}
   const endpoint = (body.endpoint || query.endpoint) as string;
-  // params from body (nested object) or from query string
   const bodyParams: Record<string, any> = body.params || {};
   const extraQueryParams: Record<string, any> = { ...query };
   delete extraQueryParams.endpoint;
@@ -54,12 +54,13 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   if (!endpoint) {
     res.writeHead(400, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'TMDB endpoint is required' }));
+    res.end(JSON.stringify({ error: 'TMDB endpoint is required', debug: { url: req.url, method: req.method } }));
     return;
   }
 
   try {
-    const response = await axios.get(`${BASE_URL}${endpoint}`, {
+    const fullUrl = `${BASE_URL}${endpoint}`;
+    const response = await axios.get(fullUrl, {
       params: { ...mergedParams, api_key: TMDB_API_KEY },
       headers: { 'Accept': 'application/json' }
     });
@@ -68,9 +69,14 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     res.end(JSON.stringify(response.data));
 
   } catch (error: any) {
-    console.error('TMDB Proxy Error:', error.message);
+    console.error(`TMDB Proxy Error [${endpoint}]:`, error.message);
     const status = error.response?.status || 500;
     res.writeHead(status, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Failed to fetch from TMDB', details: error.message }));
+    res.end(JSON.stringify({ 
+      error: 'Failed to fetch from TMDB', 
+      details: error.message,
+      endpoint: endpoint,
+      status: status
+    }));
   }
 }
