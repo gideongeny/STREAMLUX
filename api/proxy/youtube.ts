@@ -19,7 +19,30 @@ function getActiveKey(): string {
   return API_KEYS[0];
 }
 
-export default async function handler(req: IncomingMessage & { query?: any; body?: any }, res: ServerResponse) {
+function parseBody(req: IncomingMessage): Promise<any> {
+  return new Promise((resolve) => {
+    let data = '';
+    req.on('data', (chunk) => { data += chunk; });
+    req.on('end', () => {
+      try { resolve(JSON.parse(data)); } catch { resolve({}); }
+    });
+    req.on('error', () => resolve({}));
+  });
+}
+
+function parseQuery(url: string = ''): Record<string, string> {
+  const queryStart = url.indexOf('?');
+  if (queryStart === -1) return {};
+  const qs = url.slice(queryStart + 1);
+  const result: Record<string, string> = {};
+  qs.split('&').forEach(pair => {
+    const [k, v] = pair.split('=');
+    if (k) result[decodeURIComponent(k)] = decodeURIComponent(v || '');
+  });
+  return result;
+}
+
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -30,14 +53,15 @@ export default async function handler(req: IncomingMessage & { query?: any; body
     return;
   }
 
-  const query: Record<string, any> = (req as any).query || {};
-  const body: Record<string, any> = (req as any).body || {};
+  const query = parseQuery(req.url);
+  const body = req.method === 'POST' ? await parseBody(req) : {};
 
-  const endpoint = (query.endpoint || body.endpoint) as string;
-  const params: Record<string, any> = { ...query, ...body };
+  const endpoint = (body.endpoint || query.endpoint) as string;
+  const bodyParams: Record<string, any> = body.params || {};
+  const extraQueryParams: Record<string, any> = { ...query };
+  delete extraQueryParams.endpoint;
 
-  delete params.endpoint;
-  delete params.retryCount;
+  const mergedParams: Record<string, any> = { ...extraQueryParams, ...bodyParams };
 
   if (!endpoint) {
     res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -50,7 +74,7 @@ export default async function handler(req: IncomingMessage & { query?: any; body
     const key = getActiveKey();
     try {
       const response = await axios.get(`${BASE_URL}${endpoint}`, {
-        params: { ...params, key }
+        params: { ...mergedParams, key }
       });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(response.data));
