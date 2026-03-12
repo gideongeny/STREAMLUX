@@ -1,45 +1,35 @@
 {
-  "functions": {
-    "api/proxy/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "buildCommand": "CI=false npm install --force --legacy-peer-deps && CI=false npm run build",
   "outputDirectory": "build",
   "installCommand": "npm install --force --legacy-peer-deps --no-optional",
-  "devCommand": "npm start",
   "rewrites": [
     {
       "source": "/api/proxy/tmdb",
-      "destination": "/api/proxy/tmdb.js"
+      "destination": "/api/tmdb.js"
     },
     {
       "source": "/api/proxy/tmdb/(.*)",
-      "destination": "/api/proxy/tmdb.js?endpoint=/$1"
+      "destination": "/api/tmdb.js?endpoint=/$1"
     },
     {
       "source": "/api/proxy/youtube",
-      "destination": "/api/proxy/youtube.js"
+      "destination": "/api/youtube.js"
     },
     {
       "source": "/api/proxy/youtube/(.*)",
-      "destination": "/api/proxy/youtube.js?endpoint=/$1"
+      "destination": "/api/youtube.js?endpoint=/$1"
     },
     {
       "source": "/api/proxy/external",
-      "destination": "/api/proxy/external.js"
+      "destination": "/api/external.js"
     },
     {
       "source": "/api/proxy/external/(.*)",
-      "destination": "/api/proxy/external.js?endpoint=/$1"
-    },
-    {
-      "source": "/api/scrapers",
-      "destination": "/api/scrapers.ts"
+      "destination": "/api/external.js?endpoint=/$1"
     },
     {
       "source": "/api/health",
-      "destination": "/api/health.ts"
+      "destination": "/api/health.js"
     },
     {
       "source": "/((?!api|.*\\.apk$).*)",
