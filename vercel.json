@@ -5,7 +5,27 @@
   "devCommand": "npm start",
   "rewrites": [
     {
-      "source": "/((?!.*\\.apk$).*)",
+      "source": "/api/proxy/tmdb",
+      "destination": "/api/proxy/tmdb.ts"
+    },
+    {
+      "source": "/api/proxy/youtube",
+      "destination": "/api/proxy/youtube.ts"
+    },
+    {
+      "source": "/api/proxy/external",
+      "destination": "/api/proxy/external.ts"
+    },
+    {
+      "source": "/api/scrapers",
+      "destination": "/api/scrapers.ts"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/health.ts"
+    },
+    {
+      "source": "/((?!api|.*\\.apk$).*)",
       "destination": "/index.html"
     }
   ]

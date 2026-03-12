@@ -127,9 +127,7 @@ export const getOMDBContent = async (
   type: "movie" | "tv" = "movie"
 ): Promise<Item[]> => {
   try {
-    const proxyUrl = "https://us-central1-streamlux.cloudfunctions.net/proxyExternalAPI";
-    
-    const response = await axios.post(`${getApiBase()}/external`, {
+    const response = await axios.post(`${getApiBase()}/proxy/external`, {
       provider: "omdb",
       params: {
         s: searchQuery,
@@ -407,7 +405,7 @@ export const getPersonalizedRecommendations = async (
     // Get unique IDs from history to filter out things they've already watched
     const watchedIds = new Set(history.map(item => item.id));
 
-    const response = await axios.get(`${getApiBase()}/tmdb`, {
+    const response = await axios.get(`${getApiBase()}/proxy/tmdb`, {
       params: {
         endpoint: `/discover/${type}`,
         with_genres: genreQuery,
