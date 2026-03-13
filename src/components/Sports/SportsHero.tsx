@@ -56,7 +56,7 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
         return () => clearInterval(interval);
     }, [isLive, featuredMatch]);
 
-    // Dynamic Highlight Search
+    // Dynamic Highlight Search - wrapped in try/catch to prevent crash
     useEffect(() => {
         if (!featuredMatch || featuredMatch.youtubeId) {
             setDynamicYoutubeId(null);
@@ -64,15 +64,19 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
         }
 
         const fetchHighlight = async () => {
-            const query = `${featuredMatch.homeTeam} vs ${featuredMatch.awayTeam} match highlights`;
-            const { videos } = await fetchYouTubeVideos(query, undefined, undefined, 'sports');
-            if (videos.length > 0) {
-                setDynamicYoutubeId(videos[0].id);
+            try {
+                const query = `${featuredMatch.homeTeam} vs ${featuredMatch.awayTeam} match highlights`;
+                const { videos } = await fetchYouTubeVideos(query, undefined, undefined, 'sports');
+                if (videos && videos.length > 0) {
+                    setDynamicYoutubeId(videos[0].id);
+                }
+            } catch (e) {
+                console.warn('[SportsHero] Failed to fetch highlight video:', e);
             }
         };
 
         fetchHighlight();
-    }, [featuredMatch]);
+    }, [featuredMatch?.id]);
 
     if (isLoading || !featuredMatch) {
         return (

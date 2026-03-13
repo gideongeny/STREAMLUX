@@ -35,7 +35,18 @@ class ErrorBoundary extends Component<Props, State> {
       errorMessage.includes('client is offline') ||
       errorMessage.includes('NetworkError') ||
       errorMessage.includes('Failed to fetch') ||
-      errorMessage.includes('script error');
+      errorMessage.includes('script error') ||
+      errorMessage.includes('YouTube') ||
+      errorMessage.includes('youtube') ||
+      errorMessage.includes('quota') ||
+      errorMessage.includes('403') ||
+      errorMessage.includes('AbortError') ||
+      errorMessage.includes('Load failed') ||
+      errorMessage.includes('ChunkLoadError') ||
+      errorMessage.includes('Loading chunk') ||
+      errorMessage.includes('Cannot read properties of undefined') ||
+      errorMessage.includes('sports') ||
+      errorMessage.includes('Cannot destructure property');
 
     if (isNonCritical) {
       this.setState({ hasError: false, error: null });
