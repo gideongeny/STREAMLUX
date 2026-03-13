@@ -78,6 +78,8 @@
     "android:apk:linux": "npm run build && npx cap sync android && cd android && ./gradlew assembleRelease",
     "android:bundle": "npm run build && npx cap sync android && cd android && gradlew.bat bundleRelease",
     "android:bundle:linux": "npm run build && npx cap sync android && cd android && ./gradlew bundleRelease",
+    "backend:build": "cd backend && npm install && npm run build",
+    "backend:start": "cd backend && npm start",
     "postinstall": "node scripts/postinstall.js"
   },
   "eslintConfig": {
