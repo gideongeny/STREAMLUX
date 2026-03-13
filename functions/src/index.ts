@@ -103,33 +103,38 @@ export const healthCheck = functions.https.onRequest((req, res) => {
  * Fulfills the /api/** rewrite in firebase.json
  */
 export const api = functions.https.onRequest(async (req, res) => {
-    // Normalize path: Remove /api/ prefix and leading slashes for robust matching
-    const path = req.path.replace(/^\/+api\//, '').replace(/^\/+/, '');
+    // Robust path normalization: Remove leading /api and any leading/trailing slashes
+    let path = req.path.replace(/^\/api/, '').replace(/^\/+/, '').replace(/\/+$/, '');
     
-    functions.logger.info('API Router - Incoming:', { originalPath: req.path, normalizedPath: path });
+    functions.logger.info(`[API Router] Incoming request: ${req.method} ${req.path} -> Resolved Path: ${path}`, {
+        query: req.query,
+        bodyKeys: Object.keys(req.body || {})
+    });
 
-    // Routing logic
-    if (path.startsWith('proxy/tmdb') || path.startsWith('tmdb')) {
-        return (exports.proxyTMDB as any)(req, res);
-    }
-    if (path.startsWith('proxy/youtube') || path.startsWith('youtube')) {
-        return (exports.proxyYouTube as any)(req, res);
-    }
-    if (path.startsWith('proxy/external') || path.startsWith('external')) {
-        return (exports.proxyExternalAPI as any)(req, res);
-    }
-    if (path.startsWith('scrapers')) {
-        return (exports.proxyScrapers as any)(req, res);
-    }
-    if (path === 'resolve' || path === 'proxy/resolve') {
-        return (exports.resolveStream as any)(req, res);
-    }
-    if (path === 'proxy' || path === 'cors') {
-        return (exports.corsProxy as any)(req, res);
-    }
-    if (path === 'health') {
-        return (exports.healthCheck as any)(req, res);
+    // Standard CORS headers
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') {
+        res.status(204).send('');
+        return;
     }
 
-    res.status(404).json({ error: 'API route not found', originalPath: req.path, normalizedPath: path });
+    // Direct Routing
+    if (path === 'proxy/tmdb' || path === 'tmdb') return (exports.proxyTMDB as any)(req, res);
+    if (path === 'proxy/youtube' || path === 'youtube') return (exports.proxyYouTube as any)(req, res);
+    if (path === 'proxy/external' || path === 'external') return (exports.proxyExternalAPI as any)(req, res);
+    if (path === 'scrapers' || path === 'proxy/scrapers') return (exports.proxyScrapers as any)(req, res);
+    if (path === 'resolve' || path === 'proxy/resolve') return (exports.resolveStream as any)(req, res);
+    if (path === 'proxy' || path === 'cors') return (exports.corsProxy as any)(req, res);
+    if (path === 'health') return res.status(200).json({ status: 'ok', resolvedPath: path });
+
+    functions.logger.warn(`[API Router] 404 - Route not found for path: ${path} (original: ${req.path})`);
+    res.status(404).json({ 
+        error: 'API route not found', 
+        path, 
+        original: req.path,
+        tip: 'Try removing or adding /api/ prefix if calling directly.' 
+    });
 });

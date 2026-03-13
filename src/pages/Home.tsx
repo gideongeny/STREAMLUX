@@ -247,52 +247,39 @@ const Home: FC = () => {
           isSidebarActive={isSidebarActive}
         />
 
-        <div
-          className="flex-grow md:pt-7 pt-0 pb-7 border-x md:px-[2vw] px-[4vw] border-gray-darken min-h-screen bg-dark relative z-0 max-w-full overflow-x-hidden md:ml-[260px]"
-        >
-          {/* Tab header row */}
-          <div className="flex justify-between md:items-end items-center">
-            <div className="inline-flex gap-[40px] pb-[14px] border-b border-gray-darken relative">
-              <FilmTypeButton
-                buttonType="tv"
-                currentTab={currentTab}
-                onSetCurrentTab={handleTabChange}
-              />
-              <FilmTypeButton
-                buttonType="movie"
-                currentTab={currentTab}
-                onSetCurrentTab={handleTabChange}
-              />
-              <FilmTypeButton
-                buttonType="sports"
-                currentTab={currentTab}
-                onSetCurrentTab={handleTabChange}
-              />
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">{welcome.text}</p>
-              <div className="flex gap-6 items-center">
-                {/* MovieBox-style search bar on desktop top bar */}
-                <TopSearchBar className="w-[300px] hidden lg:block" />
-                
-                <div className="flex gap-4 items-center">
-                  <p className="font-bold text-white flex items-center gap-2">
-                    {currentUser?.displayName || "Guest"}
-                    <span className={`text-[10px] bg-white/5 px-2 py-0.5 rounded-full border border-white/10 ${welcome.color}`}>{welcome.mood}</span>
-                  </p>
-                  <img
-                    src={
-                      currentUser
-                        ? (currentUser.photoURL as string)
-                        : "/defaultAvatar.jpg"
-                    }
-                    alt="User avatar"
-                    className="w-7 h-7 rounded-full object-cover"
-                    referrerPolicy="no-referrer"
-                    onError={(e: any) => { e.target.src = "/defaultAvatar.jpg"; }}
-                  />
-                </div>
+        {/* 🌟 FIXED DESKTOP HEADER (STATIONARY LIKE MOVIEBOX) */}
+        <div className="hidden md:flex fixed top-0 left-[260px] right-0 h-20 items-center justify-between px-8 bg-dark/80 backdrop-blur-xl border-b border-gray-darken z-[80] transition-all duration-500">
+           <div className="flex items-center gap-10">
+              <div className="flex gap-10 border-b border-gray-darken/30">
+                 <FilmTypeButton buttonType="tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
+                 <FilmTypeButton buttonType="movie" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
+                 <FilmTypeButton buttonType="sports" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
               </div>
+           </div>
+           
+           <div className="flex items-center gap-6">
+              <TopSearchBar className="w-[300px] lg:block hidden" />
+              <div className="flex items-center gap-4">
+                 <div className="text-right">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-tight">{welcome.mood}</p>
+                    <p className="text-sm font-bold text-white tracking-tight">{currentUser?.displayName || "Guest"}</p>
+                 </div>
+                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary/20">
+                    {(currentUser?.displayName?.[0] || "G").toUpperCase()}
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        <div
+          className="flex-grow md:pt-28 pt-0 pb-7 border-x md:px-[2vw] px-[4vw] border-gray-darken min-h-screen bg-dark relative z-0 max-w-full overflow-x-hidden md:ml-[260px]"
+        >
+          {/* Mobile-only tab header */}
+          <div className="flex md:hidden justify-between md:items-end items-center mb-6">
+            <div className="inline-flex gap-[40px] pb-[14px] border-b border-gray-darken relative">
+              <FilmTypeButton buttonType="tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
+              <FilmTypeButton buttonType="movie" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
+              <FilmTypeButton buttonType="sports" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
             </div>
           </div>
 
