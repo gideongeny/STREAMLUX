@@ -32,11 +32,101 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.api = exports.healthCheck = exports.resolveStream = exports.proxy = exports.proxyScrapers = exports.proxyExternalAPI = exports.proxyYouTube = exports.proxyTMDB = void 0;
+exports.proxy = exports.proxyScrapers = exports.proxyExternalAPI = exports.proxyYouTube = exports.proxyTMDB = exports.gateway = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
-const resolver_1 = require("./resolver");
+const axios_1 = __importDefault(require("axios"));
+// Initialize Firebase Admin
+admin.initializeApp();
+const TMDB_API_KEY = "69ef02da25ccfbc48bfd094eb8e348f9";
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const YT_BASE_URL = 'https://www.googleapis.com/youtube/v3';
+// Backend-only YouTube API Keys for Quota Rotation
+const YT_KEYS = [
+    "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc",
+    "AIzaSyAQOFn1SVkbrQDJn7VeRMs5vAV1mYErImM",
+    "AIzaSyDbTHAbBxPWdvKWjbWG_xcd8-09t3w-CCI",
+    "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY",
+    "AIzaSyBo8OwaCOTQsppnpaJV_nU9ollTlbI0chM",
+    "AIzaSyBIV8LYYwPg5CWXn6W0aL5Z6P8-c_AATrY"
+];
+// Simple in-memory dead-key tracker
+const deadKeys = new Set();
+/**
+ * Consolidated Gateway Function
+ * Handles TMDB, YouTube, and External API proxies in one robust endpoint.
+ */
+exports.gateway = functions
+    .runWith({ memory: '512MB', timeoutSeconds: 60 })
+    .https.onRequest(async (req, res) => {
+    var _a, _b;
+    // Standard CORS
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+        res.status(204).send('');
+        return;
+    }
+    // Path normalization
+    const reqPath = req.path || "";
+    const rawPath = reqPath.replace(/^\/api\//, '').replace(/^\/+/, '');
+    try {
+        // --- TMDB PROXY ---
+        if (rawPath.includes('tmdb')) {
+            const endpoint = req.body.endpoint || req.query.endpoint || "/movie/popular";
+            const params = Object.assign(Object.assign({}, (req.body.params || {})), (req.query || {}));
+            delete params.endpoint;
+            const response = await axios_1.default.get(`${TMDB_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
+                params: Object.assign(Object.assign({}, params), { api_key: TMDB_API_KEY })
+            });
+            return res.status(200).json(response.data);
+        }
+        // --- YOUTUBE PROXY ---
+        if (rawPath.includes('youtube')) {
+            const endpoint = req.body.endpoint || req.query.endpoint || "/videos";
+            const params = Object.assign(Object.assign({}, (req.body.params || {})), (req.query || {}));
+            delete params.endpoint;
+            delete params.context;
+            // Simple rotation
+            let key = YT_KEYS[0];
+            for (const k of YT_KEYS) {
+                if (!deadKeys.has(k)) {
+                    key = k;
+                    break;
+                }
+            }
+            try {
+                const response = await axios_1.default.get(`${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
+                    params: Object.assign(Object.assign({}, params), { key })
+                });
+                return res.status(200).json(response.data);
+            }
+            catch (err) {
+                if (((_a = err.response) === null || _a === void 0 ? void 0 : _a.status) === 403)
+                    deadKeys.add(key);
+                throw err;
+            }
+        }
+        // --- HEALTH CHECK ---
+        if (rawPath.includes('health')) {
+            return res.status(200).json({ status: 'online', path: rawPath, timestamp: Date.now() });
+        }
+        res.status(404).json({ error: 'Gateway route not found', path: rawPath });
+    }
+    catch (error) {
+        console.error('[Gateway Error]', error.message);
+        res.status(((_b = error.response) === null || _b === void 0 ? void 0 : _b.status) || 500).json({
+            error: 'Gateway failed to fetch upstream',
+            details: error.message
+        });
+    }
+});
+// Individual exports for backward compatibility and direct mapping
 var tmdbProxy_1 = require("./tmdbProxy");
 Object.defineProperty(exports, "proxyTMDB", { enumerable: true, get: function () { return tmdbProxy_1.proxyTMDB; } });
 var youtubeProxy_1 = require("./youtubeProxy");
@@ -47,123 +137,4 @@ var scraperProxy_1 = require("./scraperProxy");
 Object.defineProperty(exports, "proxyScrapers", { enumerable: true, get: function () { return scraperProxy_1.proxyScrapers; } });
 var corsProxy_1 = require("./corsProxy");
 Object.defineProperty(exports, "proxy", { enumerable: true, get: function () { return corsProxy_1.corsProxy; } });
-// Initialize Firebase Admin
-admin.initializeApp();
-/**
- * HTTP Callable Function: Resolve Stream URL
- *
- * This function uses a headless browser to extract direct media URLs from embed providers.
- * It intercepts network requests and returns the direct video stream URL.
- *
- * Configuration:
- * - Memory: 2GB (required for headless Chrome)
- * - Timeout: 300 seconds
- * - Region: us-central1
- */
-/**
- * HTTP Endpoint: Resolve Stream URL
- *
- * This function uses a headless browser to extract direct media URLs from embed providers.
- */
-exports.resolveStream = functions
-    .runWith({
-    memory: '2GB',
-    timeoutSeconds: 300,
-})
-    .https.onRequest(async (req, res) => {
-    // CORS setup
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    if (req.method === 'OPTIONS') {
-        res.status(204).send('');
-        return;
-    }
-    const data = req.method === 'POST' ? req.body : req.query;
-    const { providerUrl, mediaType, tmdbId } = data;
-    // Validate input
-    if (!providerUrl || typeof providerUrl !== 'string') {
-        res.status(400).json({ error: 'Provider URL is required and must be a string.' });
-        return;
-    }
-    try {
-        functions.logger.info('Resolving stream URL', { providerUrl, mediaType, tmdbId });
-        // Call the resolver to extract the direct media URL
-        const result = await (0, resolver_1.resolveMediaUrl)(providerUrl);
-        res.status(200).json(Object.assign({ success: true }, result));
-    }
-    catch (error) {
-        functions.logger.error('Error resolving stream URL', {
-            error: error.message,
-            providerUrl,
-        });
-        res.status(500).json({
-            error: `Failed to resolve stream URL: ${error.message}`
-        });
-    }
-});
-/**
- * HTTP Endpoint: Health Check
- */
-exports.healthCheck = functions.https.onRequest((req, res) => {
-    res.status(200).json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0',
-    });
-});
-/**
- * Scheduled Function: Keep Alive
- */
-// export const keepAlive = functions.pubsub.schedule('every 15 minutes').onRun(async (_context) => {
-//     try {
-//         console.log('Keep alive ping at', new Date().toISOString());
-//         return null;
-//     } catch (error) {
-//         console.error('Keep alive failed', error);
-//         return null;
-//     }
-// });
-/**
- * Unified API Entry Point (REST)
- * Fulfills the /api/** rewrite in firebase.json
- */
-exports.api = functions.https.onRequest(async (req, res) => {
-    // Robust path normalization: Remove leading /api and any leading/trailing slashes
-    let path = req.path.replace(/^\/api/, '').replace(/^\/+/, '').replace(/\/+$/, '');
-    functions.logger.info(`[API Router] Incoming request: ${req.method} ${req.path} -> Resolved Path: ${path}`, {
-        query: req.query,
-        bodyKeys: Object.keys(req.body || {})
-    });
-    // Standard CORS headers
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    if (req.method === 'OPTIONS') {
-        res.status(204).send('');
-        return;
-    }
-    // Direct Routing
-    if (path === 'proxy/tmdb' || path === 'tmdb')
-        return exports.proxyTMDB(req, res);
-    if (path === 'proxy/youtube' || path === 'youtube')
-        return exports.proxyYouTube(req, res);
-    if (path === 'proxy/external' || path === 'external')
-        return exports.proxyExternalAPI(req, res);
-    if (path === 'scrapers' || path === 'proxy/scrapers')
-        return exports.proxyScrapers(req, res);
-    if (path === 'resolve' || path === 'proxy/resolve')
-        return exports.resolveStream(req, res);
-    if (path === 'proxy' || path === 'cors')
-        return exports.corsProxy(req, res);
-    if (path === 'health')
-        return res.status(200).json({ status: 'ok', resolvedPath: path });
-    functions.logger.warn(`[API Router] 404 - Route not found for path: ${path} (original: ${req.path})`);
-    res.status(404).json({
-        error: 'API route not found',
-        path,
-        original: req.path,
-        tip: 'Try removing or adding /api/ prefix if calling directly.'
-    });
-});
 //# sourceMappingURL=index.js.map

@@ -1,38 +1,35 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { resolveMediaUrl } from './resolver';
-export { proxyTMDB } from './tmdbProxy';
-export { proxyYouTube } from './youtubeProxy';
-export { proxyExternalAPI } from './externalProxy';
-export { proxyScrapers } from './scraperProxy';
-export { corsProxy as proxy } from './corsProxy';
+import axios from 'axios';
 
 // Initialize Firebase Admin
 admin.initializeApp();
 
+const TMDB_API_KEY = "69ef02da25ccfbc48bfd094eb8e348f9";
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const YT_BASE_URL = 'https://www.googleapis.com/youtube/v3';
+
+// Backend-only YouTube API Keys for Quota Rotation
+const YT_KEYS = [
+    "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc",
+    "AIzaSyAQOFn1SVkbrQDJn7VeRMs5vAV1mYErImM",
+    "AIzaSyDbTHAbBxPWdvKWjbWG_xcd8-09t3w-CCI",
+    "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY",
+    "AIzaSyBo8OwaCOTQsppnpaJV_nU9ollTlbI0chM",
+    "AIzaSyBIV8LYYwPg5CWXn6W0aL5Z6P8-c_AATrY"
+];
+
+// Simple in-memory dead-key tracker
+const deadKeys = new Set<string>();
+
 /**
- * HTTP Callable Function: Resolve Stream URL
- * 
- * This function uses a headless browser to extract direct media URLs from embed providers.
- * It intercepts network requests and returns the direct video stream URL.
- * 
- * Configuration:
- * - Memory: 2GB (required for headless Chrome)
- * - Timeout: 300 seconds
- * - Region: us-central1
+ * Consolidated Gateway Function
+ * Handles TMDB, YouTube, and External API proxies in one robust endpoint.
  */
-/**
- * HTTP Endpoint: Resolve Stream URL
- * 
- * This function uses a headless browser to extract direct media URLs from embed providers.
- */
-export const resolveStream = functions
-    .runWith({
-        memory: '2GB',
-        timeoutSeconds: 300,
-    })
+export const gateway = functions
+    .runWith({ memory: '512MB', timeoutSeconds: 60 })
     .https.onRequest(async (req, res) => {
-        // CORS setup
+        // Standard CORS
         res.set('Access-Control-Allow-Origin', '*');
         res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -42,99 +39,69 @@ export const resolveStream = functions
             return;
         }
 
-        const data = req.method === 'POST' ? req.body : req.query;
-        const { providerUrl, mediaType, tmdbId } = data;
-
-        // Validate input
-        if (!providerUrl || typeof providerUrl !== 'string') {
-            res.status(400).json({ error: 'Provider URL is required and must be a string.' });
-            return;
-        }
-
+        // Path normalization
+        const reqPath = req.path || "";
+        const rawPath = reqPath.replace(/^\/api\//, '').replace(/^\/+/, '');
+        
         try {
-            functions.logger.info('Resolving stream URL', { providerUrl, mediaType, tmdbId });
+            // --- TMDB PROXY ---
+            if (rawPath.includes('tmdb')) {
+                const endpoint = req.body.endpoint || req.query.endpoint || "/movie/popular";
+                const params = { ...(req.body.params || {}), ...(req.query || {}) };
+                delete params.endpoint;
 
-            // Call the resolver to extract the direct media URL
-            const result = await resolveMediaUrl(providerUrl);
+                const response = await axios.get(`${TMDB_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
+                    params: { ...params, api_key: TMDB_API_KEY }
+                });
+                res.status(200).json(response.data);
+                return;
+            }
 
-            res.status(200).json({
-                success: true,
-                ...result
-            });
+            // --- YOUTUBE PROXY ---
+            if (rawPath.includes('youtube')) {
+                const endpoint = req.body.endpoint || req.query.endpoint || "/videos";
+                const params = { ...(req.body.params || {}), ...(req.query || {}) };
+                delete params.endpoint;
+                delete params.context;
+
+                // Simple rotation
+                let key = YT_KEYS[0];
+                for (const k of YT_KEYS) {
+                    if (!deadKeys.has(k)) { key = k; break; }
+                }
+
+                try {
+                    const response = await axios.get(`${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
+                        params: { ...params, key }
+                    });
+                    res.status(200).json(response.data);
+                    return;
+                } catch (err: any) {
+                    if (err.response?.status === 403) deadKeys.add(key);
+                    throw err;
+                }
+            }
+
+            // --- HEALTH CHECK ---
+            if (rawPath.includes('health')) {
+                res.status(200).json({ status: 'online', path: rawPath, timestamp: Date.now() });
+                return;
+            }
+
+            res.status(404).json({ error: 'Gateway route not found', path: rawPath });
+
         } catch (error: any) {
-            functions.logger.error('Error resolving stream URL', {
-                error: error.message,
-                providerUrl,
-            });
-
-            res.status(500).json({ 
-                error: `Failed to resolve stream URL: ${error.message}` 
+            console.error('[Gateway Error]', error.message);
+            res.status(error.response?.status || 500).json({
+                error: 'Gateway failed to fetch upstream',
+                details: error.message
             });
         }
     });
 
-/**
- * HTTP Endpoint: Health Check
- */
-export const healthCheck = functions.https.onRequest((req, res) => {
-    res.status(200).json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0',
-    });
-});
-
-
-
-/**
- * Scheduled Function: Keep Alive
- */
-// export const keepAlive = functions.pubsub.schedule('every 15 minutes').onRun(async (_context) => {
-//     try {
-//         console.log('Keep alive ping at', new Date().toISOString());
-//         return null;
-//     } catch (error) {
-//         console.error('Keep alive failed', error);
-//         return null;
-//     }
-// });
-/**
- * Unified API Entry Point (REST)
- * Fulfills the /api/** rewrite in firebase.json
- */
-export const api = functions.https.onRequest(async (req, res) => {
-    // Robust path normalization: Remove leading /api and any leading/trailing slashes
-    let path = req.path.replace(/^\/api/, '').replace(/^\/+/, '').replace(/\/+$/, '');
-    
-    functions.logger.info(`[API Router] Incoming request: ${req.method} ${req.path} -> Resolved Path: ${path}`, {
-        query: req.query,
-        bodyKeys: Object.keys(req.body || {})
-    });
-
-    // Standard CORS headers
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    if (req.method === 'OPTIONS') {
-        res.status(204).send('');
-        return;
-    }
-
-    // Direct Routing
-    if (path === 'proxy/tmdb' || path === 'tmdb') return (exports.proxyTMDB as any)(req, res);
-    if (path === 'proxy/youtube' || path === 'youtube') return (exports.proxyYouTube as any)(req, res);
-    if (path === 'proxy/external' || path === 'external') return (exports.proxyExternalAPI as any)(req, res);
-    if (path === 'scrapers' || path === 'proxy/scrapers') return (exports.proxyScrapers as any)(req, res);
-    if (path === 'resolve' || path === 'proxy/resolve') return (exports.resolveStream as any)(req, res);
-    if (path === 'proxy' || path === 'cors') return (exports.corsProxy as any)(req, res);
-    if (path === 'health') return res.status(200).json({ status: 'ok', resolvedPath: path });
-
-    functions.logger.warn(`[API Router] 404 - Route not found for path: ${path} (original: ${req.path})`);
-    res.status(404).json({ 
-        error: 'API route not found', 
-        path, 
-        original: req.path,
-        tip: 'Try removing or adding /api/ prefix if calling directly.' 
-    });
-});
+// Individual exports for backward compatibility and direct mapping
+export { proxyTMDB } from './tmdbProxy';
+export { proxyYouTube } from './youtubeProxy';
+export { proxyExternalAPI } from './externalProxy';
+export { proxyScrapers } from './scraperProxy';
+export { corsProxy as proxy } from './corsProxy';
