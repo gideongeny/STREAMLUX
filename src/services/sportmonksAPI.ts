@@ -10,6 +10,10 @@ const fetchFromSportmonks = async (endpoint: string, params: Record<string, stri
         endpoint,
         params
     });
+    // Handle both Vercel wrapper { data: { data: [...] } } and Firebase direct { data: [...] }
+    if (response.data?.data) {
+        return response.data;
+    }
     return response.data;
 };
 

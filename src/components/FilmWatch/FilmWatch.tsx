@@ -66,6 +66,20 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
       setIsResolving(true);
       const id = detail?.id || "";
       const imdbId = (detail as any)?.imdb_id;
+      
+      const scrapedUrl = searchParams.get("src");
+      const isScraped = searchParams.get("scraped") === "true";
+
+      if (isScraped && scrapedUrl) {
+        setSources([{
+          name: "Scraped Source",
+          url: scrapedUrl,
+          quality: "HD",
+          type: "direct"
+        }]);
+        setIsResolving(false);
+        return;
+      }
 
       try {
         const resolved = await ResolverService.getInstance().resolveSources(

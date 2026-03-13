@@ -66,6 +66,15 @@ export const proxyExternalAPI = functions.https.onRequest(async (req, res) => {
         res.status(200).json(response.data);
         break;
 
+      case "sportmonks":
+        const sportmonksBase = "https://api.sportmonks.com/v3/football";
+        const sportmonksKey = "pWJ9QW6z7Y6U0uI4R8K9O2Q7L5V3M1N0";
+        response = await axios.get(`${sportmonksBase}${endpoint}`, { 
+          params: { ...params, api_token: sportmonksKey } 
+        });
+        res.status(200).json(response.data);
+        break;
+
       case "tmdb-proxy":
         // Fallback or internal routing for TMDB if called via external point
         const tmdbProxy = require('./tmdbProxy');

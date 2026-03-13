@@ -7,7 +7,7 @@ import { RiSkipForwardFill } from 'react-icons/ri';
 import { toast } from 'react-toastify';
 import { vibeService } from '../../services/vibe';
 import { hapticImpact } from '../../shared/utils';
-import { FiVolume2, FiSun, FiChevronsRight, FiChevronsLeft, FiXCircle } from 'react-icons/fi';
+import { FiVolume2, FiSun, FiChevronsRight, FiChevronsLeft, FiXCircle, FiMessageSquare } from 'react-icons/fi';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { toggleCinemaMode } from '../../store/slice/uiSlice';
 import AmbiFlowGlow from './AmbiFlowGlow';
@@ -118,6 +118,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     const [showAdSkip, setShowAdSkip] = useState(false);
     const [showVisionCast, setShowVisionCast] = useState(false);
     const [showMagicMenu, setShowMagicMenu] = useState(false); // Magic Menu state
+    const [showReactions, setShowReactions] = useState(false); // Reactions (LiveBuzz) state
     const adTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Gesture / Indicator state
@@ -576,6 +577,14 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                                         <span>{t('Switch to Clean Source')}</span>
                                     </button>
                                 )}
+
+                                <button
+                                    onClick={() => { setShowReactions(!showReactions); setShowMagicMenu(false); }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 text-xs transition-all ${showReactions ? 'text-primary bg-primary/10' : 'text-gray-300 hover:bg-white/5'}`}
+                                >
+                                    <FiMessageSquare size={16} className={showReactions ? "text-primary" : "text-gray-400"} />
+                                    <span className="font-bold">{showReactions ? t('Hide Reactions') : t('Show Reactions')}</span>
+                                </button>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -766,7 +775,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                 <LiveBuzz 
                     mediaId={id} 
                     mediaType={mediaType} 
-                    isVisible={controlsVisible && !isPiP} 
+                    isVisible={showReactions && controlsVisible && !isPiP} 
                 />
             )}
         </div>

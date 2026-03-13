@@ -266,18 +266,18 @@ export class ResolverService {
         sources.push(
             // T1 - Premier (No/Low Ads, High Success)
             {
-                name: "AutoEmbed",
-                url: mediaType === "movie"
-                    ? `https://autoembed.cc/movie/tmdb/${tmdbId}`
-                    : `https://autoembed.cc/tv/tmdb/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "4K/1080p", speed: "fast", status: "active", type: "embed", priority: 0
-            },
-            {
                 name: "VidSrc.me",
                 url: mediaType === "movie"
                     ? `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`
                     : `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${season || 1}&episode=${episode || 1}`,
-                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 1
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 0
+            },
+            {
+                name: "AutoEmbed",
+                url: mediaType === "movie"
+                    ? `https://autoembed.cc/movie/tmdb/${tmdbId}`
+                    : `https://autoembed.cc/tv/tmdb/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "4K/1080p", speed: "fast", status: "active", type: "embed", priority: 1
             },
             {
                 name: "VidLink",

@@ -95,10 +95,10 @@ export class DownloadService {
     if (mediaType === "movie") {
       // Only use known working sources: vidsrc, vidplay, upcloud, autoembed, vidlink
       return [
+        `${EMBED_ALTERNATIVES.VIDSRC_ME}/movie/${tmdbId}`,
         `https://vidsrc.to/embed/${imdb}`,
         `${EMBED_ALTERNATIVES.AUTOEMBED}/movie/${tmdbId}`,
         `${EMBED_ALTERNATIVES.VIDLINK}/movie/${tmdbId}`,
-        `${EMBED_ALTERNATIVES.VIDSRC_ME}/movie/${tmdbId}`,
         `${EMBED_ALTERNATIVES.VIDSRC_TO}/movie/${tmdbId}`,
         `https://vidplay.online/e/movie/${tmdbId}`,
         `https://upcloud.to/e/movie/${tmdbId}`,
@@ -111,10 +111,10 @@ export class DownloadService {
       const season = seasonId || 1;
       const episode = episodeId || 1;
       return [
+        `${EMBED_ALTERNATIVES.VIDSRC_ME}/tv/${tmdbId}/${season}/${episode}`,
         `${EMBED_ALTERNATIVES.AUTOEMBED}/tv/${tmdbId}/${season}/${episode}`,
         `${EMBED_ALTERNATIVES.AUTOEMBED}/tv/${tmdbId}/${season}/${episode}?server=1`,
         `${EMBED_ALTERNATIVES.VIDLINK}/tv/${tmdbId}/${season}/${episode}`,
-        `${EMBED_ALTERNATIVES.VIDSRC_ME}/tv/${tmdbId}/${season}/${episode}`,
         `${EMBED_ALTERNATIVES.VIDSRC_TO}/tv/${tmdbId}/${season}/${episode}`,
         `https://vidplay.online/e/tv/${tmdbId}/${season}/${episode}`,
         `https://upcloud.to/e/tv/${tmdbId}/${season}/${episode}`,

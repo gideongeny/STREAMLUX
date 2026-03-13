@@ -59,12 +59,57 @@ const fetchByCountry = async (
   }
 };
 
+// Fetches scraped content from the backend scraper proxy
+export const getScrapedContent = async (query: string): Promise<Item[]> => {
+  try {
+    const response = await axios.post(`${getApiBase()}/proxy/scraper`, {
+      title: query
+    });
+    const { fzmovies = [], netnaija = [] } = response.data;
+    
+    const mapScraped = (s: any, provider: string): Item => ({
+      id: Math.abs(s.url.split('').reduce((a:number,b:string)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)) || Date.now(),
+      title: s.title,
+      name: s.title,
+      overview: `Scraped from ${provider}. Quality: ${s.quality || 'HD'}`,
+      poster_path: "", 
+      backdrop_path: "",
+      media_type: "movie",
+      release_date: new Date().getFullYear().toString(),
+      vote_average: 8.0,
+      popularity: 100,
+      genre_ids: [],
+      original_language: "en",
+      vote_count: 100,
+      isScraped: true,
+      scrapedUrl: s.url,
+      provider: provider
+    });
+
+    return [
+      ...fzmovies.map((s: any) => mapScraped(s, "FzMovies")),
+      ...netnaija.map((s: any) => mapScraped(s, "NetNaija"))
+    ];
+  } catch (error) {
+    console.error("Scraper fetch error:", error);
+    return [];
+  }
+};
+
 // ========================
 // 🌍 All-Region TV Content
 // ========================
 
 /** Africa **/
-export const getNigerianContent = () => fetchByCountry("tv", "NG", "en-US");
+export const getNigerianContent = async (): Promise<Item[]> => {
+  const tmdb = await fetchByCountry("tv", "NG", "en-US");
+  const scraped = await getScrapedContent("Nigerian").catch(() => []);
+  return [...scraped, ...tmdb].filter(
+    (item: Item, index: number, self: Item[]) =>
+      index === self.findIndex((i: Item) => i.title === item.title)
+  );
+};
+
 export const getGhanaianContent = () => fetchByCountry("tv", "GH", "en-US");
 export const getEthiopianContent = () => fetchByCountry("tv", "ET", "en-US");
 export const getKenyanContent = () => fetchByCountry("tv", "KE", "en-US");
@@ -119,8 +164,23 @@ export const getAmericanContent = () => fetchByCountry("tv", "US", "en-US");
 export const getAnimeContent = () => fetchByCountry("tv", "JP", "ja");
 
 /** Movies — Global **/
-export const getBollywoodMovies = () => fetchByCountry("movie", "IN", "hi");
-export const getNollywoodMovies = () => fetchByCountry("movie", "NG", "en-US");
+export const getBollywoodMovies = async (): Promise<Item[]> => {
+  const tmdb = await fetchByCountry("movie", "IN", "hi");
+  const scraped = await getScrapedContent("Bollywood").catch(() => []);
+  return [...scraped, ...tmdb].filter(
+    (item: Item, index: number, self: Item[]) =>
+      index === self.findIndex((i: Item) => i.title === item.title)
+  );
+};
+
+export const getNollywoodMovies = async (): Promise<Item[]> => {
+  const tmdb = await fetchByCountry("movie", "NG", "en-US");
+  const scraped = await getScrapedContent("Nollywood").catch(() => []);
+  return [...scraped, ...tmdb].filter(
+    (item: Item, index: number, self: Item[]) =>
+      index === self.findIndex((i: Item) => i.title === item.title)
+  );
+};
 export const getKoreanMovies = () => fetchByCountry("movie", "KR", "ko");
 export const getTurkishMovies = () => fetchByCountry("movie", "TR", "tr");
 export const getFrenchMovies = () => fetchByCountry("movie", "FR", "fr");

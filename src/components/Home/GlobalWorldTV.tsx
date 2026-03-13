@@ -75,6 +75,10 @@ const GlobalWorldTV: FC = () => {
   }, []);
 
   const handleClick = (item: Item) => {
+    if ((item as any).isScraped) {
+      navigate(`/movie/${item.id}?src=${encodeURIComponent((item as any).scrapedUrl)}&scraped=true`);
+      return;
+    }
     if (item.media_type === "movie") {
       navigate(`/movie/${item.id}`);
     } else {
@@ -117,17 +121,24 @@ const GlobalWorldTV: FC = () => {
                     className="flex-shrink-0 w-32 cursor-pointer group relative"
                     onClick={() => handleClick(item)}
                   >
-                    <div className="relative rounded-xl overflow-hidden shadow-lg">
+                    <div className="relative rounded-xl overflow-hidden shadow-lg bg-dark/40">
                       <LazyLoadImage
-                        src={resizeImage(item.poster_path, "w342")}
+                        src={(item as any).isScraped ? "/logo.svg" : resizeImage(item.poster_path, "w342")}
                         alt={item.title || item.name || ""}
                         className="w-32 h-48 object-cover"
                         effect="opacity"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-2">
-                        <span className="text-white text-xs font-medium line-clamp-2">
-                          {item.title || item.name}
-                        </span>
+                      <div className={`absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent ${(item as any).isScraped ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200 flex items-end p-2`}>
+                        <div className="flex flex-col gap-0.5">
+                          {(item as any).isScraped && (
+                            <span className="text-[10px] text-primary font-bold uppercase tracking-widest bg-black/40 px-1 py-0.5 rounded w-fit">
+                              {(item as any).provider || 'SCRAPED'}
+                            </span>
+                          )}
+                          <span className="text-white text-xs font-medium line-clamp-2">
+                            {item.title || item.name}
+                          </span>
+                        </div>
                       </div>
                       {item.vote_average ? (
                         <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-yellow-400 text-xs font-bold px-1.5 py-0.5 rounded-md">

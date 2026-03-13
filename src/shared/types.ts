@@ -16,6 +16,9 @@ export interface Item {
   isLive?: boolean;
   isExternal?: boolean;
   url?: string;
+  isScraped?: boolean;
+  scrapedUrl?: string;
+  provider?: string;
 
   // Sports specific
   homeTeam?: string;
