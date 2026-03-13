@@ -84,7 +84,8 @@ exports.gateway = functions
             const response = await axios_1.default.get(`${TMDB_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
                 params: Object.assign(Object.assign({}, params), { api_key: TMDB_API_KEY })
             });
-            return res.status(200).json(response.data);
+            res.status(200).json(response.data);
+            return;
         }
         // --- YOUTUBE PROXY ---
         if (rawPath.includes('youtube')) {
@@ -104,7 +105,8 @@ exports.gateway = functions
                 const response = await axios_1.default.get(`${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
                     params: Object.assign(Object.assign({}, params), { key })
                 });
-                return res.status(200).json(response.data);
+                res.status(200).json(response.data);
+                return;
             }
             catch (err) {
                 if (((_a = err.response) === null || _a === void 0 ? void 0 : _a.status) === 403)
@@ -114,7 +116,8 @@ exports.gateway = functions
         }
         // --- HEALTH CHECK ---
         if (rawPath.includes('health')) {
-            return res.status(200).json({ status: 'online', path: rawPath, timestamp: Date.now() });
+            res.status(200).json({ status: 'online', path: rawPath, timestamp: Date.now() });
+            return;
         }
         res.status(404).json({ error: 'Gateway route not found', path: rawPath });
     }
