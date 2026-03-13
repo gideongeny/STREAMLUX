@@ -67,8 +67,10 @@ instance.interceptors.response.use(
     
     let actualData = response.data;
     
-    // Unwrap our custom Proxy layer (only if it looks like a TMDB proxy response)
-    if (actualData && actualData.success && actualData.data && !response.config.url?.includes('proxy/external')) {
+    // Unwrap our custom Proxy layer (only if it looks like a legacy TMDB proxy response)
+    // Legacy: { success: true, data: { ... } }
+    // New: { ... } (Raw data)
+    if (actualData && actualData.success === true && actualData.data && !response.config.url?.includes('proxy/external')) {
         actualData = actualData.data;
     }
 

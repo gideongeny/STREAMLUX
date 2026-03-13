@@ -52,10 +52,7 @@ module.exports = async (req, res) => {
     
     const data = await response.json();
     
-    return res.status(response.status).json({
-        success: response.ok,
-        data: data
-    });
+    return res.status(response.status).json(data);
   } catch (error) {
     return res.status(500).json({ 
         success: false, 

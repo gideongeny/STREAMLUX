@@ -103,8 +103,11 @@ export const healthCheck = functions.https.onRequest((req, res) => {
  * Fulfills the /api/** rewrite in firebase.json
  */
 export const api = functions.https.onRequest(async (req, res) => {
-    const path = req.path.replace(/^\/api\//, '');
+    // Normalize path: Remove /api/ prefix and leading slashes for robust matching
+    const path = req.path.replace(/^\/+api\//, '').replace(/^\/+/, '');
     
+    functions.logger.info('API Router - Incoming:', { originalPath: req.path, normalizedPath: path });
+
     // Routing logic
     if (path.startsWith('proxy/tmdb') || path.startsWith('tmdb')) {
         return (exports.proxyTMDB as any)(req, res);
@@ -128,5 +131,5 @@ export const api = functions.https.onRequest(async (req, res) => {
         return (exports.healthCheck as any)(req, res);
     }
 
-    res.status(404).json({ error: 'API route not found', path });
+    res.status(404).json({ error: 'API route not found', originalPath: req.path, normalizedPath: path });
 });
