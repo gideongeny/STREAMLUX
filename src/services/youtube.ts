@@ -61,9 +61,14 @@ export async function fetchYouTubeVideos(
         if (pageToken) params["pageToken"] = pageToken;
         if (videoDuration) params["videoDuration"] = videoDuration;
 
-        const data = await executeYouTubeProxy("/search", params, context);
+        const raw = await executeYouTubeProxy("/search", params, context);
+        
+        // Support both raw YouTube API format { items: [...] }
+        // and legacy wrapped format { success: true, data: { items: [...] } }
+        const data = raw?.items ? raw : raw?.data;
+        
         if (!data || !data.items) {
-             console.warn("YouTube proxy returned empty items for queries: ", query);
+             console.warn("YouTube proxy returned empty items for query: ", query);
              return { videos: [], nextPageToken: undefined };
         }
         const items = data.items as any[];

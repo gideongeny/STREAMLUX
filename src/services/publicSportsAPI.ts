@@ -83,9 +83,13 @@ export const getESPNScores = async (date?: string): Promise<SportsFixtureConfig[
     );
 
     responses.forEach((res) => {
-      if (res.status === 'fulfilled' && res.value.data?.events) {
-        const events = res.value.data.events;
-        events.forEach((event: any) => {
+      // Handle both raw format and wrapped { success, data } envelope
+      const events = res.status === 'fulfilled' 
+        ? (res.value.data?.events || res.value.data?.data?.events)
+        : null;
+      if (!events) return;
+
+      events.forEach((event: any) => {
           if (!event.competitions || !event.competitions[0] || !event.competitions[0].competitors) return;
           
           const competitorHome = event.competitions[0].competitors.find((c: any) => c.homeAway === 'home');
@@ -114,7 +118,6 @@ export const getESPNScores = async (date?: string): Promise<SportsFixtureConfig[
             kickoffTimeFormatted: new Date(event.date).toISOString(),
           });
         });
-      }
     });
 
     return allFixtures;
@@ -165,8 +168,10 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
       params: { d: dateStr }
     });
 
-    if (response.data?.events && Array.isArray(response.data.events)) {
-      const liveEvents = response.data.events.filter((e: any) =>
+    // Handle both raw format { events } and wrapped format { success, data: { events } }
+    const eventsData = response.data?.events || response.data?.data?.events;
+    if (eventsData && Array.isArray(eventsData)) {
+      const liveEvents = eventsData.filter((e: any) =>
         e.strStatus === "Live" || e.strStatus === "HT" || e.strStatus === "1H" || e.strStatus === "2H" ||
         e.strStatus === "Half Time" || e.strStatus === "Second Half"
       );
@@ -303,8 +308,10 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
           timeout: 8000,
         });
 
-        if (response.data?.events && Array.isArray(response.data.events)) {
-          const upcomingEvents = response.data.events.filter((e: any) =>
+        // Handle both raw format { events } and wrapped format { success, data: { events } }
+        const eventsData = response.data?.events || response.data?.data?.events;
+        if (eventsData && Array.isArray(eventsData)) {
+          const upcomingEvents = eventsData.filter((e: any) =>
             e.strStatus !== "Live" &&
             e.strStatus !== "HT" &&
             e.strStatus !== "1H" &&
