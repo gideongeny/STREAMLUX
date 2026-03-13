@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 const SLIDES = [
   {
     id: 1,
-    image: "/hero_1_png_1773441747477.png",
+    image: "/hero_1.png",
     title: "STREAM YOUR",
     highlight: "FAVORITE MOVIES",
     description: "Experience cinema-quality streaming from the comfort of your home. Thousands of titles waiting for you.",
@@ -15,7 +15,7 @@ const SLIDES = [
   },
   {
     id: 2,
-    image: "/hero_2_png_1773441761380.png",
+    image: "/hero_2.png",
     title: "STREAM MOVIES • TV SHOWS",
     highlight: "SPORTS",
     description: "The ultimate destination for all your entertainment needs. Live scores, epic series, and blockbuster hits.",

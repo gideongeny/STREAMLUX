@@ -226,20 +226,31 @@ const Home: FC = () => {
       />
       <AmbientGlow imageUrl={activeGlowImage} />
 
-      <div className={`flex md:hidden justify-between items-center px-5 py-4 sticky top-0 z-[100] transition-all duration-300 ${isScrolled ? "tw-glass bg-dark/60 shadow-lg backdrop-blur-xl" : "bg-transparent"
+      <div className={`flex md:hidden flex-col sticky top-0 z-[100] transition-all duration-300 ${isScrolled ? "tw-glass bg-dark/60 shadow-lg backdrop-blur-xl" : "bg-dark"
         }`}>
-        <Link to="/" className="flex gap-2 items-center shrink-0">
-          <img
-            src="/logo.svg"
-            alt="StreamLux Logo"
-            className="h-10 w-10"
-          />
-        </Link>
-        {/* MovieBox-style search bar on mobile top bar */}
-        <TopSearchBar className="flex-1 mx-3" />
-        <button onClick={() => setIsSidebarActive((prev) => !prev)} className="shrink-0">
-          <GiHamburgerMenu size={25} />
-        </button>
+        <div className="flex justify-between items-center px-5 py-4">
+          <Link to="/" className="flex gap-2 items-center shrink-0">
+            <img
+              src="/logo.svg"
+              alt="StreamLux Logo"
+              className="h-10 w-10"
+            />
+          </Link>
+          {/* MovieBox-style search bar on mobile top bar */}
+          <TopSearchBar className="flex-1 mx-3" />
+          <button onClick={() => setIsSidebarActive((prev) => !prev)} className="shrink-0 text-white">
+            <GiHamburgerMenu size={25} />
+          </button>
+        </div>
+
+        {/* Mobile-only tab header (now integrated into sticky header) */}
+        <div className="px-5 pb-2">
+          <div className="inline-flex gap-8 border-b border-gray-darken/30 w-full">
+            <FilmTypeButton buttonType="tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
+            <FilmTypeButton buttonType="movie" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
+            <FilmTypeButton buttonType="sports" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
+          </div>
+        </div>
       </div>
 
       <div className="flex items-start relative max-w-full overflow-x-hidden">
@@ -275,16 +286,7 @@ const Home: FC = () => {
         <div
           className="flex-grow md:pt-28 pt-0 pb-7 border-x md:px-[2vw] px-[4vw] border-gray-darken min-h-screen bg-dark relative z-0 max-w-full overflow-x-hidden md:ml-[260px]"
         >
-          {/* Mobile-only tab header */}
-          <div className="flex md:hidden justify-between md:items-end items-center mb-6">
-            <div className="inline-flex gap-[40px] pb-[14px] border-b border-gray-darken relative">
-              <FilmTypeButton buttonType="tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
-              <FilmTypeButton buttonType="movie" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
-              <FilmTypeButton buttonType="sports" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
-            </div>
-          </div>
 
-          <HeroCarousel />
           <CinematicMoments />
 
           {/* Main Banner Slider for Movies/TV */}
@@ -362,6 +364,9 @@ const Home: FC = () => {
 
               {/* Inline Ad - Non-intrusive (only shows after 10 seconds) */}
               <SmartAdContainer position="inline" minViewTime={10000} />
+
+              {/* Premium Advertising Carousel */}
+              <HeroCarousel />
 
               {/* Global World TV — Content from 40+ Nations */}
               <ErrorBoundary fallback={null}>

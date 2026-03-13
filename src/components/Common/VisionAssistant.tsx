@@ -180,7 +180,7 @@ const VisionAssistant: FC = () => {
                         whileHover={{ scale: 1.1, rotate: 5 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setIsOpen(true)}
-                        className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-6 z-[10001] w-14 h-14 bg-gradient-to-tr from-primary to-blue-400 rounded-full shadow-[0_10px_40px_rgba(255,107,53,0.5)] flex items-center justify-center text-white border-2 border-white/20"
+                        className="fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] right-6 md:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-[10001] w-14 h-14 bg-gradient-to-tr from-primary to-blue-400 rounded-full shadow-[0_10px_40px_rgba(255,107,53,0.5)] flex items-center justify-center text-white border-2 border-white/20"
                     >
                         <HiSparkles size={28} />
                     </motion.button>
