@@ -27,7 +27,21 @@ const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 // to avoid hitting them repeatedly and slowing down the user experience.
 const deadKeys = new Set<string>();
 
-function getActiveKey(): { key: string, index: number } | null {
+// High-priority keys for specific sections to ensure they always have quota
+const SPECIAL_KEYS: Record<string, string> = {
+    "sports": "AIzaSyBo8OwaCOTQsppnpaJV_nU9ollTlbI0chM",
+    "entertainment": "AIzaSyBIV8LYYwPg5CWXn6W0aL5Z6P8-c_AATrY"
+};
+
+function getActiveKey(context?: string): { key: string, index: number } | null {
+    // If a context key is requested and not dead, use it
+    if (context && SPECIAL_KEYS[context]) {
+        const specialKey = SPECIAL_KEYS[context];
+        if (!deadKeys.has(specialKey)) {
+            return { key: specialKey, index: -1 };
+        }
+    }
+
     // Find the first key that is NOT dead
     for (let i = 0; i < API_KEYS.length; i++) {
         const candidate = API_KEYS[i];
@@ -39,6 +53,11 @@ function getActiveKey(): { key: string, index: number } | null {
     // If ALL keys are dead, we clear the dead list and hope for a reset.
     functions.logger.error("[YouTube Proxy] ALL keys are dead or exhausted! Flushing dead tracker.");
     deadKeys.clear();
+
+    if (context && SPECIAL_KEYS[context]) {
+        return { key: SPECIAL_KEYS[context], index: -1 };
+    }
+    
     return { key: API_KEYS[0], index: 0 };
 }
 
@@ -63,13 +82,14 @@ export const proxyYouTube = functions
         const endpoint = req.query.endpoint as string || req.body.endpoint;
         const params = req.body.params || req.query || {};
         const retryCount = parseInt(req.query.retryCount as string || req.body.retryCount || "0");
+        const context = (req.query.context as string) || req.body.context;
 
         if (!endpoint) {
             res.status(400).json({ error: 'YouTube endpoint is required' });
             return;
         }
 
-        const activeParams = getActiveKey();
+        const activeParams = getActiveKey(context);
         if (!activeParams) {
              res.status(500).json({ error: 'No API keys configured or available.' });
              return;
@@ -79,6 +99,7 @@ export const proxyYouTube = functions
             // Remove internal proxy params
             delete (params as any).endpoint;
             delete (params as any).retryCount;
+            delete (params as any).context;
 
             const response = await axios.get(`${BASE_URL}${endpoint}`, {
                 params: {
@@ -106,7 +127,7 @@ export const proxyYouTube = functions
                 
                 // For a more robust internal retry without a second HTTP hop:
                 let currentRetry = nextRetryCount;
-                let currentKeyParams = getActiveKey();
+                let currentKeyParams = getActiveKey(context);
                 
                 while (currentRetry < API_KEYS.length && currentKeyParams) {
                    try {
@@ -118,7 +139,7 @@ export const proxyYouTube = functions
                    } catch (err: any) {
                        if (err?.response?.status === 403) {
                            markKeyAsDead(currentKeyParams.key);
-                           currentKeyParams = getActiveKey();
+                           currentKeyParams = getActiveKey(context);
                            currentRetry++;
                        } else {
                            throw err;

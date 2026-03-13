@@ -237,7 +237,7 @@ export const getVarietyYT = async (): Promise<any[]> => {
   const results = await Promise.all(
     ytQueries.map(async (query) => {
       try {
-        const { videos } = await fetchYouTubeVideos(query.q).catch(() => ({ videos: [] }));
+        const { videos } = await fetchYouTubeVideos(query.q, undefined, undefined, 'sports').catch(() => ({ videos: [] }));
         const liveItems = (videos || []).map((video: any, idx: number) => ({
           ...convertYouTubeToItem(video, idx),
           sportsCategory: query.type,

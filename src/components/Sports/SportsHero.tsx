@@ -7,6 +7,7 @@ import MatchVisualizer from "./MatchVisualizer";
 import LiveBuzz from "./LiveBuzz";
 import MatchCenterModal from "./MatchCenterModal";
 import { getMatchEvents, getMatchStatistics } from "../../services/sportsAPI";
+import { fetchYouTubeVideos } from "../../services/youtube";
 
 interface SportsHeroProps {
     featuredMatch: SportsFixtureConfig | null;
@@ -18,6 +19,7 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
     const [showVisualizer, setShowVisualizer] = useState(false);
     const [matchEvents, setMatchEvents] = useState<any[]>([]);
     const [possession, setPossession] = useState({ home: 50, away: 50 });
+    const [dynamicYoutubeId, setDynamicYoutubeId] = useState<string | null>(null);
 
     const isLive = featuredMatch?.status === "live";
     const hasTeams = !!(featuredMatch?.homeTeam && featuredMatch?.awayTeam);
@@ -54,6 +56,24 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
         return () => clearInterval(interval);
     }, [isLive, featuredMatch]);
 
+    // Dynamic Highlight Search
+    useEffect(() => {
+        if (!featuredMatch || featuredMatch.youtubeId) {
+            setDynamicYoutubeId(null);
+            return;
+        }
+
+        const fetchHighlight = async () => {
+            const query = `${featuredMatch.homeTeam} vs ${featuredMatch.awayTeam} highlights 2025`;
+            const { videos } = await fetchYouTubeVideos(query, undefined, undefined, 'sports');
+            if (videos.length > 0) {
+                setDynamicYoutubeId(videos[0].id);
+            }
+        };
+
+        fetchHighlight();
+    }, [featuredMatch]);
+
     if (isLoading || !featuredMatch) {
         return (
             <div className="w-full aspect-[21/9] min-h-[400px] rounded-[2.5rem] bg-dark-lighten/10 animate-pulse border border-white/5" />
@@ -88,7 +108,7 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
                                     mediaId={typeof featuredMatch.id === 'number' ? featuredMatch.id : 999999}
                                     mediaType="movie"
                                     isActive={true}
-                                    youtubeId={featuredMatch.youtubeId || "OP5tMURXRbI"} // High-quality CL Highlights fallback
+                                    youtubeId={featuredMatch.youtubeId || dynamicYoutubeId || "OP5tMURXRbI"} // Highlights of featured match or fallback
                                 />
                             </div>
                         </motion.div>

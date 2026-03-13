@@ -110,12 +110,12 @@ const SportsMainContent: FC = () => {
                 return matchLeague && matchStatus;
             });
 
-            // FORCE LOGIC: If Live tab is empty, show top upcoming marquee matches instead of "No Events Found"
+            // FORCE LOGIC: If Live tab is empty, show top variety items (replays/highlights) instead of upcoming
             if (activeStatus === "live" && matches.length === 0) {
-                return allFixtures
-                    .filter(f => activeLeague === "all" || f.leagueId === activeLeague)
+                return varietySports
+                    .filter(s => activeLeague === "all" || s.leagueId === activeLeague)
                     .slice(0, 6)
-                    .map(f => ({ ...f, status: "live" as any, isUpcomingMarquee: true }));
+                    .map(s => ({ ...s, status: "live" as any, isUpcomingMarquee: true }));
             }
 
             return matches;

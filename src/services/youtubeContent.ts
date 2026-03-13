@@ -65,7 +65,7 @@ export const getYouTubeMovies = async (): Promise<Item[]> => {
         ];
 
         const results = await Promise.allSettled(
-            queries.map(q => fetchYouTubeVideos(q))
+            queries.map(q => fetchYouTubeVideos(q, undefined, undefined, 'entertainment'))
         );
 
         const allVideos: YouTubeVideo[] = [];
@@ -139,7 +139,7 @@ export const getYouTubeTVShows = async (): Promise<Item[]> => {
         ];
 
         const results = await Promise.allSettled(
-            queries.map(q => fetchYouTubeVideos(q))
+            queries.map(q => fetchYouTubeVideos(q, undefined, undefined, 'entertainment'))
         );
 
         const allVideos: YouTubeVideo[] = [];
@@ -209,7 +209,7 @@ export const getYouTubeByGenre = async (genreName: string, type: "movie" | "tv" 
             ? `${genreName} movies full`
             : `${genreName} tv series`;
 
-        const result = await fetchYouTubeVideos(query);
+        const result = await fetchYouTubeVideos(query, undefined, undefined, 'entertainment');
         const allVideos = result.videos.filter(v => v.type === type);
 
         // Deduplicate and convert
@@ -258,7 +258,7 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
         ];
 
         const results = await Promise.allSettled(
-            queries.map(q => fetchYouTubeVideos(q, undefined, 'short'))
+            queries.map(q => fetchYouTubeVideos(q, undefined, 'short', 'entertainment'))
         );
 
         const allVideos: YouTubeVideo[] = [];
@@ -333,7 +333,7 @@ export const searchYouTube = async (query: string, type: "multi" | "movie" | "tv
         if (type === 'movie') ytQuery += ' full movie';
         else if (type === 'tv') ytQuery += ' full episodes';
 
-        const result = await fetchYouTubeVideos(ytQuery);
+        const result = await fetchYouTubeVideos(ytQuery, undefined, undefined, 'entertainment');
         let allVideos = result.videos;
 
         if (type !== 'multi') {

@@ -19,11 +19,12 @@ export interface YouTubeVideo {
 /**
  * Build a proxy execution payload for a given region or genre.
  */
-async function executeYouTubeProxy(endpoint: string, params: Record<string, string | number>) {
+async function executeYouTubeProxy(endpoint: string, params: Record<string, string | number>, context?: string) {
     const response = await axios.get(`${getBackendBase()}/api/proxy/youtube`, {
         params: {
             ...params,
-            endpoint
+            endpoint,
+            context
         }
     });
     
@@ -37,7 +38,8 @@ async function executeYouTubeProxy(endpoint: string, params: Record<string, stri
 export async function fetchYouTubeVideos(
     query: string,
     pageToken?: string,
-    videoDuration?: 'any' | 'long' | 'medium' | 'short'
+    videoDuration?: 'any' | 'long' | 'medium' | 'short',
+    context?: string
 ): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string }> {
     try {
         // Only cache the first page of broad searches
@@ -59,7 +61,7 @@ export async function fetchYouTubeVideos(
         if (pageToken) params["pageToken"] = pageToken;
         if (videoDuration) params["videoDuration"] = videoDuration;
 
-        const data = await executeYouTubeProxy("/search", params);
+        const data = await executeYouTubeProxy("/search", params, context);
         if (!data || !data.items) {
              console.warn("YouTube proxy returned empty items for queries: ", query);
              return { videos: [], nextPageToken: undefined };

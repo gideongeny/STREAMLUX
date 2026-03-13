@@ -58,10 +58,15 @@ const Top10Slider: FC<Top10SliderProps> = ({ films }) => {
                                 {/* Poster Card */}
                                 <div className="relative z-10 w-full rounded-xl overflow-hidden aspect-[2/3] shadow-2xl transition-transform duration-300 group-hover:scale-105 group-hover:z-20 border border-white/10 bg-dark-lighten">
                                     <LazyLoadImage
-                                        src={resizeImage(item.poster_path, "w342")}
+                                        src={item.youtubeId ? `https://i.ytimg.com/vi/${item.youtubeId}/maxresdefault.jpg` : resizeImage(item.poster_path, "w342")}
                                         alt={item.title || item.name}
                                         effect="opacity"
                                         className="w-full h-full object-cover"
+                                        onError={(e: any) => {
+                                            if (item.youtubeId) {
+                                                e.target.src = `https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg`;
+                                            }
+                                        }}
                                     />
                                     {/* Rating Badge */}
                                     <div className="absolute top-3 right-3 bg-primary px-1.5 py-0.5 rounded text-[10px] font-black text-black shadow-lg">
