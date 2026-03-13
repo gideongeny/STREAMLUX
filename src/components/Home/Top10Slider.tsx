@@ -62,6 +62,7 @@ const Top10Slider: FC<Top10SliderProps> = ({ films }) => {
                                         alt={item.title || item.name}
                                         effect="opacity"
                                         className="w-full h-full object-cover"
+                                        wrapperClassName="w-full h-full"
                                         onError={(e: any) => {
                                             if (item.youtubeId) {
                                                 e.target.src = `https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg`;

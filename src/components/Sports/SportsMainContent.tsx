@@ -115,7 +115,24 @@ const SportsMainContent: FC = () => {
                 return varietySports
                     .filter(s => activeLeague === "all" || s.leagueId === activeLeague)
                     .slice(0, 6)
-                    .map(s => ({ ...s, status: "live" as any, isUpcomingMarquee: true }));
+                    .map(s => {
+                        // Parse title to extract teams if possible (e.g. "Liverpool vs Chelsea Highlights")
+                        const titleParts = s.title?.split(/\s+vs\s+|\s+-\s+|\s+v\s+/i) || [];
+                        const home = titleParts[0]?.trim() || s.title?.substring(0, 10) || "Match";
+                        const away = titleParts[1]?.trim() || "Highlights";
+                        
+                        return { 
+                            ...s, 
+                            status: "live" as any, 
+                            isUpcomingMarquee: true,
+                            homeTeam: home,
+                            awayTeam: away,
+                            homeTeamLogo: s.thumb || s.poster_path || "",
+                            awayTeamLogo: s.thumb || s.poster_path || "",
+                            kickoffTimeFormatted: "WATCH REPLAY",
+                            venue: "VOD"
+                        };
+                    });
             }
 
             return matches;

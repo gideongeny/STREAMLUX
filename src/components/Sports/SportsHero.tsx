@@ -64,7 +64,7 @@ const SportsHero: FC<SportsHeroProps> = ({ featuredMatch, isLoading, getMatchLin
         }
 
         const fetchHighlight = async () => {
-            const query = `${featuredMatch.homeTeam} vs ${featuredMatch.awayTeam} highlights 2025`;
+            const query = `${featuredMatch.homeTeam} vs ${featuredMatch.awayTeam} match highlights`;
             const { videos } = await fetchYouTubeVideos(query, undefined, undefined, 'sports');
             if (videos.length > 0) {
                 setDynamicYoutubeId(videos[0].id);

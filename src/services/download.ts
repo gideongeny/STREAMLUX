@@ -10,16 +10,14 @@ export function getBackendBase(): string {
   if (typeof window !== 'undefined') {
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
-    // Use localhost in development, otherwise point directly to Vercel
+    // In production, always use the current origin to hit our Firebase or Vercel proxy
     if (isLocalhost) {
-      return window.location.origin;
-    } else {
-      // Hardcoded Vercel URL to bypass Firebase Hosting limitations
-      return "https://streamlux.vercel.app";
+      return "http://localhost:5001/streamlux-648cf/us-central1"; // Local Firebase Emulator
     }
+    return window.location.origin;
   }
 
-  return "https://streamlux.vercel.app"; 
+  return ""; 
 }
 
 export interface DownloadInfo {
