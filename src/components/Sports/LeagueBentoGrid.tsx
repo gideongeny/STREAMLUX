@@ -8,20 +8,20 @@ interface LeagueBentoGridProps {
 }
 
 const LEAGUE_THEMES: Record<string, { color: string; glow: string; logo?: string; bg?: string }> = {
-    epl: { color: "from-[#3d195b] to-[#1a0025]", glow: "shadow-[#3d195b]/60", logo: "/images/leagues/Premier_League-Logo.png" },
-    ucl: { color: "from-[#003399] to-[#001155]", glow: "shadow-[#003399]/60", logo: "/images/leagues/UEFA_Champions_League-Logo.png" },
-    laliga: { color: "from-[#f9a825] to-[#b47800]", glow: "shadow-[#f9a825]/60", logo: "/images/leagues/LaLiga-Logo.png" },
-    seriea: { color: "from-[#002d72] to-[#00123a]", glow: "shadow-[#002d72]/60", logo: "/images/leagues/Italian-Serie-A-Logo-2019.png" },
-    ligue1: { color: "from-[#1a1a2e] to-[#16213e]", glow: "shadow-[#daff00]/40", logo: "/images/leagues/Ligue-1-Logo.png" },
+    epl: { color: "from-[#3d195b] to-[#1a0025]", glow: "shadow-[#3d195b]/60" },
+    ucl: { color: "from-[#003399] to-[#001155]", glow: "shadow-[#003399]/60" },
+    laliga: { color: "from-[#f9a825] to-[#b47800]", glow: "shadow-[#f9a825]/60" },
+    seriea: { color: "from-[#002d72] to-[#00123a]", glow: "shadow-[#002d72]/60" },
+    ligue1: { color: "from-[#1a1a2e] to-[#16213e]", glow: "shadow-[#daff00]/40" },
     bundesliga: { color: "from-[#d3010c] to-[#7a0006]", glow: "shadow-[#d3010c]/60" },
     nba: { color: "from-[#17408b] to-[#003366]", glow: "shadow-[#17408b]/60" },
-    ufc: { color: "from-[#d20a0a] to-[#6b0000]", glow: "shadow-[#d20a0a]/60", logo: "/images/leagues/Ultimate-Fighting-Championship-2015.png" },
+    ufc: { color: "from-[#d20a0a] to-[#6b0000]", glow: "shadow-[#d20a0a]/60" },
     f1: { color: "from-[#e10600] to-[#6a0000]", glow: "shadow-[#e10600]/60" },
-    wwe: { color: "from-[#1c1c1c] to-[#000000]", glow: "shadow-[#ffffff]/10", logo: "/images/leagues/wwe-logo.jpg" },
-    rugby: { color: "from-[#004b23] to-[#002010]", glow: "shadow-[#004b23]/60", logo: "/images/leagues/Rugby-World-Cup.jpg" },
-    afcon: { color: "from-[#009639] to-[#005520]", glow: "shadow-[#009639]/60", logo: "/images/leagues/Confédération-Africaine-de-Football-logo.png" },
-    athletics: { color: "from-[#4a148c] to-[#1a0042]", glow: "shadow-[#4a148c]/60", logo: "/images/leagues/Althletics logo.png" },
-    "six-nations": { color: "from-[#0d47a1] to-[#00215a]", glow: "shadow-[#0d47a1]/60", logo: "/images/leagues/Six nations.jpg" },
+    wwe: { color: "from-[#1c1c1c] to-[#000000]", glow: "shadow-[#ffffff]/10" },
+    rugby: { color: "from-[#004b23] to-[#002010]", glow: "shadow-[#004b23]/60" },
+    afcon: { color: "from-[#009639] to-[#005520]", glow: "shadow-[#009639]/60" },
+    athletics: { color: "from-[#4a148c] to-[#1a0042]", glow: "shadow-[#4a148c]/60" },
+    "six-nations": { color: "from-[#0d47a1] to-[#00215a]", glow: "shadow-[#0d47a1]/60" },
 };
 
 const LeagueBentoGrid: FC<LeagueBentoGridProps> = ({ activeLeague, onLeagueSelect }) => {
@@ -69,9 +69,9 @@ const LeagueBentoGrid: FC<LeagueBentoGridProps> = ({ activeLeague, onLeagueSelec
 
                             {/* Main Centered Logo (Large) */}
                             <div className="absolute inset-0 flex items-center justify-center p-4">
-                                {theme.logo ? (
+                                {league.logo || theme.logo ? (
                                     <img
-                                        src={theme.logo}
+                                        src={league.logo || theme.logo}
                                         alt={league.name}
                                         className="w-full h-full object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform duration-500"
                                     />

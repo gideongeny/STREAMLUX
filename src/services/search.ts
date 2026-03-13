@@ -2,9 +2,14 @@ import axios from "../shared/axios";
 import { getRecommendGenres2Type, Item, ItemsPage } from "../shared/types";
 import { searchFZMovies } from "./fzmovies";
 import { searchYouTube } from "./youtubeContent";
+import { safeStorage } from "../utils/safeStorage";
 
 export const getSearchKeyword = async (query: string): Promise<string[]> => {
-  return (
+  const cacheKey = `search-keywords-${query.toLowerCase()}`;
+  const cached = safeStorage.get(cacheKey);
+  if (cached) return JSON.parse(cached);
+
+  const results = (
     await axios.get("/search/keyword", {
       params: {
         query,
@@ -13,6 +18,9 @@ export const getSearchKeyword = async (query: string): Promise<string[]> => {
   ).data.results
     .map((item: any) => item.name)
     .filter((_: any, index: number) => index < 5);
+  
+  safeStorage.set(cacheKey, JSON.stringify(results));
+  return results;
 };
 
 
@@ -32,6 +40,10 @@ export const getSearchResult: (
   query: string,
   page: number
 ) => Promise<ItemsPage> = async (typeSearch, query, page) => {
+  const cacheKey = `search-results-${typeSearch}-${query.toLowerCase()}-${page}`;
+  const cached = safeStorage.get(cacheKey);
+  if (cached) return JSON.parse(cached);
+
   const [tmdbData, fzResults, ytResults] = await Promise.all([
     axios.get(`/search/${typeSearch}`, {
       params: {
@@ -56,7 +68,6 @@ export const getSearchResult: (
       ...item,
       ...(typeSearch !== "multi" && { media_type: typeSearch }),
     }));
-  // Note: do NOT filter by poster_path here – many valid results lack posters
 
   // Merge with FZMovies and YouTube results, deduplicate by ID
   const combined = [...tmdbResults, ...ytResults, ...fzResults];
@@ -64,12 +75,15 @@ export const getSearchResult: (
   const results = combined.filter((item) => {
     if (seen.has(item.id)) return false;
     seen.add(item.id);
-    return true; // Include all results regardless of poster
+    return true;
   });
 
-  return {
+  const finalData = {
     ...tmdbData.data,
     results,
-    total_results: results.length, // Update total to reflect merged results
+    total_results: results.length,
   };
+
+  safeStorage.set(cacheKey, JSON.stringify(finalData));
+  return finalData;
 };

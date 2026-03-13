@@ -33,8 +33,12 @@ import { useHomeData } from "../hooks/useHomeData";
 import { useWatchProgress } from "../hooks/useWatchProgress";
 import { useAppSelector } from "../store/hooks";
 import { useScrollPersistence } from "../hooks/useScrollPersistence";
+import { useTranslation } from "react-i18next";
+import SectionSlider from "../components/Slider/SectionSlider";
+import { Item } from "../shared/types";
 
 const Home: FC = () => {
+  const { t } = useTranslation();
   const currentUser = useAppSelector((state) => state.auth.user);
 
   const [isSidebarActive, setIsSidebarActive] = useState(false);
@@ -378,8 +382,38 @@ const Home: FC = () => {
               {/* Discover World navigation */}
               <DiverseNavigation />
 
-              {/* Discover World content */}
-              <DiverseContent currentTab={currentTab as "movie" | "tv" | "sports"} />
+                <SmartRecommendations />
+
+                {/* 🌟 NEW GENRE-SPECIFIC SLIDERS FOR VARIETY */}
+                <SectionSlider
+                  title={t("Sci-Fi & Cyberpunk Hits")}
+                  films={currentTab === "movie" 
+                    ? (dataMovie?.Trending || []).filter((f: Item) => f.genre_ids?.includes(878) || f.genre_ids?.includes(10765))
+                    : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(10765) || f.genre_ids?.includes(878))}
+                />
+
+                <SectionSlider
+                   title={t("Anime & Animation")}
+                   films={currentTab === "movie"
+                     ? (dataMovie?.Trending || []).filter((f: Item) => f.genre_ids?.includes(16) || f.genre_ids?.includes(3166))
+                     : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(16) || f.genre_ids?.includes(3166))}
+                />
+
+                <SectionSlider
+                   title={t("True Crime & Mystery")}
+                   films={currentTab === "movie"
+                     ? (dataMovie?.Trending || []).filter((f: Item) => f.genre_ids?.includes(80) || f.genre_ids?.includes(9648))
+                     : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(80) || f.genre_ids?.includes(9648))}
+                />
+
+                <SectionSlider
+                   title={t("History & War Epic")}
+                   films={currentTab === "movie"
+                     ? (dataMovie?.Trending || []).filter((f: Item) => f.genre_ids?.includes(36) || f.genre_ids?.includes(10752))
+                     : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(36) || f.genre_ids?.includes(10768))}
+                />
+
+                <DiverseContent currentTab={currentTab} />
             </>
           )}
 

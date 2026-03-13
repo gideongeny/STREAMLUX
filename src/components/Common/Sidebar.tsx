@@ -141,9 +141,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
       )}
 
       <div
-        className={`shrink-0 md:max-w-[260px] w-[70vw] pl-8 top-0 pt-10 overflow-y-auto pb-20
-        md:sticky md:translate-x-0 md:bg-transparent md:shadow-none md:self-start md:max-h-screen
-      -translate-x-full fixed h-screen shadow-2xl transition-all duration-500 bg-dark/40 tw-glass z-50 ${isSidebarActive && "translate-x-0"
+        className={`fixed top-0 left-0 h-screen w-[260px] bg-dark border-r border-gray-darken z-[110] flex flex-col transition-transform duration-500 overflow-y-auto scrollbar-hide ${isSidebarActive ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           }`}
       >
         {!isMobile && (
@@ -160,7 +158,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           </Link>
         )}
 
-        <div className="mt-8 px-4">
+        <div className="mt-8 px-6">
           <LanguageSelector />
         </div>
 
@@ -210,6 +208,21 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             <BiSearch size={25} />
             <p className="font-bold tracking-tight">{t('Search')}</p>
           </Link>
+        </div>
+
+        {/* 🎭 GENRES SECTION */}
+        <div className="text-white text-lg font-bold uppercase tracking-widest mt-12 px-8 flex items-center gap-3 border-l-4 border-primary">{t('GENRES')}</div>
+        <div className="mt-8 px-8 flex flex-col gap-4 max-h-[400px] overflow-y-auto scrollbar-hide custom-sidebar-scroll">
+          {GENRES.map((genre) => (
+            <Link
+              key={genre.id}
+              to={`/explore?genre=${genre.id}`}
+              className="group flex items-center justify-between text-gray-400 hover:text-white transition-all duration-300"
+            >
+              <span className="text-sm font-semibold tracking-tight group-hover:translate-x-1 transition-transform">{genre.name}</span>
+              <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-primary font-black">EXPLORE</span>
+            </Link>
+          ))}
         </div>
 
 
