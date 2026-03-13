@@ -226,7 +226,7 @@ const Home: FC = () => {
       />
       <AmbientGlow imageUrl={activeGlowImage} />
 
-      <div className={`flex md:hidden flex-col sticky top-0 z-[100] transition-all duration-300 ${isScrolled ? "tw-glass bg-dark/60 shadow-lg backdrop-blur-xl" : "bg-dark"
+      <div className={`flex md:hidden flex-col fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${isScrolled ? "tw-glass bg-dark/60 shadow-lg backdrop-blur-xl" : "bg-dark"
         }`}>
         <div className="flex justify-between items-center px-5 py-4">
           <Link to="/" className="flex gap-2 items-center shrink-0">
@@ -252,6 +252,9 @@ const Home: FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Header Spacer */}
+      <div className="h-[120px] md:hidden"></div>
 
       <div className="flex items-start relative max-w-full overflow-x-hidden">
         <Sidebar

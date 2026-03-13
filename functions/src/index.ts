@@ -80,31 +80,80 @@ export const gateway = functions
             }
 
             // --- CORS / EXTERNAL PROXY ---
-            if (rawPath.includes('proxy') || rawPath.includes('url')) {
-                const targetUrl = req.query.url as string || req.body.url as string;
-                if (!targetUrl) {
-                    res.status(400).json({ error: 'Missing target URL' });
+            if (rawPath.includes('proxy/external') || rawPath.includes('external')) {
+                const { provider, endpoint, params } = { ...(req.query || {}), ...(req.body || {}) };
+                if (!provider) {
+                    res.status(400).json({ error: 'Missing provider parameter' });
                     return;
                 }
 
-                const response = await axios.get(targetUrl, {
-                    headers: {
-                        'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0',
-                        'Referer': new URL(targetUrl).origin
-                    },
-                    responseType: 'stream'
-                });
+                let targetUrl = "";
+                let headers: any = {
+                    'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0',
+                };
 
-                res.set('Content-Type', response.headers['content-type']);
-                response.data.pipe(res);
-                return;
+                switch (provider) {
+                    case "sportmonks":
+                        const smKey = "pWJ9QW6z7Y6U0uI4R8K9O2Q7L5V3M1N0";
+                        targetUrl = `https://api.sportmonks.com/v3/football${endpoint}`;
+                        const smParams = { ...params, api_token: smKey };
+                        const smResponse = await axios.get(targetUrl, { params: smParams });
+                        res.status(200).json(smResponse.data);
+                        return;
+
+                    case "apisports":
+                        const asKey = "418210481bfff05ff4c1a61d285a0942";
+                        targetUrl = `https://v3.football.api-sports.io${endpoint}`;
+                        const asResponse = await axios.get(targetUrl, { 
+                            params, 
+                            headers: { ...headers, "x-apisports-key": asKey } 
+                        });
+                        res.status(200).json(asResponse.data);
+                        return;
+
+                    case "scorebat":
+                        const sbToken = "Mjc3ODY0XzE3NzE3NjU0MTNfZWFiMWQ1NGRmOTkxNTY3ZjgxNjQ4Y2IyNDMyMTYxYjU2NmZiZjZhMA==";
+                        targetUrl = "https://www.scorebat.com/video-api/v3/feed/";
+                        const sbResponse = await axios.get(targetUrl, { 
+                            params: { ...params, token: sbToken } 
+                        });
+                        res.status(200).json(sbResponse.data);
+                        return;
+
+                    case "espn":
+                        targetUrl = `https://site.api.espn.com/apis/site/v2/sports${endpoint}`;
+                        const espnResponse = await axios.get(targetUrl, { params });
+                        res.status(200).json(espnResponse.data);
+                        return;
+
+                    case "thesportsdb":
+                        targetUrl = `https://www.thesportsdb.com/api/v1/json/3${endpoint}`;
+                        const tsdbResponse = await axios.get(targetUrl, { params });
+                        res.status(200).json(tsdbResponse.data);
+                        return;
+
+                    default:
+                        // Generic proxy fallback
+                        const url = req.query.url as string || req.body.url as string;
+                        if (!url) {
+                            res.status(400).json({ error: 'Unsupported provider and missing target URL' });
+                            return;
+                        }
+                        const response = await axios.get(url, {
+                            headers: { ...headers, 'Referer': new URL(url).origin },
+                            responseType: 'stream'
+                        });
+                        res.set('Content-Type', response.headers['content-type']);
+                        response.data.pipe(res);
+                        return;
+                }
             }
 
             // --- HEALTH CHECK ---
             if (rawPath.includes('health')) {
                 res.status(200).json({ 
                     status: 'online', 
-                    gateway: 'consolidated-v2',
+                    gateway: 'consolidated-v2-sports',
                     timestamp: Date.now() 
                 });
                 return;
