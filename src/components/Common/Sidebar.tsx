@@ -17,6 +17,7 @@ import BuyMeACoffee from "./BuyMeACoffee";
 import LanguageSelector from "./LanguageSelector";
 
 const GENRES = [
+  // Movie genres
   { id: 28, name: "Action" },
   { id: 12, name: "Adventure" },
   { id: 16, name: "Animation" },
@@ -35,6 +36,16 @@ const GENRES = [
   { id: 53, name: "Thriller" },
   { id: 10752, name: "War" },
   { id: 37, name: "Western" },
+  // TV-specific genres
+  { id: 10759, name: "Action & Adventure" },
+  { id: 10762, name: "Kids" },
+  { id: 10763, name: "News" },
+  { id: 10764, name: "Reality" },
+  { id: 10765, name: "Sci-Fi & Fantasy" },
+  { id: 10766, name: "Soap" },
+  { id: 10767, name: "Talk" },
+  { id: 10768, name: "War & Politics" },
+  { id: 10770, name: "TV Movie" },
 ];
 
 interface SidebarProps {

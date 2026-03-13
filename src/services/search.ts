@@ -55,16 +55,16 @@ export const getSearchResult: (
     .map((item: Item) => ({
       ...item,
       ...(typeSearch !== "multi" && { media_type: typeSearch }),
-    }))
-    .filter((item: Item) => item.poster_path || item.profile_path);
+    }));
+  // Note: do NOT filter by poster_path here – many valid results lack posters
 
-  // Merge with FZMovies and YouTube results
+  // Merge with FZMovies and YouTube results, deduplicate by ID
   const combined = [...tmdbResults, ...ytResults, ...fzResults];
   const seen = new Set<string | number>();
   const results = combined.filter((item) => {
     if (seen.has(item.id)) return false;
     seen.add(item.id);
-    return item.poster_path || item.profile_path;
+    return true; // Include all results regardless of poster
   });
 
   return {

@@ -162,24 +162,41 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
           )}
         </AnimatePresence>
 
-        <img
-          alt={item.title || item.name}
-          src={
-            item.media_type === "person"
-              ? resizeImage(item.profile_path || "", "w342")
-              : item.poster_path
-                ? resizeImage(item.poster_path, "w342")
-                : item.backdrop_path
-                  ? resizeImage(item.backdrop_path, "w342")
-                  : "https://via.placeholder.com/342x513?text=No+Poster"
-          }
-          className={`object-cover w-full ${item.media_type === 'sports_video' ? 'aspect-video' : 'aspect-[2/3]'}`}
-          loading="lazy"
-          decoding="async"
-          onError={(e: any) => {
-            e.target.src = "https://via.placeholder.com/342x513?text=No+Poster";
-          }}
-        />
+        {/* Poster — with elegant no-poster fallback */}
+        {(item.poster_path || item.backdrop_path || (item.media_type === "person" && item.profile_path)) ? (
+          <img
+            alt={item.title || item.name}
+            src={
+              item.media_type === "person"
+                ? resizeImage(item.profile_path || "", "w342")
+                : item.poster_path
+                  ? resizeImage(item.poster_path, "w342")
+                  : resizeImage(item.backdrop_path || "", "w342")
+            }
+            className={`object-cover w-full ${item.media_type === 'sports_video' ? 'aspect-video' : 'aspect-[2/3]'}`}
+            loading="lazy"
+            decoding="async"
+            onError={(e: any) => {
+              // Replace with styled fallback on image load error
+              const parent = e.target.parentElement;
+              if (parent && !parent.querySelector('.no-poster-fallback')) {
+                e.target.style.display = 'none';
+                const fallback = document.createElement('div');
+                fallback.className = 'no-poster-fallback w-full aspect-[2/3] flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-dark to-gray-800 border border-white/5';
+                fallback.innerHTML = `<svg xmlns='http://www.w3.org/2000/svg' class='w-10 h-10 text-gray-600 mb-2' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='1' d='M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z'/></svg><p class='text-gray-500 text-[10px] text-center px-2 leading-tight'>${(item.title || item.name || '').slice(0, 28)}</p>`;
+                parent.insertBefore(fallback, e.target.nextSibling);
+              }
+            }}
+          />
+        ) : (
+          /* Direct no-poster fallback when poster_path is null */
+          <div className={`w-full ${item.media_type === 'sports_video' ? 'aspect-video' : 'aspect-[2/3]'} flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-dark to-gray-800 border-b border-white/5`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-gray-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+            </svg>
+            <p className="text-gray-500 text-[10px] text-center px-2 leading-tight">{(item.title || item.name || "").slice(0, 28)}</p>
+          </div>
+        )}
         <p className="whitespace-nowrap overflow-hidden text-ellipsis text-[13px] font-medium text-gray-300 mt-2 text-center px-2 group-hover:text-white transition duration-300">
           {item.title || item.name}
         </p>

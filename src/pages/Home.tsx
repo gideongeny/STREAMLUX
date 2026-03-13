@@ -28,6 +28,7 @@ import SmartAdContainer from "../components/Common/SmartAdContainer";
 import AdBanner from "../components/Ads/AdBanner";
 import CinematicMoments from "../components/Home/CinematicMoments";
 import AmbientGlow from "../components/Common/AmbientGlow";
+import TopSearchBar from "../components/Common/TopSearchBar";
 import { useHomeData } from "../hooks/useHomeData";
 import { useWatchProgress } from "../hooks/useWatchProgress";
 import { useAppSelector } from "../store/hooks";
@@ -222,17 +223,16 @@ const Home: FC = () => {
 
       <div className={`flex md:hidden justify-between items-center px-5 py-4 sticky top-0 z-[100] transition-all duration-300 ${isScrolled ? "tw-glass bg-dark/60 shadow-lg backdrop-blur-xl" : "bg-transparent"
         }`}>
-        <Link to="/" className="flex gap-2 items-center">
+        <Link to="/" className="flex gap-2 items-center shrink-0">
           <img
             src="/logo.svg"
             alt="StreamLux Logo"
             className="h-10 w-10"
           />
-          <p className="text-xl text-white font-medium tracking-wider uppercase">
-            Stream<span className="text-primary">Lux</span>
-          </p>
         </Link>
-        <button onClick={() => setIsSidebarActive((prev) => !prev)}>
+        {/* MovieBox-style search bar on mobile top bar */}
+        <TopSearchBar className="flex-1 mx-3" />
+        <button onClick={() => setIsSidebarActive((prev) => !prev)} className="shrink-0">
           <GiHamburgerMenu size={25} />
         </button>
       </div>
@@ -272,7 +272,7 @@ const Home: FC = () => {
                   {currentUser?.displayName || "Guest"}
                   <span className={`text-[10px] bg-white/5 px-2 py-0.5 rounded-full border border-white/10 ${welcome.color}`}>{welcome.mood}</span>
                 </p>
-                <LazyLoadImage
+                <img
                   src={
                     currentUser
                       ? (currentUser.photoURL as string)
@@ -280,8 +280,8 @@ const Home: FC = () => {
                   }
                   alt="User avatar"
                   className="w-7 h-7 rounded-full object-cover"
-                  effect="opacity"
                   referrerPolicy="no-referrer"
+                  onError={(e: any) => { e.target.src = "/defaultAvatar.jpg"; }}
                 />
               </div>
             </div>

@@ -39,10 +39,32 @@ export const getTeamLogo = async (teamName: string): Promise<string | null> => {
 // ESPN Hidden Public APIs
 const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports";
 const ESPN_ENDPOINTS = [
+  // Football/Soccer
   "/soccer/all/scoreboard",
+  "/soccer/usa.1/scoreboard",      // MLS
+  "/soccer/eng.1/scoreboard",     // Premier League
+  "/soccer/esp.1/scoreboard",     // La Liga
+  "/soccer/ger.1/scoreboard",     // Bundesliga
+  "/soccer/ita.1/scoreboard",     // Serie A
+  "/soccer/fra.1/scoreboard",     // Ligue 1
+  "/soccer/uefa.champions/scoreboard", // UCL
+  // Basketball
   "/basketball/nba/scoreboard",
+  "/basketball/wnba/scoreboard",
+  // American sports
+  "/football/nfl/scoreboard",
+  "/baseball/mlb/scoreboard",
+  "/hockey/nhl/scoreboard",
+  // Combat
   "/mma/ufc/scoreboard",
+  // Motor racing
+  "/racing/f1/scoreboard",
+  // Tennis
   "/tennis/atp/scoreboard",
+  "/tennis/wta/scoreboard",
+  // Other
+  "/golf/pga/scoreboard",
+  "/rugby/union/scoreboard",
 ];
 
 // Helper to map league names to our league IDs
@@ -51,15 +73,46 @@ const getLeagueIdFromName = (leagueName: string): string => {
   const name = leagueName.toLowerCase();
   if (name.includes("premier league") || name.includes("epl")) return "epl";
   if (name.includes("champions league") || name.includes("ucl")) return "ucl";
-  if (name.includes("la liga")) return "laliga";
+  if (name.includes("europa league") || name.includes("uel")) return "uel";
+  if (name.includes("la liga") || name.includes("laliga")) return "laliga";
+  if (name.includes("bundesliga")) return "bundesliga";
   if (name.includes("ligue 1") || name.includes("ligue1")) return "ligue1";
   if (name.includes("serie a") || name.includes("seriea")) return "seriea";
+  if (name.includes("eredivisie")) return "eredivisie";
+  if (name.includes("mls") || name.includes("major league soccer")) return "mls";
   if (name.includes("afcon") || name.includes("africa cup")) return "afcon";
-  if (name.includes("bundesliga")) return "bundesliga";
+  if (name.includes("caf champions")) return "caf-cl";
+  if (name.includes("libertadores")) return "copa-libertadores";
+  if (name.includes("world cup") && name.includes("soccer")) return "world-cup";
+  if (name.includes("scottish")) return "scottish-prem";
   if (name.includes("nba") || name.includes("basketball")) return "nba";
+  if (name.includes("euroleague")) return "euroleague";
+  if (name.includes("wnba")) return "wnba";
+  if (name.includes("nfl") || name.includes("american football")) return "nfl";
+  if (name.includes("mlb") || name.includes("baseball")) return "mlb";
+  if (name.includes("nhl") || name.includes("hockey")) return "nhl";
   if (name.includes("ufc") || name.includes("mma")) return "ufc";
-  if (name.includes("rugby")) return "rugby-world-cup";
+  if (name.includes("bellator")) return "bellator";
+  if (name.includes("one championship") || name.includes("one fc")) return "one-championship";
+  if (name.includes("boxing") || name.includes("wbc") || name.includes("wbo")) return "boxing";
   if (name.includes("wwe")) return "wwe";
+  if (name.includes("formula 1") || name.includes("f1")) return "f1";
+  if (name.includes("motogp")) return "motogp";
+  if (name.includes("nascar")) return "nascar";
+  if (name.includes("ipl") || name.includes("indian premier")) return "ipl";
+  if (name.includes("cricket") || name.includes("ashes")) return "the-ashes";
+  if (name.includes("wimbledon")) return "wimbledon";
+  if (name.includes("australian open")) return "australian-open";
+  if (name.includes("roland garros") || name.includes("french open")) return "roland-garros";
+  if (name.includes("us open") && name.includes("tennis")) return "us-open-tennis";
+  if (name.includes("tennis")) return "wimbledon";
+  if (name.includes("pga") || name.includes("golf")) return "pga-tour";
+  if (name.includes("masters") && name.includes("golf")) return "the-masters";
+  if (name.includes("rugby")) return "rugby-world-cup";
+  if (name.includes("six nations")) return "six-nations";
+  if (name.includes("cycling") || name.includes("tour de france")) return "tour-de-france";
+  if (name.includes("volleyball") || name.includes("fivb")) return "fivb";
+  if (name.includes("esport") || name.includes("gaming")) return "esports";
   return "epl"; // Default
 };
 
@@ -97,9 +150,14 @@ export const getESPNScores = async (date?: string): Promise<SportsFixtureConfig[
           if (!competitorHome || !competitorAway) return;
           
           const status = event.status?.type?.name || 'STATUS_SCHEDULED';
+          const eventDate = event.date ? new Date(event.date) : null;
+          const now = new Date();
+          const hoursDiff = eventDate ? (now.getTime() - eventDate.getTime()) / (1000 * 60 * 60) : 0;
 
-          // Only show live or very recent/upcoming
-          if (status === 'STATUS_FINAL' || status === 'STATUS_CANCELED') return;
+          // Include: live, upcoming, or recently finished (within 72 hours)
+          const isTooOld = status === 'STATUS_FINAL' && hoursDiff > 72;
+          const isCanceled = status === 'STATUS_CANCELED';
+          if (isTooOld || isCanceled) return;
 
           allFixtures.push({
             id: `espn-${event.id}`,

@@ -81,6 +81,7 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical", items: 
                         const isNear = Math.abs(index - activeIndex) <= 1;
                         const isCurrentlyViewed = activeIndex === index;
                         const youtubeId = (short as any).youtubeId || 'dQw4w9WgXcQ';
+                        const thumbnail = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
 
                         return (
                             <SwiperSlide key={short.id} className="relative aspect-[9/16] rounded-2xl overflow-hidden border border-white/10 group bg-black shadow-2xl transition-transform duration-300 hover:scale-[1.02]">
@@ -93,11 +94,15 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical", items: 
                                             className="w-full h-full pointer-events-none scale-[1.05]"
                                             title={short.title}
                                             frameBorder="0"
-                                            allow="autoplay; encrypted-media"
+                                            allow="autoplay; encrypted-media; picture-in-picture"
+                                            referrerPolicy="no-referrer"
                                         />
                                     ) : (
-                                        <div className="w-full h-full bg-[#111] animate-pulse flex items-center justify-center">
-                                            <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                                        <div className="w-full h-full bg-black relative overflow-hidden">
+                                            <img src={thumbnail} alt={short.title} className="w-full h-full object-cover opacity-60" />
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                                            </div>
                                         </div>
                                     )}
 

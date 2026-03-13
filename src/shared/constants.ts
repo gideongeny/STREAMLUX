@@ -38,6 +38,17 @@ export const EMBED_ALTERNATIVES = {
   KENYANFLIX: "https://kenyanflix.com",
   NIGERIANFLIX: "https://nigerianflix.com",
   // Additional working sources
+  // TOP-TIER NEW WORKING EMBED SOURCES
+  MULTIEMBED: "https://multiembed.mov",
+  TWOEMBED_CC: "https://2embed.cc/embed",
+  FLIXHQ: "https://flixhq.to/embed",
+  VIDSRC_XYZ: "https://vidsrc.xyz/embed",
+  SMASHYSTREAM: "https://embed.smashystream.com/playere.php",
+  SMASHYSTREAM2: "https://smashystream.xyz/player.php",
+  FREEK: "https://freek.to",
+  EMBEDDER: "https://www.embedder.net/e",
+  NONTONGO: "https://www.nontongo.win/embed",
+  MOVICLOUD: "https://movicloud.me/embed",
   CINEMAHOLIC: "https://cinemaholic.com",
   MOVIEFREAK: "https://moviefreak.com",
   WATCHSERIES: "https://watchseries.to",
@@ -196,94 +207,64 @@ export const SPORTS_CHANNELS = [
 ];
 
 export const SPORTS_LEAGUES: SportsLeagueConfig[] = [
-  {
-    id: "epl",
-    name: "English Premier League",
-    shortName: "EPL",
-    country: "England",
-    flag: "🏴",
-    primaryColor: "#38003c",
-  },
-  {
-    id: "ucl",
-    name: "UEFA Champions League",
-    shortName: "UCL",
-    country: "Europe",
-    flag: "⭐",
-    primaryColor: "#0b2144",
-  },
-  {
-    id: "laliga",
-    name: "La Liga",
-    shortName: "La Liga",
-    country: "Spain",
-    flag: "🇪🇸",
-    primaryColor: "#00529f",
-  },
-  {
-    id: "ligue1",
-    name: "Ligue 1",
-    shortName: "Ligue 1",
-    country: "France",
-    flag: "🇫🇷",
-    primaryColor: "#001c3d",
-  },
-  {
-    id: "seriea",
-    name: "Serie A",
-    shortName: "Serie A",
-    country: "Italy",
-    flag: "🇮🇹",
-    primaryColor: "#008fd2",
-  },
-  {
-    id: "afcon",
-    name: "Africa Cup of Nations",
-    shortName: "AFCON",
-    country: "Africa",
-    flag: "🌍",
-    primaryColor: "#009639",
-  },
-  {
-    id: "rugby-world-cup",
-    name: "Rugby World Cup",
-    shortName: "Rugby WC",
-    country: "World",
-    flag: "🏉",
-    primaryColor: "#1b5e20",
-  },
-  {
-    id: "six-nations",
-    name: "Six Nations Championship",
-    shortName: "Six Nations",
-    country: "Europe",
-    flag: "🏴 🇮🇪 🏴",
-    primaryColor: "#0d47a1",
-  },
-  {
-    id: "ufc",
-    name: "Ultimate Fighting Championship",
-    shortName: "UFC",
-    country: "World",
-    flag: "🥊",
-    primaryColor: "#b71c1c",
-  },
-  {
-    id: "wwe",
-    name: "WWE Premium Live Events",
-    shortName: "WWE",
-    country: "World",
-    flag: "🤼",
-    primaryColor: "#212121",
-  },
-  {
-    id: "athletics",
-    name: "World Athletics / Diamond League",
-    shortName: "Athletics",
-    country: "World",
-    flag: "🏃",
-    primaryColor: "#4a148c",
-  },
+  // ⚽ FOOTBALL / SOCCER
+  { id: "epl", name: "English Premier League", shortName: "EPL", country: "England", flag: "🏴", primaryColor: "#38003c" },
+  { id: "ucl", name: "UEFA Champions League", shortName: "UCL", country: "Europe", flag: "⭐", primaryColor: "#0b2144" },
+  { id: "uel", name: "UEFA Europa League", shortName: "UEL", country: "Europe", flag: "🟠", primaryColor: "#f47a23" },
+  { id: "laliga", name: "La Liga", shortName: "La Liga", country: "Spain", flag: "🇪🇸", primaryColor: "#00529f" },
+  { id: "bundesliga", name: "Bundesliga", shortName: "Bundesliga", country: "Germany", flag: "🇩🇪", primaryColor: "#d20515" },
+  { id: "seriea", name: "Serie A", shortName: "Serie A", country: "Italy", flag: "🇮🇹", primaryColor: "#008fd2" },
+  { id: "ligue1", name: "Ligue 1", shortName: "Ligue 1", country: "France", flag: "🇫🇷", primaryColor: "#001c3d" },
+  { id: "eredivisie", name: "Eredivisie", shortName: "Eredivisie", country: "Netherlands", flag: "🇳🇱", primaryColor: "#e04f00" },
+  { id: "mls", name: "Major League Soccer", shortName: "MLS", country: "USA", flag: "🇺🇸", primaryColor: "#002f6c" },
+  { id: "afcon", name: "Africa Cup of Nations", shortName: "AFCON", country: "Africa", flag: "🌍", primaryColor: "#009639" },
+  { id: "caf-cl", name: "CAF Champions League", shortName: "CAF CL", country: "Africa", flag: "🌍", primaryColor: "#00a651" },
+  { id: "copa-libertadores", name: "Copa Libertadores", shortName: "Libertadores", country: "South America", flag: "🌎", primaryColor: "#1565c0" },
+  { id: "world-cup", name: "FIFA World Cup", shortName: "World Cup", country: "World", flag: "🏆", primaryColor: "#002244" },
+  { id: "scottish-prem", name: "Scottish Premiership", shortName: "SPL", country: "Scotland", flag: "🏴", primaryColor: "#003087" },
+  // 🏀 BASKETBALL
+  { id: "nba", name: "NBA", shortName: "NBA", country: "USA", flag: "🏀", primaryColor: "#c9082a" },
+  { id: "euroleague", name: "EuroLeague Basketball", shortName: "EuroLeague", country: "Europe", flag: "🇪🇺", primaryColor: "#002366" },
+  { id: "wnba", name: "WNBA", shortName: "WNBA", country: "USA", flag: "🏀", primaryColor: "#e56020" },
+  // 🏈 AMERICAN SPORTS
+  { id: "nfl", name: "NFL", shortName: "NFL", country: "USA", flag: "🏈", primaryColor: "#013369" },
+  { id: "mlb", name: "Major League Baseball", shortName: "MLB", country: "USA", flag: "⚾", primaryColor: "#002d72" },
+  { id: "nhl", name: "NHL Ice Hockey", shortName: "NHL", country: "USA", flag: "🏒", primaryColor: "#000000" },
+  // 🥊 COMBAT SPORTS
+  { id: "ufc", name: "Ultimate Fighting Championship", shortName: "UFC", country: "World", flag: "🥊", primaryColor: "#b71c1c" },
+  { id: "bellator", name: "Bellator MMA", shortName: "Bellator", country: "World", flag: "🥊", primaryColor: "#e53935" },
+  { id: "one-championship", name: "ONE Championship", shortName: "ONE FC", country: "Asia", flag: "🏆", primaryColor: "#f50029" },
+  { id: "boxing", name: "World Championship Boxing", shortName: "Boxing", country: "World", flag: "🥊", primaryColor: "#212121" },
+  { id: "wwe", name: "WWE Premium Live Events", shortName: "WWE", country: "World", flag: "🤼", primaryColor: "#212121" },
+  // 🏎️ MOTOR RACING
+  { id: "f1", name: "Formula 1", shortName: "F1", country: "World", flag: "🏎️", primaryColor: "#e10600" },
+  { id: "motogp", name: "MotoGP", shortName: "MotoGP", country: "World", flag: "🏍️", primaryColor: "#cc0000" },
+  { id: "nascar", name: "NASCAR Cup Series", shortName: "NASCAR", country: "USA", flag: "🏁", primaryColor: "#ffd700" },
+  // 🏏 CRICKET
+  { id: "ipl", name: "Indian Premier League", shortName: "IPL", country: "India", flag: "🇮🇳", primaryColor: "#004ba0" },
+  { id: "icc-world-cup", name: "ICC Cricket World Cup", shortName: "ICC WC", country: "World", flag: "🏏", primaryColor: "#003366" },
+  { id: "the-ashes", name: "The Ashes", shortName: "Ashes", country: "England/Australia", flag: "🏏", primaryColor: "#003366" },
+  // 🎾 TENNIS
+  { id: "wimbledon", name: "Wimbledon", shortName: "Wimbledon", country: "UK", flag: "🎾", primaryColor: "#194d38" },
+  { id: "australian-open", name: "Australian Open", shortName: "AO", country: "Australia", flag: "🇦🇺", primaryColor: "#0066b2" },
+  { id: "roland-garros", name: "Roland Garros", shortName: "RG", country: "France", flag: "🇫🇷", primaryColor: "#c24f1e" },
+  { id: "us-open-tennis", name: "US Open Tennis", shortName: "US Open", country: "USA", flag: "🇺🇸", primaryColor: "#2d5fa0" },
+  // 🏌️ GOLF
+  { id: "pga-tour", name: "PGA Tour", shortName: "PGA", country: "USA", flag: "⛳", primaryColor: "#003087" },
+  { id: "the-masters", name: "The Masters", shortName: "Masters", country: "USA", flag: "⛳", primaryColor: "#006747" },
+  // 🏉 RUGBY
+  { id: "rugby-world-cup", name: "Rugby World Cup", shortName: "Rugby WC", country: "World", flag: "🏉", primaryColor: "#1b5e20" },
+  { id: "six-nations", name: "Six Nations Championship", shortName: "Six Nations", country: "Europe", flag: "🏴", primaryColor: "#0d47a1" },
+  { id: "super-rugby", name: "Super Rugby", shortName: "Super Rugby", country: "World", flag: "🏉", primaryColor: "#00274c" },
+  // 🏊 SWIMMING / ATHLETICS
+  { id: "athletics", name: "World Athletics / Diamond League", shortName: "Athletics", country: "World", flag: "🏃", primaryColor: "#4a148c" },
+  { id: "swimming", name: "FINA World Swimming Championships", shortName: "FINA", country: "World", flag: "🏊", primaryColor: "#006994" },
+  // 🚴 CYCLING
+  { id: "tour-de-france", name: "Tour de France", shortName: "TDF", country: "France", flag: "🚴", primaryColor: "#ffce00" },
+  // 🏐 VOLLEYBALL
+  { id: "fivb", name: "FIVB World Championships", shortName: "FIVB", country: "World", flag: "🏐", primaryColor: "#003087" },
+  // 🎮 ESPORTS
+  { id: "esports", name: "Esports & Gaming Events", shortName: "Esports", country: "World", flag: "🎮", primaryColor: "#6441a5" },
 ];
 
 export const SPORTS_FIXTURES: SportsFixtureConfig[] = [];
