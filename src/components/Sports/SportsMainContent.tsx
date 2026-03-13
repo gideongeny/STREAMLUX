@@ -263,9 +263,29 @@ const SportsMainContent: FC = () => {
             {varietySports.length > 0 && (
                 <div className="space-y-20">
                     <Suspense fallback={null}>
-                        <SectionSlider
+                    <SectionSlider
                             title={t('Elite Football Highlights')}
-                            films={varietySports.filter(s => s.sportsCategory === "Elite Football")}
+                            films={varietySports.filter(s => s.sportsCategory === "Elite Football" || s.sportsCategory === "Football")}
+                        />
+                        <SectionSlider
+                            title={t('NBA Elite Clips')}
+                            films={varietySports.filter(s => s.sportsCategory === "NBA" || s.sportsCategory === "Basketball")}
+                        />
+                        <SectionSlider
+                            title={t('UFC Knockouts')}
+                            films={varietySports.filter(s => s.sportsCategory === "UFC" || s.sportsCategory === "Combat Sports")}
+                        />
+                        <SectionSlider
+                            title={t('Formula 1 On-Boards')}
+                            films={varietySports.filter(s => s.sportsCategory === "F1" || s.sportsCategory === "Racing")}
+                        />
+                        <SectionSlider
+                            title={t('Cricket Thrillers')}
+                            films={varietySports.filter(s => s.sportsCategory === "Cricket")}
+                        />
+                         <SectionSlider
+                            title={t('Tennis Masters')}
+                            films={varietySports.filter(s => s.sportsCategory === "Tennis")}
                         />
                         <SectionSlider
                             title={t('NCAA Collegiate Specials')}
@@ -275,13 +295,6 @@ const SportsMainContent: FC = () => {
                             title={t('Pro Wrestling Highlights')}
                             films={varietySports.filter(s => s.sportsCategory === "Pro Wrestling")}
                         />
-                        <div className="relative group">
-                            <div className="absolute -inset-10 bg-primary/5 rounded-[5rem] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                            <SectionSlider
-                                title={t('Combat Sports')}
-                                films={varietySports.filter(s => s.sportsCategory === "Combat Sports")}
-                            />
-                        </div>
                         <SectionSlider
                             title={t('Sports Documentaries')}
                             films={varietySports.filter(s => s.sportsCategory === "Documentary" || s.sportsCategory === "Movie")}

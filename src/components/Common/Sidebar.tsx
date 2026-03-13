@@ -17,7 +17,7 @@ import BuyMeACoffee from "./BuyMeACoffee";
 import LanguageSelector from "./LanguageSelector";
 
 const GENRES = [
-  // Movie genres
+  // 🎬 MOVIE HIGHLIGHTS
   { id: 28, name: "Action" },
   { id: 12, name: "Adventure" },
   { id: 16, name: "Animation" },
@@ -36,7 +36,7 @@ const GENRES = [
   { id: 53, name: "Thriller" },
   { id: 10752, name: "War" },
   { id: 37, name: "Western" },
-  // TV-specific genres
+  // 📺 TV FAVORITES
   { id: 10759, name: "Action & Adventure" },
   { id: 10762, name: "Kids" },
   { id: 10763, name: "News" },
@@ -46,6 +46,30 @@ const GENRES = [
   { id: 10767, name: "Talk" },
   { id: 10768, name: "War & Politics" },
   { id: 10770, name: "TV Movie" },
+  // 🌟 SPECIALTY & NICHE
+  { id: 3166, name: "Anime" },
+  { id: 10769, name: "Foreign" },
+  { id: 10771, name: "Short" },
+  { id: 41, name: "Biographical" },
+  { id: 43, name: "Superhero" },
+  { id: 45, name: "Martial Arts" },
+  { id: 47, name: "Medical" },
+  { id: 49, name: "Legal" },
+  { id: 51, name: "Sports Story" },
+  { id: 533, name: "Psychological" },
+  { id: 55, name: "Historical" },
+  { id: 57, name: "Independent" },
+  { id: 59, name: "Black Cinema" },
+  { id: 61, name: "African" },
+  { id: 63, name: "Asian" },
+  { id: 65, name: "Latin" },
+  { id: 67, name: "European" },
+  { id: 69, name: "Erotic" },
+  { id: 71, name: "True Crime" },
+  { id: 73, name: "Conspiracy" },
+  { id: 75, name: "Dystopian" },
+  { id: 77, name: "Steampunk" },
+  { id: 79, name: "Cyberpunk" },
 ];
 
 interface SidebarProps {
@@ -56,9 +80,9 @@ interface SidebarProps {
 const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const currentUser = useAppSelector((state) => state.auth.user);
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
   const { isMobile } = useCurrentViewportView();
 
   const signOutHandler = () => {
