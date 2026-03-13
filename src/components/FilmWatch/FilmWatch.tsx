@@ -190,7 +190,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
           onCloseSidebar={() => setIsSidebarActive(false)}
         />
 
-        <div className="flex-grow min-w-0 pt-14 md:pt-0">
+        <div className="flex-grow min-w-0 pt-14 md:pt-0 md:ml-[260px]">
 
           <div className={`md:hidden fixed top-0 left-0 w-full z-40 px-4 py-3 flex items-center justify-between border-b border-white/5 transition-all duration-700 ${isCinemaMode ? 'bg-black/40 backdrop-blur-3xl opacity-0 hover:opacity-100' : 'bg-dark-lighten/90 backdrop-blur-md'}`}>
             <Link to="/" className="flex gap-2 items-center">

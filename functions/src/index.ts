@@ -19,27 +19,25 @@ const YT_KEYS = [
     "AIzaSyBIV8LYYwPg5CWXn6W0aL5Z6P8-c_AATrY"
 ];
 
-// Simple in-memory dead-key tracker
 const deadKeys = new Set<string>();
 
 /**
  * Consolidated Gateway Function
- * Handles TMDB, YouTube, and External API proxies in one robust endpoint.
+ * Handles TMDB, YouTube, and CORS/External proxies in one robust endpoint.
  */
 export const gateway = functions
-    .runWith({ memory: '512MB', timeoutSeconds: 60 })
+    .runWith({ memory: '1GB', timeoutSeconds: 120 })
     .https.onRequest(async (req, res) => {
         // Standard CORS
         res.set('Access-Control-Allow-Origin', '*');
         res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-        res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
         if (req.method === 'OPTIONS') {
             res.status(204).send('');
             return;
         }
 
-        // Path normalization
         const reqPath = req.path || "";
         const rawPath = reqPath.replace(/^\/api\//, '').replace(/^\/+/, '');
         
@@ -64,7 +62,6 @@ export const gateway = functions
                 delete params.endpoint;
                 delete params.context;
 
-                // Simple rotation
                 let key = YT_KEYS[0];
                 for (const k of YT_KEYS) {
                     if (!deadKeys.has(k)) { key = k; break; }
@@ -82,9 +79,34 @@ export const gateway = functions
                 }
             }
 
+            // --- CORS / EXTERNAL PROXY ---
+            if (rawPath.includes('proxy') || rawPath.includes('url')) {
+                const targetUrl = req.query.url as string || req.body.url as string;
+                if (!targetUrl) {
+                    res.status(400).json({ error: 'Missing target URL' });
+                    return;
+                }
+
+                const response = await axios.get(targetUrl, {
+                    headers: {
+                        'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0',
+                        'Referer': new URL(targetUrl).origin
+                    },
+                    responseType: 'stream'
+                });
+
+                res.set('Content-Type', response.headers['content-type']);
+                response.data.pipe(res);
+                return;
+            }
+
             // --- HEALTH CHECK ---
             if (rawPath.includes('health')) {
-                res.status(200).json({ status: 'online', path: rawPath, timestamp: Date.now() });
+                res.status(200).json({ 
+                    status: 'online', 
+                    gateway: 'consolidated-v2',
+                    timestamp: Date.now() 
+                });
                 return;
             }
 
@@ -99,9 +121,10 @@ export const gateway = functions
         }
     });
 
-// Individual exports for backward compatibility and direct mapping
+// Maintain back-compat exports
 export { proxyTMDB } from './tmdbProxy';
 export { proxyYouTube } from './youtubeProxy';
 export { proxyExternalAPI } from './externalProxy';
 export { proxyScrapers } from './scraperProxy';
 export { corsProxy as proxy } from './corsProxy';
+export { resolveStream } from './resolver';

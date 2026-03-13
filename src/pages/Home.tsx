@@ -21,6 +21,7 @@ import Top10Slider from "../components/Home/Top10Slider";
 import VerticalShorts from "../components/Home/VerticalShorts";
 import UpcomingCalendar from "../components/Home/UpcomingCalendar";
 import NewReleases from "../components/Home/NewReleases";
+import HeroCarousel from "../components/Home/HeroCarousel";
 import ComingSoonSlider from "../components/Home/ComingSoonSlider";
 import GlobalWorldTV from "../components/Home/GlobalWorldTV";
 import SectionErrorBoundary from "../components/Common/SectionErrorBoundary";
@@ -283,6 +284,7 @@ const Home: FC = () => {
             </div>
           </div>
 
+          <HeroCarousel />
           <CinematicMoments />
 
           {/* Main Banner Slider for Movies/TV */}

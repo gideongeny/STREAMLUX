@@ -38,6 +38,7 @@ import VisionAssistant from "./components/Common/VisionAssistant";
 import Library from "./pages/Library";
 import WatchlistPage from "./pages/WatchlistPage";
 import AtmosphericBackground from "./components/Common/AtmosphericBackground";
+import MobileBottomNav from "./components/Navigation/MobileBottomNav";
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
@@ -476,6 +477,7 @@ function App() {
           <SpotlightSearch />
           <VisionAssistant />
           <DownloadTray />
+          <MobileBottomNav />
         </div>
       </DownloadManagerProvider>
     </div>
