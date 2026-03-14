@@ -30,61 +30,31 @@ const SportsMainContent: FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
 
-    // Fetch real live data with Caching
+    // Fetch real live data with Caching & Stale-While-Revalidate
     useEffect(() => {
-        const fetchRealData = async () => {
-            setIsLoading(true);
-            // 1. Check Cache
-            const cachedLive = safeStorage.get(`sports_live_fixtures_${CACHE_VERSION}`);
-            const cachedUpcoming = safeStorage.get(`sports_upcoming_fixtures_${CACHE_VERSION}`);
-            const cachedTime = safeStorage.get(`sports_cache_time_${CACHE_VERSION}`);
-            const now = Date.now();
-            const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
-
-            if (cachedLive && cachedUpcoming && cachedTime && (now - Number(cachedTime) < CACHE_DURATION)) {
-                try {
-                    const live = JSON.parse(cachedLive);
-                    const upcoming = JSON.parse(cachedUpcoming);
-                    setLiveFixtures(live);
-                    setUpcomingFixtures(upcoming);
-                    setIsLoading(false);
-
-                    // Still fetch variety in background
-                    getVarietySports().then(setVarietySports);
-                    return;
-                } catch (e) {
-                    safeStorage.clear();
-                }
-            }
-
-            // 2. Fetch Fresh Data
-            try {
-                const [live, upcoming, variety] = await Promise.all([
-                    getLiveFixturesAPI(),
-                    getUpcomingFixturesAPI(),
-                    getVarietySports(),
-                ]);
-
-                setLiveFixtures(live);
-                setUpcomingFixtures(upcoming);
-                setVarietySports(variety);
-
-                safeStorage.set(`sports_live_fixtures_${CACHE_VERSION}`, JSON.stringify(live));
-                safeStorage.set(`sports_upcoming_fixtures_${CACHE_VERSION}`, JSON.stringify(upcoming));
-                safeStorage.set(`sports_cache_time_${CACHE_VERSION}`, String(now));
-
-            } catch (error) {
-                console.error("Error fetching sports data:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchRealData();
+        // Init with cache immediately
+        const cachedLive = safeStorage.get(`sports_live_fixtures_${CACHE_VERSION}`);
+        if (cachedLive) {
+            try { setLiveFixtures(JSON.parse(cachedLive)); } catch (e) {}
+        }
 
         const unsubscribe = subscribeToLiveScores((fixtures) => {
-            setLiveFixtures(fixtures);
+            if (fixtures && fixtures.length > 0) {
+                setLiveFixtures(fixtures);
+                setIsLoading(false);
+                // Background cache update
+                safeStorage.set(`sports_live_fixtures_${CACHE_VERSION}`, JSON.stringify(fixtures));
+            } else {
+                // If we get 0 from subscriber, we DON'T overwrite if we already have data
+                // This prevents the "refreshing back to 0" issue during silent aggregator failures
+                console.warn("Subscriber returned empty. Retaining stale data.");
+                setIsLoading(false);
+            }
         }, 60000);
+
+        // Background fetch for non-live content
+        getUpcomingFixturesAPI().then(setUpcomingFixtures);
+        getVarietySports().then(setVarietySports);
 
         return () => unsubscribe();
     }, []);

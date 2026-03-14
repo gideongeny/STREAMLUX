@@ -431,6 +431,10 @@ export const getScrapedMatches = async (): Promise<SportsFixtureConfig[]> => {
   }
 };
 
+// Persistence Guard: Cache for the last successful fetch to prevent UI clearing
+let LAST_KNOWN_GOOD_LIVE: SportsFixtureConfig[] = [];
+let LAST_SUCCESS_TIME = 0;
+
 export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
   try {
     const controller = new AbortController();
@@ -505,10 +509,26 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
       }
     });
 
-    return Array.from(uniqueMap.values());
+    const finalResults = Array.from(uniqueMap.values());
+
+    // 4. Persistence Guard Logic
+    if (finalResults.length > 0) {
+      LAST_KNOWN_GOOD_LIVE = finalResults;
+      LAST_SUCCESS_TIME = Date.now();
+      return finalResults;
+    } else {
+      // If we got 0 results, check if we have a relatively fresh backup
+      const now = Date.now();
+      const BACKUP_WINDOW = 5 * 60 * 1000; // 5 minutes
+      if (LAST_KNOWN_GOOD_LIVE.length > 0 && (now - LAST_SUCCESS_TIME < BACKUP_WINDOW)) {
+        console.warn("Live fetch returned 0. Using Persistence Guard fallback.");
+        return LAST_KNOWN_GOOD_LIVE;
+      }
+      return [];
+    }
   } catch (e) { 
     console.error("Aggregation Error:", e);
-    return []; 
+    return LAST_KNOWN_GOOD_LIVE.length > 0 ? LAST_KNOWN_GOOD_LIVE : []; 
   }
 };
 
