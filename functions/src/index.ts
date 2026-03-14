@@ -6,7 +6,7 @@ import * as crypto from 'crypto';
 // Initialize Firebase Admin
 admin.initializeApp();
 
-import { scrapeSportsLiveToday } from './scrapers/footballScraper';
+import { scrapeAllSports } from './scrapers/footballScraper';
 import { searchFzMovies, searchNetNaija } from './scrapers/movieScrapers'; // I'll create this to clean up
 import { resolveStream } from './resolver';
 
@@ -205,7 +205,8 @@ export const gateway = functions
                         return;
 
                     case "sportslivetoday":
-                        const scrapedMatches = await scrapeSportsLiveToday();
+                    case "all-sports":
+                        const scrapedMatches = await scrapeAllSports();
                         res.status(200).json({ success: true, response: scrapedMatches });
                         return;
 

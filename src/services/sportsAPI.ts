@@ -406,7 +406,7 @@ const getUpcomingFixturesAPISports = async (signal?: AbortSignal): Promise<Sport
 export const getScrapedMatches = async (): Promise<SportsFixtureConfig[]> => {
   try {
     const response = await axios.post(`${getBackendBase()}/api/proxy/external`, {
-      provider: "sportslivetoday",
+      provider: "all-sports",
       params: {}
     });
     
@@ -496,9 +496,7 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
 };
 
 export const getMatchLink = (fixture: SportsFixtureConfig): string => {
-  if (String(fixture.id)?.startsWith("sm-")) return "#"; // Parent handles modal click
-  if (fixture.matchId) return `https://sportslive.run/matches/${fixture.matchId}?utm_source=MB_Website`;
-  return `https://sportslive.run/live?utm_source=MB_Website`;
+  return `/matches/details/${fixture.id}`;
 };
 
 export const getLiveScores = async (): Promise<SportsFixtureConfig[]> => {

@@ -39,6 +39,7 @@ import WatchlistPage from "./pages/WatchlistPage";
 import AtmosphericBackground from "./components/Common/AtmosphericBackground";
 import MobileBottomNav from "./components/Navigation/MobileBottomNav";
 import GeniusAI from "./components/Common/GeniusAI";
+import MatchesDetails from "./pages/Sports/MatchesDetails";
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
@@ -433,6 +434,7 @@ function App() {
                 <Route path="tv/:id/watch" element={<TVWatch />} />
                 <Route path="sports" element={<SportsHome />} />
                 <Route path="sports/:leagueId/:matchId/watch" element={<SportsWatch />} />
+                <Route path="matches/details/:fixtureId" element={<MatchesDetails />} />
                 <Route path="explore" element={<Explore />} />
                 <Route path="calendar" element={<CalendarPage />} />
                 <Route path="settings" element={<Settings />} />

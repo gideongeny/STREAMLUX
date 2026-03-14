@@ -226,7 +226,7 @@ const SportsMainContent: FC = () => {
                 {/* Main Match Grid */}
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredFixtures.map((fixture) => (
-                        <div key={fixture.id} onClick={() => String(fixture.id).startsWith("sm-") && setSelectedFixtureId(String(fixture.id))} className={String(fixture.id).startsWith("sm-") ? "cursor-pointer" : ""}>
+                        <div key={fixture.id}>
                             <SportsPremiumMatchCard
                                 fixture={fixture}
                                 isExternal={!!(fixture.matchId || (fixture.streamSources?.length || 0) > 0)}
@@ -310,13 +310,6 @@ const SportsMainContent: FC = () => {
                 <div className="py-20 text-center">
                     <p className="text-gray-500">{t('Try another competition')}</p>
                 </div>
-            )}
-
-            {selectedFixtureId && (
-                <MatchCenterModal
-                    fixtureId={selectedFixtureId}
-                    onClose={() => setSelectedFixtureId(null)}
-                />
             )}
         </div>
     );
