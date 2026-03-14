@@ -27,7 +27,7 @@ const SportsMainContent: FC = () => {
     const [liveFixtures, setLiveFixtures] = useState<SportsFixtureConfig[]>([]);
     const [upcomingFixtures, setUpcomingFixtures] = useState<SportsFixtureConfig[]>([]);
     const [varietySports, setVarietySports] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(liveFixtures.length === 0);
     const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
 
     // Fetch real live data with Caching & Stale-While-Revalidate

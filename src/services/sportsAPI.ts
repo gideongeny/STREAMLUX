@@ -561,6 +561,27 @@ export const getLiveScores = async (): Promise<SportsFixtureConfig[]> => {
   return await getLiveFixturesAPI();
 };
 
-export const subscribeToLiveScores = (cb: (f: any[]) => void, i: number = 30000) => {
-  try { return subscribeToLiveScoresPublic(cb, i); } catch (e) { return () => { }; }
+export const subscribeToLiveScores = (
+  callback: (fixtures: SportsFixtureConfig[]) => void,
+  interval: number = 30000
+): (() => void) => {
+  let isActive = true;
+
+  const fetchAndUpdate = async () => {
+    if (!isActive) return;
+    try {
+      const fixtures = await getLiveFixturesAPI();
+      callback(fixtures);
+    } catch (e) {
+      console.error("Subscription update error:", e);
+    }
+  };
+
+  fetchAndUpdate(); // Initial fetch
+  const intervalId = setInterval(fetchAndUpdate, interval);
+
+  return () => {
+    isActive = false;
+    clearInterval(intervalId);
+  };
 };

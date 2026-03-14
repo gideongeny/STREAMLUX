@@ -148,14 +148,15 @@ const Home: FC = () => {
     isError: isErrorMovie,
     error: errorMovie,
     detailQuery: detailQueryMovie,
-  } = useHomeData("movie", historyItems);
+  } = useHomeData("movie", currentTab === "movie" ? historyItems : []);
+  
   const {
     data: dataTV,
     isLoading: isLoadingTV,
     isError: isErrorTV,
     error: errorTV,
     detailQuery: detailQueryTV,
-  } = useHomeData("tv", historyItems);
+  } = useHomeData("tv", currentTab === "tv" ? historyItems : []);
 
   if (isErrorMovie) return (
     <div className="flex items-center justify-center min-h-screen bg-dark text-white">
