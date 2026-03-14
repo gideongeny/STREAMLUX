@@ -43,10 +43,11 @@ const axios_1 = __importDefault(require("axios"));
 // Initialize Firebase Admin
 admin.initializeApp();
 const footballScraper_1 = require("./scrapers/footballScraper");
+const movieScrapers_1 = require("./scrapers/movieScrapers"); // I'll create this to clean up
+const resolver_1 = require("./resolver");
 const TMDB_API_KEY = "69ef02da25ccfbc48bfd094eb8e348f9";
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const YT_BASE_URL = 'https://www.googleapis.com/youtube/v3';
-// Backend-only YouTube API Keys for Quota Rotation
 const YT_KEYS = [
     "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc",
     "AIzaSyAQOFn1SVkbrQDJn7VeRMs5vAV1mYErImM",
@@ -55,6 +56,10 @@ const YT_KEYS = [
     "AIzaSyBo8OwaCOTQsppnpaJV_nU9ollTlbI0chM",
     "AIzaSyBIV8LYYwPg5CWXn6W0aL5Z6P8-c_AATrY"
 ];
+const SPECIAL_KEYS = {
+    "sports": "AIzaSyBo8OwaCOTQsppnpaJV_nU9ollTlbI0chM",
+    "entertainment": "AIzaSyBIV8LYYwPg5CWXn6W0aL5Z6P8-c_AATrY"
+};
 const deadKeys = new Set();
 /**
  * Consolidated Gateway Function
@@ -86,31 +91,48 @@ exports.gateway = functions
             res.status(200).json(response.data);
             return;
         }
-        // --- YOUTUBE PROXY ---
+        // --- YOUTUBE PROXY WITH ROBUST ROTATION ---
         if (rawPath.includes('youtube')) {
             const endpoint = req.body.endpoint || req.query.endpoint || "/videos";
             const params = Object.assign(Object.assign({}, (req.body.params || {})), (req.query || {}));
+            const context = params.context;
             delete params.endpoint;
+            delete params.retryCount;
             delete params.context;
-            let key = YT_KEYS[0];
+            // Build candidate keys: context key first, then all others
+            const candidates = [];
+            if (context && SPECIAL_KEYS[context] && !deadKeys.has(SPECIAL_KEYS[context])) {
+                candidates.push(SPECIAL_KEYS[context]);
+            }
             for (const k of YT_KEYS) {
-                if (!deadKeys.has(k)) {
-                    key = k;
-                    break;
+                if (!deadKeys.has(k) && k !== SPECIAL_KEYS[context])
+                    candidates.push(k);
+            }
+            // If all dead, reset once
+            if (candidates.length === 0) {
+                deadKeys.clear();
+                candidates.push(...YT_KEYS);
+            }
+            let lastError = null;
+            for (const key of candidates) {
+                try {
+                    const response = await axios_1.default.get(`${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
+                        params: Object.assign(Object.assign({}, params), { key }),
+                        timeout: 8000
+                    });
+                    res.status(200).json(response.data);
+                    return;
+                }
+                catch (err) {
+                    lastError = err;
+                    if (((_a = err.response) === null || _a === void 0 ? void 0 : _a.status) === 403) {
+                        deadKeys.add(key);
+                        continue; // Try next key
+                    }
+                    throw err;
                 }
             }
-            try {
-                const response = await axios_1.default.get(`${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
-                    params: Object.assign(Object.assign({}, params), { key })
-                });
-                res.status(200).json(response.data);
-                return;
-            }
-            catch (err) {
-                if (((_a = err.response) === null || _a === void 0 ? void 0 : _a.status) === 403)
-                    deadKeys.add(key);
-                throw err;
-            }
+            throw lastError || new Error("All YouTube keys exhausted");
         }
         // --- CORS / EXTERNAL PROXY ---
         if (rawPath.includes('proxy/external') || rawPath.includes('external')) {
@@ -178,6 +200,36 @@ exports.gateway = functions
                     return;
             }
         }
+        // --- MOVIE/TV SCRAPERS ---
+        if (rawPath.includes('scrapers') || rawPath.includes('proxy/scrapers')) {
+            const { title, id } = Object.assign(Object.assign({}, (req.query || {})), (req.body || {}));
+            const query = title || id;
+            if (!query) {
+                res.status(400).json({ error: 'Missing title or id for scraper' });
+                return;
+            }
+            const [fz, net] = await Promise.allSettled([
+                (0, movieScrapers_1.searchFzMovies)(query),
+                (0, movieScrapers_1.searchNetNaija)(query)
+            ]);
+            res.status(200).json({
+                fzmovies: fz.status === 'fulfilled' ? fz.value : [],
+                netnaija: net.status === 'fulfilled' ? net.value : [],
+                success: true
+            });
+            return;
+        }
+        // --- STREAM RESOLVER ---
+        if (rawPath.includes('resolve')) {
+            const { url } = Object.assign(Object.assign({}, (req.query || {})), (req.body || {}));
+            if (!url) {
+                res.status(400).json({ error: 'Missing url for resolution' });
+                return;
+            }
+            const result = await (0, resolver_1.resolveStream)(url);
+            res.status(200).json(result);
+            return;
+        }
         // --- HEALTH CHECK ---
         if (rawPath.includes('health')) {
             res.status(200).json({
@@ -208,6 +260,6 @@ var scraperProxy_1 = require("./scraperProxy");
 Object.defineProperty(exports, "proxyScrapers", { enumerable: true, get: function () { return scraperProxy_1.proxyScrapers; } });
 var corsProxy_1 = require("./corsProxy");
 Object.defineProperty(exports, "proxy", { enumerable: true, get: function () { return corsProxy_1.corsProxy; } });
-var resolver_1 = require("./resolver");
-Object.defineProperty(exports, "resolveStream", { enumerable: true, get: function () { return resolver_1.resolveStream; } });
+var resolver_2 = require("./resolver");
+Object.defineProperty(exports, "resolveStream", { enumerable: true, get: function () { return resolver_2.resolveStream; } });
 //# sourceMappingURL=index.js.map

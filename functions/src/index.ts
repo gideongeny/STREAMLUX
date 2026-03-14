@@ -6,12 +6,13 @@ import axios from 'axios';
 admin.initializeApp();
 
 import { scrapeSportsLiveToday } from './scrapers/footballScraper';
+import { searchFzMovies, searchNetNaija } from './scrapers/movieScrapers'; // I'll create this to clean up
+import { resolveStream } from './resolver';
 
 const TMDB_API_KEY = "69ef02da25ccfbc48bfd094eb8e348f9";
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const YT_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
-// Backend-only YouTube API Keys for Quota Rotation
 const YT_KEYS = [
     "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc",
     "AIzaSyAQOFn1SVkbrQDJn7VeRMs5vAV1mYErImM",
@@ -20,6 +21,11 @@ const YT_KEYS = [
     "AIzaSyBo8OwaCOTQsppnpaJV_nU9ollTlbI0chM",
     "AIzaSyBIV8LYYwPg5CWXn6W0aL5Z6P8-c_AATrY"
 ];
+
+const SPECIAL_KEYS: Record<string, string> = {
+    "sports": "AIzaSyBo8OwaCOTQsppnpaJV_nU9ollTlbI0chM",
+    "entertainment": "AIzaSyBIV8LYYwPg5CWXn6W0aL5Z6P8-c_AATrY"
+};
 
 const deadKeys = new Set<string>();
 
@@ -57,28 +63,49 @@ export const gateway = functions
                 return;
             }
 
-            // --- YOUTUBE PROXY ---
+            // --- YOUTUBE PROXY WITH ROBUST ROTATION ---
             if (rawPath.includes('youtube')) {
                 const endpoint = req.body.endpoint || req.query.endpoint || "/videos";
                 const params = { ...(req.body.params || {}), ...(req.query || {}) };
+                const context = params.context as string;
                 delete params.endpoint;
+                delete params.retryCount;
                 delete params.context;
 
-                let key = YT_KEYS[0];
+                // Build candidate keys: context key first, then all others
+                const candidates = [];
+                if (context && SPECIAL_KEYS[context] && !deadKeys.has(SPECIAL_KEYS[context])) {
+                    candidates.push(SPECIAL_KEYS[context]);
+                }
                 for (const k of YT_KEYS) {
-                    if (!deadKeys.has(k)) { key = k; break; }
+                    if (!deadKeys.has(k) && k !== SPECIAL_KEYS[context]) candidates.push(k);
+                }
+                
+                // If all dead, reset once
+                if (candidates.length === 0) {
+                    deadKeys.clear();
+                    candidates.push(...YT_KEYS);
                 }
 
-                try {
-                    const response = await axios.get(`${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
-                        params: { ...params, key }
-                    });
-                    res.status(200).json(response.data);
-                    return;
-                } catch (err: any) {
-                    if (err.response?.status === 403) deadKeys.add(key);
-                    throw err;
+                let lastError: any = null;
+                for (const key of candidates) {
+                    try {
+                        const response = await axios.get(`${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
+                            params: { ...params, key },
+                            timeout: 8000
+                        });
+                        res.status(200).json(response.data);
+                        return;
+                    } catch (err: any) {
+                        lastError = err;
+                        if (err.response?.status === 403) {
+                            deadKeys.add(key);
+                            continue; // Try next key
+                        }
+                        throw err;
+                    }
                 }
+                throw lastError || new Error("All YouTube keys exhausted");
             }
 
             // --- CORS / EXTERNAL PROXY ---
@@ -154,6 +181,38 @@ export const gateway = functions
                         response.data.pipe(res);
                         return;
                 }
+            }
+
+            // --- MOVIE/TV SCRAPERS ---
+            if (rawPath.includes('scrapers') || rawPath.includes('proxy/scrapers')) {
+                const { title, id } = { ...(req.query || {}), ...(req.body || {}) };
+                const query = title || id;
+                if (!query) {
+                    res.status(400).json({ error: 'Missing title or id for scraper' });
+                    return;
+                }
+                const [fz, net] = await Promise.allSettled([
+                    searchFzMovies(query),
+                    searchNetNaija(query)
+                ]);
+                res.status(200).json({
+                    fzmovies: fz.status === 'fulfilled' ? fz.value : [],
+                    netnaija: net.status === 'fulfilled' ? net.value : [],
+                    success: true
+                });
+                return;
+            }
+
+            // --- STREAM RESOLVER ---
+            if (rawPath.includes('resolve')) {
+                const { url } = { ...(req.query || {}), ...(req.body || {}) };
+                if (!url) {
+                    res.status(400).json({ error: 'Missing url for resolution' });
+                    return;
+                }
+                const result = await resolveStream(url);
+                res.status(200).json(result);
+                return;
             }
 
             // --- HEALTH CHECK ---
