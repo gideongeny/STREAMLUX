@@ -50,6 +50,12 @@ module.exports = async (req, res) => {
         targetUrl = `https://www.thesportsdb.com/api/v1/json/3${endpoint}`;
         break;
 
+      case "sportslivetoday":
+        // Bridge to Firebase for Playwright-based scraping
+        targetUrl = "https://us-central1-streamlux-67a84.cloudfunctions.net/gateway/api/proxy/external";
+        finalParams.provider = "sportslivetoday";
+        break;
+
       case "omdb":
         targetUrl = "http://www.omdbapi.com/";
         finalParams.apikey = OMDB_API_KEY;
@@ -62,7 +68,7 @@ module.exports = async (req, res) => {
     const response = await axios.get(targetUrl, {
       params: finalParams,
       headers: headers,
-      timeout: 10000
+      timeout: 20000 // Increased timeout for scraper bridge
     });
 
     return res.status(200).json(response.data);
@@ -75,4 +81,3 @@ module.exports = async (req, res) => {
     });
   }
 };
-```

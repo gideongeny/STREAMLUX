@@ -1,4 +1,4 @@
-const TMDB_API_KEY = "a09e6f0e213603b1cda6f489987cff74";
+const TMDB_API_KEY = "69ef02da25ccfbc48bfd094eb8e348f9";
 const TMDB_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhMDllNmYwZTIxMzYwM2IxY2RhNmY0ODk5ODdjZmY3NCIsIm5iZiI6MTc1NDgyNjU1Mi4zMTcsInN1YiI6IjY4OTg4NzM4NzczZjAxYzIzNDVkMGRlYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.G0DnSMJ9PjLOM8Q9uBf6YruODK27kipmcFshPn0VfL0";
 const BASE_URL = 'https://api.themoviedb.org/3';
 

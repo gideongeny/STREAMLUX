@@ -6,7 +6,9 @@ const ROTATING_KEYS = [
   "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc",
   "AIzaSyAQOFn1SVkbrQDJn7VeRMs5vAV1mYErImM",
   "AIzaSyDbTHAbBxPWdvKWjbWG_xcd8-09t3w-CCI",
-  "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY"
+  "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY",
+  "AIzaSyBo8OwaCOTQsppnpaJV_nU9ollTlbI0chM",
+  "AIzaSyBIV8LYYwPg5CWXn6W0aL5Z6P8-c_AATrY"
 ];
 
 // Dedicated high-quota keys for specific sections
