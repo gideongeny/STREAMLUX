@@ -404,12 +404,16 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         if (!currentSource) return;
         hapticImpact();
         toast.info(t('Starting Elite Download...'), { position: "top-center" });
+        
+        const s = searchParams.get('s');
+        const e = searchParams.get('e');
+        
         downloadService.downloadSource(
-            title, 
+            title || "Unknown Title", 
             currentSource.url, 
-            mediaType, 
-            searchParams.get('s') ? Number(searchParams.get('s')) : undefined,
-            searchParams.get('e') ? Number(searchParams.get('e')) : undefined
+            (mediaType as 'movie' | 'tv') || 'movie', 
+            s ? Number(s) : undefined,
+            e ? Number(e) : undefined
         );
     };
 

@@ -294,7 +294,6 @@ const Home: FC = () => {
         >
 
           <CinematicMoments />
-          <CategoricalHero />
 
           {/* Main Banner Slider for Movies/TV */}
           {currentTab === "movie" && (
