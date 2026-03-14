@@ -34,7 +34,6 @@ import Settings from "./pages/Settings";
 import MiniPlayer from "./components/FilmWatch/MiniPlayer";
 import SpotlightSearch from "./components/Common/SpotlightSearch";
 import MasterReveal from "./components/Common/MasterReveal";
-import VisionAssistant from "./components/Common/VisionAssistant";
 import Library from "./pages/Library";
 import WatchlistPage from "./pages/WatchlistPage";
 import AtmosphericBackground from "./components/Common/AtmosphericBackground";
@@ -476,7 +475,6 @@ function App() {
           </AnimatePresence>
           <MiniPlayer />
           <SpotlightSearch />
-          <VisionAssistant />
           <DownloadTray />
           <MobileBottomNav />
           <GeniusAI />
