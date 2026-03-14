@@ -18,7 +18,7 @@ export interface ResolvedMedia {
  * 4. Extracts direct video URLs (mp4 or m3u8)
  * 5. Returns the direct URL with metadata
  */
-export async function resolveMediaUrl(providerUrl: string): Promise<ResolvedMedia> {
+export async function resolveStream(providerUrl: string): Promise<ResolvedMedia> {
     let browser: playwright.Browser | null = null;
 
     try {

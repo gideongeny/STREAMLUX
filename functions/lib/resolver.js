@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resolveMediaUrl = resolveMediaUrl;
+exports.resolveStream = resolveStream;
 const playwright = __importStar(require("playwright-core"));
 const chrome_aws_lambda_1 = __importDefault(require("chrome-aws-lambda"));
 /**
@@ -49,7 +49,7 @@ const chrome_aws_lambda_1 = __importDefault(require("chrome-aws-lambda"));
  * 4. Extracts direct video URLs (mp4 or m3u8)
  * 5. Returns the direct URL with metadata
  */
-async function resolveMediaUrl(providerUrl) {
+async function resolveStream(providerUrl) {
     let browser = null;
     try {
         // Launch headless Chrome with AWS Lambda optimizations
