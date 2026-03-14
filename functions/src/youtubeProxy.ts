@@ -1,40 +1,42 @@
 import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
 import axios from 'axios';
+import * as crypto from 'crypto';
 
-// Backend-only YouTube API Keys for Quota Rotation (Loaded from Firebase Config)
+// Initialize admin if not already initialized
+if (admin.apps.length === 0) {
+    admin.initializeApp();
+}
+
+const db = admin.firestore();
+
+// Backend-only YouTube API Keys for Quota Rotation
 let API_KEYS: string[] = [];
 try {
-    // Config should be stored as a comma-separated string: "key1,key2,key3"
     const keysString = functions.config().youtube?.keys || "";
     API_KEYS = keysString.split(',').map((k: string) => k.trim()).filter(Boolean);
 } catch (e) {
     functions.logger.warn("Failed to load YouTube keys from config, using fallbacks.");
 }
 
-// Fallbacks only if config is missing (for local testing mostly)
 if (API_KEYS.length === 0) {
     API_KEYS = [
         "AIzaSyAU0j_L3w2nsH7_5qc56cPfBBBVlmqdikc",
         "AIzaSyAQOFn1SVkbrQDJn7VeRMs5vAV1mYErImM",
         "AIzaSyDbTHAbBxPWdvKWjbWG_xcd8-09t3w-CCI",
-        "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY" // Default fallback
+        "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY"
     ];
 }
 
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
-
-// Smart Health Tracking: Keep track of which keys are currently exhausted 
-// to avoid hitting them repeatedly and slowing down the user experience.
 const deadKeys = new Set<string>();
 
-// High-priority keys for specific sections to ensure they always have quota
 const SPECIAL_KEYS: Record<string, string> = {
     "sports": "AIzaSyBo8OwaCOTQsppnpaJV_nU9ollTlbI0chM",
     "entertainment": "AIzaSyBIV8LYYwPg5CWXn6W0aL5Z6P8-c_AATrY"
 };
 
 function getActiveKey(context?: string): { key: string, index: number } | null {
-    // If a context key is requested and not dead, use it
     if (context && SPECIAL_KEYS[context]) {
         const specialKey = SPECIAL_KEYS[context];
         if (!deadKeys.has(specialKey)) {
@@ -42,7 +44,6 @@ function getActiveKey(context?: string): { key: string, index: number } | null {
         }
     }
 
-    // Find the first key that is NOT dead
     for (let i = 0; i < API_KEYS.length; i++) {
         const candidate = API_KEYS[i];
         if (!deadKeys.has(candidate)) {
@@ -50,26 +51,26 @@ function getActiveKey(context?: string): { key: string, index: number } | null {
         }
     }
     
-    // If ALL keys are dead, we clear the dead list and hope for a reset.
-    functions.logger.error("[YouTube Proxy] ALL keys are dead or exhausted! Flushing dead tracker.");
     deadKeys.clear();
-
     if (context && SPECIAL_KEYS[context]) {
         return { key: SPECIAL_KEYS[context], index: -1 };
     }
-    
     return { key: API_KEYS[0], index: 0 };
 }
 
 function markKeyAsDead(key: string) {
     deadKeys.add(key);
-    functions.logger.warn(`[YouTube Proxy] Key marked as DEAD (Quota Exceeded). Total dead keys: ${deadKeys.size}/${API_KEYS.length}`);
+}
+
+// CACHE HELPER: Hash request for infinite-ish keys
+function getCacheKey(endpoint: string, params: any): string {
+    const raw = `${endpoint}_${JSON.stringify(params)}`;
+    return crypto.createHash('sha256').update(raw).digest('hex');
 }
 
 export const proxyYouTube = functions
     .runWith({ memory: '256MB', timeoutSeconds: 60 })
     .https.onRequest(async (req, res) => {
-        // Handle CORS
         res.set('Access-Control-Allow-Origin', '*');
         res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -81,12 +82,33 @@ export const proxyYouTube = functions
 
         const endpoint = req.query.endpoint as string || req.body.endpoint;
         const params = req.body.params || req.query || {};
-        const retryCount = parseInt(req.query.retryCount as string || req.body.retryCount || "0");
         const context = (req.query.context as string) || req.body.context;
+        const noCache = req.query.noCache === 'true' || req.body.noCache === true;
 
         if (!endpoint) {
             res.status(400).json({ error: 'YouTube endpoint is required' });
             return;
+        }
+
+        // 1. CHECK CACHE FIRST (Save Quota!)
+        const cacheId = getCacheKey(endpoint, params);
+        if (!noCache) {
+            try {
+                const cacheDoc = await db.collection('youtube_cache').doc(cacheId).get();
+                if (cacheDoc.exists) {
+                    const data = cacheDoc.data();
+                    const now = Date.now();
+                    const expiry = 48 * 60 * 60 * 1000; // 48 hours for trailers/highlights
+                    
+                    if (data && (now - data.timestamp < expiry)) {
+                        functions.logger.info(`[YouTube Cache] HIT for ${endpoint} - saved 100 quota units!`);
+                        res.status(200).json(data.payload);
+                        return;
+                    }
+                }
+            } catch (e) {
+                functions.logger.warn("[YouTube Cache] Read failed, proceeding to API.");
+            }
         }
 
         const activeParams = getActiveKey(context);
@@ -97,58 +119,56 @@ export const proxyYouTube = functions
 
         try {
             // Remove internal proxy params
-            delete (params as any).endpoint;
-            delete (params as any).retryCount;
-            delete (params as any).context;
+            const cleanParams = { ...params };
+            delete (cleanParams as any).endpoint;
+            delete (cleanParams as any).retryCount;
+            delete (cleanParams as any).context;
+            delete (cleanParams as any).noCache;
 
             const response = await axios.get(`${BASE_URL}${endpoint}`, {
-                params: {
-                    ...params,
-                    key: activeParams.key,
-                }
+                params: { ...cleanParams, key: activeParams.key }
             });
+
+            // 2. STORE IN CACHE (Background)
+            db.collection('youtube_cache').doc(cacheId).set({
+                timestamp: Date.now(),
+                payload: response.data,
+                endpoint
+            }).catch(e => functions.logger.warn("[YouTube Cache] Write failed:", e));
 
             res.status(200).json(response.data);
 
         } catch (error: any) {
             const status = error?.response?.status;
             
-            // 403 usually means Quota Exceeded for YouTube Data API
-            if (status === 403 && retryCount < API_KEYS.length) {
+            if (status === 403) {
                 markKeyAsDead(activeParams.key);
-                
-                // Recursively retry by calling a local version of our logic or just looping
-                // Since this is onRequest, we can just loop until success or exhaust keys
-                functions.logger.info(`[YouTube Proxy] Retrying internally (${retryCount + 1}/${API_KEYS.length})...`);
-                
-                // We'll redirect to ourself for the retry to keep the logic clean, 
-                // but incrementing retryCount to avoid infinite loops
-                const nextRetryCount = retryCount + 1;
-                
-                // For a more robust internal retry without a second HTTP hop:
-                let currentRetry = nextRetryCount;
+                // Attempt internal retry loop
                 let currentKeyParams = getActiveKey(context);
-                
-                while (currentRetry < API_KEYS.length && currentKeyParams) {
+                while (currentKeyParams) {
                    try {
-                       const retryResponse = await axios.get(`${BASE_URL}${endpoint}`, {
+                       const retryRes = await axios.get(`${BASE_URL}${endpoint}`, {
                            params: { ...params, key: currentKeyParams.key }
                        });
-                       res.status(200).json(retryResponse.data);
+                       
+                       // Cache the retry success too
+                       db.collection('youtube_cache').doc(cacheId).set({
+                           timestamp: Date.now(),
+                           payload: retryRes.data,
+                           endpoint
+                       }).catch(e => {});
+
+                       res.status(200).json(retryRes.data);
                        return;
                    } catch (err: any) {
                        if (err?.response?.status === 403) {
                            markKeyAsDead(currentKeyParams.key);
                            currentKeyParams = getActiveKey(context);
-                           currentRetry++;
-                       } else {
-                           throw err;
-                       }
+                       } else { break; }
                    }
                 }
             }
 
-            functions.logger.error('YouTube Proxy Error:', error.message);
             res.status(error.response?.status || 500).json({
                 error: 'Failed to fetch from YouTube',
                 details: error.message

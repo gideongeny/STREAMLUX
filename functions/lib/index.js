@@ -36,10 +36,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resolveStream = exports.proxy = exports.proxyScrapers = exports.proxyExternalAPI = exports.proxyYouTube = exports.proxyTMDB = exports.gateway = void 0;
+exports.resolveStream = exports.proxy = exports.proxyScrapers = exports.geniusProxy = exports.proxyExternalAPI = exports.proxyYouTube = exports.proxyTMDB = exports.gateway = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const axios_1 = __importDefault(require("axios"));
+const crypto = __importStar(require("crypto"));
 // Initialize Firebase Admin
 admin.initializeApp();
 const footballScraper_1 = require("./scrapers/footballScraper");
@@ -104,15 +105,33 @@ exports.gateway = functions
             res.status(200).json(response.data);
             return;
         }
-        // --- YOUTUBE PROXY WITH ROBUST ROTATION ---
+        // --- YOUTUBE PROXY WITH ROBUST ROTATION & CACHE ---
         if (rawPath.includes('youtube')) {
             const endpoint = req.body.endpoint || req.query.endpoint || "/videos";
             const params = Object.assign(Object.assign({}, (req.body.params || {})), (req.query || {}));
             const context = params.context;
+            const noCache = params.noCache === 'true' || params.noCache === true;
             delete params.endpoint;
             delete params.retryCount;
             delete params.context;
-            // Build candidate keys: context key first, then all others
+            delete params.noCache;
+            // Hash request for cache lookup
+            const rawKey = `${endpoint}_${JSON.stringify(params)}`;
+            const cacheId = crypto.createHash('sha256').update(rawKey).digest('hex');
+            if (!noCache) {
+                try {
+                    const cacheDoc = await admin.firestore().collection('youtube_cache').doc(cacheId).get();
+                    if (cacheDoc.exists) {
+                        const data = cacheDoc.data();
+                        if (data && (Date.now() - data.timestamp < 48 * 60 * 60 * 1000)) {
+                            res.status(200).json(data.payload);
+                            return;
+                        }
+                    }
+                }
+                catch (e) { }
+            }
+            // Build candidate keys
             const candidates = [];
             if (context && SPECIAL_KEYS[context] && !deadKeys.has(SPECIAL_KEYS[context])) {
                 candidates.push(SPECIAL_KEYS[context]);
@@ -121,7 +140,6 @@ exports.gateway = functions
                 if (!deadKeys.has(k) && k !== SPECIAL_KEYS[context])
                     candidates.push(k);
             }
-            // If all dead, reset once
             if (candidates.length === 0) {
                 deadKeys.clear();
                 candidates.push(...YT_KEYS);
@@ -133,6 +151,12 @@ exports.gateway = functions
                         params: Object.assign(Object.assign({}, params), { key }),
                         timeout: 8000
                     });
+                    // Cache background
+                    admin.firestore().collection('youtube_cache').doc(cacheId).set({
+                        timestamp: Date.now(),
+                        payload: response.data,
+                        endpoint
+                    }).catch(() => { });
                     res.status(200).json(response.data);
                     return;
                 }
@@ -140,7 +164,7 @@ exports.gateway = functions
                     lastError = err;
                     if (((_a = err.response) === null || _a === void 0 ? void 0 : _a.status) === 403) {
                         deadKeys.add(key);
-                        continue; // Try next key
+                        continue;
                     }
                     throw err;
                 }
@@ -269,6 +293,8 @@ var youtubeProxy_1 = require("./youtubeProxy");
 Object.defineProperty(exports, "proxyYouTube", { enumerable: true, get: function () { return youtubeProxy_1.proxyYouTube; } });
 var externalProxy_1 = require("./externalProxy");
 Object.defineProperty(exports, "proxyExternalAPI", { enumerable: true, get: function () { return externalProxy_1.proxyExternalAPI; } });
+var geniusProxy_1 = require("./geniusProxy");
+Object.defineProperty(exports, "geniusProxy", { enumerable: true, get: function () { return geniusProxy_1.geniusProxy; } });
 var scraperProxy_1 = require("./scraperProxy");
 Object.defineProperty(exports, "proxyScrapers", { enumerable: true, get: function () { return scraperProxy_1.proxyScrapers; } });
 var corsProxy_1 = require("./corsProxy");

@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import axios from 'axios';
+import * as crypto from 'crypto';
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -78,16 +79,36 @@ export const gateway = functions
                 return;
             }
 
-            // --- YOUTUBE PROXY WITH ROBUST ROTATION ---
+            // --- YOUTUBE PROXY WITH ROBUST ROTATION & CACHE ---
             if (rawPath.includes('youtube')) {
                 const endpoint = req.body.endpoint || req.query.endpoint || "/videos";
                 const params = { ...(req.body.params || {}), ...(req.query || {}) };
                 const context = params.context as string;
+                const noCache = params.noCache === 'true' || params.noCache === true;
+                
                 delete params.endpoint;
                 delete params.retryCount;
                 delete params.context;
+                delete params.noCache;
 
-                // Build candidate keys: context key first, then all others
+                // Hash request for cache lookup
+                const rawKey = `${endpoint}_${JSON.stringify(params)}`;
+                const cacheId = crypto.createHash('sha256').update(rawKey).digest('hex');
+
+                if (!noCache) {
+                    try {
+                        const cacheDoc = await admin.firestore().collection('youtube_cache').doc(cacheId).get();
+                        if (cacheDoc.exists) {
+                            const data = cacheDoc.data();
+                            if (data && (Date.now() - data.timestamp < 48 * 60 * 60 * 1000)) {
+                                res.status(200).json(data.payload);
+                                return;
+                            }
+                        }
+                    } catch (e) {}
+                }
+
+                // Build candidate keys
                 const candidates = [];
                 if (context && SPECIAL_KEYS[context] && !deadKeys.has(SPECIAL_KEYS[context])) {
                     candidates.push(SPECIAL_KEYS[context]);
@@ -96,7 +117,6 @@ export const gateway = functions
                     if (!deadKeys.has(k) && k !== SPECIAL_KEYS[context]) candidates.push(k);
                 }
                 
-                // If all dead, reset once
                 if (candidates.length === 0) {
                     deadKeys.clear();
                     candidates.push(...YT_KEYS);
@@ -109,13 +129,21 @@ export const gateway = functions
                             params: { ...params, key },
                             timeout: 8000
                         });
+                        
+                        // Cache background
+                        admin.firestore().collection('youtube_cache').doc(cacheId).set({
+                            timestamp: Date.now(),
+                            payload: response.data,
+                            endpoint
+                        }).catch(() => {});
+
                         res.status(200).json(response.data);
                         return;
                     } catch (err: any) {
                         lastError = err;
                         if (err.response?.status === 403) {
                             deadKeys.add(key);
-                            continue; // Try next key
+                            continue;
                         }
                         throw err;
                     }
@@ -255,6 +283,7 @@ export const gateway = functions
 export { proxyTMDB } from './tmdbProxy';
 export { proxyYouTube } from './youtubeProxy';
 export { proxyExternalAPI } from './externalProxy';
+export { geniusProxy } from './geniusProxy';
 export { proxyScrapers } from './scraperProxy';
 export { corsProxy as proxy } from './corsProxy';
 export { resolveStream } from './resolver';

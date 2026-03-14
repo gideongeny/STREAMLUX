@@ -6,22 +6,26 @@ const PRODUCTION_BACKEND_BASE = "https://us-central1-streamlux-67a84.cloudfuncti
 
 /** Use for all backend API URLs (sniff, download, resolve). */
 export function getBackendBase(): string {
-  // Check if we're running locally
   if (typeof window !== 'undefined') {
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
     
-    if (isLocalhost) {
-      return "http://localhost:5001/streamlux-648cf/us-central1"; // Local Firebase Emulator
+    // CAPACITOR/ANDROID PRODUCTION CHECK
+    // On Android, hostname is 'localhost', but window.Capacitor exists.
+    // We also check for port 5001/3000 to avoid confusing dev with production.
+    const isCapacitor = (window as any).Capacitor !== undefined || window.location.protocol === 'capacitor:';
+    
+    if (isLocalhost && !isCapacitor && (window.location.port === '3000' || window.location.port === '5001' || !window.location.port)) {
+        // Traditional Local PC Development
+        return "http://localhost:5001/streamlux-648cf/us-central1"; // Local Firebase Emulator
     }
     
-    // Check if we are on the primary Firebase domain.
-    // If we're on Vercel or any other domain, we MUST use the fixed Firebase cluster URL 
-    // to ensure 100% parity for scrapers and resolvers which only live there.
-    if (window.location.hostname.includes('firebaseapp.com') || window.location.hostname.includes('web.app')) {
+    // PROD: Firebase Domain
+    if (hostname.includes('firebaseapp.com') || hostname.includes('web.app')) {
         return window.location.origin;
     }
     
-    // All other production environments (Vercel, Android, etc.) point to the stable Firebase gateway
+    // PROD: All other environments (Vercel, Android App, etc.)
     return "https://streamlux-67a84.web.app";
   }
 

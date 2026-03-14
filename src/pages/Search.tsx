@@ -58,7 +58,7 @@ const Search: FunctionComponent<SearchProps> = () => {
           onCloseSidebar={() => setIsSidebarActive(false)}
           isSidebarActive={isSidebarActive}
         />
-        <div className="flex-grow">
+        <div className="flex-grow md:ml-[260px]">
           <div
             className={`relative z-30 md:max-w-[50vw] w-full mx-auto translate-y-[120px] transition duration-300 text-xl ${query && "!translate-y-0"
               }`}
