@@ -46,6 +46,7 @@ const footballScraper_1 = require("./scrapers/footballScraper");
 const movieScrapers_1 = require("./scrapers/movieScrapers"); // I'll create this to clean up
 const resolver_1 = require("./resolver");
 const TMDB_API_KEY = "69ef02da25ccfbc48bfd094eb8e348f9";
+const TMDB_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhMDllNmYwZTIxMzYwM2IxY2RhNmY0ODk5ODdjZmY3NCIsIm5iZiI6MTc1NDgyNjU1Mi4zMTcsInN1YiI6IjY4OTg4NzM4NzczZjAxYzIzNDVkMGRlYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.G0DnSMJ9PjLOM8Q9uBf6YruODK27kipmcFshPn0VfL0";
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const YT_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 const YT_KEYS = [
@@ -81,12 +82,17 @@ exports.gateway = functions
     const rawPath = reqPath.replace(/^\/api\//, '').replace(/^\/+/, '');
     try {
         // --- TMDB PROXY ---
-        if (rawPath.includes('tmdb')) {
+        // Stricter matching: only if path strictly includes 'tmdb'
+        if (rawPath === 'tmdb' || rawPath.startsWith('proxy/tmdb') || rawPath.includes('tmdb')) {
             const endpoint = req.body.endpoint || req.query.endpoint || "/movie/popular";
             const params = Object.assign(Object.assign({}, (req.body.params || {})), (req.query || {}));
             delete params.endpoint;
             const response = await axios_1.default.get(`${TMDB_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
-                params: Object.assign(Object.assign({}, params), { api_key: TMDB_API_KEY })
+                params: Object.assign(Object.assign({}, params), { api_key: TMDB_API_KEY }),
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${TMDB_BEARER_TOKEN}`
+                }
             });
             res.status(200).json(response.data);
             return;

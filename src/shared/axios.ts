@@ -20,9 +20,12 @@ instance.interceptors.request.use(
     // Only wrap if it's a request to the TMDB proxy (default baseURL or empty URL)
     const isTmdbProxy = !config.url || config.url === PROXY_URL || config.url.startsWith('/tmdb');
     
+    // Recovery of original endpoint for caching purposes
+    let cacheKeyUrl = config.url || '';
+    let cacheKeyParams = { ...config.params };
+
     if (isTmdbProxy) {
         // Extract the original endpoint (e.g., /movie/popular)
-        // If config.url is empty/default, check if it's already in config.data
         const originalEndpoint = config.url || config.data?.endpoint || '';
         
         if (originalEndpoint && !config.data?.endpoint) {
@@ -30,27 +33,28 @@ instance.interceptors.request.use(
                 endpoint: originalEndpoint,
                 params: { ...config.params }
             };
+            // For TMDB proxy requests, the endpoint is what we want to cache, NOT the proxy path
+            cacheKeyUrl = originalEndpoint;
         }
         
-        // Clear the URL and Params since they are now in the POST body
+        // Clear the URL and Params since they are now in the POST body for the proxy
         if (config.data?.endpoint) {
             config.url = ''; 
             config.params = {};
             config.method = 'POST';
         }
     }
+
     // Check cache first
-    const cacheKey = config.url || '';
-    const cachedData = apiCache.get(cacheKey, config.params);
+    const cachedData = apiCache.get(cacheKeyUrl, cacheKeyParams);
 
     if (cachedData) {
       // Return cached data by throwing a special error that will be caught
-      // This is a workaround since we can't return data directly from interceptor
       return Promise.reject({ __cached: true, data: cachedData, config });
     }
 
     // Check rate limiting
-    await apiCache.checkRateLimit(cacheKey);
+    await apiCache.checkRateLimit(cacheKeyUrl);
 
     return config;
   },
@@ -62,15 +66,12 @@ instance.interceptors.request.use(
 // Response interceptor - Cache successful responses and handle errors
 instance.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Vercel Serverless Functions return standard JSON
-    // Our proxy returns { success: true, data: { TMDB_RESULTS } }
-    
     let actualData = response.data;
     
-    // Unwrap our custom Proxy layer (only if it looks like a legacy TMDB proxy response)
-    // Legacy: { success: true, data: { ... } }
-    // New: { ... } (Raw data)
-    if (actualData && actualData.success === true && actualData.data && !response.config.url?.includes('proxy/external')) {
+    // Our proxy might return raw data or { success: true, data: { ... } }
+    if (actualData && actualData.success === true && actualData.data) {
+        // Only unwrap if it looks like a wrapped proxy response
+        // Check if there's any other indicator this is a proxy response
         actualData = actualData.data;
     }
 
@@ -80,16 +81,18 @@ instance.interceptors.response.use(
     // Cache successful responses
     const config = response.config;
     // Recover original endpoint for caching from the payload we built
-    const url = typeof config.data === 'string' ? JSON.parse(config.data).data?.endpoint : config.data?.data?.endpoint || '';
-    const params = typeof config.data === 'string' ? JSON.parse(config.data).data?.params : config.data?.data?.params || {};
+    let url = cacheKeyUrlFromConfig(config);
+    let params = cacheKeyParamsFromConfig(config);
 
-    let ttl = 5 * 60 * 1000;
-    if (url.includes('/trending')) ttl = 10 * 60 * 1000;
-    else if (url.includes('/popular') || url.includes('/top_rated')) ttl = 15 * 60 * 1000;
-    else if (url.includes('/discover')) ttl = 5 * 60 * 1000;
-    else if (url.includes('/search')) ttl = 2 * 60 * 1000;
+    if (url) {
+      let ttl = 5 * 60 * 1000;
+      if (url.includes('/trending')) ttl = 10 * 60 * 1000;
+      else if (url.includes('/popular') || url.includes('/top_rated')) ttl = 15 * 60 * 1000;
+      else if (url.includes('/discover')) ttl = 5 * 60 * 1000;
+      else if (url.includes('/search')) ttl = 2 * 60 * 1000;
 
-    apiCache.set(url, params, actualData, ttl);
+      apiCache.set(url, params, actualData, ttl);
+    }
 
     return response;
   },
@@ -110,10 +113,10 @@ instance.interceptors.response.use(
       console.error('API quota exceeded. Using cached data if available.');
       
       const config = error.config;
-      const url = typeof config.data === 'string' ? JSON.parse(config.data).data?.endpoint : '';
-      const params = typeof config.data === 'string' ? JSON.parse(config.data).data?.params : {};
+      const url = cacheKeyUrlFromConfig(config);
+      const params = cacheKeyParamsFromConfig(config);
       
-      const cachedData = apiCache.get(url, params);
+      const cachedData = url ? apiCache.get(url, params) : null;
 
       if (cachedData) {
         return Promise.resolve({
@@ -138,12 +141,38 @@ instance.interceptors.response.use(
   }
 );
 
+// Helper to recover original URL for caching
+function cacheKeyUrlFromConfig(config: AxiosRequestConfig): string {
+    if (config.data) {
+        try {
+            const data = typeof config.data === 'string' ? JSON.parse(config.data) : config.data;
+            return data.endpoint || '';
+        } catch (e) {
+            return '';
+        }
+    }
+    return config.url || '';
+}
+
+// Helper to recover original params for caching
+function cacheKeyParamsFromConfig(config: AxiosRequestConfig): any {
+    if (config.data) {
+        try {
+            const data = typeof config.data === 'string' ? JSON.parse(config.data) : config.data;
+            return data.params || {};
+        } catch (e) {
+            return {};
+        }
+    }
+    return config.params || {};
+}
+
 export const setLanguage = (lang: string) => {
-  // Since we removed instance.defaults.params to use POST bodies,
-  // we add an Axios interceptor to globally append language to every request payload
   instance.interceptors.request.use((config) => {
       if (config.data && config.data.params) {
           config.data.params.language = lang;
+      } else if (config.params) {
+          config.params.language = lang;
       }
       return config;
   });
