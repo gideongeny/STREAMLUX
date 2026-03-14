@@ -19,13 +19,16 @@ const SportsPremiumMatchCard: FC<MatchCardPremiumProps> = ({ fixture, isExternal
     useEffect(() => {
         const updateStatus = () => {
             const now = new Date();
-            const kickoff = new Date(fixture.kickoffTimeFormatted.includes('T') ? fixture.kickoffTimeFormatted : Date.now()); // Fallback if format is weird
+            const kickoffText = fixture.kickoffTimeFormatted || "";
+            const kickoff = kickoffText.includes('T') ? new Date(kickoffText) : new Date();
             
             // If the kickoff format doesn't have T, it might be a simple time string, we need to handle that
-            let kickoffDate = new Date(fixture.kickoffTimeFormatted);
+            let kickoffDate = new Date(kickoffText);
             if (isNaN(kickoffDate.getTime())) {
                 // Try today with the given time
-                 const [hours, minutes] = (fixture.kickoffTimeFormatted.match(/\d+/g) || ["0", "0"]);
+                 const matches = kickoffText.match(/\d+/g);
+                 const hours = matches?.[0] || "0";
+                 const minutes = matches?.[1] || "0";
                  kickoffDate = new Date();
                  kickoffDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
             }

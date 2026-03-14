@@ -28,10 +28,13 @@ const MatchesDetails: FC = () => {
         
         const updateStatus = () => {
             const now = new Date();
-            let kickoffDate = new Date(match.kickoffTimeFormatted);
+            const kickoffText = match?.kickoffTimeFormatted || "";
+            let kickoffDate = new Date(kickoffText);
             
             if (isNaN(kickoffDate.getTime())) {
-                 const [hours, minutes] = (match.kickoffTimeFormatted?.match(/\d+/g) || ["0", "0"]);
+                 const matches = kickoffText.match(/\d+/g);
+                 const hours = matches?.[0] || "0";
+                 const minutes = matches?.[1] || "0";
                  kickoffDate = new Date();
                  kickoffDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
             }

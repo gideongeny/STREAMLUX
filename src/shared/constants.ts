@@ -162,7 +162,7 @@ export interface SportsFixtureConfig {
   awayTeam: string;
   homeTeamLogo?: string;
   awayTeamLogo?: string;
-  status: "live" | "upcoming" | "replay";
+  status: "live" | "upcoming" | "replay" | "ended" | "FT" | "Full Time" | "NS" | string;
   kickoffTimeFormatted: string;
   venue: string;
   round?: string;
