@@ -684,6 +684,23 @@ export class ResolverService {
                 });
             }
 
+            // Process 123Movies sources
+            if (data.movies123 && Array.isArray(data.movies123)) {
+                data.movies123.forEach((item: any, index: number) => {
+                    if (item.url) {
+                        scraperSources.push({
+                            name: `123Movies - ${item.quality || 'HD'}`,
+                            url: item.url,
+                            quality: item.quality || 'HD',
+                            speed: 'medium',
+                            status: 'checking',
+                            type: 'embed',
+                            priority: 50 + index
+                        });
+                    }
+                });
+            }
+
             return scraperSources;
         } catch (error) {
             console.error('Error fetching scraper sources:', error);

@@ -13,6 +13,47 @@ interface MatchCardPremiumProps {
 
 const SportsPremiumMatchCard: FC<MatchCardPremiumProps> = ({ fixture, isExternal, getMatchLink }) => {
     const [bgImage, setBgImage] = useState<string | null>(null);
+    const [countdown, setCountdown] = useState<string>("");
+    const [statusLabel, setStatusLabel] = useState<string>(fixture.status || "");
+
+    useEffect(() => {
+        const updateStatus = () => {
+            const now = new Date();
+            const kickoff = new Date(fixture.kickoffTimeFormatted.includes('T') ? fixture.kickoffTimeFormatted : Date.now()); // Fallback if format is weird
+            
+            // If the kickoff format doesn't have T, it might be a simple time string, we need to handle that
+            let kickoffDate = new Date(fixture.kickoffTimeFormatted);
+            if (isNaN(kickoffDate.getTime())) {
+                // Try today with the given time
+                 const [hours, minutes] = (fixture.kickoffTimeFormatted.match(/\d+/g) || ["0", "0"]);
+                 kickoffDate = new Date();
+                 kickoffDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            }
+
+            const diff = kickoffDate.getTime() - now.getTime();
+
+            if (fixture.status === "live") {
+                setStatusLabel("LIVE");
+                setCountdown("");
+            } else if (fixture.status === "ended" || fixture.status === "FT" || fixture.status === "Full Time") {
+                setStatusLabel("FT");
+                setCountdown("");
+            } else if (diff > 0) {
+                setStatusLabel("Upcoming");
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                setCountdown(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+            } else {
+                setStatusLabel(fixture.status || "Check App");
+                setCountdown("");
+            }
+        };
+
+        updateStatus();
+        const timer = setInterval(updateStatus, 1000);
+        return () => clearInterval(timer);
+    }, [fixture]);
 
     useEffect(() => {
         if ((fixture as any).isUpcomingMarquee) {
@@ -88,13 +129,15 @@ const SportsPremiumMatchCard: FC<MatchCardPremiumProps> = ({ fixture, isExternal
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">
                         {fixture.leagueName || fixture.leagueId.toUpperCase()}
                     </span>
-                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black tracking-tighter uppercase border ${(fixture as any).isUpcomingMarquee
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black tracking-tighter uppercase border ${statusLabel === "Upcoming"
                         ? "bg-amber-500/20 text-amber-500 border-amber-500/40"
-                        : fixture.status === "live"
+                        : statusLabel === "LIVE"
                             ? "bg-red-500/20 text-red-500 border-red-500/40 animate-pulse"
-                            : "bg-white/5 text-gray-400 border-white/10"
+                            : statusLabel === "FT"
+                                ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
+                                : "bg-white/5 text-gray-400 border-white/10"
                         }`}>
-                        {(fixture as any).isUpcomingMarquee ? "Upcoming Marquee" : fixture.status}
+                        {statusLabel} {countdown && `• ${countdown}`}
                     </div>
                 </div>
 
@@ -112,7 +155,7 @@ const SportsPremiumMatchCard: FC<MatchCardPremiumProps> = ({ fixture, isExternal
                     </div>
 
                     <div className="flex flex-col items-center gap-1">
-                        {fixture.status === "live" ? (
+                        {(statusLabel === "LIVE" || statusLabel === "FT") ? (
                             <div className="flex items-center gap-2">
                                 <span className="text-2xl md:text-3xl font-black text-white tabular-nums">{fixture.homeScore ?? 0}</span>
                                 <span className="text-gray-600">:</span>
@@ -121,8 +164,8 @@ const SportsPremiumMatchCard: FC<MatchCardPremiumProps> = ({ fixture, isExternal
                         ) : (
                             <span className="text-xl font-black text-gray-500 italic opacity-50">VS</span>
                         )}
-                        {fixture.minute && (
-                            <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md italic">{fixture.minute}</span>
+                        {fixture.minute && statusLabel === "LIVE" && (
+                            <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md italic">{fixture.minute}'</span>
                         )}
                     </div>
 

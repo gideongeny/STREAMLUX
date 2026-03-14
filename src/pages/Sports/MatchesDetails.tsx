@@ -20,6 +20,46 @@ const MatchesDetails: FC = () => {
     const [hotMatches, setHotMatches] = useState<any[]>([]);
     const [stats, setStats] = useState<any[]>([]);
     const [events, setEvents] = useState<any[]>([]);
+    const [countdown, setCountdown] = useState<string>("");
+    const [statusLabel, setStatusLabel] = useState<string>("");
+
+    useEffect(() => {
+        if (!match) return;
+        
+        const updateStatus = () => {
+            const now = new Date();
+            let kickoffDate = new Date(match.kickoffTimeFormatted);
+            
+            if (isNaN(kickoffDate.getTime())) {
+                 const [hours, minutes] = (match.kickoffTimeFormatted?.match(/\d+/g) || ["0", "0"]);
+                 kickoffDate = new Date();
+                 kickoffDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            }
+
+            const diff = kickoffDate.getTime() - now.getTime();
+
+            if (match.status === "live") {
+                setStatusLabel("LIVE");
+                setCountdown("");
+            } else if (match.status === "ended" || match.status === "FT" || match.status === "Full Time") {
+                setStatusLabel("FT");
+                setCountdown("");
+            } else if (diff > 0) {
+                setStatusLabel("Upcoming");
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                setCountdown(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+            } else {
+                setStatusLabel(match.status || "Check App");
+                setCountdown("");
+            }
+        };
+
+        updateStatus();
+        const timer = setInterval(updateStatus, 1000);
+        return () => clearInterval(timer);
+    }, [match]);
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -131,14 +171,20 @@ const MatchesDetails: FC = () => {
 
                                 <div className="flex flex-col items-center gap-4">
                                     <div className="flex items-center gap-6 md:gap-12 text-6xl md:text-8xl font-black italic tracking-tighter drop-shadow-glow">
-                                        <span className={match?.status === "live" ? "text-white" : "text-white/20"}>{match?.homeScore || 0}</span>
+                                        <span className={(statusLabel === "LIVE" || statusLabel === "FT") ? "text-white" : "text-white/20"}>{match?.homeScore || 0}</span>
                                         <span className="text-primary animate-pulse">:</span>
-                                        <span className={match?.status === "live" ? "text-white" : "text-white/20"}>{match?.awayScore || 0}</span>
+                                        <span className={(statusLabel === "LIVE" || statusLabel === "FT") ? "text-white" : "text-white/20"}>{match?.awayScore || 0}</span>
                                     </div>
                                     <div className="flex flex-col items-center gap-2">
-                                        <div className="px-5 py-2 rounded-full bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)] flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-white animate-ping"></div>
-                                            <span className="text-[12px] font-black uppercase tracking-widest">{match?.minute || "LIVE"}</span>
+                                        <div className={`px-5 py-2 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.3)] flex items-center gap-2 ${
+                                            statusLabel === "Upcoming" ? "bg-amber-600 shadow-amber-600/50" :
+                                            statusLabel === "LIVE" ? "bg-red-600 animate-pulse" :
+                                            "bg-blue-600 shadow-blue-600/50"
+                                        }`}>
+                                            {(statusLabel === "LIVE" || statusLabel === "Upcoming") && <div className="w-2 h-2 rounded-full bg-white animate-ping"></div>}
+                                            <span className="text-[12px] font-black uppercase tracking-widest">
+                                                {statusLabel} {countdown && `| ${countdown}`} {statusLabel === "LIVE" && match?.minute && `| ${match.minute}'`}
+                                            </span>
                                         </div>
                                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{match?.venue || "Main Arena"}</p>
                                     </div>

@@ -63,3 +63,35 @@ export async function searchNetNaija(query: string) {
         return [];
     }
 }
+
+export async function search123Movies(query: string) {
+    try {
+        const BASE_URL = 'https://123movies.hk';
+        const searchUrl = `${BASE_URL}/search/${encodeURIComponent(query).replace(/%20/g, '-')}`;
+        const { data } = await axios.get(searchUrl, { 
+            headers: getHeaders(BASE_URL),
+            timeout: 10000 
+        });
+        const $ = cheerio.load(data);
+        const results: any[] = [];
+
+        $('.ml-item').each((_: number, element: any) => {
+            const link = $(element).find('a').first();
+            const title = $(element).find('.mli-info h2').text().trim() || link.attr('title') || "";
+            const href = link.attr('href');
+            const quality = $(element).find('.mli-quality').text().trim();
+            
+            if (href && title) {
+                results.push({
+                    title,
+                    url: href.startsWith('http') ? href : href.startsWith('/') ? `${BASE_URL}${href}` : `${BASE_URL}/${href}`,
+                    quality: quality || 'HD',
+                    source: '123Movies'
+                });
+            }
+        });
+        return results;
+    } catch (e) {
+        return [];
+    }
+}
