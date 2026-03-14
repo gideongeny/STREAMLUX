@@ -18,7 +18,7 @@ class APICache {
   private rateLimits: Map<string, RateLimitEntry> = new Map();
   private readonly DEFAULT_TTL = 15 * 60 * 1000; // 15 minutes default cache for persistent feel
   private readonly MAX_REQUESTS_PER_MINUTE = 40;
-  private readonly REQUEST_DELAY = 150;
+  private readonly REQUEST_DELAY = 50;
   private readonly STORAGE_KEY = 'streamlux_api_cache_v2';
 
   constructor() {

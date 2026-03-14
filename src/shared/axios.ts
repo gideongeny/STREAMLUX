@@ -11,18 +11,21 @@ const instance = axios.create({
   baseURL: PROXY_URL,
 });
 
+// For efficiency, we use a global variable for language to avoid leaking interceptors
+let globalLang = 'en-US';
+
 // Request interceptor - Add caching, rate limiting, and format the proxy payload
 instance.interceptors.request.use(
   async (config: AxiosRequestConfig) => {
     // 1. Transform the standard TMDB config to the Proxy Payload format
     // proxyTMDB expects { data: { endpoint: string, params: object } }
     
-    // Only wrap if it's a request to the TMDB proxy (default baseURL or empty URL)
-    const isTmdbProxy = !config.url || config.url === PROXY_URL || config.url.startsWith('/tmdb');
+    // Hard check: If the URL starts with / find the baseURL is PROXY_URL, it's a TMDB request
+    const isTmdbProxy = !config.url || config.url === PROXY_URL || config.url.startsWith('/') || config.url.startsWith('tmdb');
     
     // Recovery of original endpoint for caching purposes
     let cacheKeyUrl = config.url || '';
-    let cacheKeyParams = { ...config.params };
+    let cacheKeyParams = { ...config.params, language: globalLang };
 
     if (isTmdbProxy) {
         // Extract the original endpoint (e.g., /movie/popular)
@@ -31,7 +34,7 @@ instance.interceptors.request.use(
         if (originalEndpoint && !config.data?.endpoint) {
             config.data = {
                 endpoint: originalEndpoint,
-                params: { ...config.params }
+                params: { ...config.params, language: globalLang }
             };
             // For TMDB proxy requests, the endpoint is what we want to cache, NOT the proxy path
             cacheKeyUrl = originalEndpoint;
@@ -68,10 +71,7 @@ instance.interceptors.response.use(
   (response: AxiosResponse) => {
     let actualData = response.data;
     
-    // Our proxy might return raw data or { success: true, data: { ... } }
     if (actualData && actualData.success === true && actualData.data) {
-        // Only unwrap if it looks like a wrapped proxy response
-        // Check if there's any other indicator this is a proxy response
         actualData = actualData.data;
     }
 
@@ -80,7 +80,6 @@ instance.interceptors.response.use(
 
     // Cache successful responses
     const config = response.config;
-    // Recover original endpoint for caching from the payload we built
     let url = cacheKeyUrlFromConfig(config);
     let params = cacheKeyParamsFromConfig(config);
 
@@ -168,14 +167,7 @@ function cacheKeyParamsFromConfig(config: AxiosRequestConfig): any {
 }
 
 export const setLanguage = (lang: string) => {
-  instance.interceptors.request.use((config) => {
-      if (config.data && config.data.params) {
-          config.data.params.language = lang;
-      } else if (config.params) {
-          config.params.language = lang;
-      }
-      return config;
-  });
+  globalLang = lang;
 };
 
 export default instance;

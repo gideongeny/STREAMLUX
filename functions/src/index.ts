@@ -54,7 +54,16 @@ export const gateway = functions
             // --- TMDB PROXY ---
             // Stricter matching: only if path strictly includes 'tmdb'
             if (rawPath === 'tmdb' || rawPath.startsWith('proxy/tmdb') || rawPath.includes('tmdb')) {
-                const endpoint = req.body.endpoint || req.query.endpoint || "/movie/popular";
+                // FALLBACK: Extract endpoint from the URL if not in body/query
+                // e.g. /api/proxy/tmdb/movie/123 -> /movie/123
+                let endpoint = req.body.endpoint || req.query.endpoint;
+                
+                if (!endpoint && rawPath.includes('tmdb/')) {
+                    endpoint = '/' + rawPath.split('tmdb/')[1];
+                }
+                
+                if (!endpoint) endpoint = "/movie/popular";
+
                 const params = { ...(req.body.params || {}), ...(req.query || {}) };
                 delete params.endpoint;
 
