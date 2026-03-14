@@ -434,44 +434,82 @@ export const getScrapedMatches = async (): Promise<SportsFixtureConfig[]> => {
 export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s budget
 
-    // Try Sportmonks First (Pro Data)
-    const { getLiveScores } = await import("./sportmonksAPI");
-    const smLive = await getLiveScores().catch(() => []);
-    if (smLive.length > 0) {
-      clearTimeout(timeoutId);
-      return smLive.map((sm: any) => ({
-        id: `sm-live-${sm.id}`,
-        homeTeam: sm.participants?.find((p: any) => p.meta?.location === "home")?.name || "Home",
-        awayTeam: sm.participants?.find((p: any) => p.meta?.location === "away")?.name || "Away",
-        homeTeamLogo: sm.participants?.find((p: any) => p.meta?.location === "home")?.image_path,
-        awayTeamLogo: sm.participants?.find((p: any) => p.meta?.location === "away")?.image_path,
-        homeScore: sm.scores?.find((s: any) => s.description === "CURRENT" && s.score?.participant === "home")?.score?.goals,
-        awayScore: sm.scores?.find((s: any) => s.description === "CURRENT" && s.score?.participant === "away")?.score?.goals,
-        leagueName: sm.league?.name,
-        minute: sm.periods?.[sm.periods.length - 1]?.minutes + "'",
-        status: "live",
-        isLive: true,
-        sportsCategory: "Elite Football",
-      }));
-    }
+    // 1. Fetch from ALL sources in parallel (no waterfall shadowing)
+    const results = await Promise.allSettled([
+      // Sportmonks (Elite Data)
+      (async () => {
+        const { getLiveScores } = await import("./sportmonksAPI");
+        const smLive = await getLiveScores();
+        return (smLive || []).map((sm: any) => ({
+          id: `sm-live-${sm.id}`,
+          homeTeam: sm.participants?.find((p: any) => p.meta?.location === "home")?.name || "Home",
+          awayTeam: sm.participants?.find((p: any) => p.meta?.location === "away")?.name || "Away",
+          homeTeamLogo: sm.participants?.find((p: any) => p.meta?.location === "home")?.image_path,
+          awayTeamLogo: sm.participants?.find((p: any) => p.meta?.location === "away")?.image_path,
+          homeScore: sm.scores?.find((s: any) => s.description === "CURRENT" && s.score?.participant === "home")?.score?.goals,
+          awayScore: sm.scores?.find((s: any) => s.description === "CURRENT" && s.score?.participant === "away")?.score?.goals,
+          leagueName: sm.league?.name,
+          minute: sm.periods?.[sm.periods.length - 1]?.minutes ? `${sm.periods[sm.periods.length - 1].minutes}'` : "Live",
+          status: "live",
+          isLive: true,
+          sportsCategory: "Elite Football",
+          priority: 1
+        }));
+      })(),
+      
+      // ESPN (Fallback Pro)
+      (async () => {
+        const { getESPNScores } = await import("./publicSportsAPI");
+        return await getESPNScores().catch(() => []);
+      })(),
 
-    const { getESPNScores } = await import("./publicSportsAPI");
-    const espn = await getESPNScores().catch(() => []);
-    if (espn.length > 0) { clearTimeout(timeoutId); return espn; }
+      // Scraped Content (The Multi-Source Engine)
+      getScrapedMatches().catch(() => []),
 
-    const pub = await getLiveFixturesPublic().catch(() => []);
-    if (pub.length > 0) { clearTimeout(timeoutId); return pub; }
+      // General Public (TheSportsDB/Sofascore)
+      getLiveFixturesPublic().catch(() => []),
+      
+      // API Sports (Reliable Fallback)
+      getLiveFixturesAPISports(controller.signal).catch(() => [])
+    ]);
 
-    const apiS = await getLiveFixturesAPISports(controller.signal).catch(() => []);
-    
-    // Add scraped matches
-    const scraped = await getScrapedMatches().catch(() => []);
-    
     clearTimeout(timeoutId);
-    return [...scraped, ...apiS];
-  } catch (e) { return []; }
+
+    // 2. Aggregate and Normalize
+    const allFixtures: any[] = [];
+    results.forEach(res => {
+      if (res.status === 'fulfilled' && Array.isArray(res.value)) {
+        allFixtures.push(...res.value);
+      }
+    });
+
+    // 3. Robust Deduplication by Team Name
+    const uniqueMap = new Map<string, SportsFixtureConfig>();
+    
+    allFixtures.forEach(f => {
+      // Create a unique key based on normalized team names
+      const home = f.homeTeam?.toLowerCase().trim() || "";
+      const away = f.awayTeam?.toLowerCase().trim() || "";
+      const key = `${home} vs ${away}`;
+      
+      const existing = uniqueMap.get(key);
+      if (!existing || (f.priority && f.priority > (existing as any).priority)) {
+        // Only override if new one has better priority or we haven't seen this match
+        uniqueMap.set(key, {
+            ...f,
+            status: "live", // Force live status for everything in this bucket
+            isLive: true
+        });
+      }
+    });
+
+    return Array.from(uniqueMap.values());
+  } catch (e) { 
+    console.error("Aggregation Error:", e);
+    return []; 
+  }
 };
 
 export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
@@ -500,7 +538,7 @@ export const getMatchLink = (fixture: SportsFixtureConfig): string => {
 };
 
 export const getLiveScores = async (): Promise<SportsFixtureConfig[]> => {
-  return await getLiveScoresPublic().catch(() => getLiveFixturesAPI());
+  return await getLiveFixturesAPI();
 };
 
 export const subscribeToLiveScores = (cb: (f: any[]) => void, i: number = 30000) => {

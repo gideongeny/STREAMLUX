@@ -17,7 +17,7 @@ import { safeStorage } from "../../utils/safeStorage";
 // Unified calendar row
 const UpcomingCalendar = lazy(() => import("../Home/UpcomingCalendar"));
 
-const CACHE_VERSION = "v2.1_elite"; // Force refresh
+const CACHE_VERSION = "v2.2_elite"; // Force refresh for unified aggregator
 
 const SportsMainContent: FC = () => {
     const { t } = useTranslation();

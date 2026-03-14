@@ -218,7 +218,8 @@ exports.gateway = functions
                     res.status(200).json(tsdbResponse.data);
                     return;
                 case "sportslivetoday":
-                    const scrapedMatches = await (0, footballScraper_1.scrapeSportsLiveToday)();
+                case "all-sports":
+                    const scrapedMatches = await (0, footballScraper_1.scrapeAllSports)();
                     res.status(200).json({ success: true, response: scrapedMatches });
                     return;
                 default:
