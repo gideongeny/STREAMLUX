@@ -403,6 +403,34 @@ const getUpcomingFixturesAPISports = async (signal?: AbortSignal): Promise<Sport
   } catch (e) { return []; }
 };
 
+export const getScrapedMatches = async (): Promise<SportsFixtureConfig[]> => {
+  try {
+    const response = await axios.post(`${getBackendBase()}/api/proxy/external`, {
+      provider: "sportslivetoday",
+      params: {}
+    });
+    
+    if (response.data?.success && Array.isArray(response.data.response)) {
+      return response.data.response.map((m: any) => ({
+        id: m.id,
+        homeTeam: m.homeTeam,
+        awayTeam: m.awayTeam,
+        homeTeamLogo: "https://images.unsplash.com/photo-1574629810360-7efbbe195018", // Generic logo
+        awayTeamLogo: "https://images.unsplash.com/photo-1574629810360-7efbbe195018",
+        status: "live",
+        isLive: true,
+        kickoffTimeFormatted: m.time || "Live Now",
+        leagueName: m.league || "Global Live",
+        streamSources: [{ name: "Watch Live", url: m.link, color: "bg-red-600" }],
+        sportsCategory: "Elite Football"
+      }));
+    }
+    return [];
+  } catch (e) {
+    return [];
+  }
+};
+
 export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
   try {
     const controller = new AbortController();
@@ -437,8 +465,12 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
     if (pub.length > 0) { clearTimeout(timeoutId); return pub; }
 
     const apiS = await getLiveFixturesAPISports(controller.signal).catch(() => []);
+    
+    // Add scraped matches
+    const scraped = await getScrapedMatches().catch(() => []);
+    
     clearTimeout(timeoutId);
-    return apiS;
+    return [...scraped, ...apiS];
   } catch (e) { return []; }
 };
 

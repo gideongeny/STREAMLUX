@@ -42,6 +42,7 @@ const admin = __importStar(require("firebase-admin"));
 const axios_1 = __importDefault(require("axios"));
 // Initialize Firebase Admin
 admin.initializeApp();
+const footballScraper_1 = require("./scrapers/footballScraper");
 const TMDB_API_KEY = "69ef02da25ccfbc48bfd094eb8e348f9";
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const YT_BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -156,6 +157,10 @@ exports.gateway = functions
                     targetUrl = `https://www.thesportsdb.com/api/v1/json/3${endpoint}`;
                     const tsdbResponse = await axios_1.default.get(targetUrl, { params });
                     res.status(200).json(tsdbResponse.data);
+                    return;
+                case "sportslivetoday":
+                    const scrapedMatches = await (0, footballScraper_1.scrapeSportsLiveToday)();
+                    res.status(200).json({ success: true, response: scrapedMatches });
                     return;
                 default:
                     // Generic proxy fallback

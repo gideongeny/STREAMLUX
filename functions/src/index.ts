@@ -5,6 +5,8 @@ import axios from 'axios';
 // Initialize Firebase Admin
 admin.initializeApp();
 
+import { scrapeSportsLiveToday } from './scrapers/footballScraper';
+
 const TMDB_API_KEY = "69ef02da25ccfbc48bfd094eb8e348f9";
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const YT_BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -130,6 +132,11 @@ export const gateway = functions
                         targetUrl = `https://www.thesportsdb.com/api/v1/json/3${endpoint}`;
                         const tsdbResponse = await axios.get(targetUrl, { params });
                         res.status(200).json(tsdbResponse.data);
+                        return;
+
+                    case "sportslivetoday":
+                        const scrapedMatches = await scrapeSportsLiveToday();
+                        res.status(200).json({ success: true, response: scrapedMatches });
                         return;
 
                     default:
