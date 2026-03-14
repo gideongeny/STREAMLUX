@@ -1,10 +1,13 @@
 # StreamLux Deployment Sync Guide
 
-To ensure all your Vercel domains (`streamlux.vercel.app`, `moonlight-films-five.vercel.app`, etc.) match the "complete" version at `moonlight-films-kzf9.vercel.app`, follow these steps in your Vercel Dashboard:
+# Vercel Deployment Sync
+StreamLux is configured for high-performance delivery via Vercel Edge.
+
+To ensure all your Vercel domains (`streamlux.vercel.app`, `streamlux-five.vercel.app`, etc.) match the "complete" version at `streamlux-kzf9.vercel.app`, follow these steps in your Vercel Dashboard:
 
 ## 1. Verify Project Settings
 1. Go to the [Vercel Dashboard](https://vercel.com/dashboard).
-2. For EACH project (`STREAMLUX`, `moonlight-films-five`, etc.):
+2. For EACH project (`STREAMLUX`, `streamlux-five`, etc.):
    - Click on the project name.
    - Go to **Settings** > **Git**.
    - Ensure the **Production Branch** is set to `main`.

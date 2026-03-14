@@ -33,7 +33,6 @@ const config: CapacitorConfig = {
       'https://www.netnaija.com',
       'https://netnaija.net',
       'https://streamlux.vercel.app',
-      'https://moonlight-films-five.vercel.app',
       // Firebase/Google Auth Domains
       'https://accounts.google.com',
       'https://*.firebaseapp.com',

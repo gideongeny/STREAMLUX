@@ -11,7 +11,7 @@
 ---
 
 ## 🚀 Experience Excellence
-**StreamLux** (formerly Moonlight Films) is a world-class, all-in-one streaming destination designed for the modern cinephile and sports enthusiast. Built with a focus on **stability, speed, and stunning UI**, it aggregates the best content from across the globe into a single, seamless experience.
+**StreamLux** is a world-class, all-in-one streaming destination designed for the modern cinephile and sports enthusiast. Built with a focus on **stability, speed, and stunning UI**, it aggregates the best content from across the globe into a single, seamless experience.
 
 🌐 **Live Demo:** [streamlux-67a84.web.app](https://streamlux-67a84.web.app)
 ⚙️ **Backend API:** [streamlux.onrender.com](https://streamlux.onrender.com)
@@ -36,14 +36,12 @@ Our newly engineered **Elite Sports Aggregator** brings you closer to the action
 
 ---
 
-## 📱 World-Class Android Experience
-StreamLux isn't just a website; it's a native powerhouse.
+## 📱 World-Class Mobile Experience
+StreamLux is now a native powerhouse, offering a fluid and immersive mobile experience.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/e015ce20-dce0-4da5-84eb-ddcab06609d7" width="200" />
-  <img src="https://github.com/user-attachments/assets/dffb0b8f-418f-49e8-8300-3b93d04186f5" width="200" />
-  <img src="https://github.com/user-attachments/assets/0cabb2d0-2a7e-48dd-b7cd-5d89c2d6bef0" width="200" />
-  <img src="https://github.com/user-attachments/assets/8bf949c8-9d81-42c9-97f8-356e275c59b6" width="200" />
+  <img src="./Images/mobile_tv.png" width="300" />
+  <img src="./Images/mobile_movies.png" width="300" />
 </p>
 
 - **Fluid Navigation:** Transition animations that feel premium and responsive.
@@ -54,17 +52,17 @@ StreamLux isn't just a website; it's a native powerhouse.
 
 ## 🖼️ Web Interface Preview
 
-### Home Dashboard
-![Home Page](https://raw.githubusercontent.com/gideongeny/STREAMLUX/main/Images/Screenshot%202025-12-01%20015602.png)
-*Modern dark mode with atmospheric glows and intuitive navigation.*
+### Unified Sports Hub
+![Sports Hub](./Images/web_sports.png)
+*Modern dark mode with atmospheric glows and intuitive navigation for all major leagues.*
 
-### Immersive Sports Hub
-![Sports Page](https://raw.githubusercontent.com/gideongeny/STREAMLUX/main/Images/Screenshot%202025-12-01%20015811.png)
-*Real-time scores, team logos, and interactive fan engagement.*
+### Cinematic Movies Grid
+![Movies Grid](./Images/web_movies.png)
+*High-fidelity posters and real-time metadata for a premium browsing experience.*
 
-### Explore & Discover
-![Explore Page](https://raw.githubusercontent.com/gideongeny/STREAMLUX/main/Images/Screenshot%202025-12-01%20015841.png)
-*Powerful sorting and filtering across 50+ genres.*
+### Immersive TV Discovery
+![TV Shows](./Images/web_tv.png)
+*Personalized discovery across thousands of global titles.*
 
 ---
 
