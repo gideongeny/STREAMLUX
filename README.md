@@ -1,271 +1,110 @@
-)# StreamLux
+# <img src="./public/logo.svg" width="45" align="center" /> StreamLux
 
-Free Movies, TV Shows & Live Sports Streaming Platform
+### **Free Movies, TV Shows & Live Sports Streaming Platform**
 
-## Live Demo
-
-**Official Website**: [https://streamlux-67a84.web.app](https://streamlux-67a84.web.app)
-
-**Backend API**: [https://streamlux.onrender.com](https://streamlux.onrender.com)
-
-🔍 **Find us on Google:** Search for "StreamLux" or "StreamLux movies" on Google to discover our platform. The website is indexed and searchable on Google Search.
-
-> **Note**: The backend runs on Render's free tier, which sleeps after 15 minutes of inactivity. The first request may take ~30 seconds to wake up.
-
-**Note:** The website has been rebranded from Moonlight Films to StreamLux. The project uses Firebase for authentication and data storage, and integrates with multiple APIs for content discovery.
-
-## Content Sources
-
-- **Movies & TV Shows:** The Movie Database (TMDB) API
-- **Sports Data:** TheSportsDB API (free tier)
-- **Streaming Links:** Multiple embed sources for movies, TV shows, and sports content
-
-## Main technology used
-
-- ReactJS, Typescript, TailwindCSS
-- Redux-Toolkit
-- React-Query, Axios
-- Firebase
-- Swiper
-- React-AutoAnimate, React-Select, React-Toastify, React-Circular-Progressbar, React-Infinite-Scroll-Component, React-Lazy-Load-Image-Component, React-Icons, React-Router-Dom
-- Formik, Yup
-
-## Features
-
-### Core Features
-- **Well-designed homepage/detail/watching pages** with modern UI
-- **Sort/filter** (query-params based) for movies, TV shows, and sports
-- **Search by name** with suggestion keywords, filter result by type
-- **Skeleton loading**, infinite scrolling, query-based pagination and smooth animation
-- **Authentication** by email/password or Google/Facebook. Fully validated sign-up form
-- **Bookmark favourite films**, store recently watched films. Allowing to edit films list: Select All -> Clear
-- **Profile page**: allowing to change profile photo, name, email, password, verify, delete account after reauthentication
-- **Comment system**: Allowing to give reactions, see who reacts to a comment (sorted and filter out the 3 most popular reactions), reply to a comment, edit, delete, hide, sort by latest/popular and load more comment
-
-### New Features (StreamLux)
-- **Live Sports Streaming**: Direct integration with SportsLive.run for live sports streaming (Note: Sports API temporarily disabled to ensure website stability)
-- **World Cinema Discovery**: Explore movies and TV shows from Africa, Asia, Latin America, Middle East, and more with beautiful category images
-- **Enhanced Content Categories**:
-  - 🔥 Most Trending Now
-  - 👻 Horror Movies
-  - ✊🏿 Must-watch Black Shows & Movies
-  - 🆕 Latest Nollywood Movies
-  - 🇿🇦 SA Drama, 🇹🇭 Thai Drama, 🇨🇳 C-Drama
-  - 🌍 African Cinema & TV Shows (comprehensive collection)
-  - 📺 African TV Shows & Series (diverse content from multiple African countries)
-  - 🇰🇪 Kenyan TV Shows, 🇳🇬 Nigerian TV Shows
-  - And many more curated sections
-- **Multiple Streaming Sources**: Access to various embed sources for movies, TV shows, and sports (including SportsLive.run, Streamed.pk, KissKH, Ailok, Googotv, Dramacool, Cuevana, Shahid, and many more regional platforms)
-- **Real-time Sports Updates**: Live scores and upcoming fixtures (Note: Sports API temporarily disabled to prevent website crashes - will be re-enabled once stability issues are resolved)
-- **Enhanced African Content**: Expanded fetching strategies with multiple pages and search terms for maximum content diversity
-- **Responsive Design**: Optimized for mobile, tablet, and desktop
-- **Copyright Page**: Comprehensive legal information and terms of use
-- **Vercel Web Analytics**: Integrated analytics for performance monitoring and user insights
-- **Performance Optimizations**: 
-  - API request caching and rate limiting to prevent quota exceeded errors
-  - Optimized Google services usage (Firebase Analytics, Google Fonts)
-  - Background content loading for faster initial page loads
-  - Reduced Firestore query operations
-- **Enhanced Video Sources**: Comprehensive list of international streaming platforms with proper display names for better user experience
-- **Direct Download Feature**: Download movies and TV shows directly to your device with a single click, similar to MovieBox.ph
-- **Sports Integration**: Direct integration with SportsLive.run for live sports streaming and match details
-- **Footer with Legal Pages**: Comprehensive footer including Contact Us, Privacy Policy, User Agreement, Disclaimer, and Backlinks sections
-- **Error Boundaries**: Robust error handling with React Error Boundaries to prevent app crashes and provide graceful fallbacks
-- **Cross-Platform Compatibility**: Optimized for iPhone, Android, and desktop browsers with polyfills for older devices
-- **Google Search Optimized**: Website is indexed and discoverable via Google Search
-- **Android App Available**: Download the StreamLux Android APK directly from our website, similar to MovieBox. See [BUILD_APK.md](./BUILD_APK.md) and [DISTRIBUTE_APK.md](./DISTRIBUTE_APK.md) for distribution instructions
-
-## 📱 Android App
-
-StreamLux is now available as a native Android app! Download the APK from [GitHub Releases](https://github.com/gideongeny/STREAMLUX/releases) and enjoy streaming on your Android device.
-
-### Android App Screenshots
-
-#### Movies Section
-![StreamLux Android - Movies Section](![WhatsApp Image 2025-12-03 at 04 25 59_79b6a59f](https://github.com/user-attachments/assets/e015ce20-dce0-4da5-84eb-ddcab06609d7)
-)
-*Movies section featuring F1 movie banner, Popular section with Zootopia 2 and The Shadow's Edge. Clean dark theme with orange accents.*
-
-#### TV Shows Section
-![StreamLux Android - TV Shows Section](![WhatsApp Image 2025-12-03 at 04 25 59_04d2962f](https://github.com/user-attachments/assets/dffb0b8f-418f-49e8-8300-3b93d04186f5)
-)
-*TV Shows section showing "Heated Rivalry" featured content and Popular section with Stranger Things and IT: Welcome to Derry.*
-
-#### Search Page
-![StreamLux Android - Search Page](![WhatsApp Image 2025-12-03 at 04 25 59_c0380572](https://github.com/user-attachments/assets/0cabb2d0-2a7e-48dd-b7cd-5d89c2d6bef0)
-)
-*Beautiful search interface with anime-style illustration, featuring "Find your favourite movies, TV shows, people and more" with search bar.*
-
-#### Sign In Page
-![StreamLux Android - Sign In Page](![WhatsApp Image 2025-12-03 at 04 26 00_dc4a0d9d](https://github.com/user-attachments/assets/8bf949c8-9d81-42c9-97f8-356e275c59b6)
-)
-*Sign In page with Google and Facebook login options, email/password fields, and "Not a member? Sign Up" link.*
-
-### Download Android App
-
-- **GitHub Releases**: [Download APK](https://github.com/gideongeny/STREAMLUX/releases)
-- **Installation Guide**: See [BUILD_APK.md](./BUILD_APK.md) for detailed instructions
-- **Requirements**: Android 5.0+ with 50MB free space
-
-## Screenshots, Preview
-
-### Home Page
-![Home Page - Breaking Bad Banner](https://raw.githubusercontent.com/gideongeny/STREAMLUX/main/Images/Screenshot%202025-12-01%20015602.png)
-*Home page featuring TV Shows, Movies, and Sports tabs. Shows Breaking Bad banner with watch/download options, popular content slider, and trending sidebar.*
-
-### Account Settings / Profile Page  
-![Account Settings Page](https://raw.githubusercontent.com/gideongeny/STREAMLUX/main/Images/Screenshot%202025-12-01%20015701.png)
-*Account Settings page showing user information section with email and name fields, change password option, profile photo upload, and delete account button. Left sidebar navigation with Profile highlighted.*
-
-### Sign In Page  
-![Sign In Page](https://raw.githubusercontent.com/gideongeny/STREAMLUX/main/Images/Screenshot%202025-12-01%20015724.png)
-*Sign In To StreamLux page with Google and Facebook login buttons, email/password input fields, and "Not a member? Sign Up" link.*
-
-### Explore Page  
-![Explore Movies & TV Shows](https://raw.githubusercontent.com/gideongeny/STREAMLUX/main/Images/Screenshot%202025-12-01%20015841.png)
-*Explore Movies & TV Shows page with Movies/TV Shows tabs, sort dropdown (Most popular), genre filters, and grid layout showing various movies and TV shows including Stranger Things, IT: Welcome to Derry, Supernatural, Law & Order: SVU, Tulsa King, Grey's Anatomy, and The Simpsons.*
-
-### TV Show Detail Page - Stranger Things  
-![TV Show Detail - Stranger Things](https://raw.githubusercontent.com/gideongeny/STREAMLUX/main/Images/Screenshot%202025-12-01%20015639.png)
-*TV Show Detail Page for Stranger Things showing banner with "WELCOME TO HAWKINS" sign, genres (SCI-FI & FANTASY, MYSTERY, ACTION & ADVENTURE), WATCH and Download buttons, poster image, rating (8.6), story section, details (Status: Returning Series, Last air date, Spoken language), media trailers section, and similar content sidebar.*
-
-### Sports Page - NBA Live Games  
-![Sports Page - NBA Live Games](https://raw.githubusercontent.com/gideongeny/STREAMLUX/main/Images/Screenshot%202025-12-01%20015811.png)
-*Sports page showing NBA live games with team logos, scores, fan voting predictions with percentages and progress bars. Displays upcoming games including LA Lakers vs New Orleans Pelicans, Sacramento Kings vs Memphis Grizzlies, Minnesota Timberwolves vs San Antonio Spurs, New York Knicks vs Toronto Raptors, and Cleveland Cavaliers vs Boston Celtics.*
-
-## Project Timeline
-
-- **Original Development**: July 2, 2024 to August 9, 2025
-- **Rebranded to StreamLux**: 2025
-- **Current Version**: StreamLux v2.0 with enhanced features
-- **Latest Update (January 2026)**:
-  - Fixed persistent build errors (corrupted file cleanup)
-  - Complete environment rebuild for stability
-  - Deployed frontend to Firebase Hosting
-  - Deployed backend to Render.com
-  - Configured production environment variables
-  - Replaced problematic icon imports for build compatibility
-
-## How to clone this project
-
-You have to create an account on the website: https://www.themoviedb.org/ to get the API KEY. You then create a file named ".env" in your root project folder.
-
-In that file, assign the API KEY that you get from the previous step to a variable named REACT_APP_API_KEY (it has to be this specific name).
-
-It looks like this:
-REACT_APP_API_KEY = a8a6fa2f944128e971223235bc3cxxxxx
-
-## Tech Stack
-
-- **Frontend Framework**: React 18+ with TypeScript
-- **Styling**: TailwindCSS
-- **State Management**: Redux Toolkit
-- **Data Fetching**: React Query (TanStack Query), Axios
-- **Authentication**: Firebase Auth
-- **Database**: Firebase Firestore
-- **Analytics**: Vercel Web Analytics, Firebase Analytics (optimized)
-- **UI Components**: Swiper, React-AutoAnimate, React-Select, React-Toastify
-- **Routing**: React Router DOM v6
-- **Image Optimization**: React-Lazy-Load-Image-Component
-- **Form Handling**: Formik, Yup
-- **Icons**: React-Icons
-- **Caching**: LRU Cache for API responses
-- **Performance**: Rate limiting, request batching, background loading
-
-## Deployment
-
-### Frontend (Firebase Hosting)
-- **Platform**: Firebase Hosting
-- **URL**: https://streamlux-67a84.web.app
-- **Build Command**: `npm run build`
-- **Deploy Command**: `firebase deploy --only hosting`
-- **Auto-Deploy**: Manual deployment via Firebase CLI
-
-### Backend (Render)
-- **Platform**: Render.com
-- **URL**: https://streamlux.onrender.com
-- **Root Directory**: `backend`
-- **Build Command**: `npm install && npm run build`
-- **Start Command**: `npm start`
-- **Auto-Deploy**: Enabled via GitHub integration (main branch)
-- **Plan**: Free tier (sleeps after 15 min inactivity)
-
-### Environment Configuration
-- **Production Backend URL**: Configured via `.env.production`
-- **Development**: Uses `localhost:3001` for local backend
-- **Build Process**: Create React App with TypeScript
-
-## Performance & Optimization
-
-### API Optimization
-- **Caching**: LRU cache implementation for API responses (15-minute default TTL)
-- **Rate Limiting**: Built-in rate limiting (30 requests/minute) to prevent quota exceeded errors
-- **Request Batching**: Content fetched in batches to reduce concurrent API calls
-- **Background Loading**: Non-critical content loads in the background for faster initial page loads
-
-### Google Services Optimization
-- **Firebase Analytics**: Conditionally initialized only in production, with automatic disable on quota errors
-- **Google Fonts**: Optimized with `preconnect`, `dns-prefetch`, and `font-display: swap`
-- **Firestore Queries**: Optimized to use `getDoc` instead of `getDocs` where possible to reduce read operations
-
-### Content Fetching
-- **Multi-Source Integration**: Fetches from TMDB, FZMovies, KissKH, Ailok, Googotv, and other custom sources
-- **Regional Content**: Enhanced filtering for African, Asian, Latin American, and Middle Eastern content
-- **Parallel Fetching**: Uses `Promise.all` for concurrent API requests where appropriate
-
-## Additional Features
-
-### Direct Download
-- **One-Click Download**: Download movies and TV shows directly to your device
-- **Smart Download Page**: Automatically attempts to extract video URLs from embed sources
-- **Multiple Download Options**: Choose from various video sources and quality options
-- **Progress Tracking**: Real-time download progress and status updates
-
-### Sports Integration
-- **SportsLive.run Integration**: Direct links to live sports matches and upcoming games
-- **Match Details**: Click any game to view detailed match information on SportsLive.run
-- **Live Scores**: Real-time updates for ongoing matches (Note: Sports API temporarily disabled to ensure website stability)
-- **Multiple Leagues**: Support for NBA, EPL, La Liga, Bundesliga, Serie A, and more
-- **Status**: Sports API calls are currently disabled to prevent website crashes. Users are redirected to SportsLive.run for live sports content.
-
-### Legal & Compliance
-- **Privacy Policy**: Comprehensive privacy policy page
-- **User Agreement**: Terms of service and user agreement
-- **Disclaimer**: Content disclaimer and copyright information
-- **Contact Information**: Social media links and contact options in footer
-
-### Browser Compatibility
-- **iPhone Support**: Fully optimized for iOS devices with proper viewport settings
-- **Android Support**: Compatible with older Android devices (Android 5+)
-- **Desktop Browsers**: Works on all modern browsers (Chrome, Firefox, Safari, Edge)
-- **Polyfills**: Includes polyfills for older browser compatibility
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Search & Discovery
-
-🔍 **Find StreamLux on Google:**
-- Search for "StreamLux" to find our platform
-- Search for "StreamLux movies" or "StreamLux TV shows" for content discovery
-- Search for "StreamLux sports" for live sports streaming
-- The website is fully indexed and optimized for Google Search
-
-**Access the website:**
-- Direct URL: [https://streamlux.vercel.app/](https://streamlux.vercel.app/)
-
-## License
-
-Copyright © 2025 StreamLux. All rights reserved.
-
-See [Copyright Page](/copyright) for more information.
-
-**Legal Pages:**
-- [Privacy Policy](/privacy-policy)
-- [User Agreement](/user-agreement)
-- [Disclaimer](/disclaimer)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-039BE5?style=for-the-badge&logo=Firebase&logoColor=white)](https://firebase.google.com/)
+[![Redux](https://img.shields.io/badge/Redux-593D88?style=for-the-badge&logo=redux&logoColor=white)](https://redux-toolkit.js.org/)
 
 ---
 
-### 👉 If you like this project, give it a star ✨ and share 👨🏻‍💻 it to your friends 👈
+## 🚀 Experience Excellence
+**StreamLux** (formerly Moonlight Films) is a world-class, all-in-one streaming destination designed for the modern cinephile and sports enthusiast. Built with a focus on **stability, speed, and stunning UI**, it aggregates the best content from across the globe into a single, seamless experience.
+
+🌐 **Live Demo:** [streamlux-67a84.web.app](https://streamlux-67a84.web.app)
+⚙️ **Backend API:** [streamlux.onrender.com](https://streamlux.onrender.com)
+📱 **Android App:** [Download Latest APK](https://github.com/gideongeny/STREAMLUX/releases/latest/download/app-release-unsigned.apk)
+
+---
+
+## 🔥 Elite Sports Hub
+Our newly engineered **Elite Sports Aggregator** brings you closer to the action than ever before.
+- 🏆 **Unified Dashboard:** Real-time scores and live streaming from EPL, NBA, La Liga, and more.
+- 🛠️ **Persistence Guard:** Advanced caching ensures your game data stays visible even during API hiccups.
+- ⚡ **Multi-Source Engine:** Scrapes live matches from premium sources (VIP, WeScore, FoxTrend) for fallback reliability.
+- 📺 **Immersive Match Details:** Deep-dive into lineups, stats, and fan predictions.
+
+---
+
+## 🎬 Cinematic Excellence
+- **AI-Powered Discovery:** Smart recommendations that learn from your viewing patterns.
+- **Global Reach:** Dedicated sections for African Cinema (Nollywood, SA Drama), Asian Hits (Anime, C-Drama), and Latin Gems.
+- **High-Fidelity Streaming:** Multiple high-quality embed sources for every title.
+- **Offline Ready:** One-click downloads for your journey, identical to the MovieBox experience.
+
+---
+
+## 📱 World-Class Android Experience
+StreamLux isn't just a website; it's a native powerhouse.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/e015ce20-dce0-4da5-84eb-ddcab06609d7" width="200" />
+  <img src="https://github.com/user-attachments/assets/dffb0b8f-418f-49e8-8300-3b93d04186f5" width="200" />
+  <img src="https://github.com/user-attachments/assets/0cabb2d0-2a7e-48dd-b7cd-5d89c2d6bef0" width="200" />
+  <img src="https://github.com/user-attachments/assets/8bf949c8-9d81-42c9-97f8-356e275c59b6" width="200" />
+</p>
+
+- **Fluid Navigation:** Transition animations that feel premium and responsive.
+- **Lightweight:** Only 50MB with a full native feature set.
+- **Secure:** Integrated Firebase Auth with Google and Facebook support.
+
+---
+
+## 🖼️ Web Interface Preview
+
+### Home Dashboard
+![Home Page](https://raw.githubusercontent.com/gideongeny/STREAMLUX/main/Images/Screenshot%202025-12-01%20015602.png)
+*Modern dark mode with atmospheric glows and intuitive navigation.*
+
+### Immersive Sports Hub
+![Sports Page](https://raw.githubusercontent.com/gideongeny/STREAMLUX/main/Images/Screenshot%202025-12-01%20015811.png)
+*Real-time scores, team logos, and interactive fan engagement.*
+
+### Explore & Discover
+![Explore Page](https://raw.githubusercontent.com/gideongeny/STREAMLUX/main/Images/Screenshot%202025-12-01%20015841.png)
+*Powerful sorting and filtering across 50+ genres.*
+
+---
+
+## 🛠️ Tech Stack & Architecture
+
+- **Core:** React 18, TypeScript, TailwindCSS
+- **State & Data:** Redux Toolkit, TanStack Query (React Query), Axios
+- **Backend:** Firebase (Auth, Firestore), Node.js (Render.com)
+- **Aggregators:** Custom multi-source scraping engine for Sports and Movies
+- **Optimization:** LRU Caching, Rate Limiting, Request Batching
+
+---
+
+## 🚀 Getting Started
+
+1. **Clone & Install:**
+   ```bash
+   git clone https://github.com/gideongeny/STREAMLUX.git
+   cd STREAMLUX
+   npm install
+   ```
+
+2. **Environment Setup:**
+   Create a `.env` file in the root:
+   ```env
+   REACT_APP_API_KEY = YOUR_TMDB_API_KEY
+   ```
+
+3. **Run Development:**
+   ```bash
+   npm start
+   ```
+
+---
+
+## ⚖️ Legal
+StreamLux is a technological aggregator. We do not host any content on our servers. Please refer to our [Privacy Policy](/privacy-policy) and [Copyright Page](/copyright) for full legal disclosure.
+
+---
+
+<p align="center">
+  <b>If you like this project, give it a star ✨ and help us build the future of streaming.</b>
+</p>
