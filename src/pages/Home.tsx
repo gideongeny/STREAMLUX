@@ -12,6 +12,7 @@ import RecommendGenres from "../components/Home/RecommendGenres";
 import TrendingNow from "../components/Home/TrendingNow";
 import DiverseNavigation from "../components/Common/DiverseNavigation";
 import DiverseContent from "../components/Home/DiverseContent";
+import CategoricalHero from "../components/Home/CategoricalHero";
 import SportsMainContent from "../components/Sports/SportsMainContent";
 import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
 import ContinueWatching from "../components/Home/ContinueWatching";
@@ -36,6 +37,7 @@ import { useAppSelector } from "../store/hooks";
 import { useScrollPersistence } from "../hooks/useScrollPersistence";
 import { useTranslation } from "react-i18next";
 import SectionSlider from "../components/Slider/SectionSlider";
+import LazySection from "../components/Common/LazySection";
 import { Item } from "../shared/types";
 
 const Home: FC = () => {
@@ -292,6 +294,7 @@ const Home: FC = () => {
         >
 
           <CinematicMoments />
+          <CategoricalHero />
 
           {/* Main Banner Slider for Movies/TV */}
           {currentTab === "movie" && (
@@ -321,47 +324,47 @@ const Home: FC = () => {
           ) : (
             <>
               {/* Top 10 Section - Movie/TV Only */}
-              <SectionErrorBoundary fallback={null}>
+              <LazySection title="Top 10 Globally" placeholderHeight={300}>
                 <Top10Slider films={(currentTab === "movie" ? dataMovie?.Trending : dataTV?.Trending) || []} />
-              </SectionErrorBoundary>
+              </LazySection>
 
-              {/* Sports Ticker (Optional for Movie/TV views) */}
-              <SectionErrorBoundary fallback={null}>
+              {/* Sports Ticker */}
+              <LazySection title="Live Matches" placeholderHeight={100}>
                 <LiveSportsTicker />
-              </SectionErrorBoundary>
+              </LazySection>
 
               {/* Continue Watching Shelf */}
-              <ErrorBoundary fallback={null}>
+              <LazySection title="Pick Up Where You Left Off" placeholderHeight={250}>
                 <ContinueWatching
                   watchHistory={watchHistory}
                   onClearProgress={clearProgress}
                 />
-              </ErrorBoundary>
+              </LazySection>
 
-              {/* AI-Powered Recommendations */}
-              <ErrorBoundary fallback={null}>
+              {/* AI-Powered Recommendations - FIXED: NO DUPLICATE CALLS */}
+              <LazySection title="Recommended For You" placeholderHeight={300}>
                 <SmartRecommendations />
-              </ErrorBoundary>
+              </LazySection>
 
               {/* Must-Watch Vertical Shorts */}
-              <ErrorBoundary fallback={null}>
+              <LazySection title="Quick Clips" placeholderHeight={300}>
                 <VerticalShorts variant="horizontal" />
-              </ErrorBoundary>
+              </LazySection>
 
               {/* Upcoming Content Calendar */}
-              <ErrorBoundary fallback={null}>
+              <LazySection title="Upcoming" placeholderHeight={400}>
                 <UpcomingCalendar contentType={currentTab as any} />
-              </ErrorBoundary>
+              </LazySection>
 
               {/* New Releases & Fast Discovery */}
-              <ErrorBoundary fallback={null}>
+              <LazySection title="Just Released" placeholderHeight={300}>
                 <NewReleases />
-              </ErrorBoundary>
+              </LazySection>
 
               {/* Coming Soon — Future release dates only */}
-              <ErrorBoundary fallback={null}>
+              <LazySection title="Coming Soon" placeholderHeight={300}>
                 <ComingSoonSlider />
-              </ErrorBoundary>
+              </LazySection>
 
               {/* MovieBox-Style Ad Banner - Promotes App Download */}
               <AdBanner position="home" />
@@ -370,46 +373,36 @@ const Home: FC = () => {
               <SmartAdContainer position="inline" minViewTime={10000} />
 
               {/* Premium Advertising Carousel */}
-              <HeroCarousel />
+              <LazySection title="Exclusives" placeholderHeight={200}>
+                <HeroCarousel />
+              </LazySection>
 
               {/* Global World TV — Content from 40+ Nations */}
-              <ErrorBoundary fallback={null}>
+              <LazySection title="World Cinema" placeholderHeight={300}>
                 <GlobalWorldTV />
-              </ErrorBoundary>
+              </LazySection>
 
               {/* Discover World navigation */}
               <DiverseNavigation />
 
-                <SmartRecommendations />
-
                 {/* 🌟 NEW GENRE-SPECIFIC SLIDERS FOR VARIETY */}
-                <SectionSlider
-                  title={t("Sci-Fi & Cyberpunk Hits")}
-                  films={currentTab === "movie" 
-                    ? (dataMovie?.Trending || []).filter((f: Item) => f.genre_ids?.includes(878) || f.genre_ids?.includes(10765))
-                    : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(10765) || f.genre_ids?.includes(878))}
-                />
+                <LazySection title={t("Sci-Fi & Cyberpunk Hits")} placeholderHeight={300}>
+                  <SectionSlider
+                    title={t("Sci-Fi & Cyberpunk Hits")}
+                    films={currentTab === "movie" 
+                      ? (dataMovie?.Trending || []).filter((f: Item) => f.genre_ids?.includes(878) || f.genre_ids?.includes(10765))
+                      : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(10765) || f.genre_ids?.includes(878))}
+                  />
+                </LazySection>
 
-                <SectionSlider
-                   title={t("Anime & Animation")}
-                   films={currentTab === "movie"
-                     ? (dataMovie?.Trending || []).filter((f: Item) => f.genre_ids?.includes(16) || f.genre_ids?.includes(3166))
-                     : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(16) || f.genre_ids?.includes(3166))}
-                />
-
-                <SectionSlider
-                   title={t("True Crime & Mystery")}
-                   films={currentTab === "movie"
-                     ? (dataMovie?.Trending || []).filter((f: Item) => f.genre_ids?.includes(80) || f.genre_ids?.includes(9648))
-                     : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(80) || f.genre_ids?.includes(9648))}
-                />
-
-                <SectionSlider
-                   title={t("History & War Epic")}
-                   films={currentTab === "movie"
-                     ? (dataMovie?.Trending || []).filter((f: Item) => f.genre_ids?.includes(36) || f.genre_ids?.includes(10752))
-                     : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(36) || f.genre_ids?.includes(10768))}
-                />
+                <LazySection title={t("Anime & Animation")} placeholderHeight={300}>
+                  <SectionSlider
+                     title={t("Anime & Animation")}
+                     films={currentTab === "movie"
+                       ? (dataMovie?.Trending || []).filter((f: Item) => f.genre_ids?.includes(16) || f.genre_ids?.includes(3166))
+                       : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(16) || f.genre_ids?.includes(3166))}
+                  />
+                </LazySection>
 
                 <DiverseContent currentTab={currentTab} />
             </>

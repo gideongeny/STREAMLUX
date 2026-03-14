@@ -58,6 +58,14 @@ class OfflineDownloadService {
     }
 
     /**
+     * Bridge to Universal Download logic
+     */
+    async downloadSource(title: string, url: string, mediaType: 'movie' | 'tv' = 'movie', season?: number, episode?: number): Promise<void> {
+        const { downloadService } = require('./download');
+        return downloadService.downloadSource(title, url, mediaType, season, episode);
+    }
+
+    /**
      * Start downloading an item
      */
     private async startDownload(itemId: string): Promise<void> {

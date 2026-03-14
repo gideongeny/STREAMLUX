@@ -34,6 +34,12 @@ export const resizeImage = (
   return `${IMAGE_URL}/${width}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
 };
 
+export const tmdbImageSrc = (path: string, width: string = "original") => {
+  if (!path) return "/fallback-poster.jpg";
+  if (path.startsWith("http")) return path;
+  return `${IMAGE_URL}/${width}${path}`;
+};
+
 // export const embedMovie = (id: number): string =>
 //   `${EMBED_URL}/movie?tmdb=${id}`;
 

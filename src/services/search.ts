@@ -4,23 +4,33 @@ import { searchFZMovies } from "./fzmovies";
 import { searchYouTube } from "./youtubeContent";
 import { safeStorage } from "../utils/safeStorage";
 
-export const getSearchKeyword = async (query: string): Promise<string[]> => {
-  const cacheKey = `search-keywords-${query.toLowerCase()}`;
+export const getSearchSuggestions = async (query: string): Promise<Item[]> => {
+  const cacheKey = `search-suggestions-${query.toLowerCase()}`;
   const cached = safeStorage.get(cacheKey);
   if (cached) return JSON.parse(cached);
 
-  const results = (
-    await axios.get("/search/keyword", {
+  try {
+    const response = await axios.get("/search/multi", {
       params: {
         query,
       },
-    })
-  ).data.results
-    .map((item: any) => item.name)
-    .filter((_: any, index: number) => index < 5);
-  
-  safeStorage.set(cacheKey, JSON.stringify(results));
-  return results;
+    });
+
+    const results = response.data.results
+      .filter((item: any) => item.media_type !== "person")
+      .slice(0, 5);
+    
+    safeStorage.set(cacheKey, JSON.stringify(results));
+    return results;
+  } catch (error) {
+    console.error("Search suggestions error:", error);
+    return [];
+  }
+};
+
+export const getSearchKeyword = async (query: string): Promise<string[]> => {
+  const suggestions = await getSearchSuggestions(query);
+  return suggestions.map(s => s.title || s.name || "");
 };
 
 

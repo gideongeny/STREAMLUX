@@ -3,6 +3,7 @@ import { Item, ItemsPage } from "../../shared/types";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import InfiniteScroll from "react-infinite-scroll-component";
 import FilmItem from "../Common/FilmItem";
+import LazySection from "../Common/LazySection";
 import Skeleton from "../Common/Skeleton";
 
 interface ExploreResultContentProps {
@@ -48,19 +49,45 @@ const ExploreResultContent: FunctionComponent<ExploreResultContentProps> = ({
           loader={<div>Loading...</div>}
           endMessage={<></>}
         >
-          <ul className="grid grid-cols-sm lg:grid-cols-lg gap-x-8 gap-y-10 pt-2 px-2">
-            {filteredItems.map((item) => (
-              <li key={item.id}>
-                <FilmItem item={item} />
-              </li>
-            ))}
+          <div className="space-y-10 pt-2 px-2">
+            {/* 
+                VIRTUALIZATION LOGIC: 
+                We split the results into chunks (e.g., 20 items per chunk).
+                Each chunk is wrapped in a LazySection.
+                This ensures that off-screen items are not kept in memory/DOM.
+            */}
+            {(() => {
+              const chunkSize = 20;
+              const chunks = [];
+              for (let i = 0; i < filteredItems.length; i += chunkSize) {
+                chunks.push(filteredItems.slice(i, i + chunkSize));
+              }
+
+              return chunks.map((chunk, chunkIndex) => (
+                <LazySection 
+                  key={`chunk-${chunkIndex}`} 
+                  placeholderHeight={chunkIndex === 0 ? 0 : 800} // First chunk loads immediately
+                  threshold={0.01}
+                  rootMargin="600px 0px" // Load ahead
+                >
+                  <ul className="grid grid-cols-sm lg:grid-cols-lg gap-x-8 gap-y-10">
+                    {chunk.map((item) => (
+                      <li key={item.id}>
+                        <FilmItem item={item} />
+                      </li>
+                    ))}
+                  </ul>
+                </LazySection>
+              ));
+            })()}
+
             {!data &&
               [...new Array(15)].map((_, index) => (
                 <li key={index}>
                   <Skeleton className="h-0 pb-[160%]" />
                 </li>
               ))}
-          </ul>
+          </div>
         </InfiniteScroll>
       )}
     </>

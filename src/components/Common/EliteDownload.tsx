@@ -35,32 +35,24 @@ const EliteDownload: React.FC<EliteDownloadProps> = ({ downloadInfo, className =
     setIsStarting(true);
     try {
       const sources = downloadInfo.sources || [];
-      // Sources are string[] (URLs)
-      let foundUrl = sources.find((s: string) => s.toLowerCase().indexOf(".mp4") !== -1);
-      if (!foundUrl && sources.length > 0) foundUrl = sources[0];
+      const foundUrl = sources[0] || "";
 
       if (!foundUrl) {
         const queryTerm = encodeURIComponent(downloadInfo.title);
         performOpen("https://www.fzmovies.net/search.php?searchquery=" + queryTerm + "&searchby=title&Search=Search");
-        setIsStarting(false);
         return;
       }
 
-      const fileName = label.replace(/[^a-z0-9\s\-]/gi, "").trim() + ".mp4";
-      const forcedDownloadUrl = getDownloadUrl(foundUrl, fileName);
-
-      const downloadLink = document.createElement("a");
-      downloadLink.href = forcedDownloadUrl;
-      downloadLink.target = "_blank";
-      downloadLink.setAttribute("download", fileName);
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-
-      toast.success("Download started!");
-      if (foundUrl.indexOf("http") === 0) {
-        addDownload(foundUrl, fileName);
-      }
+      toast.info("Preparing Elite capture...");
+      await offlineDownloadService.downloadSource(
+        downloadInfo.title,
+        foundUrl,
+        downloadInfo.mediaType,
+        downloadInfo.seasonId,
+        downloadInfo.episodeId
+      );
+      
+      toast.success("Download link captured!");
     } catch (err) {
       toast.error("Error starting download");
     } finally {

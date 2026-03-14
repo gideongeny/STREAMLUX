@@ -1,5 +1,6 @@
 import { FC, useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface AmbientGlowProps {
     imageUrl?: string;
@@ -20,24 +21,38 @@ const AmbientGlow: FC<AmbientGlowProps> = ({ imageUrl, fallbackColor = "#ff6b35"
         const img = new Image();
         img.src = imageUrl;
         img.onload = () => {
-            // Create a subtle spread using the image itself
             setCurrentGlow(`url(${imageUrl})`);
             setIsLoaded(true);
         };
     }, [imageUrl, fallbackColor]);
 
-    if (!Capacitor.isNativePlatform() && window.innerWidth < 768) return null; // Save performance on mobile web
+    if (!Capacitor.isNativePlatform() && window.innerWidth < 768) return null;
 
     return (
-        <div
-            className={`tw-ambient-glow ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-            style={{
-                backgroundImage: currentGlow || 'none',
-                backgroundPosition: 'center 20%',
-                backgroundSize: '150% 150%',
-                backgroundRepeat: 'no-repeat',
-            }}
-        />
+        <AnimatePresence>
+            {isLoaded && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ 
+                        opacity: [0.4, 0.6, 0.4],
+                        scale: [1, 1.05, 1],
+                    }}
+                    transition={{ 
+                        duration: 8, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                    }}
+                    className="tw-ambient-glow"
+                    style={{
+                        backgroundImage: currentGlow || 'none',
+                        backgroundPosition: 'center 20%',
+                        backgroundSize: '150% 150%',
+                        backgroundRepeat: 'no-repeat',
+                        transition: 'background-image 1s ease-in-out'
+                    }}
+                />
+            )}
+        </AnimatePresence>
     );
 };
 

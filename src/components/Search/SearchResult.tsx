@@ -5,6 +5,7 @@ import { LazyLoadImage } from "react-lazy-load-image-component";
 import { getSearchResult } from "../../services/search";
 import { ItemsPage } from "../../shared/types";
 import FilmItem from "../Common/FilmItem";
+import LazySection from "../Common/LazySection";
 import Skeleton from "../Common/Skeleton";
 import Pagination from "./Pagination";
 
@@ -50,20 +51,22 @@ const SearchResult: FunctionComponent<SearchResultProps> = ({
           <p className="text-white text-3xl mt-5">There is no such films</p>
         </div>
       )}
-      <ul className="grid grid-cols-sm md:grid-cols-lg gap-x-8 gap-y-10">
-        {data &&
-          data.results.map((item) => (
-            <li key={item.id}>
-              <FilmItem item={item} />
-            </li>
-          ))}
-        {!data &&
-          [...new Array(15)].map((_, index) => (
-            <li key={index}>
-              <Skeleton className="h-0 pb-[160%]" />
-            </li>
-          ))}
-      </ul>
+      <LazySection placeholderHeight={400} threshold={0.01}>
+        <ul className="grid grid-cols-sm md:grid-cols-lg gap-x-8 gap-y-10">
+          {data &&
+            data.results.map((item) => (
+              <li key={item.id}>
+                <FilmItem item={item} />
+              </li>
+            ))}
+          {!data &&
+            [...new Array(15)].map((_, index) => (
+              <li key={index}>
+                <Skeleton className="h-0 pb-[160%]" />
+              </li>
+            ))}
+        </ul>
+      </LazySection>
       {data && (
         <Pagination
           maxPage={data.total_pages}

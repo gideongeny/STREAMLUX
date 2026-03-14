@@ -38,6 +38,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.searchFzMovies = searchFzMovies;
 exports.searchNetNaija = searchNetNaija;
+exports.search123Movies = search123Movies;
 const axios_1 = __importDefault(require("axios"));
 const cheerio = __importStar(require("cheerio"));
 const FZMOVIES_BASE = 'https://www.fzmovies.ng';
@@ -90,6 +91,36 @@ async function searchNetNaija(query) {
                 results.push({
                     title,
                     url: href.startsWith('http') ? href : `${NETNAIJA_BASE}${href}`
+                });
+            }
+        });
+        return results;
+    }
+    catch (e) {
+        return [];
+    }
+}
+async function search123Movies(query) {
+    try {
+        const BASE_URL = 'https://123movies.hk';
+        const searchUrl = `${BASE_URL}/search/${encodeURIComponent(query).replace(/%20/g, '-')}`;
+        const { data } = await axios_1.default.get(searchUrl, {
+            headers: getHeaders(BASE_URL),
+            timeout: 10000
+        });
+        const $ = cheerio.load(data);
+        const results = [];
+        $('.ml-item').each((_, element) => {
+            const link = $(element).find('a').first();
+            const title = $(element).find('.mli-info h2').text().trim() || link.attr('title') || "";
+            const href = link.attr('href');
+            const quality = $(element).find('.mli-quality').text().trim();
+            if (href && title) {
+                results.push({
+                    title,
+                    url: href.startsWith('http') ? href : href.startsWith('/') ? `${BASE_URL}${href}` : `${BASE_URL}/${href}`,
+                    quality: quality || 'HD',
+                    source: '123Movies'
                 });
             }
         });

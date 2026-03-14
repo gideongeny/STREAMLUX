@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper";
 import { BannerInfo, Item } from "../../shared/types";
@@ -6,7 +6,7 @@ import { LazyLoadImage } from "react-lazy-load-image-component";
 import { resizeImage } from "../../shared/utils";
 import { AiFillStar } from "react-icons/ai";
 import { Link } from "react-router-dom";
-import { BsFillPlayFill, BsVolumeMuteFill, BsVolumeUpFill } from "react-icons/bs";
+import { BsFillPlayFill, BsVolumeMuteFill, BsVolumeUpFill, BsDownload } from "react-icons/bs";
 import { motion, AnimatePresence } from "framer-motion";
 import Skeleton from "../Common/Skeleton";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
@@ -27,6 +27,18 @@ const BannerSlider: FC<BannerSliderProps> = ({
   const { isMobile } = useCurrentViewportView();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
+
+  // Elite Optimization: Preload backdrops for next slides
+  useEffect(() => {
+    if (!films || films.length === 0) return;
+    
+    // Preload next 2 slides for instant switching
+    const nextIndices = [(activeIndex + 1) % films.length, (activeIndex + 2) % films.length];
+    nextIndices.forEach(idx => {
+      const img = new Image();
+      img.src = resizeImage(films[idx].backdrop_path, "w1280");
+    });
+  }, [activeIndex, films]);
 
   return (
     <div className="mt-6 relative w-full h-0 md:pb-[35%] pb-[56.25%] tw-banner-slider bg-dark-lighten rounded-lg overflow-hidden max-h-[85vh]">
@@ -147,40 +159,33 @@ const BannerSlider: FC<BannerSliderProps> = ({
                               </h2>
                             </div>
                           ) : (
-                            <h2 className="md:text-5xl text-xl  text-primary font-black tracking-wide md:tw-multiline-ellipsis-2 tw-multiline-ellipsis-3 drop-shadow-lg">
-                              {film.title || film.name}
-                            </h2>
+                            <>
+                              <h2 className="md:text-5xl text-xl text-white font-black tracking-wide md:tw-multiline-ellipsis-2 tw-multiline-ellipsis-3 drop-shadow-lg mb-2">
+                                {film.title || film.name}
+                              </h2>
+                              {/* MovieBox Style Meta info overlay */}
+                              <div className="flex items-center gap-3 text-gray-300 font-bold text-sm mb-4">
+                                <img src="/icons/tmdb.svg" alt="" className="w-5 h-5 grayscale opacity-70" />
+                                <span>{film.release_date?.split('-')[0] || "2026"}</span>
+                                <span className="w-1 h-1 rounded-full bg-gray-600" />
+                                <span className="text-xs uppercase tracking-widest">{dataDetail?.[index]?.genre?.[0]?.name || "Action"}</span>
+                                
+                                <button className="ml-4 w-10 h-10 rounded-full bg-primary/20 backdrop-blur-xl flex items-center justify-center text-primary border border-primary/30 hover:bg-primary hover:text-white transition-all duration-300 shadow-lg shadow-primary/20">
+                                   <BsDownload size={20} />
+                                </button>
+                              </div>
+                            </>
                           )}
 
                           <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3, duration: 0.6 }}
+                            className="hidden md:block" // Keep description on desktop only for clean mobile look
                           >
-                            <p className="text-white font-semibold md:text-2xl text-base mt-6 drop-shadow-md">
-                              {dataDetail?.[index].translation[0]}
+                            <p className="text-white font-semibold text-lg mt-2 drop-shadow-md tw-multiline-ellipsis-2">
+                              {film.overview}
                             </p>
-                            <p className="mt-1 text-primary/90 font-bold uppercase tracking-widest text-xs md:text-sm">
-                              {film.release_date && film.release_date}
-                            </p>
-                            {!isMobile && (
-                              <>
-                                <div className="flex gap-2 flex-wrap mt-5">
-                                  {dataDetail?.[index].genre.map((genre) => (
-                                    <motion.div
-                                      whileHover={{ scale: 1.1, backgroundColor: "rgba(255,107,53,0.3)" }}
-                                      className="px-3 py-1 border border-primary/40 rounded-full bg-primary/10 backdrop-blur-sm text-xs font-bold text-white uppercase tracking-wider cursor-default"
-                                      key={genre.id}
-                                    >
-                                      {genre.name}
-                                    </motion.div>
-                                  ))}
-                                </div>
-                                <p className=" mt-3 text-base tw-multiline-ellipsis-3 text-gray-200 drop-shadow-md bg-black/20 p-2 rounded backdrop-blur-xs">
-                                  {film.overview}
-                                </p>
-                              </>
-                            )}
                           </motion.div>
                         </motion.div>
                       </AnimatePresence>

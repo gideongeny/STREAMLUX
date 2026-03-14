@@ -19,6 +19,9 @@ import { backgroundAudioService } from '../../services/backgroundAudio';
 import { setFullscreen } from '../../store/slice/uiSlice';
 import { useTranslation } from 'react-i18next';
 import LiveBuzz from './LiveBuzz';
+import { BsDownload } from 'react-icons/bs';
+import { useSearchParams } from 'react-router-dom';
+import { downloadService } from '../../services/download';
 
 export interface VideoSource {
     name: string;
@@ -87,6 +90,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     const dispatch = useAppDispatch();
     const { t } = useTranslation();
     const { isCinemaMode } = useAppSelector((state) => state.ui);
+    const [searchParams] = useSearchParams();
     const normalizedSources: VideoSource[] = sources.map((s) =>
         typeof s === 'string' ? { name: 'Default', url: s } : s
     );
@@ -119,7 +123,10 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     const [showVisionCast, setShowVisionCast] = useState(false);
     const [showMagicMenu, setShowMagicMenu] = useState(false); // Magic Menu state
     const [showReactions, setShowReactions] = useState(false); // Reactions (LiveBuzz) state
+    const [autoplayBlocked, setAutoplayBlocked] = useState(false); // Policy Handler
     const adTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const bufferCheckTimer = useRef<NodeJS.Timeout | null>(null);
+    const retryCount = useRef(0);
 
     // Gesture / Indicator state
     const [indicator, setIndicator] = useState<{ type: 'volume' | 'brightness' | 'seek', value: string | number, icon: any } | null>(null);
@@ -338,8 +345,34 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     
     const handleVideoLoad = () => { 
         setIsLoading(false); 
+        setAutoplayBlocked(false);
+        retryCount.current = 0;
+        if (bufferCheckTimer.current) clearTimeout(bufferCheckTimer.current);
+
         if (currentSource?.name) resolverService.reportPlaybackSuccess(currentSource.name);
-        if (videoRef.current) videoRef.current.playbackRate = playbackRate; 
+        if (videoRef.current) {
+            videoRef.current.playbackRate = playbackRate; 
+            // Attempt autoplay and catch block
+            videoRef.current.play().catch((err) => {
+                if (err.name === "NotAllowedError" || err.name === "AbortError") {
+                    setAutoplayBlocked(true);
+                }
+            });
+        }
+    };
+
+    const handleBuffering = () => {
+        setIsLoading(true);
+        if (bufferCheckTimer.current) clearTimeout(bufferCheckTimer.current);
+        
+        // If buffering for more than 7 seconds, try another source
+        bufferCheckTimer.current = setTimeout(() => {
+            if (isLoading && retryCount.current < 3) {
+                toast.warning(t("Optimizing connection for slow internet..."), { position: "top-center" });
+                retryCount.current++;
+                setCurrentIndex((prev) => (prev + 1) % normalizedSources.length);
+            }
+        }, 7000);
     };
     const handleSpeedChange = (rate: number) => { setPlaybackRate(rate); if (videoRef.current) videoRef.current.playbackRate = rate; setShowSpeedMenu(false); };
 
@@ -365,6 +398,19 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         if (cleanIdx !== -1 && cleanIdx !== currentIndex) { setCurrentIndex(cleanIdx); }
         else { setCurrentIndex((prev) => (prev + 1) % normalizedSources.length); }
         setShowAdSkip(false);
+    };
+
+    const handleDownloadCurrentSource = () => {
+        if (!currentSource) return;
+        hapticImpact();
+        toast.info(t('Starting Elite Download...'), { position: "top-center" });
+        downloadService.downloadSource(
+            title, 
+            currentSource.url, 
+            mediaType, 
+            searchParams.get('s') ? Number(searchParams.get('s')) : undefined,
+            searchParams.get('e') ? Number(searchParams.get('e')) : undefined
+        );
     };
 
     const showIndicator = (type: 'volume' | 'brightness' | 'seek', value: string | number, icon: any) => {
@@ -606,14 +652,24 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                         ref={videoRef}
                         className="w-full h-full object-contain"
                         controls
-                        autoPlay={getSetting('autoplay_enabled', true)}
+                        autoPlay={true} // Hard-coded for "Elite" experience
                         playsInline
                         webkit-playsinline="true"
-                        muted={false} // Ensure it's not muted so audio works with autoplay if browser allows
+                        muted={false} 
                         poster={poster}
                         onError={handleVideoError}
-                        onLoadedData={handleVideoLoad}
-                        onCanPlay={handleVideoLoad}
+                        onLoadedData={(e) => {
+                            handleVideoLoad();
+                            // Aggressive Autoplay attempt
+                            try { e.currentTarget.play().catch(() => {}); } catch {}
+                        }}
+                        onCanPlay={(e) => {
+                            handleVideoLoad();
+                            try { e.currentTarget.play().catch(() => {}); } catch {}
+                        }}
+                        onWaiting={handleBuffering}
+                        onStalled={handleBuffering}
+                        onPlaying={() => { setIsLoading(false); setAutoplayBlocked(false); if (bufferCheckTimer.current) clearTimeout(bufferCheckTimer.current); }}
                         src={currentSource.url}
                         crossOrigin="anonymous"
                         onClick={handleDoubleTap}
@@ -625,6 +681,47 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                             <track key={track.language} kind="subtitles" src={track.src} srcLang={track.language} label={track.label} default={track.language === 'en'} />
                         ))}
                     </video>
+
+                    {/* Autoplay Policy Fallback Overlay */}
+                    <AnimatePresence>
+                        {autoplayBlocked && (
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-md flex items-center justify-center cursor-pointer group/overlay"
+                                onClick={() => {
+                                    videoRef.current?.play();
+                                    setAutoplayBlocked(false);
+                                    hapticImpact();
+                                }}
+                            >
+                                <div className="text-center">
+                                    <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={handleDownloadCurrentSource}
+                                        className="p-2.5 rounded-full hover:bg-white/10 transition-colors group relative"
+                                        title={t('Download Offline')}
+                                    >
+                                        <BsDownload size={22} className="text-white group-hover:text-primary transition-colors" />
+                                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse md:block hidden" />
+                                    </motion.button>
+
+                                    <div className="w-px h-6 bg-white/10 mx-1 md:block hidden" />
+
+                                    <motion.div 
+                                        animate={{ scale: [1, 1.1, 1] }}
+                                        transition={{ repeat: Infinity, duration: 2 }}
+                                        className="w-20 h-20 rounded-full bg-primary/20 border border-primary flex items-center justify-center mb-4 mx-auto group-hover/overlay:bg-primary group-hover/overlay:text-black transition-all"
+                                    >
+                                        <RiSkipForwardFill size={40} className="ml-1" />
+                                    </motion.div>
+                                    <p className="text-white font-black uppercase tracking-[0.2em] text-sm">{t('Tap to Start Cinema')}</p>
+                                    <p className="text-gray-400 text-[10px] mt-2 tracking-widest uppercase">{title}</p>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     <div
                         className="absolute bottom-12 right-2 z-30 transition-opacity duration-500 flex gap-1.5 flex-wrap justify-end"

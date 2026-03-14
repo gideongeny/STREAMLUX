@@ -141,11 +141,10 @@ export class DownloadService {
     onProgress?: (progress: DownloadProgress) => void
   ): Promise<void> {
     const downloadId = this.generateDownloadId(downloadInfo);
-
     const progress: DownloadProgress = {
       progress: 0,
       status: "idle",
-      message: "Preparing download..."
+      message: "Preparing Elite download..."
     };
 
     this.downloads.set(downloadId, progress);
@@ -153,102 +152,74 @@ export class DownloadService {
 
     try {
       progress.status = "downloading";
-      progress.message = "Searching for high-quality sources...";
+      progress.message = "Analyzing stream for offline capture...";
       progress.progress = 20;
       onProgress?.(progress);
 
-      // STEP 1: Check Scraped Data (Netnaija, Fzmovies, etc.)
+      // STEP 1: Scraper Link Check (Highest Reliability if available)
       const { hasDownloads, enrichWithDownloads } = require('./hybridContent');
-      const title = downloadInfo.title;
+      if (hasDownloads(downloadInfo.title)) {
+        const hybridItems = enrichWithDownloads([{ title: downloadInfo.title, media_type: downloadInfo.mediaType }]);
+        if (hybridItems[0]?.downloads?.length > 0) {
+          progress.message = "Found verified direct link!";
+          progress.progress = 100;
+          progress.status = "completed";
+          onProgress?.(progress);
+          window.open(hybridItems[0].downloads[0].url, '_blank');
+          return;
+        }
+      }
 
-      if (hasDownloads(title)) {
-        progress.message = "Found direct scraper links!";
-        progress.progress = 40;
+      // STEP 2: Deep Proxy Extraction (For VidSrc and blocked providers)
+      const targetUrl = downloadInfo.sources[0];
+      const isBlockedProvider = targetUrl.includes('vidsrc') || targetUrl.includes('vidlink') || targetUrl.includes('embed.su');
+
+      if (isBlockedProvider) {
+        progress.message = "Defeating provider blocks (Deep Proxy)...";
+        progress.progress = 50;
         onProgress?.(progress);
 
-        const hybridItems = enrichWithDownloads([{
-          title,
-          media_type: downloadInfo.mediaType,
-          id: 0 // Placeholder
-        }]);
-
-        if (hybridItems[0]?.downloads && hybridItems[0].downloads.length > 0) {
-          const directUrl = hybridItems[0].downloads[0].url;
-          progress.message = "Opening direct download...";
-          progress.progress = 100;
-          progress.status = "completed";
-          onProgress?.(progress);
-
-          window.open(directUrl, '_blank');
-          return;
-        }
+        const backendBase = getBackendBase();
+        // The Vision API performs a server-side capture + piping to bypass CORS and referer checks
+        const visionDownloadUrl = `${backendBase}/api/vision/download?url=${encodeURIComponent(targetUrl)}&filename=${encodeURIComponent(this.generateFilename(downloadInfo))}`;
+        
+        progress.message = "Stream captured! Syncing to device...";
+        progress.progress = 100;
+        progress.status = "completed";
+        onProgress?.(progress);
+        
+        window.open(visionDownloadUrl, '_blank');
+        return;
       }
 
-      // STEP 2: Logic for generic sources (VidSrc Proxy)
-      progress.message = "Resolving streaming backup...";
-      progress.progress = 60;
-      onProgress?.(progress);
-
-      const tmdbIdMatch = downloadInfo.sources[0].match(/\/(\d+)(?:\/|\?|$)/);
-      const tmdbId = tmdbIdMatch ? parseInt(tmdbIdMatch[1]) : 0;
-      let targetUrl = downloadInfo.sources[0];
-
-      if (tmdbId > 0) {
-        try {
-          const backendBase = getBackendBase();
-
-          // Vision Download: sniffs AND pipes in one shot inside the Puppeteer
-          // session. This is the only reliable approach that bypasses CDN 403s.
-          progress.message = "Vision AI: Connecting to stream...";
-          progress.progress = 70;
-          onProgress?.(progress);
-
-          const visionDownloadUrl = `${backendBase}/api/vision/download?url=${encodeURIComponent(targetUrl)}&filename=${encodeURIComponent(this.generateFilename(downloadInfo))}`;
-
-          progress.message = "Stream captured! Starting download...";
-          progress.progress = 100;
-          progress.status = "completed";
-          onProgress?.(progress);
-
-          window.open(visionDownloadUrl, '_blank');
-          return;
-
-          // Fallback to basic resolution
-          let resolveUrl = `${backendBase}/api/resolve?type=${downloadInfo.mediaType}&id=${tmdbId}`;
-          if (downloadInfo.mediaType === 'tv' && downloadInfo.seasonId && downloadInfo.episodeId) {
-            resolveUrl += `&s=${downloadInfo.seasonId}&e=${downloadInfo.episodeId}`;
-          }
-
-          const response = await fetch(resolveUrl);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.directUrl) {
-              targetUrl = data.directUrl;
-            }
-          }
-        } catch (e) {
-          console.warn("Backend resolution fallback failed:", e);
-        }
-      }
-
-      // STEP 3: Fallback to Smart Download Page
-      progress.message = "Opening Smart Download Page...";
+      // STEP 3: Fallback Logic
+      progress.message = "Launching Smart Download Portal...";
       progress.progress = 100;
       progress.status = "completed";
       onProgress?.(progress);
-
-      const downloadPage = this.createSmartDownloadPage(downloadInfo, tmdbId);
-      const newTab = window.open(downloadPage, '_blank');
-
-      if (!newTab) {
-        throw new Error("Popup blocked. Please allow popups to open the download player.");
-      }
+      
+      const downloadPage = this.createSmartDownloadPage(downloadInfo, 0);
+      window.open(downloadPage, '_blank');
 
     } catch (error) {
       progress.status = "error";
       progress.message = `Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
       onProgress?.(progress);
     }
+  }
+
+  /**
+   * Universal downloader for a specific URL found in the player
+   */
+  async downloadSource(title: string, url: string, mediaType: 'movie' | 'tv' = 'movie', season?: number, episode?: number): Promise<void> {
+    const info: DownloadInfo = {
+        title,
+        mediaType,
+        sources: [url],
+        seasonId: season,
+        episodeId: episode
+    };
+    return this.downloadMovie(info);
   }
 
   private generateFilename(downloadInfo: DownloadInfo): string {

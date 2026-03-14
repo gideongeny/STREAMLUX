@@ -110,6 +110,7 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
       className="block w-full"
     >
       <motion.div
+        whileTap={{ scale: 0.95 }}
         style={{
           rotateX: !isNative && isFullyHovered ? rotateX : 0,
           rotateY: !isNative && isFullyHovered ? rotateY : 0,
@@ -168,12 +169,12 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
             alt={item.title || item.name}
             src={
               item.media_type === "person"
-                ? resizeImage(item.profile_path || "", "w342")
+                ? resizeImage(item.profile_path || "", "w185")
                 : item.poster_path
-                  ? resizeImage(item.poster_path, "w342")
+                  ? resizeImage(item.poster_path, "w185")
                   : item.backdrop_path
-                    ? resizeImage(item.backdrop_path, "w342")
-                    : resizeImage((item as any).thumb || "", "w342")
+                    ? resizeImage(item.backdrop_path, "w185")
+                    : resizeImage((item as any).thumb || "", "w185")
             }
             className={`object-cover w-full ${item.media_type === 'sports_video' ? 'aspect-video' : 'aspect-[2/3]'}`}
             loading="lazy"

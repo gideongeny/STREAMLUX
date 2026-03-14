@@ -246,13 +246,15 @@ exports.gateway = functions
                 res.status(400).json({ error: 'Missing title or id for scraper' });
                 return;
             }
-            const [fz, net] = await Promise.allSettled([
+            const [fz, net, movie123] = await Promise.allSettled([
                 (0, movieScrapers_1.searchFzMovies)(query),
-                (0, movieScrapers_1.searchNetNaija)(query)
+                (0, movieScrapers_1.searchNetNaija)(query),
+                (0, movieScrapers_1.search123Movies)(query)
             ]);
             res.status(200).json({
                 fzmovies: fz.status === 'fulfilled' ? fz.value : [],
                 netnaija: net.status === 'fulfilled' ? net.value : [],
+                movies123: movie123.status === 'fulfilled' ? movie123.value : [],
                 success: true
             });
             return;

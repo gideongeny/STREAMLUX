@@ -1,100 +1,118 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { FC, ReactNode, useState, useEffect, useRef } from 'react';
+import { useInView } from 'react-intersection-observer';
 import { Item } from '../../shared/types';
 import SectionSlider from '../Slider/SectionSlider';
 import Skeleton from './Skeleton';
 
 interface LazySectionProps {
-    fetcher: () => Promise<Item[]>;
-    title: string;
-    isLarge?: boolean;
-    className?: string;
-    forceLoad?: boolean; // For initial sections that should load immediately
+  children?: ReactNode;
+  fetcher?: () => Promise<Item[]>;
+  title?: string;
+  placeholderHeight?: string | number;
+  threshold?: number;
+  rootMargin?: string;
+  isLarge?: boolean;
+  className?: string;
+  forceLoad?: boolean;
 }
 
-const LazySection: React.FC<LazySectionProps> = ({
-    fetcher,
-    title,
-    isLarge,
-    className,
-    forceLoad = false
+/**
+ * LazySection
+ * A high-performance wrapper that can either:
+ * 1. Render children only when visible (Virtualization mode)
+ * 2. Fetch data and render a SectionSlider only when visible (Fetcher mode)
+ */
+const LazySection: FC<LazySectionProps> = ({ 
+  children, 
+  fetcher,
+  title = "",
+  placeholderHeight = 280, 
+  threshold = 0.01,
+  rootMargin = '400px 0px',
+  isLarge = false,
+  className = "",
+  forceLoad = false
 }) => {
-    const [data, setData] = useState<Item[]>([]);
-    const [isLoading, setIsLoading] = useState(forceLoad);
-    const [hasLoaded, setHasLoaded] = useState(forceLoad);
-    const containerRef = useRef<HTMLDivElement>(null);
+  const [data, setData] = useState<Item[]>([]);
+  const [isLoading, setIsLoading] = useState(forceLoad);
+  const [hasLoaded, setHasLoaded] = useState(forceLoad);
 
-    useEffect(() => {
-        // If we're already loading or loaded, do nothing (unless forced initially)
-        if (hasLoaded && !isLoading) return;
+  const { ref, inView } = useInView({
+    triggerOnce: true,
+    threshold,
+    rootMargin,
+  });
 
-        const loadData = async () => {
-            try {
-                setIsLoading(true);
-                const result = await fetcher();
-                setData(Array.isArray(result) ? result : []);
-            } catch (error) {
-                console.warn(`Failed to load section: ${title}`, error);
-                setData([]);
-            } finally {
-                setIsLoading(false);
-                setHasLoaded(true);
-            }
-        };
+  useEffect(() => {
+    if (!fetcher || (hasLoaded && !isLoading)) return;
 
-        if (forceLoad) {
-            loadData();
-            return;
-        }
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const result = await fetcher();
+        setData(Array.isArray(result) ? result : []);
+      } catch (error) {
+        console.warn(`Failed to load section: ${title}`, error);
+        setData([]);
+      } finally {
+        setIsLoading(false);
+        setHasLoaded(true);
+      }
+    };
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting) {
-                    loadData();
-                    observer.disconnect();
-                }
-            },
-            { rootMargin: '400px' } // Start loading 400px before it enters viewport
-        );
+    if (forceLoad || inView) {
+      loadData();
+    }
+  }, [fetcher, inView, forceLoad, hasLoaded, isLoading, title]);
 
-        if (containerRef.current) {
-            observer.observe(containerRef.current);
-        }
+  // Loading state for fetcher mode
+  if (fetcher && isLoading) {
+    return (
+      <div className={`mb-12 ${className}`}>
+        <div className="flex items-center justify-between mb-4">
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <div className="flex gap-4 overflow-hidden">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className={`h-[${isLarge ? '350px' : '250px'}] w-[170px] shrink-0 rounded-xl`} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-        return () => observer.disconnect();
-    }, [fetcher, title, forceLoad]);
-
-    // Initial state (before intersection)
-    if (!hasLoaded && !isLoading) {
-        return (
-            <div ref={containerRef} className={`mb-12 min-h-[250px] ${className || ''}`}>
-                {/* Invisible trigger area */}
+  // Children mode (Virtualization)
+  if (children) {
+    return (
+        <div ref={ref} className={className} style={{ minHeight: inView ? 'auto' : placeholderHeight }}>
+          {inView ? children : (
+            <div className="w-full mb-12 animate-pulse" style={{ height: placeholderHeight }}>
+              {title && <div className="h-8 w-48 bg-white/10 rounded-md mb-4" />}
+              <div className="flex gap-4 overflow-hidden">
+                 {[...Array(6)].map((_, i) => (
+                    <div key={i} className="h-[250px] w-[170px] bg-white/5 rounded-xl shrink-0" />
+                 ))}
+              </div>
             </div>
-        );
-    }
+          )}
+        </div>
+      );
+  }
 
-    // Loading state
-    if (isLoading) {
-        return (
-            <div className={`mb-12 ${className || ''}`}>
-                <div className="flex items-center justify-between mb-4">
-                    <Skeleton className="h-8 w-48" />
-                </div>
-                <div className="flex gap-4 overflow-hidden">
-                    {[...Array(6)].map((_, i) => (
-                        <Skeleton key={i} className={`h-[${isLarge ? '350px' : '250px'}] w-[170px] shrink-0 rounded-xl`} />
-                    ))}
-                </div>
-            </div>
-        );
-    }
+  // Fetcher mode (Data loading)
+  if (fetcher) {
+    return (
+        <div ref={ref} className={className}>
+            {hasLoaded && data.length > 0 ? (
+                <SectionSlider films={data} title={title} />
+            ) : (
+                <div style={{ height: placeholderHeight }} />
+            )}
+        </div>
+    );
+  }
 
-    // Loaded but empty
-    if (data.length === 0) {
-        return null;
-    }
-
-    // Loaded with data
-    return <SectionSlider films={data} title={title} />;
+  return null;
 };
 
 export default LazySection;
