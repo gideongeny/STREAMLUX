@@ -10,6 +10,7 @@ import { BsFillPlayFill, BsVolumeMuteFill, BsVolumeUpFill, BsDownload } from "re
 import { motion, AnimatePresence } from "framer-motion";
 import Skeleton from "../Common/Skeleton";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
+import { downloadService } from "../../services/download";
 
 interface BannerSliderProps {
   films: Item[] | undefined;
@@ -170,7 +171,15 @@ const BannerSlider: FC<BannerSliderProps> = ({
                                 <span className="w-1 h-1 rounded-full bg-gray-600" />
                                 <span className="text-xs uppercase tracking-widest">{dataDetail?.[index]?.genre?.[0]?.name || "Action"}</span>
                                 
-                                <button className="ml-4 w-10 h-10 rounded-full bg-primary/20 backdrop-blur-xl flex items-center justify-center text-primary border border-primary/30 hover:bg-primary hover:text-white transition-all duration-300 shadow-lg shadow-primary/20">
+                                <button 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const info = downloadService.generateDownloadInfo(film as any, film.media_type as "movie" | "tv");
+                                    downloadService.smartRedirect(info);
+                                  }}
+                                  className="ml-4 w-10 h-10 rounded-full bg-primary/20 backdrop-blur-xl flex items-center justify-center text-primary border border-primary/30 hover:bg-primary hover:text-white transition-all duration-300 shadow-lg shadow-primary/20"
+                                >
                                    <BsDownload size={20} />
                                 </button>
                               </div>

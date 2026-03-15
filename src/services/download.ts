@@ -137,6 +137,26 @@ export class DownloadService {
     }
   }
 
+  /**
+   * Centralized Smart Redirector
+   * Navigates to the high-reliability dl.vidsrc.vip portal
+   */
+  smartRedirect(info: DownloadInfo): void {
+    const tmdbId = info.id;
+    let dlUrl = "";
+
+    if (info.mediaType === 'movie') {
+      dlUrl = `https://dl.vidsrc.vip/movie/${tmdbId}`;
+    } else {
+      const season = info.seasonId || 1;
+      const episode = info.episodeId || 1;
+      dlUrl = `https://dl.vidsrc.vip/tv/${tmdbId}/${season}/${episode}`;
+    }
+
+    console.log('[SmartRedirect] Target URL:', dlUrl);
+    window.open(dlUrl, '_blank', 'noopener,noreferrer');
+  }
+
   // Main download method - Robust "Scraper First" approach
   async downloadMovie(
     downloadInfo: DownloadInfo,

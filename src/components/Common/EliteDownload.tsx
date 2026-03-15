@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AiOutlineDownload } from 'react-icons/ai';
 import { toast } from 'react-toastify';
-import { DownloadInfo } from '../../services/download';
+import { DownloadInfo, downloadService } from '../../services/download';
 import { useDownloadManager } from '../../contexts/DownloadManagerContext';
 import { offlineDownloadService } from '../../services/offlineDownload';
 import { Capacitor } from '@capacitor/core';
@@ -35,28 +35,10 @@ const EliteDownload: React.FC<EliteDownloadProps> = ({ downloadInfo, className =
     setIsStarting(true);
     try {
       toast.info("Opening Download Page...");
-      
-      // Use ID from downloadInfo for reliability
-      const tmdbId = downloadInfo.id;
-      
-      let dlUrl = "";
-      if (downloadInfo.mediaType === 'movie') {
-          dlUrl = `https://dl.vidsrc.vip/movie/${tmdbId}`;
-      } else {
-          dlUrl = `https://dl.vidsrc.vip/tv/${tmdbId}/${downloadInfo.seasonId || 1}/${downloadInfo.episodeId || 1}`;
-      }
-
-      // Strict Parameter Check & Console Log
-      console.log('Target URL:', dlUrl);
-
-      // UI Feedback Delay
-      setTimeout(() => {
-        window.open(dlUrl, '_blank', 'noopener,noreferrer');
-        setIsStarting(false);
-      }, 2000);
-
+      downloadService.smartRedirect(downloadInfo);
+      setTimeout(() => setIsStarting(false), 2000);
     } catch (err) {
-      toast.error("Error opening download portal");
+      toast.error("Failed to open portal");
       setIsStarting(false);
     }
   };
