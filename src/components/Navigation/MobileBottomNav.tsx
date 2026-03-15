@@ -31,10 +31,10 @@ const MobileBottomNav: FC = () => {
         </div>
       ), 
       label: "", 
-      path: "/hub",
+      path: "/download",
       special: true 
     },
-    { icon: <MdFolderSpecial size={26} />, label: t("Downloads"), path: "/download" },
+    { icon: <MdFolderSpecial size={26} />, label: t("Library"), path: "/library" },
     { icon: <BiUserCircle size={26} />, label: t("Me"), path: "/profile" },
   ];
 
