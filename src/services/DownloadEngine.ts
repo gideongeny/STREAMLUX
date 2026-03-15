@@ -46,8 +46,10 @@ export class DownloadEngine {
      */
     async extractFromIframe(iframeUrl: string): Promise<ExtractedStream> {
         try {
+            console.log('[DownloadEngine] Fetching from:', iframeUrl);
             const response = await this.fetchWithProxy(iframeUrl);
             const html = await response.text();
+            console.log('[DownloadEngine] HTML Length:', html.length);
 
             // 1. Try to parse the DOM and look for <video> or <source> tags
             const parser = new DOMParser();
@@ -85,6 +87,17 @@ export class DownloadEngine {
                 if (mp4Url) return { url: mp4Url, type: 'mp4' };
             }
 
+            // 3. Fallback: Search for JSON strings that might contain stream URLs (common in providers)
+            const jsonUrlRegex = /["'](https?:\/\/[^"']+\.(?:m3u8|mp4)[^"']*)["']/gi;
+            const jsonMatches = html.match(jsonUrlRegex);
+            if (jsonMatches && jsonMatches.length > 0) {
+                const cleanUrl = jsonMatches[0].replace(/["']/g, '');
+                const type = cleanUrl.includes('.m3u8') ? 'hls' : 'mp4';
+                return { url: cleanUrl, type };
+            }
+
+            // For debugging: log the first 1000 chars of HTML if extraction fails
+            console.warn('[DownloadEngine] Extraction failed. HTML Preview:', html.substring(0, 1000));
             throw new Error('No valid .m3u8 or .mp4 found in iframe HTML');
         } catch (error) {
             console.error('[DownloadEngine] Extraction failed for:', iframeUrl, error);
@@ -129,6 +142,7 @@ export class DownloadEngine {
     ): Promise<Uint8Array> {
         const response = await this.fetchWithProxy(url, { signal });
         if (!response.ok) {
+            console.error(`[DownloadEngine] MP4 fetch failed! Status: ${response.status}`, url);
             throw new Error(`Failed to fetch MP4: ${response.statusText}`);
         }
 
@@ -212,6 +226,7 @@ export class DownloadEngine {
             const segUrl = segmentUrls[i];
             const segResp = await this.fetchWithProxy(segUrl, { signal });
             if (!segResp.ok) {
+                console.error(`[DownloadEngine] HLS segment ${i} fetch failed! Status: ${segResp.status}`, segUrl);
                 throw new Error(`Failed to fetch segment ${i}: ${segResp.statusText}`);
             }
 
