@@ -219,6 +219,9 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     title={title}
                     id={detail?.id}
                     mediaType={media_type}
+                    releaseYear={media_type === "movie" ? (detail as DetailMovie)?.release_date?.slice(0, 4) : (detail as DetailTV)?.first_air_date?.slice(0, 4)}
+                    seasonId={seasonId}
+                    episodeId={episodeId}
                     startAt={Number(searchParams.get("time")) || 0}
                     onError={() => console.log("Video playback error")}
                   />
