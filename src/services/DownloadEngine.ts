@@ -18,7 +18,7 @@ export class DownloadEngine {
     /**
      * @param proxy Base URL of the proxy (e.g. 'https://cors-anywhere.herokuapp.com/')
      */
-    constructor(proxy: string = 'https://cors-anywhere.herokuapp.com/') {
+    constructor(proxy: string = '/api-proxy/') {
         // Ensure proxy ends with a slash for easy concatenation
         this.proxy = proxy.endsWith('/') ? proxy : proxy + '/';
     }
@@ -45,46 +45,51 @@ export class DownloadEngine {
      * @throws If no stream URL can be found.
      */
     async extractFromIframe(iframeUrl: string): Promise<ExtractedStream> {
-        const response = await this.fetchWithProxy(iframeUrl);
-        const html = await response.text();
+        try {
+            const response = await this.fetchWithProxy(iframeUrl);
+            const html = await response.text();
 
-        // 1. Try to parse the DOM and look for <video> or <source> tags
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
+            // 1. Try to parse the DOM and look for <video> or <source> tags
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
 
-        // Look for video element
-        const video = doc.querySelector('video');
-        if (video) {
-            const src = video.getAttribute('src');
-            if (src) {
-                const absolute = this.resolveRelativeUrl(src, iframeUrl);
-                if (absolute.includes('.m3u8')) return { url: absolute, type: 'hls' };
-                if (absolute.includes('.mp4')) return { url: absolute, type: 'mp4' };
-            }
-            // Check <source> children
-            const source = video.querySelector('source');
-            if (source) {
-                const src = source.getAttribute('src');
+            // Look for video element
+            const video = doc.querySelector('video');
+            if (video) {
+                const src = video.getAttribute('src');
                 if (src) {
                     const absolute = this.resolveRelativeUrl(src, iframeUrl);
                     if (absolute.includes('.m3u8')) return { url: absolute, type: 'hls' };
                     if (absolute.includes('.mp4')) return { url: absolute, type: 'mp4' };
                 }
+                // Check <source> children
+                const source = video.querySelector('source');
+                if (source) {
+                    const src = source.getAttribute('src');
+                    if (src) {
+                        const absolute = this.resolveRelativeUrl(src, iframeUrl);
+                        if (absolute.includes('.m3u8')) return { url: absolute, type: 'hls' };
+                        if (absolute.includes('.mp4')) return { url: absolute, type: 'mp4' };
+                    }
+                }
             }
-        }
 
-        // 2. Fallback: regex‑search the whole HTML for .m3u8 or .mp4 URLs
-        const urlRegex = /(https?:\/\/[^\s"']+\.(?:m3u8|mp4)(?:\?[^\s"']*)?)/gi;
-        const matches = html.match(urlRegex);
-        if (matches && matches.length > 0) {
-            // Prefer HLS (m3u8) as it usually gives better quality
-            const m3u8Url = matches.find(url => url.includes('.m3u8'));
-            if (m3u8Url) return { url: m3u8Url, type: 'hls' };
-            const mp4Url = matches.find(url => url.includes('.mp4'));
-            if (mp4Url) return { url: mp4Url, type: 'mp4' };
-        }
+            // 2. Fallback: regex‑search the whole HTML for .m3u8 or .mp4 URLs
+            const urlRegex = /(https?:\/\/[^\s"']+\.(?:m3u8|mp4)(?:\?[^\s"']*)?)/gi;
+            const matches = html.match(urlRegex);
+            if (matches && matches.length > 0) {
+                // Prefer HLS (m3u8) as it usually gives better quality
+                const m3u8Url = matches.find(url => url.includes('.m3u8'));
+                if (m3u8Url) return { url: m3u8Url, type: 'hls' };
+                const mp4Url = matches.find(url => url.includes('.mp4'));
+                if (mp4Url) return { url: mp4Url, type: 'mp4' };
+            }
 
-        throw new Error('Could not extract any stream URL from the iframe');
+            throw new Error('No valid .m3u8 or .mp4 found in iframe HTML');
+        } catch (error) {
+            console.error('[DownloadEngine] Extraction failed for:', iframeUrl, error);
+            throw error;
+        }
     }
 
     /**

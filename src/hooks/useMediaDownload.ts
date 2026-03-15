@@ -32,7 +32,7 @@ export interface UseMediaDownloadReturn {
  */
 export function useMediaDownload(
     mediaInfo: MediaInfo,
-    proxy: string = 'https://cors-anywhere.herokuapp.com/'
+    proxy: string = '/api-proxy/'
 ): UseMediaDownloadReturn {
     const [progress, setProgress] = useState(0);
     const [isDownloading, setIsDownloading] = useState(false);

@@ -690,7 +690,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         if (isDownloading) cancelDownload();
-                                        else startDownload(currentSource.url, !isDirect);
+                                        else startDownload(currentSource.url, true);
                                         setShowMagicMenu(false);
                                     }}
                                     className={`w-full flex items-center gap-3 px-4 py-3 text-xs transition-all ${isDownloading ? 'text-red-400 bg-red-400/10' : 'text-gray-300 hover:bg-white/5'}`}
@@ -698,7 +698,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                                     {isDownloading ? (
                                         <>
                                             <FiXCircle size={16} />
-                                            <span className="font-bold">{t('Stop Download')}</span>
+                                            <span className="font-bold">{t('Stop Downloading...')}</span>
                                         </>
                                     ) : (
                                         <>
@@ -724,8 +724,12 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        if (isDownloading) cancelDownload();
-                        else startDownload(currentSource.url, !isDirect);
+                        if (isDownloading) {
+                            cancelDownload();
+                        } else {
+                            // User requested forcing true for Extraction Sniffing
+                            startDownload(currentSource.url, true);
+                        }
                     }}
                     title={isDownloading ? t('Cancel Download') : t('Download for Offline')}
                     className={`flex items-center gap-1.5 px-3 py-2 ${isDownloading ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-black/80 text-white border-white/20'} backdrop-blur border rounded-xl hover:bg-primary hover:text-black hover:border-primary transition shadow-xl font-bold text-xs`}
@@ -733,7 +737,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                     {isDownloading ? (
                         <div className="flex items-center gap-2">
                             <AiOutlineLoading3Quarters className="animate-spin" size={14} />
-                            <span>{Math.round(downloadProgress)}%</span>
+                            <span>{t('Downloading...')} {Math.round(downloadProgress)}%</span>
                         </div>
                     ) : (
                         <>
