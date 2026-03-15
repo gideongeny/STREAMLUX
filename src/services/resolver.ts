@@ -48,6 +48,7 @@ export class ResolverService {
     private healthCache: Map<string, { status: "active" | "slow" | "down", timestamp: number }> = new Map();
     private globalHealth: Map<string, { success: number, failure: number }> = new Map();
     private readonly HEALTH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+    private permissionDenied = false;
 
     private constructor() {
         this.syncGlobalHealth();
@@ -113,7 +114,7 @@ export class ResolverService {
      * Sync global health stats from Firestore
      */
     private async syncGlobalHealth() {
-        if (!db) return;
+        if (!db || this.permissionDenied) return;
         try {
             const healthDoc = await getDoc(doc(db, "system", "health"));
             if (healthDoc.exists()) {
@@ -122,8 +123,13 @@ export class ResolverService {
                     this.globalHealth.set(key, data[key]);
                 });
             }
-        } catch (error) {
-            console.warn("Failed to sync global health:", error);
+        } catch (error: any) {
+            if (error?.code === 'permission-denied') {
+                this.permissionDenied = true;
+                console.log("[Resolver] Firestore access denied (Unauthenticated). Reporting disabled.");
+            } else {
+                console.warn("Failed to sync global health:", error);
+            }
         }
     }
 
@@ -131,7 +137,7 @@ export class ResolverService {
      * Report successful playback for a source
      */
     async reportPlaybackSuccess(sourceName: string) {
-        if (!db) return;
+        if (!db || this.permissionDenied) return;
         try {
             const docRef = doc(db, "system", "health");
             const docSnap = await getDoc(docRef);
@@ -144,8 +150,12 @@ export class ResolverService {
             }
             const current = this.globalHealth.get(sourceName) || { success: 0, failure: 0 };
             this.globalHealth.set(sourceName, { ...current, success: current.success + 1 });
-        } catch (error) {
-            console.warn("Failed to report success:", error);
+        } catch (error: any) {
+            if (error?.code === 'permission-denied') {
+                this.permissionDenied = true;
+            } else {
+                console.warn("Failed to report success:", error);
+            }
         }
     }
 
@@ -153,7 +163,7 @@ export class ResolverService {
      * Report failed playback for a source
      */
     async reportPlaybackFailure(sourceName: string) {
-        if (!db) return;
+        if (!db || this.permissionDenied) return;
         try {
             const docRef = doc(db, "system", "health");
             const docSnap = await getDoc(docRef);
@@ -166,8 +176,12 @@ export class ResolverService {
             }
             const current = this.globalHealth.get(sourceName) || { success: 0, failure: 0 };
             this.globalHealth.set(sourceName, { ...current, failure: current.failure + 1 });
-        } catch (error) {
-            console.warn("Failed to report failure:", error);
+        } catch (error: any) {
+            if (error?.code === 'permission-denied') {
+                this.permissionDenied = true;
+            } else {
+                console.warn("Failed to report failure:", error);
+            }
         }
     }
 

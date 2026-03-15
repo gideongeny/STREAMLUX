@@ -30,7 +30,7 @@ const LiveBuzz: React.FC<LiveBuzzProps> = ({ mediaId, mediaType, isVisible = tru
   // Floating animations for incoming reactions
   const [floatingEmojis, setFloatingEmojis] = useState<{ id: string; emoji: string; xOffset: number }[]>([]);
 
-  useEffect(() => {
+    useEffect(() => {
     if (!mediaId || !mediaType) return;
 
     const docId = `${mediaType}_${mediaId.toString()}`;
@@ -39,8 +39,12 @@ const LiveBuzz: React.FC<LiveBuzzProps> = ({ mediaId, mediaType, isVisible = tru
     // Ensure document exists
     getDoc(buzzRef).then(snap => {
       if (!snap.exists()) {
-        setDoc(buzzRef, { recentReactions: [] }, { merge: true });
+        setDoc(buzzRef, { recentReactions: [] }, { merge: true }).catch(() => {});
       }
+    }).catch(err => {
+        if (err?.code === 'permission-denied') {
+            console.log("[LiveBuzz] Access denied. Real-time buzz disabled.");
+        }
     });
 
     const unsubscribe = onSnapshot(buzzRef, (snapshot) => {
@@ -72,6 +76,10 @@ const LiveBuzz: React.FC<LiveBuzzProps> = ({ mediaId, mediaType, isVisible = tru
 
         setReactions(newReactions);
       }
+    }, (error) => {
+        if (error?.code === 'permission-denied') {
+            console.log("[LiveBuzz] Snapshot denied.");
+        }
     });
 
     return () => unsubscribe();

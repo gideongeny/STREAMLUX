@@ -33,6 +33,7 @@ export function getBackendBase(): string {
 }
 
 export interface DownloadInfo {
+  id: string | number;
   title: string;
   mediaType: "movie" | "tv";
   seasonId?: number;
@@ -79,6 +80,7 @@ export class DownloadService {
     const sources = this.generateVideoSources(detail.id, mediaType, seasonId, episodeId, imdbId);
 
     return {
+      id: detail.id,
       title,
       mediaType,
       seasonId,
@@ -211,8 +213,9 @@ export class DownloadService {
   /**
    * Universal downloader for a specific URL found in the player
    */
-  async downloadSource(title: string, url: string, mediaType: 'movie' | 'tv' = 'movie', season?: number, episode?: number): Promise<void> {
+  async downloadSource(id: string | number, title: string, url: string, mediaType: 'movie' | 'tv' = 'movie', season?: number, episode?: number): Promise<void> {
     const info: DownloadInfo = {
+        id,
         title,
         mediaType,
         sources: [url],

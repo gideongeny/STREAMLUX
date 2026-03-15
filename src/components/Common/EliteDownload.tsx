@@ -34,29 +34,30 @@ const EliteDownload: React.FC<EliteDownloadProps> = ({ downloadInfo, className =
   const handleDownload = async () => {
     setIsStarting(true);
     try {
-      const sources = downloadInfo.sources || [];
-      const foundUrl = sources[0] || "";
-
-      if (!foundUrl) {
-        const queryTerm = encodeURIComponent(downloadInfo.title);
-        performOpen("https://www.fzmovies.net/search.php?searchquery=" + queryTerm + "&searchby=title&Search=Search");
-        return;
+      toast.info("Opening Download Page...");
+      
+      // Use ID from downloadInfo for reliability
+      const tmdbId = downloadInfo.id;
+      
+      let dlUrl = "";
+      if (downloadInfo.mediaType === 'movie') {
+          dlUrl = `https://dl.vidsrc.vip/movie/${tmdbId}`;
+      } else {
+          dlUrl = `https://dl.vidsrc.vip/tv/${tmdbId}/${downloadInfo.seasonId || 1}/${downloadInfo.episodeId || 1}`;
       }
 
-      toast.info("Preparing Elite capture...");
-      await offlineDownloadService.downloadSource(
-        downloadInfo.title,
-        foundUrl,
-        downloadInfo.mediaType,
-        downloadInfo.seasonId,
-        downloadInfo.episodeId
-      );
-      
-      toast.success("Download link captured!");
+      // Strict Parameter Check & Console Log
+      console.log('Target URL:', dlUrl);
+
+      // UI Feedback Delay
+      setTimeout(() => {
+        window.open(dlUrl, '_blank', 'noopener,noreferrer');
+        setIsStarting(false);
+      }, 2000);
+
     } catch (err) {
-      toast.error("Error starting download");
-    } finally {
-      setTimeout(() => setIsStarting(false), 1000);
+      toast.error("Error opening download portal");
+      setIsStarting(false);
     }
   };
 
@@ -98,7 +99,7 @@ const EliteDownload: React.FC<EliteDownloadProps> = ({ downloadInfo, className =
     <div className={"bg-dark rounded-2xl p-5 border border-white/5 " + className}>
       <div className="flex items-center gap-2 mb-4">
         <AiOutlineDownload className="text-primary" size={20} />
-        <span className="text-white font-bold text-sm">Download Options</span>
+        <span className="text-white font-bold text-sm">Download to Device</span>
       </div>
       <p className="text-[10px] text-gray-500 mb-4">{label}</p>
       <button
@@ -107,27 +108,7 @@ const EliteDownload: React.FC<EliteDownloadProps> = ({ downloadInfo, className =
         className="w-full bg-primary text-black font-bold p-3 rounded-xl text-sm transition-opacity hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
       >
         <AiOutlineDownload size={18} />
-        {isStarting ? "One moment..." : "Download to Device"}
-      </button>
-
-      {Capacitor.isNativePlatform() && (
-        <button
-          onClick={handleOfflineSync}
-          disabled={isStarting}
-          className="w-full mt-3 bg-white/10 text-white font-bold p-3 rounded-xl text-sm transition-all hover:bg-white/20 disabled:opacity-50 flex items-center justify-center gap-2 border border-white/5"
-        >
-          <MdOutlineLibraryAdd size={18} className="text-primary" />
-          Sync to Offline Library
-        </button>
-      )}
-      <button
-        onClick={() => {
-          const qStr = encodeURIComponent(downloadInfo.title);
-          performOpen("https://www.fzmovies.net/search.php?searchquery=" + qStr + "&searchby=title&Search=Search");
-        }}
-        className="w-full text-[10px] text-gray-500 mt-4 hover:text-white transition-colors"
-      >
-        Open on FzMovies
+        {isStarting ? "One moment..." : "Download Now"}
       </button>
     </div>
   );

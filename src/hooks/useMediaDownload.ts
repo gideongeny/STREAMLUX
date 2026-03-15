@@ -1,12 +1,11 @@
-// hooks/useMediaDownload.ts
-
 import { useState, useCallback, useRef } from 'react';
-import { DownloadEngine, ExtractedStream } from '../services/DownloadEngine';
+import { DownloadEngine, ExtractedStream, DownloadStage } from '../services/DownloadEngine';
 
 /**
  * Media information required to build the final file name.
  */
 export interface MediaInfo {
+    id: string | number;
     title: string;
     year: number | string;
     type: 'movie' | 'tv';
@@ -19,6 +18,7 @@ export interface MediaInfo {
  */
 export interface UseMediaDownloadReturn {
     progress: number;               // 0‑100
+    status: DownloadStage;
     isDownloading: boolean;
     error: string | null;
     startDownload: (sourceUrl: string, isIframe?: boolean) => Promise<void>;
@@ -28,18 +28,18 @@ export interface UseMediaDownloadReturn {
 /**
  * React hook for downloading media with progress tracking.
  * @param mediaInfo - Object containing title, year, type, and optional season/episode.
- * @param proxy - Optional proxy URL (defaults to 'https://cors-anywhere.herokuapp.com/').
+ * @param proxy - Optional proxy URL.
  */
 export function useMediaDownload(
     mediaInfo: MediaInfo,
-    proxy: string = '/api-proxy/'
+    _proxy: string = '/api-proxy/'
 ): UseMediaDownloadReturn {
     const [progress, setProgress] = useState(0);
+    const [status, setStatus] = useState<DownloadStage>('Initializing...');
     const [isDownloading, setIsDownloading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const abortControllerRef = useRef<AbortController | null>(null);
-    const engine = useRef<DownloadEngine>(new DownloadEngine(proxy)).current;
 
     const cancelDownload = useCallback(() => {
         if (abortControllerRef.current) {
@@ -48,81 +48,58 @@ export function useMediaDownload(
         }
         setIsDownloading(false);
         setProgress(0);
+        setStatus('Initializing...');
     }, []);
 
     const startDownload = useCallback(
-        async (sourceUrl: string, isIframe: boolean = true) => {
-            // Abort any ongoing download
+        async (_sourceUrl: string, _isIframe: boolean = true) => {
             cancelDownload();
-
             setError(null);
             setIsDownloading(true);
-            setProgress(0);
+            setProgress(30);
+            setStatus('Opening Download Page...');
 
-            const abortController = new AbortController();
-            abortControllerRef.current = abortController;
+            // The user wants a 2-second status "Openining Download Page..." so they know it worked
+            setTimeout(() => {
+                try {
+                    // 1. Calculate the exact DL URL
+                    // Use the id passed in mediaInfo for reliability
+                    const tmdbId = mediaInfo.id;
+                    
+                    let dlUrl = "";
+                    if (mediaInfo.type === 'movie') {
+                        dlUrl = `https://dl.vidsrc.vip/movie/${tmdbId}`;
+                    } else {
+                        dlUrl = `https://dl.vidsrc.vip/tv/${tmdbId}/${mediaInfo.season || 1}/${mediaInfo.episode || 1}`;
+                    }
 
-            try {
-                // 1. Obtain the direct stream URL
-                let stream: ExtractedStream;
-                if (isIframe) {
-                    stream = await engine.extractFromIframe(sourceUrl);
-                } else {
-                    // Assume sourceUrl is already a direct stream; guess type from extension
-                    const type = sourceUrl.includes('.m3u8') ? 'hls' : 'mp4';
-                    stream = { url: sourceUrl, type };
+                    // Strict Parameter Check & Console Log
+                    console.log('Target URL:', dlUrl);
+
+                    // 2. Safe Open
+                    window.open(dlUrl, '_blank', 'noopener,noreferrer');
+                    
+                    setProgress(100);
+                    setStatus('Redirecting...');
+                    
+                    // Reset UI after redirect
+                    setTimeout(() => {
+                        setIsDownloading(false);
+                        setProgress(0);
+                        setStatus('Initializing...');
+                    }, 1000);
+                } catch (err: any) {
+                    setError('Failed to generate redirect link');
+                    setIsDownloading(false);
                 }
-
-                // 2. Download the stream with progress
-                const data = await engine.downloadStream(
-                    stream.url,
-                    stream.type,
-                    (percent) => {
-                        if (!abortController.signal.aborted) {
-                            setProgress(percent);
-                        }
-                    },
-                    abortController.signal
-                );
-
-                // 3. Build the file name
-                let fileName = '';
-                if (mediaInfo.type === 'movie') {
-                    fileName = `${mediaInfo.title} (${mediaInfo.year}).mp4`;
-                } else {
-                    const season = mediaInfo.season?.toString().padStart(2, '0') || '01';
-                    const episode = mediaInfo.episode?.toString().padStart(2, '0') || '01';
-                    fileName = `${mediaInfo.title} (${mediaInfo.year}) - S${season}E${episode}.mp4`;
-                }
-
-                // 4. Trigger browser download
-                const blob = new Blob([data], { type: 'video/mp4' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = fileName;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-
-                setProgress(100);
-            } catch (err: any) {
-                if (err.name === 'AbortError') {
-                    setError('Download cancelled');
-                } else {
-                    setError(err.message || 'Download failed');
-                }
-            } finally {
-                setIsDownloading(false);
-                abortControllerRef.current = null;
-            }
+            }, 2000);
         },
-        [mediaInfo, engine, cancelDownload]
+        [mediaInfo, cancelDownload]
     );
 
     return {
         progress,
+        status,
         isDownloading,
         error,
         startDownload,

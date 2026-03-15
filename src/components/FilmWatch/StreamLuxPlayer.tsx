@@ -19,10 +19,8 @@ import { backgroundAudioService } from '../../services/backgroundAudio';
 import { setFullscreen } from '../../store/slice/uiSlice';
 import { useTranslation } from 'react-i18next';
 import LiveBuzz from './LiveBuzz';
-import { BsDownload } from 'react-icons/bs';
 import { useSearchParams } from 'react-router-dom';
 import { downloadService } from '../../services/download';
-import { useMediaDownload } from '../../hooks/useMediaDownload';
 
 export interface VideoSource {
     name: string;
@@ -99,14 +97,6 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     const { isCinemaMode } = useAppSelector((state) => state.ui);
     const [searchParams] = useSearchParams();
 
-    // Offline Download Logic
-    const { progress: downloadProgress, isDownloading, error: downloadError, startDownload, cancelDownload } = useMediaDownload({
-        title: title || "Unknown Title",
-        year: releaseYear || new Date().getFullYear().toString(),
-        type: (mediaType as 'movie' | 'tv') || 'movie',
-        season: seasonId,
-        episode: episodeId,
-    });
     const normalizedSources: VideoSource[] = sources.map((s) =>
         typeof s === 'string' ? { name: 'Default', url: s } : s
     );
@@ -416,7 +406,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         setShowAdSkip(false);
     };
 
-    const handleDownloadCurrentSource = () => {
+    const handleDownloadCurrentSource = async () => {
         if (!currentSource) return;
         hapticImpact();
         toast.info(t('Starting Elite Download...'), { position: "top-center" });
@@ -425,6 +415,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         const e = searchParams.get('e');
         
         downloadService.downloadSource(
+            id || "unknown",
             title || "Unknown Title", 
             currentSource.url, 
             (mediaType as 'movie' | 'tv') || 'movie', 
@@ -561,40 +552,6 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                 )}
             </AnimatePresence>
 
-            {/* Offline Download Progress Overlay */}
-            <AnimatePresence>
-                {isDownloading && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] bg-black/80 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-2xl shadow-2xl flex flex-col items-center gap-2 min-w-[240px]"
-                    >
-                        <div className="flex items-center justify-between w-full mb-1">
-                            <span className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                                <AiOutlineLoading3Quarters className="animate-spin text-primary" size={12} />
-                                {t('Downloading Offline...')}
-                            </span>
-                            <span className="text-primary text-xs font-black">{Math.round(downloadProgress)}%</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                            <motion.div 
-                                className="h-full bg-primary" 
-                                initial={{ width: 0 }}
-                                animate={{ width: `${downloadProgress}%` }}
-                                transition={{ duration: 0.3 }}
-                            />
-                        </div>
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); cancelDownload(); }}
-                            className="mt-1 text-[10px] text-gray-500 hover:text-red-400 transition-colors uppercase font-bold"
-                        >
-                            {t('Cancel Download')}
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
             {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20 pointer-events-none">
                     <AiOutlineLoading3Quarters className="animate-spin text-primary" size={48} />
@@ -685,28 +642,6 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                                     <FiMessageSquare size={16} className={showReactions ? "text-primary" : "text-gray-400"} />
                                     <span className="font-bold">{showReactions ? t('Hide Reactions') : t('Show Reactions')}</span>
                                 </button>
-
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (isDownloading) cancelDownload();
-                                        else startDownload(currentSource.url, true);
-                                        setShowMagicMenu(false);
-                                    }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 text-xs transition-all ${isDownloading ? 'text-red-400 bg-red-400/10' : 'text-gray-300 hover:bg-white/5'}`}
-                                >
-                                    {isDownloading ? (
-                                        <>
-                                            <FiXCircle size={16} />
-                                            <span className="font-bold">{t('Stop Downloading...')}</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <BsDownload size={16} className="text-primary" />
-                                            <span className="font-bold">{t('Download Offline')}</span>
-                                        </>
-                                    )}
-                                </button>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -719,32 +654,6 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                 >
                     {isFullscreen ? <MdFullscreenExit size={18} /> : <MdFullscreen size={18} />}
                     <span className="ml-1">{isFullscreen ? t('Exit') : t('Fullscreen')}</span>
-                </button>
-
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (isDownloading) {
-                            cancelDownload();
-                        } else {
-                            // User requested forcing true for Extraction Sniffing
-                            startDownload(currentSource.url, true);
-                        }
-                    }}
-                    title={isDownloading ? t('Cancel Download') : t('Download for Offline')}
-                    className={`flex items-center gap-1.5 px-3 py-2 ${isDownloading ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-black/80 text-white border-white/20'} backdrop-blur border rounded-xl hover:bg-primary hover:text-black hover:border-primary transition shadow-xl font-bold text-xs`}
-                >
-                    {isDownloading ? (
-                        <div className="flex items-center gap-2">
-                            <AiOutlineLoading3Quarters className="animate-spin" size={14} />
-                            <span>{t('Downloading...')} {Math.round(downloadProgress)}%</span>
-                        </div>
-                    ) : (
-                        <>
-                            <BsDownload size={16} />
-                            <span className="ml-1">{t('Save')}</span>
-                        </>
-                    )}
                 </button>
             </div>
 
@@ -798,32 +707,6 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                                 }}
                             >
                                 <div className="text-center">
-                                    <motion.button
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.9 }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (isDownloading) cancelDownload();
-                                            else startDownload(currentSource.url, !isDirect);
-                                        }}
-                                        className={`p-2.5 rounded-full ${isDownloading ? 'bg-red-500/20' : 'hover:bg-white/10'} transition-colors group relative`}
-                                        title={t('Download Offline')}
-                                    >
-                                        {isDownloading ? (
-                                            <div className="relative w-8 h-8 flex items-center justify-center">
-                                                <AiOutlineLoading3Quarters className="animate-spin text-primary absolute" size={24} />
-                                                <span className="text-[10px] font-black text-white z-10">{Math.round(downloadProgress)}</span>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <BsDownload size={22} className="text-white group-hover:text-primary transition-colors" />
-                                                <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse md:block hidden" />
-                                            </>
-                                        )}
-                                    </motion.button>
-
-                                    <div className="w-px h-6 bg-white/10 mx-1 md:block hidden" />
-
                                     <motion.div 
                                         animate={{ scale: [1, 1.1, 1] }}
                                         transition={{ repeat: Infinity, duration: 2 }}

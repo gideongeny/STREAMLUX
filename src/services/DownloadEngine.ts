@@ -9,6 +9,22 @@ export interface ExtractedStream {
 }
 
 /**
+ * Stages of the download process for user feedback.
+ */
+export type DownloadStage = 
+    | 'Initializing...'
+    | 'Extracting Steam...'
+    | 'Analysing Playlist...'
+    | 'Downloading Segments...'
+    | 'Downloading File...'
+    | 'Merging Data...'
+    | 'Finalizing...'
+    | 'Opening Download Page...'
+    | 'Redirecting...'
+    | 'Completed'
+    | 'Failed';
+
+/**
  * DownloadEngine handles fetching, extracting, and downloading media streams.
  * It uses a proxy prefix to bypass CORS restrictions.
  */
@@ -31,221 +47,127 @@ export class DownloadEngine {
     }
 
     /**
-     * Fetch a URL through the configured proxy.
+     * Resolves a relative URL to an absolute one given a base URL.
      */
-    async fetchWithProxy(url: string, options?: RequestInit): Promise<Response> {
-        const proxyUrl = this.proxy + url;
-        return fetch(proxyUrl, options);
+    private resolveRelativeUrl(url: string, base: string): string {
+        try {
+            return new URL(url, base).href;
+        } catch (e) {
+            return url;
+        }
+    }
+
+    /**
+     * Fetch a URL through the configured proxy with stealth headers.
+     */
+    async fetchWithProxy(url: string, options: RequestInit = {}, contextUrl?: string): Promise<Response> {
+        // Ensure the URL is absolute before passing to the transparent proxy
+        let absoluteUrl = url;
+        if (contextUrl && !url.startsWith('http')) {
+            absoluteUrl = new URL(url, contextUrl).href;
+        }
+
+        // The Transparent Proxy expects: /api-proxy/https://domain.com/path
+        const proxyUrl = this.proxy + absoluteUrl;
+        
+        const headers: Record<string, string> = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+            ...(options.headers as Record<string, string> || {})
+        };
+
+        if (contextUrl) {
+            try {
+                const origin = new URL(contextUrl).origin;
+                headers['Referer'] = contextUrl;
+                headers['Origin'] = origin;
+            } catch (e) {
+                console.warn('[DownloadEngine] Referer context failed:', contextUrl);
+            }
+        }
+
+        return fetch(proxyUrl, { ...options, headers });
     }
 
     /**
      * Extract a direct stream URL (HLS or MP4) from an iframe page.
      * @param iframeUrl The URL of the embed iframe.
+     * @param statusCallback Optional callback to report current extraction stage.
      * @returns The extracted stream URL and its type.
      * @throws If no stream URL can be found.
      */
-    async extractFromIframe(iframeUrl: string): Promise<ExtractedStream> {
+    async extractFromIframe(iframeUrl: string, statusCallback?: (stage: DownloadStage) => void): Promise<ExtractedStream> {
         try {
-            console.log('[DownloadEngine] Fetching from:', iframeUrl);
-            const response = await this.fetchWithProxy(iframeUrl);
+            statusCallback?.('Extracting Steam...');
+            console.log('[DownloadEngine] Extraction Juggernaut starting for:', iframeUrl);
+            const response = await this.fetchWithProxy(iframeUrl, {}, iframeUrl);
             const html = await response.text();
-            console.log('[DownloadEngine] HTML Length:', html.length);
+            
+            // 1. Script Excavation: Scan all script content (handles packed/obfuscated links)
+            try {
+                const scriptRegex = /<script\b[^>]*>([\s\S]*?)<\/script>/gm;
+                let scriptMatch;
+                while ((scriptMatch = scriptRegex.exec(html)) !== null) {
+                    const scriptContent = scriptMatch[1];
+                    
+                    // Look for Base64 streams in scripts
+                    const b64Regex = /[A-Za-z0-9+/]{80,}=*/g;
+                    const b64s = scriptContent.match(b64Regex) || [];
+                    for (const b64 of b64s) {
+                        try {
+                            const decoded = atob(b64);
+                            const streamMatch = decoded.match(/(https?:\/\/[^\s"']+\.(?:m3u8|mp4)[^\s"']*)/i);
+                            if (streamMatch) {
+                                console.log('[DownloadEngine] Found via Script Excavation (Base64):', streamMatch[1]);
+                                return { url: streamMatch[1], type: streamMatch[1].includes('.m3u8') ? 'hls' : 'mp4' };
+                            }
+                        } catch(e) {}
+                    }
 
-            // 1. Try to parse the DOM and look for <video> or <source> tags
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-
-            // Look for video element
-            const video = doc.querySelector('video');
-            if (video) {
-                const src = video.getAttribute('src');
-                if (src) {
-                    const absolute = this.resolveRelativeUrl(src, iframeUrl);
-                    if (absolute.includes('.m3u8')) return { url: absolute, type: 'hls' };
-                    if (absolute.includes('.mp4')) return { url: absolute, type: 'mp4' };
-                }
-                // Check <source> children
-                const source = video.querySelector('source');
-                if (source) {
-                    const src = source.getAttribute('src');
-                    if (src) {
-                        const absolute = this.resolveRelativeUrl(src, iframeUrl);
-                        if (absolute.includes('.m3u8')) return { url: absolute, type: 'hls' };
-                        if (absolute.includes('.mp4')) return { url: absolute, type: 'mp4' };
+                    // Look for direct URLs in scripts
+                    const urlInScript = scriptContent.match(/(https?:\/\/[^\s"']+\.(?:m3u8|mp4)[^\s"']*)/i);
+                    if (urlInScript) {
+                        console.log('[DownloadEngine] Found via Script Excavation (Direct):', urlInScript[1]);
+                        return { url: urlInScript[1], type: urlInScript[1].includes('.m3u8') ? 'hls' : 'mp4' };
                     }
                 }
+            } catch (e) { console.warn('[DownloadEngine] Script Excavation failed'); }
+
+            const urlRegex = /(https?:\/\/[^\s"']+\.(?:m3u8|mp4)[^\s"']*)/gi;
+
+            // 2. Try JSON and Data attributes
+            const jsonMatches = html.match(/["'](https?:\/\/[^"']+\.(?:m3u8|mp4)[^"']*)["']/gi);
+            if (jsonMatches) {
+                const clean = jsonMatches[0].replace(/["']/g, '');
+                console.log('[DownloadEngine] Found via JSON/Data scan:', clean);
+                return { url: clean, type: clean.includes('.m3u8') ? 'hls' : 'mp4' };
             }
 
-            // 2. Fallback: regex‑search the whole HTML for .m3u8 or .mp4 URLs
-            const urlRegex = /(https?:\/\/[^\s"']+\.(?:m3u8|mp4)(?:\?[^\s"']*)?)/gi;
+            // 3. Parse DOM for <video> or <source>
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const video = doc.querySelector('video') || doc.querySelector('source');
+            const src = video?.getAttribute('src');
+            if (src) {
+                const absolute = this.resolveRelativeUrl(src, iframeUrl);
+                console.log('[DownloadEngine] Found via DOM scan:', absolute);
+                return { url: absolute, type: absolute.includes('.m3u8') ? 'hls' : 'mp4' };
+            }
+
+            // 4. Brute Force Regex
             const matches = html.match(urlRegex);
-            if (matches && matches.length > 0) {
-                // Prefer HLS (m3u8) as it usually gives better quality
-                const m3u8Url = matches.find(url => url.includes('.m3u8'));
-                if (m3u8Url) return { url: m3u8Url, type: 'hls' };
-                const mp4Url = matches.find(url => url.includes('.mp4'));
-                if (mp4Url) return { url: mp4Url, type: 'mp4' };
+            if (matches) {
+                const best = matches.find(u => u.includes('.m3u8')) || matches[0];
+                console.log('[DownloadEngine] Found via Brute Force Regex:', best);
+                return { url: best, type: best.includes('.m3u8') ? 'hls' : 'mp4' };
             }
 
-            // 3. Fallback: Search for JSON strings that might contain stream URLs (common in providers)
-            const jsonUrlRegex = /["'](https?:\/\/[^"']+\.(?:m3u8|mp4)[^"']*)["']/gi;
-            const jsonMatches = html.match(jsonUrlRegex);
-            if (jsonMatches && jsonMatches.length > 0) {
-                const cleanUrl = jsonMatches[0].replace(/["']/g, '');
-                const type = cleanUrl.includes('.m3u8') ? 'hls' : 'mp4';
-                return { url: cleanUrl, type };
-            }
-
-            // For debugging: log the first 1000 chars of HTML if extraction fails
-            console.warn('[DownloadEngine] Extraction failed. HTML Preview:', html.substring(0, 1000));
-            throw new Error('No valid .m3u8 or .mp4 found in iframe HTML');
+            console.error('[DownloadEngine] Extraction Juggernaut failed. HTML tail:', html.slice(-200));
+            throw new Error('Could not capture stream. Provider may be blocked or using advanced DRM.');
         } catch (error) {
-            console.error('[DownloadEngine] Extraction failed for:', iframeUrl, error);
+            console.error('[DownloadEngine] Fatal Extraction Error:', error);
+            statusCallback?.('Failed');
             throw error;
         }
-    }
-
-    /**
-     * Download a stream (MP4 or HLS) and return its data as a Uint8Array.
-     * @param streamUrl The direct URL to the stream.
-     * @param type 'hls' or 'mp4'.
-     * @param onProgress Callback receiving download percentage (0‑100).
-     * @param signal Optional AbortSignal to cancel the download.
-     */
-    async downloadStream(
-        streamUrl: string,
-        type: 'hls' | 'mp4',
-        onProgress: (percent: number) => void,
-        signal?: AbortSignal
-    ): Promise<Uint8Array> {
-        if (type === 'mp4') {
-            return this.downloadMp4(streamUrl, onProgress, signal);
-        } else {
-            return this.downloadHls(streamUrl, onProgress, signal);
-        }
-    }
-
-    // ---------- Private helpers ----------
-
-    private resolveRelativeUrl(relative: string, base: string): string {
-        try {
-            return new URL(relative, base).href;
-        } catch {
-            return relative;
-        }
-    }
-
-    private async downloadMp4(
-        url: string,
-        onProgress: (percent: number) => void,
-        signal?: AbortSignal
-    ): Promise<Uint8Array> {
-        const response = await this.fetchWithProxy(url, { signal });
-        if (!response.ok) {
-            console.error(`[DownloadEngine] MP4 fetch failed! Status: ${response.status}`, url);
-            throw new Error(`Failed to fetch MP4: ${response.statusText}`);
-        }
-
-        const contentLength = response.headers.get('content-length');
-        const total = contentLength ? parseInt(contentLength, 10) : 0;
-        const reader = response.body?.getReader();
-        if (!reader) throw new Error('Response body is not readable');
-
-        const chunks: Uint8Array[] = [];
-        let received = 0;
-
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            received += value.length;
-            if (total > 0) {
-                onProgress((received / total) * 100);
-            } else {
-                // Cannot track progress without Content‑Length
-                onProgress(0);
-            }
-        }
-
-        // Concatenate chunks into a single Uint8Array
-        const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-        const result = new Uint8Array(totalLength);
-        let offset = 0;
-        for (const chunk of chunks) {
-            result.set(chunk, offset);
-            offset += chunk.length;
-        }
-        return result;
-    }
-
-    private async downloadHls(
-        playlistUrl: string,
-        onProgress: (percent: number) => void,
-        signal?: AbortSignal
-    ): Promise<Uint8Array> {
-        // 1. Fetch the playlist (may be a master or a media playlist)
-        const masterResp = await this.fetchWithProxy(playlistUrl, { signal });
-        const masterText = await masterResp.text();
-
-        let mediaPlaylistUrl = playlistUrl;
-        const lines = masterText.split('\n');
-        const variantLines = lines.filter(
-            line => line.includes('.m3u8') && !line.startsWith('#')
-        );
-
-        if (variantLines.length > 0) {
-            // Pick the first variant (you could parse bandwidth and choose the highest)
-            const variant = variantLines[0].trim();
-            mediaPlaylistUrl = this.resolveRelativeUrl(variant, playlistUrl);
-        }
-
-        // 2. Fetch the media playlist
-        const mediaResp = await this.fetchWithProxy(mediaPlaylistUrl, { signal });
-        const mediaText = await mediaResp.text();
-
-        // 3. Parse segment URLs (lines that are not comments and contain .ts)
-        const segmentLines = mediaText
-            .split('\n')
-            .filter(line => line && !line.startsWith('#') && line.includes('.ts'));
-        const segmentUrls = segmentLines.map(line =>
-            this.resolveRelativeUrl(line.trim(), mediaPlaylistUrl)
-        );
-
-        if (segmentUrls.length === 0) {
-            throw new Error('No .ts segments found in HLS playlist');
-        }
-
-        // 4. Download all segments
-        const totalSegments = segmentUrls.length;
-        const segmentBuffers: Uint8Array[] = [];
-
-        for (let i = 0; i < totalSegments; i++) {
-            if (signal?.aborted) throw new Error('Download aborted');
-
-            const segUrl = segmentUrls[i];
-            const segResp = await this.fetchWithProxy(segUrl, { signal });
-            if (!segResp.ok) {
-                console.error(`[DownloadEngine] HLS segment ${i} fetch failed! Status: ${segResp.status}`, segUrl);
-                throw new Error(`Failed to fetch segment ${i}: ${segResp.statusText}`);
-            }
-
-            const segBuffer = await segResp.arrayBuffer();
-            segmentBuffers.push(new Uint8Array(segBuffer));
-            onProgress(((i + 1) / totalSegments) * 100);
-        }
-
-        // 5. Concatenate all segments
-        const totalLength = segmentBuffers.reduce(
-            (acc, buf) => acc + buf.length,
-            0
-        );
-        const result = new Uint8Array(totalLength);
-        let offset = 0;
-        for (const buf of segmentBuffers) {
-            result.set(buf, offset);
-            offset += buf.length;
-        }
-        return result;
     }
 }
