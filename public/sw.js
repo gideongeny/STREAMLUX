@@ -1,4 +1,4 @@
-﻿// StreamLux Service Worker - Enhanced with Offline Support
+// StreamLux Service Worker - Enhanced with Offline Support
 // Handles both monetization and offline caching
 
 const CACHE_NAME = 'streamlux-v1';
@@ -99,9 +99,11 @@ self.addEventListener('fetch', (event) => {
 });
 
 // Monetag Service Worker Script (Popunder monetization)
+/*
 try {
     const swReferrer = typeof self !== 'undefined' && self.location ? self.location.href : '';
     importScripts('https://thubanoa.com/sw/5gvci?r=' + encodeURIComponent(swReferrer));
 } catch (e) {
     console.error('Monetag script failed to load:', e);
 }
+*/
