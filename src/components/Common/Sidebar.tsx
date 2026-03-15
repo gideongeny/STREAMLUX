@@ -350,7 +350,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           <div className="mt-6 pt-6 border-t border-gray-800">
             <BuyMeACoffee variant="button" className="w-full justify-center" />
             <div className="mt-4 text-center text-[10px] text-gray-500 font-mono tracking-tighter opacity-50">
-              v0.1.1-SYNC
+              v0.1.2-SYNC
             </div>
           </div>
         </div>
