@@ -40,6 +40,7 @@ const resources = {
             "GENERAL": "GENERAL",
             "Bookmarked": "Bookmarked",
             "Watchlist": "Watchlist",
+            "Library": "Library",
             "My Library": "My Library",
             "Sign in to access": "Sign in to access",
             "Sign in to access bookmarks": "Sign in to access bookmarks",

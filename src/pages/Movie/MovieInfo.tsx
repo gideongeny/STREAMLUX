@@ -8,6 +8,7 @@ import { DetailMovie, FilmInfo } from "../../shared/types";
 import { useTranslation } from "react-i18next";
 import { MdMovieFilter, MdSearch, MdHome } from "react-icons/md";
 import { motion } from "framer-motion";
+import AdBanner from "../../components/Ads/AdBanner";
 
 const MovieInfo: FC = () => {
   const { id } = useParams();
@@ -64,6 +65,9 @@ const MovieInfo: FC = () => {
         description={data?.detail?.overview}
         image={data?.detail?.poster_path ? `https://image.tmdb.org/t/p/w500${data?.detail?.poster_path}` : undefined}
       />
+      <div className="pt-20">
+        <AdBanner position="details" />
+      </div>
       <FilmDetail {...data} />
     </>
   );

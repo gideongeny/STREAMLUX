@@ -376,6 +376,11 @@ const Home: FC = () => {
                 <HeroCarousel />
               </LazySection>
 
+              {/* World Cinema Ad placement */}
+              <div className="my-10">
+                <AdBanner position="home" />
+              </div>
+
               {/* Global World TV — Content from 40+ Nations */}
               <LazySection title="World Cinema" placeholderHeight={300}>
                 <GlobalWorldTV />

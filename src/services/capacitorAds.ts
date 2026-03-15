@@ -15,9 +15,12 @@ import { Capacitor } from '@capacitor/core';
 
 // ── Ad Unit IDs ────────────────────────────────────────────────
 const AD_UNITS = {
-    banner: 'ca-app-pub-1281448884303417/2591576419',
-    interstitial: 'ca-app-pub-1281448884303417/4423967607',
-    rewarded: 'ca-app-pub-1281448884303417/7216392727',
+    banner: 'ca-app-pub-1281448884303417/6844354025',
+    interstitial: 'ca-app-pub-1281448884303417/7742502728',
+    rewarded: 'ca-app-pub-1281448884303417/6905766493',
+    appOpen: 'ca-app-pub-1281448884303417/9531929832',
+    native: 'ca-app-pub-1281448884303417/2886630430',
+    rewardedInterstitial: 'ca-app-pub-1281448884303417/3330682677',
     // Test IDs used in dev/web builds only
     bannerTest: 'ca-app-pub-3940256099942544/6300978111',
     interstitialTest: 'ca-app-pub-3940256099942544/1033173712',

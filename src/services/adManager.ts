@@ -47,9 +47,9 @@ class AdManager {
     }
 
     // TEST IDs (Replace with real IDs in production)
-    private readonly BANNER_ID = 'ca-app-pub-3940256099942544/6300978111';
-    private readonly INTERSTITIAL_ID = 'ca-app-pub-3940256099942544/1033173712';
-    private readonly REWARDED_ID = 'ca-app-pub-3940256099942544/5224354917';
+    private readonly BANNER_ID = 'ca-app-pub-1281448884303417/6844354025';
+    private readonly INTERSTITIAL_ID = 'ca-app-pub-1281448884303417/7742502728';
+    private readonly REWARDED_ID = 'ca-app-pub-1281448884303417/6905766493';
 
     async initialize(): Promise<void> {
         if (!Capacitor.isNativePlatform()) {
@@ -80,7 +80,7 @@ class AdManager {
                 adSize: 'ADAPTIVE_BANNER',
                 position: 'BOTTOM_CENTER',
                 margin: 0,
-                isTesting: true
+                isTesting: false
             };
             await AdMobPlugin.showBanner(options);
         } catch (error) {
@@ -109,7 +109,7 @@ class AdManager {
         try {
             const options: any = {
                 adId: this.INTERSTITIAL_ID,
-                isTesting: true
+                isTesting: false
             };
             await AdMobPlugin.prepareInterstitial(options);
             await AdMobPlugin.showInterstitial();
@@ -131,7 +131,7 @@ class AdManager {
             try {
                 const options: any = {
                     adId: this.REWARDED_ID,
-                    isTesting: true
+                    isTesting: false
                 };
 
                 await AdMobPlugin.prepareRewardVideoAd(options);

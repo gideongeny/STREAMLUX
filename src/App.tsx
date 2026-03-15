@@ -47,7 +47,7 @@ import { backendHealthService } from "./services/backendHealth";
 import { safeStorage } from "./utils/safeStorage";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 import { MdWifiOff } from "react-icons/md";
-import { initializeAdMob } from "./services/capacitorAds";
+import { initializeAdMob, showBannerAd } from "./services/capacitorAds";
 import { App as CapApp } from "@capacitor/app";
 import { themeService } from "./services/theme";
 import { pushNotificationService } from "./services/pushNotifications";
@@ -96,6 +96,7 @@ function App() {
 
     if (Capacitor.isNativePlatform()) {
       pushNotificationService.initialize().catch(console.warn);
+      showBannerAd().catch(console.warn);
     }
 
     // Check for trending content notification on startup and periodically

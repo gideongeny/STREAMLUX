@@ -1,6 +1,6 @@
 {
   "name": "streamlux",
-  "version": "0.1.2",
+  "version": "1.2.0",
   "proxy": "http://localhost:3001",
   "private": true,
   "dependencies": {
