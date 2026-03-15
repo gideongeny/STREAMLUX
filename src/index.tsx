@@ -90,6 +90,26 @@ function initializeApp() {
     // Don't prevent default - let React handle it
   });
 
+  // DIAGNOSTICS: Catch abrupt window closure or navigations (for F12 issue)
+  window.addEventListener("beforeunload", (event) => {
+    console.warn("[Diagnostic] Window is about to unload. Active Element:", document.activeElement?.tagName);
+    // On some browsers, this might show up in the "Preserve Log" console
+  });
+
+  // DIAGNOSTICS: Detect abrupt viewport changes typical of DevTools opening
+  let lastWidth = window.innerWidth;
+  let lastHeight = window.innerHeight;
+  window.addEventListener("resize", () => {
+    const widthDiff = Math.abs(window.innerWidth - lastWidth);
+    const heightDiff = Math.abs(window.innerHeight - lastHeight);
+    
+    if (widthDiff > 200 || heightDiff > 200) {
+      console.warn(`[Diagnostic] Abrupt viewport change detected: ΔW=${widthDiff}, ΔH=${heightDiff}`);
+    }
+    lastWidth = window.innerWidth;
+    lastHeight = window.innerHeight;
+  });
+
   try {
     const root = ReactDOM.createRoot(rootElement);
 

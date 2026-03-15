@@ -60,6 +60,7 @@
     "yup": "^0.32.11"
   },
   "scripts": {
+    "dev": "npm start",
     "start": "concurrently \"npm run server\" \"npm run client\"",
     "setup:backend": "cd backend && npm install",
     "server": "npm run setup:backend && cd backend && npm run dev",
