@@ -37,10 +37,16 @@ export const trendingNotificationService = {
             });
 
             // 2. System-Level Notification (if native)
+            const imageUrl = topItem.poster_path ? `https://image.tmdb.org/t/p/w500${topItem.poster_path}` : undefined;
+            
             await pushNotificationService.scheduleLocalNotification(
                 `🔥 Trending Now: ${title}`,
-                `A new ${type === 'movie' ? 'Movie' : 'TV Show'} is trending on StreamLux!`,
-                { id: topItem.id, media_type: topItem.media_type }
+                `Everyone is talking about ${title}. Start watching the buzz on StreamLux!`,
+                { 
+                    id: topItem.id, 
+                    media_type: topItem.media_type,
+                    imageUrl: imageUrl
+                }
             );
 
             safeStorage.set("last_notified_trending_id", String(topItem.id));

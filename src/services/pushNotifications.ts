@@ -4,6 +4,7 @@
  */
 
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { safeStorage } from '../utils/safeStorage';
 
@@ -287,9 +288,28 @@ class PushNotificationService {
         data?: any,
         scheduleAt?: Date
     ): Promise<void> {
-        // This would use @capacitor/local-notifications plugin
-        // Placeholder for future implementation
-        console.log('Local notification scheduled:', { title, body, data, scheduleAt });
+        if (!Capacitor.isNativePlatform()) return;
+
+        try {
+            await LocalNotifications.schedule({
+                notifications: [
+                    {
+                        title,
+                        body,
+                        id: Math.floor(Math.random() * 10000),
+                        schedule: scheduleAt ? { at: scheduleAt } : undefined,
+                        extra: data,
+                        smallIcon: 'res://ic_stat_name', // Needs to exist in android res/drawable
+                        largeIcon: data?.imageUrl || undefined,
+                        actionTypeId: 'OPEN_CONTENT',
+                        attachments: data?.imageUrl ? [{ id: 'poster', url: data.imageUrl }] : [],
+                    }
+                ]
+            });
+            console.log('Local notification scheduled with image:', data?.imageUrl);
+        } catch (error) {
+            console.error('Error scheduling local notification:', error);
+        }
     }
 }
 
