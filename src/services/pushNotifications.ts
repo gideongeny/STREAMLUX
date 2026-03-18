@@ -6,6 +6,9 @@
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
+import { pushNotificationService as pushService } from './pushNotifications'; // Self-reference for type check if needed
+import { db, auth as firebaseAuth } from '../shared/firebase';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { safeStorage } from '../utils/safeStorage';
 
 export type NotificationType =
@@ -212,14 +215,33 @@ class PushNotificationService {
      */
     private async saveFCMToken(token: string): Promise<void> {
         try {
-            // Save to localStorage
+            // 1. Save to local storage for quick access
             safeStorage.set('fcm_token', token);
 
-            // TODO: Send to backend for targeted notifications
-            // await fetch('/api/save-fcm-token', {
-            //   method: 'POST',
-            //   body: JSON.stringify({ token }),
-            // });
+            // 2. Persist to Firestore if user is logged in
+            const user = firebaseAuth.currentUser;
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                
+                // Use arrayUnion to store multiple tokens (one for each device)
+                await updateDoc(userDocRef, {
+                    fcmTokens: arrayUnion(token),
+                    lastTokenUpdate: new Date().toISOString()
+                }).catch(async (error) => {
+                    // If document doesn't exist or field is missing, handle gracefully
+                    if (error.code === 'not-found') {
+                        // This shouldn't happen as user doc is created on auth, 
+                        // but let's be safe.
+                        await setDoc(userDocRef, { 
+                            fcmTokens: [token],
+                            lastTokenUpdate: new Date().toISOString()
+                        }, { merge: true });
+                    }
+                });
+                console.log('FCM token persisted to Firestore for user:', user.uid);
+            } else {
+                console.log('FCM token generated but user not logged in. Token will be synced on next login.');
+            }
         } catch (error) {
             console.error('Error saving FCM token:', error);
         }

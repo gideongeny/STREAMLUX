@@ -2,6 +2,7 @@ import { initializeApp, getApps } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { initializeAuth, indexedDBLocalPersistence, browserPopupRedirectResolver, getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getMessaging } from "firebase/messaging";
 
 // StreamLux Firebase Configuration
 const firebaseConfig = {
@@ -44,6 +45,18 @@ try {
 }
 
 export { db, auth };
+
+// Initialize Messaging (FCM)
+let messaging: ReturnType<typeof getMessaging> | undefined;
+if (typeof window !== "undefined") {
+  try {
+    messaging = getMessaging(app);
+  } catch (error) {
+    console.warn("Firebase Messaging initialization failed:", error);
+  }
+}
+
+export { messaging };
 
 // Initialize Analytics (only in browser environment, not in dev)
 let analytics: ReturnType<typeof getAnalytics> | undefined;

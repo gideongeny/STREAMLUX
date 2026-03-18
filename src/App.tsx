@@ -53,6 +53,7 @@ import { App as CapApp } from "@capacitor/app";
 import { themeService } from "./services/theme";
 import { pushNotificationService } from "./services/pushNotifications";
 import { trendingNotificationService } from "./services/trendingNotifications";
+import { webNotificationService } from "./services/webNotificationService";
 import { setLanguage } from "./shared/axios";
 
 // Final deployment heartbeat for unified Vercel backend propagation
@@ -98,6 +99,9 @@ function App() {
     if (Capacitor.isNativePlatform()) {
       pushNotificationService.initialize().catch(console.warn);
       showBannerAd().catch(console.warn);
+    } else {
+      // PC/Web Notifications
+      webNotificationService.initialize().catch(console.warn);
     }
 
     // Check for trending content notification on startup and periodically

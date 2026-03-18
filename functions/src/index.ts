@@ -282,6 +282,86 @@ export const gateway = functions
         }
     });
 
+/**
+ * Scheduled Function: Notify users of new trending content
+ * Runs every 12 hours
+ */
+export const notifyTrendingContent = functions.pubsub
+    .schedule('every 12 hours')
+    .onRun(async (context) => {
+        try {
+            // 1. Fetch trending content from TMDB
+            const response = await axios.get(`${TMDB_BASE_URL}/trending/all/day`, {
+                params: { api_key: TMDB_API_KEY },
+                headers: { 'Authorization': `Bearer ${TMDB_BEARER_TOKEN}` }
+            });
+            const topItem = response.data.results[0];
+            if (!topItem) return null;
+
+            const title = topItem.title || topItem.name;
+            const type = topItem.media_type === "movie" ? "movie" : "tv";
+            const imageUrl = topItem.poster_path ? `https://image.tmdb.org/t/p/w500${topItem.poster_path}` : undefined;
+
+            // 2. Query all users from Firestore who have FCM tokens
+            const usersSnapshot = await admin.firestore().collection('users').where('fcmTokens', '!=', null).get();
+            
+            const allTokens: string[] = [];
+            usersSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                    allTokens.push(...data.fcmTokens);
+                }
+            });
+
+            if (allTokens.length === 0) {
+                console.log('No FCM tokens found to notify.');
+                return null;
+            }
+
+            // Remove duplicates and limit for multicast (max 500 tokens per call)
+            const uniqueTokens = Array.from(new Set(allTokens)).slice(0, 500);
+
+            // 3. Send Multicast Message
+            const message: admin.messaging.MulticastMessage = {
+                tokens: uniqueTokens,
+                notification: {
+                    title: `🔥 Trending Now: ${title}`,
+                    body: `Everyone is talking about ${title}. Watch it now on StreamLux!`,
+                    imageUrl: imageUrl
+                },
+                data: {
+                    type: 'trending',
+                    id: String(topItem.id),
+                    mediaType: type,
+                    url: `/${type}/${topItem.id}`
+                },
+                android: {
+                    priority: 'high',
+                    notification: {
+                        channelId: 'trending',
+                        sticky: false,
+                        visibility: 'public',
+                        icon: 'mipmap/ic_launcher',
+                        color: '#E50914'
+                    }
+                },
+                webpush: {
+                    fcmOptions: {
+                        link: `/${type}/${topItem.id}`
+                    }
+                }
+            };
+
+            const responseFCM = await admin.messaging().sendEachForMulticast(message);
+            console.log(`Successfully sent ${responseFCM.successCount} trending notifications for ${title}.`);
+
+            return null;
+        } catch (error: any) {
+            console.error('Error in notifyTrendingContent:', error.message);
+            return null;
+        }
+    });
+
 // Maintain back-compat exports
 export { proxyTMDB } from './tmdbProxy';
 export { proxyYouTube } from './youtubeProxy';
