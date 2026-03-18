@@ -5,7 +5,7 @@ const MasterReveal: FC = () => {
     const [isVisible, setIsVisible] = useState(true);
 
     useEffect(() => {
-        const timer = setTimeout(() => setIsVisible(false), 2500);
+        const timer = setTimeout(() => setIsVisible(false), 1500);
         return () => clearTimeout(timer);
     }, []);
 

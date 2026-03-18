@@ -38,6 +38,7 @@ import { useScrollPersistence } from "../hooks/useScrollPersistence";
 import { useTranslation } from "react-i18next";
 import SectionSlider from "../components/Slider/SectionSlider";
 import LazySection from "../components/Common/LazySection";
+import HomeSkeleton from "../components/Home/HomeSkeleton";
 import { Item } from "../shared/types";
 
 const Home: FC = () => {
@@ -144,13 +145,13 @@ const Home: FC = () => {
     });
   };
 
-  const {
+   const {
     data: dataMovie,
     isLoading: isLoadingMovie,
     isError: isErrorMovie,
     error: errorMovie,
     detailQuery: detailQueryMovie,
-  } = useHomeData("movie", currentTab === "movie" ? historyItems : []);
+  } = useHomeData("movie", currentTab === "movie" ? historyItems : [], currentTab === "movie");
   
   const {
     data: dataTV,
@@ -158,7 +159,7 @@ const Home: FC = () => {
     isError: isErrorTV,
     error: errorTV,
     detailQuery: detailQueryTV,
-  } = useHomeData("tv", currentTab === "tv" ? historyItems : []);
+  } = useHomeData("tv", currentTab === "tv" ? historyItems : [], currentTab === "tv");
 
   if (isErrorMovie) return (
     <div className="flex items-center justify-center min-h-screen bg-dark text-white">
@@ -297,22 +298,30 @@ const Home: FC = () => {
 
           {/* Main Banner Slider for Movies/TV */}
           {currentTab === "movie" && (
-            <MainHomeFilm
-              data={dataMovie}
-              dataDetail={detailQueryMovie.data}
-              isLoadingBanner={detailQueryMovie.isLoading}
-              isLoadingSection={isLoadingMovie}
-              onActiveImageChange={setActiveGlowImage}
-            />
+            isLoadingMovie && !dataMovie ? (
+              <HomeSkeleton />
+            ) : (
+              <MainHomeFilm
+                data={dataMovie}
+                dataDetail={detailQueryMovie.data}
+                isLoadingBanner={detailQueryMovie.isLoading}
+                isLoadingSection={isLoadingMovie}
+                onActiveImageChange={setActiveGlowImage}
+              />
+            )
           )}
           {currentTab === "tv" && (
-            <MainHomeFilm
-              data={dataTV}
-              dataDetail={detailQueryTV.data}
-              isLoadingBanner={detailQueryTV.isLoading}
-              isLoadingSection={isLoadingTV}
-              onActiveImageChange={setActiveGlowImage}
-            />
+            isLoadingTV && !dataTV ? (
+              <HomeSkeleton />
+            ) : (
+              <MainHomeFilm
+                data={dataTV}
+                dataDetail={detailQueryTV.data}
+                isLoadingBanner={detailQueryTV.isLoading}
+                isLoadingSection={isLoadingTV}
+                onActiveImageChange={setActiveGlowImage}
+              />
+            )
           )}
 
           {/* Conditional Sections based on Tab */}
@@ -452,7 +461,7 @@ const FilmTypeButton: FC<FilmTypeButtonProps> = memo(({
       onClick={() => {
         onSetCurrentTab(buttonType);
       }}
-      className={`relative transition duration-300 hover:text-white ${isActive ? "text-white font-medium" : "text-gray-400"
+      className={`relative transition duration-300 hover:text-white tw-hit-target ${isActive ? "text-white font-medium" : "text-gray-400"
         }`}
     >
       {getButtonText()}

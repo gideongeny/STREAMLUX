@@ -39,6 +39,7 @@ import WatchlistPage from "./pages/WatchlistPage";
 import AtmosphericBackground from "./components/Common/AtmosphericBackground";
 import MobileBottomNav from "./components/Navigation/MobileBottomNav";
 import GeniusAI from "./components/Common/GeniusAI";
+import OnboardingOverlay from "./components/Common/OnboardingOverlay";
 import MatchesDetails from "./pages/Sports/MatchesDetails";
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
@@ -97,15 +98,6 @@ function App() {
     if (Capacitor.isNativePlatform()) {
       pushNotificationService.initialize().catch(console.warn);
       showBannerAd().catch(console.warn);
-      
-      // Test Notification for Verification (MovieBox style)
-      setTimeout(() => {
-        pushNotificationService.scheduleLocalNotification(
-          "🎬 Welcome back to StreamLux!",
-          "Ready for your movie night? Check out today's trending hits! 🔥",
-          { imageUrl: "https://image.tmdb.org/t/p/w500/uDsvTUfS1AB7h4ETvO87Y9X1vI6.jpg" } // Sample poster (Avatar)
-        );
-      }, 5000);
     }
 
     // Check for trending content notification on startup and periodically
@@ -491,6 +483,7 @@ function App() {
           <DownloadTray />
           <MobileBottomNav />
           <GeniusAI />
+          <OnboardingOverlay />
         </div>
       </DownloadManagerProvider>
     </div>

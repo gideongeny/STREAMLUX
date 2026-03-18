@@ -130,6 +130,9 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     const [showMagicMenu, setShowMagicMenu] = useState(false); // Magic Menu state
     const [showReactions, setShowReactions] = useState(false); // Reactions (LiveBuzz) state
     const [autoplayBlocked, setAutoplayBlocked] = useState(false); // Policy Handler
+    const [isLocked, setIsLocked] = useState(false); // Playback Lock State
+    const [showLockHint, setShowLockHint] = useState(false);
+    const lockTimerRef = useRef<NodeJS.Timeout | null>(null);
     const adTimerRef = useRef<NodeJS.Timeout | null>(null);
     const bufferCheckTimer = useRef<NodeJS.Timeout | null>(null);
     const retryCount = useRef(0);
@@ -385,9 +388,26 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     const handlePiPToggle = async () => {
         if (!videoRef.current || !document.pictureInPictureEnabled) return;
         try {
-            if (isPiP) { await document.exitPictureInPicture(); setIsPiP(false); }
-            else { await videoRef.current.requestPictureInPicture(); setIsPiP(true); }
-        } catch (error) { console.error('PiP error:', error); }
+            if (document.pictureInPictureElement) { 
+                await document.exitPictureInPicture(); 
+            } else { 
+                await videoRef.current.requestPictureInPicture(); 
+            }
+        } catch (error) { 
+            console.error('PiP error:', error); 
+        }
+    };
+
+    const handleToggleLock = () => {
+        setIsLocked(!isLocked);
+        if (!isLocked) {
+            setControlsVisible(false);
+            toast.info(t("Controls Locked"), { position: "top-center", autoClose: 1000 });
+        } else {
+            setControlsVisible(true);
+            toast.success(t("Controls Unlocked"), { position: "top-center", autoClose: 1000 });
+        }
+        hapticImpact();
     };
 
     const handleSkipAd = () => {
@@ -537,6 +557,37 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         >
             <AmbiFlowGlow videoRef={videoRef} poster={poster} isActive={isCinemaMode || isFullscreen} />
 
+            {/* Playback Lock Overlay */}
+            <AnimatePresence>
+                {isLocked && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-[200] flex items-center justify-center bg-black/5"
+                        onClick={() => {
+                            setShowLockHint(true);
+                            if (lockTimerRef.current) clearTimeout(lockTimerRef.current);
+                            lockTimerRef.current = setTimeout(() => setShowLockHint(false), 2000);
+                        }}
+                    >
+                        {showLockHint && (
+                            <motion.button
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                onClick={(e) => { e.stopPropagation(); handleToggleLock(); }}
+                                className="p-6 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white shadow-2xl"
+                            >
+                                <div className="flex flex-col items-center gap-2">
+                                    <MdFullscreenExit size={32} className="text-primary rotate-45" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('Unlock Controls')}</span>
+                                </div>
+                            </motion.button>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Indicator Overlay */}
             <AnimatePresence>
                 {indicator && (
@@ -642,6 +693,14 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                                     <FiMessageSquare size={16} className={showReactions ? "text-primary" : "text-gray-400"} />
                                     <span className="font-bold">{showReactions ? t('Hide Reactions') : t('Show Reactions')}</span>
                                 </button>
+
+                                <button
+                                    onClick={() => { handleToggleLock(); setShowMagicMenu(false); }}
+                                    className="w-full flex items-center gap-3 px-4 py-3 text-xs text-red-400 hover:bg-red-400/10 transition-all font-bold"
+                                >
+                                    <MdFullscreenExit size={16} className="rotate-45" />
+                                    <span>{t('Lock Controls')}</span>
+                                </button>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -732,17 +791,30 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                                     <FaVolumeUp size={13} />
                                     <span>{audioTracks.find(t => t.id === activeAudio)?.label || 'Audio'}</span>
                                 </button>
-                                {showAudioMenu && (
-                                    <div className="absolute bottom-full right-0 mb-1 w-36 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-xl overflow-hidden py-1">
-                                        <div className="px-3 py-1.5 text-[10px] text-gray-500 uppercase tracking-wider font-bold">Audio</div>
-                                        {audioTracks.map((track) => (
-                                            <button key={track.id} onClick={() => handleAudioChange(track.id)} className={`w-full text-left px-3 py-2 text-xs transition flex items-center gap-2 ${activeAudio === track.id ? 'text-primary bg-white/5' : 'text-gray-300 hover:bg-white/5'}`}>
-                                                {activeAudio === track.id && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
-                                                {track.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
+                                <AnimatePresence>
+                                    {showAudioMenu && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                                            className="absolute bottom-full right-0 mb-3 w-48 bg-[#0a0a1a]/95 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-3 z-[100]"
+                                        >
+                                            <div className="px-4 pb-2 text-[10px] text-gray-500 uppercase tracking-widest font-black flex items-center gap-2 border-b border-white/5 mb-2">
+                                                <FaVolumeUp className="text-primary" /> {t('Audio Tracks')}
+                                            </div>
+                                            {audioTracks.map((track) => (
+                                                <button 
+                                                    key={track.id} 
+                                                    onClick={() => handleAudioChange(track.id)} 
+                                                    className={`w-full text-left px-4 py-3 text-xs transition-all flex items-center justify-between ${activeAudio === track.id ? 'text-primary bg-primary/10 font-bold' : 'text-gray-300 hover:bg-white/5'}`}
+                                                >
+                                                    {track.label}
+                                                    {activeAudio === track.id && <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(255,255,255,0.5)]" />}
+                                                </button>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         )}
 
@@ -752,15 +824,37 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                                     <FaClosedCaptioning size={14} />
                                     <span>{activeSubtitle === 'off' ? 'Sub' : activeSubtitle.toUpperCase()}</span>
                                 </button>
-                                {showSubtitleMenu && (
-                                    <div className="absolute bottom-full right-0 mb-1 w-40 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-xl overflow-hidden py-1">
-                                        <div className="px-3 py-1.5 text-[10px] text-gray-500 uppercase font-bold">Subtitles</div>
-                                        <button onClick={() => handleSubtitleChange('off')} className={`w-full text-left px-3 py-2 text-xs transition ${activeSubtitle === 'off' ? 'text-primary bg-white/5' : 'text-gray-300 hover:bg-white/5'}`}>Off</button>
-                                        {subtitleTracks.map((track) => (
-                                            <button key={track.language} onClick={() => handleSubtitleChange(track.language)} className={`w-full text-left px-3 py-2 text-xs transition ${activeSubtitle === track.language ? 'text-primary bg-white/5' : 'text-gray-300 hover:bg-white/5'}`}>{track.label}</button>
-                                        ))}
-                                    </div>
-                                )}
+                                <AnimatePresence>
+                                    {showSubtitleMenu && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                                            className="absolute bottom-full right-0 mb-3 w-48 bg-[#0a0a1a]/95 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-3 z-[100]"
+                                        >
+                                            <div className="px-4 pb-2 text-[10px] text-gray-500 uppercase tracking-widest font-black flex items-center gap-2 border-b border-white/5 mb-2">
+                                                <FaClosedCaptioning className="text-primary" /> {t('Subtitles')}
+                                            </div>
+                                            <button 
+                                                onClick={() => handleSubtitleChange('off')} 
+                                                className={`w-full text-left px-4 py-3 text-xs transition-all flex items-center justify-between ${activeSubtitle === 'off' ? 'text-primary bg-primary/10 font-bold' : 'text-gray-300 hover:bg-white/5'}`}
+                                            >
+                                                Off
+                                                {activeSubtitle === 'off' && <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(255,255,255,0.5)]" />}
+                                            </button>
+                                            {subtitleTracks.map((track) => (
+                                                <button 
+                                                    key={track.language} 
+                                                    onClick={() => handleSubtitleChange(track.language)} 
+                                                    className={`w-full text-left px-4 py-3 text-xs transition-all flex items-center justify-between ${activeSubtitle === track.language ? 'text-primary bg-primary/10 font-bold' : 'text-gray-300 hover:bg-white/5'}`}
+                                                >
+                                                    {track.label}
+                                                    {activeSubtitle === track.language && <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(255,255,255,0.5)]" />}
+                                                </button>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         )}
 
@@ -783,7 +877,10 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                         </div>
 
                         {document.pictureInPictureEnabled && (
-                            <button onClick={handlePiPToggle} className="flex items-center px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white hover:bg-black/90 transition">
+                            <button 
+                                onClick={handlePiPToggle} 
+                                className={`flex items-center px-2.5 py-1.5 ${document.pictureInPictureElement ? 'bg-primary text-black' : 'bg-black/70 text-white'} backdrop-blur border border-white/10 rounded-lg hover:bg-primary hover:text-black transition`}
+                            >
                                 <MdPictureInPicture size={15} />
                             </button>
                         )}

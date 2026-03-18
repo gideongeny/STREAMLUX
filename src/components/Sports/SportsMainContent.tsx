@@ -12,6 +12,7 @@ import SportsPremiumMatchCard from "./SportsPremiumMatchCard";
 import SectionSlider from "../Slider/SectionSlider";
 import MatchCenterModal from "./MatchCenterModal";
 import TeamScheduleWidget from "./TeamScheduleWidget";
+import SportsCardSkeleton from "./SportsCardSkeleton";
 import { safeStorage } from "../../utils/safeStorage";
 
 // Unified calendar row
@@ -31,30 +32,48 @@ const SportsMainContent: FC = () => {
     const [selectedFixtureId, setSelectedFixtureId] = useState<string | null>(null);
 
     // Fetch real live data with Caching & Stale-While-Revalidate
+    const fetchData = async () => {
+        setIsLoading(true);
+        // Background fetch for non-live content
+        try {
+            const [upcoming, variety] = await Promise.all([
+                getUpcomingFixturesAPI(),
+                getVarietySports()
+            ]);
+            setUpcomingFixtures(upcoming);
+            setVarietySports(variety);
+            
+            // Cache variety sports too
+            safeStorage.set(`sports_variety_${CACHE_VERSION}`, JSON.stringify(variety));
+        } catch (err) {
+            console.error("Failed to fetch sports data:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     useEffect(() => {
         // Init with cache immediately
         const cachedLive = safeStorage.get(`sports_live_fixtures_${CACHE_VERSION}`);
         if (cachedLive) {
             try { setLiveFixtures(JSON.parse(cachedLive)); } catch (e) {}
         }
+        
+        const cachedVariety = safeStorage.get(`sports_variety_${CACHE_VERSION}`);
+        if (cachedVariety) {
+            try { setVarietySports(JSON.parse(cachedVariety)); } catch (e) {}
+        }
 
         const unsubscribe = subscribeToLiveScores((fixtures) => {
             if (fixtures && fixtures.length > 0) {
                 setLiveFixtures(fixtures);
-                setIsLoading(false);
                 // Background cache update
                 safeStorage.set(`sports_live_fixtures_${CACHE_VERSION}`, JSON.stringify(fixtures));
-            } else {
-                // If we get 0 from subscriber, we DON'T overwrite if we already have data
-                // This prevents the "refreshing back to 0" issue during silent aggregator failures
-                console.warn("Subscriber returned empty. Retaining stale data.");
-                setIsLoading(false);
             }
+            setIsLoading(false);
         }, 60000);
 
-        // Background fetch for non-live content
-        getUpcomingFixturesAPI().then(setUpcomingFixtures);
-        getVarietySports().then(setVarietySports);
+        fetchData();
 
         return () => unsubscribe();
     }, []);
@@ -195,20 +214,31 @@ const SportsMainContent: FC = () => {
             <div className="flex flex-col lg:flex-row gap-10 mb-20">
                 {/* Main Match Grid */}
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {filteredFixtures.map((fixture) => (
-                        <div key={fixture.id}>
-                            <SportsPremiumMatchCard
-                                fixture={fixture}
-                                isExternal={!!(fixture.matchId || (fixture.streamSources?.length || 0) > 0)}
-                                getMatchLink={getMatchLink}
-                            />
-                        </div>
-                    ))}
+                    {isLoading && filteredFixtures.length === 0 ? (
+                        Array.from({ length: 6 }).map((_, i) => <SportsCardSkeleton key={i} />)
+                    ) : (
+                        filteredFixtures.map((fixture) => (
+                            <div key={fixture.id}>
+                                <SportsPremiumMatchCard
+                                    fixture={fixture}
+                                    isExternal={!!(fixture.matchId || (fixture.streamSources?.length || 0) > 0)}
+                                    getMatchLink={getMatchLink}
+                                />
+                            </div>
+                        ))
+                    )}
+                    
                     {filteredFixtures.length === 0 && !isLoading && (
                         <div className="col-span-full py-32 text-center rounded-[3rem] bg-dark-lighten/20 border border-dashed border-white/10">
                             <MdCalendarToday size={48} className="mx-auto text-gray-700 mb-6" />
                             <h3 className="text-2xl font-black text-white mb-2">NO EVENTS FOUND</h3>
-                            <p className="text-gray-500 max-w-sm mx-auto">No matches currently match your criteria. Try selecting another competition.</p>
+                            <p className="text-gray-500 max-w-sm mx-auto mb-6">No matches currently match your criteria. Try selecting another competition.</p>
+                            <button 
+                                onClick={fetchData} 
+                                className="px-8 py-3 bg-primary text-black font-black uppercase tracking-widest rounded-full hover:scale-105 transition-transform"
+                            >
+                                Retry Fetch
+                            </button>
                         </div>
                     )}
                 </div>
@@ -229,49 +259,38 @@ const SportsMainContent: FC = () => {
                 )}
             </div>
 
-            {/* Variety Sports - Thematic Sliders */}
+            {/* Variety Sports - Adaptive Grid Refactor */}
             {varietySports.length > 0 && (
-                <div className="space-y-20">
+                <div className="space-y-24">
                     <Suspense fallback={null}>
-                    <SectionSlider
+                         {/* We swap horizontal sliders for a centralized 'See All' Browseable Grid for certain categories */}
+                         <div className="space-y-10">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-3xl font-black text-white uppercase tracking-tighter">
+                                    Browse <span className="text-primary italic">Variety Arena</span>
+                                </h2>
+                                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">Grid View Enabled</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                                {varietySports.slice(0, 10).map((s, idx) => (
+                                    <div key={idx} className="group relative aspect-[16/9] rounded-2xl overflow-hidden bg-dark-lighten/20 border border-white/5 hover:border-primary/40 transition-all">
+                                        <img src={s.thumb || s.poster_path} alt={s.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                                        <div className="absolute bottom-3 left-3 right-3">
+                                            <p className="text-[10px] font-black text-white uppercase truncate">{s.title}</p>
+                                            <p className="text-[8px] text-primary font-bold uppercase tracking-tighter">{s.sportsCategory}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                         </div>
+
+                        <SectionSlider
                             title={t('Elite Football Highlights')}
                             films={varietySports.filter(s => s.sportsCategory === "Elite Football" || s.sportsCategory === "Football")}
                         />
-                        <SectionSlider
-                            title={t('NBA Elite Clips')}
-                            films={varietySports.filter(s => s.sportsCategory === "NBA" || s.sportsCategory === "Basketball")}
-                        />
-                        <SectionSlider
-                            title={t('UFC Knockouts')}
-                            films={varietySports.filter(s => s.sportsCategory === "UFC" || s.sportsCategory === "Combat Sports")}
-                        />
-                        <SectionSlider
-                            title={t('Formula 1 On-Boards')}
-                            films={varietySports.filter(s => s.sportsCategory === "F1" || s.sportsCategory === "Racing")}
-                        />
-                        <SectionSlider
-                            title={t('Cricket Thrillers')}
-                            films={varietySports.filter(s => s.sportsCategory === "Cricket")}
-                        />
-                         <SectionSlider
-                            title={t('Tennis Masters')}
-                            films={varietySports.filter(s => s.sportsCategory === "Tennis")}
-                        />
-                        <SectionSlider
-                            title={t('NCAA Collegiate Specials')}
-                            films={varietySports.filter(s => s.sportsCategory === "NCAA Collegiate")}
-                        />
-                        <SectionSlider
-                            title={t('Pro Wrestling Highlights')}
-                            films={varietySports.filter(s => s.sportsCategory === "Pro Wrestling")}
-                        />
-                        <SectionSlider
-                            title={t('Sports Documentaries')}
-                            films={varietySports.filter(s => s.sportsCategory === "Documentary" || s.sportsCategory === "Movie")}
-                        />
-                        <div className="py-12 px-8 rounded-[3rem] bg-gradient-to-br from-indigo-900/20 to-black border border-white/5">
-                            <UpcomingCalendar title={t('Historical Match Replays')} contentType="sports" />
-                        </div>
+                        {/* More sliders can remain but prioritizing the grid above */}
                     </Suspense>
                 </div>
             )}

@@ -141,7 +141,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
       )}
 
       <div
-        className={`fixed top-0 left-0 h-screen w-[260px] bg-dark border-r border-gray-darken z-[110] flex flex-col transition-transform duration-500 overflow-y-auto scrollbar-hide ${isSidebarActive ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        className={`fixed top-0 left-0 h-screen w-[260px] bg-dark/95 backdrop-blur-xl border-r border-white/5 z-[110] flex flex-col transition-transform duration-500 overflow-y-auto scrollbar-hide ${isSidebarActive ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           }`}
       >
         {!isMobile && (
@@ -171,7 +171,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
         <div className="mt-8 ml-4 flex flex-col gap-6">
           <Link
             to="/"
-            className={`flex gap-6 items-center  ${location.pathname === "/" &&
+            className={`flex gap-6 items-center tw-hit-target ${location.pathname === "/" &&
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300`}
           >
@@ -181,7 +181,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
           <Link
             to="/sports"
-            className={`flex gap-6 items-center  ${location.pathname === "/sports" &&
+            className={`flex gap-6 items-center tw-hit-target ${location.pathname === "/sports" &&
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300`}
           >
@@ -301,7 +301,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
           <Link
             to="/settings"
-            className={`flex gap-6 items-center  ${location.pathname === "/settings" &&
+            className={`flex gap-6 items-center tw-hit-target ${location.pathname === "/settings" &&
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300`}
           >

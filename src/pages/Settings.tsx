@@ -2,6 +2,7 @@ import { FunctionComponent, useEffect, useRef, useState } from "react";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
+import { useQueryClient } from "@tanstack/react-query";
 import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
 import NotificationRequest from "../components/Common/NotificationRequest";
@@ -33,6 +34,7 @@ const Settings: FunctionComponent<SettingsProps> = () => {
     const [apiKey, setApiKey] = useState("");
     const [isValidating, setIsValidating] = useState(false);
     const keyInputRef = useRef<HTMLInputElement>(null);
+    const queryClient = useQueryClient();
 
     const dispatch = useAppDispatch();
     const currentUser = useAppSelector((state) => state.auth.user);
@@ -51,12 +53,16 @@ const Settings: FunctionComponent<SettingsProps> = () => {
         safeStorage.get("background_audio_enabled") === "true"
     );
 
+    const [m3uProvider, setM3uProvider] = useState("");
+    const m3uInputRef = useRef<HTMLInputElement>(null);
+
     useEffect(() => {
-        // Load saved key on mount
+        // Load saved keys on mount
         const savedKey = safeStorage.get("user_youtube_api_key");
-        if (savedKey) {
-            setApiKey(savedKey);
-        }
+        if (savedKey) setApiKey(savedKey);
+
+        const savedM3u = safeStorage.get("m3u_provider_url");
+        if (savedM3u) setM3uProvider(savedM3u);
     }, []);
 
     const handleSaveKey = async () => {
@@ -80,6 +86,13 @@ const Settings: FunctionComponent<SettingsProps> = () => {
         } else {
             toast.error("Invalid API Key. Please check and try again.", { position: "top-right" });
         }
+    };
+
+    const handleSaveM3u = () => {
+        const newUrl = m3uInputRef.current?.value.trim() || "";
+        safeStorage.set("m3u_provider_url", newUrl);
+        setM3uProvider(newUrl);
+        toast.success(newUrl ? "M3U Provider link updated!" : "Provider link removed.", { position: "top-right" });
     };
 
     const handleThemeChange = (color: string) => {
@@ -121,10 +134,21 @@ const Settings: FunctionComponent<SettingsProps> = () => {
             key.startsWith("search_") ||
             key.startsWith("video_detail_") ||
             key.startsWith("tmdb_cache_") ||
-            key.startsWith("yt_cache_")
+            key.startsWith("yt_cache_") ||
+            key.startsWith("home_") ||
+            key.startsWith("sports_")
         );
         keysToRemove.forEach(key => safeStorage.remove(key));
         toast.success(`Cleared ${keysToRemove.length} cached items!`, { position: "top-right" });
+    };
+
+    const handleRefreshLibrary = () => {
+        handleClearCache();
+        queryClient.invalidateQueries(); // Invalidate all React Query data
+        toast.info("Refreshing library content...", { position: "top-center" });
+        setTimeout(() => {
+            window.location.reload(); 
+        }, 800);
     };
 
     const handleBiometricToggle = async () => {
@@ -243,6 +267,49 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                             </div>
                         </div>
 
+                        {/* M3U Provider Section */}
+                        <div className="bg-dark p-6 rounded-xl border border-white/5 shadow-lg mb-8">
+                            <h2 className="text-xl text-white font-bold mb-4 flex items-center gap-2">
+                                <span className="text-indigo-400">📺</span> M3U / XUI Provider
+                            </h2>
+                            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                                Unlock thousands of live channels and global movies by connecting your M3U or XUI service provider.
+                            </p>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Provider M3U Link / API URL
+                                    </label>
+                                    <div className="flex gap-3">
+                                        <input
+                                            ref={m3uInputRef}
+                                            type="text"
+                                            defaultValue={m3uProvider}
+                                            placeholder="https://example.com/playlist.m3u"
+                                            className="flex-grow bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors font-mono text-sm"
+                                        />
+                                        <button
+                                            onClick={handleSaveM3u}
+                                            className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition-colors shadow-lg shadow-indigo-500/20 tw-hit-target"
+                                        >
+                                            Link
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {m3uProvider && (
+                                    <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 flex items-start gap-3">
+                                        <div className="text-primary mt-0.5">✓</div>
+                                        <div>
+                                            <p className="text-primary text-sm font-bold">Provider Linked</p>
+                                            <p className="text-primary/70 text-xs">Library content will prioritize your provider.</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         {/* Cinema Moods Section */}
                         <div className="bg-dark p-6 rounded-xl border border-white/5 shadow-lg mb-8">
                             <h2 className="text-xl text-white font-bold mb-1">Cinema Moods</h2>
@@ -305,6 +372,26 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                                 {/* Divider */}
                                 <div className="h-px bg-white/5" />
 
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-white font-medium">Refresh Global Library</p>
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            Forces the app to clear all cache and fetch fresh data from all providers.
+                                            <br />
+                                            Use this after updating your Provider Link.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleRefreshLibrary}
+                                        className="px-4 py-2 bg-primary text-black text-sm font-bold rounded-lg hover:bg-white transition-colors border border-primary shadow-lg shadow-primary/20"
+                                    >
+                                        Refresh Now
+                                    </button>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="h-px bg-white/5" />
+
                                 {/* Auto-Play Toggle */}
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -326,19 +413,37 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                                 {/* Divider */}
                                 <div className="h-px bg-white/5" />
 
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-white font-medium">Refresh Global Library</p>
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            Forces the app to clear all cache and fetch fresh data from all providers.
+                                            <br />
+                                            Use this after updating your Provider Link.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleRefreshLibrary}
+                                        className="px-4 py-2 bg-primary text-black text-sm font-bold rounded-lg hover:bg-white transition-colors border border-primary shadow-lg shadow-primary/20"
+                                    >
+                                        Refresh Now
+                                    </button>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="h-px bg-white/5" />
+
                                 {/* Clear Cache */}
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-white font-medium">Clear App Cache</p>
+                                        <p className="text-white font-medium">Clear All Cache</p>
                                         <p className="text-gray-500 text-xs mt-1">
                                             Fixes loading issues by clearing locally stored data (searches, history).
-                                            <br />
-                                            Safe to use; does not delete your account.
                                         </p>
                                     </div>
                                     <button
                                         onClick={handleClearCache}
-                                        className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-lg transition-colors border border-white/10"
+                                        className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-lg transition-colors border border-white/10 tw-hit-target"
                                     >
                                         Clear Cache
                                     </button>

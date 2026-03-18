@@ -299,8 +299,9 @@ class PushNotificationService {
                         id: Math.floor(Math.random() * 10000),
                         schedule: scheduleAt ? { at: scheduleAt } : undefined,
                         extra: data,
-                        smallIcon: 'res://ic_stat_name', // Needs to exist in android res/drawable
+                        smallIcon: 'mipmap/ic_launcher', // Use standard app icon
                         largeIcon: data?.imageUrl || undefined,
+                        iconColor: '#E50914', // StreamLux Primary Red
                         actionTypeId: 'OPEN_CONTENT',
                         attachments: data?.imageUrl ? [{ id: 'poster', url: data.imageUrl }] : [],
                     }
