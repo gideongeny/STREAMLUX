@@ -115,6 +115,15 @@ class PushNotificationService {
         // This is a placeholder for the channel configuration
         const channels = [
             {
+                id: 'trending',
+                name: 'Trending & New Content',
+                description: 'Get notified for new releases and trending movies/TV shows',
+                importance: 4, // HIGH - Shows as heads-up and supports rich media
+                visibility: 1, // PUBLIC
+                sound: 'default',
+                vibration: true,
+            },
+            {
                 id: 'new_episodes',
                 name: 'New Episodes',
                 description: 'Notifications for new episodes of your favorite shows',
@@ -131,12 +140,12 @@ class PushNotificationService {
                 vibration: false,
             },
             {
-                id: 'trending',
-                name: 'Trending Content',
-                description: 'Trending movies and shows in your region',
-                importance: 2, // LOW
-                sound: null,
-                vibration: false,
+                id: 'updates',
+                name: 'App Updates',
+                description: 'Notifications for new app versions and features',
+                importance: 3,
+                sound: 'default',
+                vibration: true,
             },
             {
                 id: 'achievements',
@@ -145,27 +154,19 @@ class PushNotificationService {
                 importance: 2, // LOW
                 sound: 'achievement',
                 vibration: true,
-            },
-            {
-                id: 'daily_reminder',
-                name: 'Daily Reminders',
-                description: 'Daily engagement and streak reminders',
-                importance: 2, // LOW
-                sound: null,
-                vibration: false,
-            },
-            {
-                id: 'recommendations',
-                name: 'Recommendations',
-                description: 'Personalized content recommendations',
-                importance: 2, // LOW
-                sound: null,
-                vibration: false,
-            },
+            }
         ];
 
-        // Store channel configuration for native implementation
-        safeStorage.set('notification_channels', JSON.stringify(channels));
+        try {
+            for (const channel of channels) {
+                await PushNotifications.createChannel(channel as any);
+            }
+            console.log('Mobile notification channels created successfully');
+            // Store channel configuration for reference
+            safeStorage.set('notification_channels', JSON.stringify(channels));
+        } catch (error) {
+            console.error('Error creating push notification channels:', error);
+        }
     }
 
     /**

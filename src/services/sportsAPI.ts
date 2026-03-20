@@ -432,15 +432,20 @@ export const getScrapedMatches = async (): Promise<SportsFixtureConfig[]> => {
 };
 
 // Persistence Guard: Cache for the last successful fetch to prevent UI clearing
-let LAST_KNOWN_GOOD_LIVE: SportsFixtureConfig[] = [];
-let LAST_SUCCESS_TIME = 0;
+let LAST_KNOWN_GOOD_LIVE: SportsFixtureConfig[] = (() => {
+  try {
+    const saved = localStorage.getItem('streamlux_last_fixtures');
+    return saved ? JSON.parse(saved) : [];
+  } catch (e) { return []; }
+})();
+let LAST_SUCCESS_TIME = parseInt(localStorage.getItem('streamlux_last_fixtures_time') || "0");
 
 export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s budget
 
-    // 1. Fetch from ALL sources in parallel (no waterfall shadowing)
+    // 1. Fetch from ALL sources in parallel
     const results = await Promise.allSettled([
       // Sportmonks (Elite Data)
       (async () => {
@@ -469,13 +474,13 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
         return await getESPNScores().catch(() => []);
       })(),
 
-      // Scraped Content (The Multi-Source Engine)
+      // Scraped Content
       getScrapedMatches().catch(() => []),
 
-      // General Public (TheSportsDB/Sofascore)
+      // General Public
       getLiveFixturesPublic().catch(() => []),
       
-      // API Sports (Reliable Fallback)
+      // API Sports
       getLiveFixturesAPISports(controller.signal).catch(() => [])
     ]);
 
@@ -493,17 +498,15 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
     const uniqueMap = new Map<string, SportsFixtureConfig>();
     
     allFixtures.forEach(f => {
-      // Create a unique key based on normalized team names
       const home = f.homeTeam?.toLowerCase().trim() || "";
       const away = f.awayTeam?.toLowerCase().trim() || "";
       const key = `${home} vs ${away}`;
       
       const existing = uniqueMap.get(key);
       if (!existing || (f.priority && f.priority > (existing as any).priority)) {
-        // Only override if new one has better priority or we haven't seen this match
         uniqueMap.set(key, {
             ...f,
-            status: "live", // Force live status for everything in this bucket
+            status: "live",
             isLive: true
         });
       }
@@ -511,15 +514,18 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
 
     const finalResults = Array.from(uniqueMap.values());
 
-    // 4. Persistence Guard Logic
+    // 4. Persistence Guard Logic with localStorage
     if (finalResults.length > 0) {
       LAST_KNOWN_GOOD_LIVE = finalResults;
       LAST_SUCCESS_TIME = Date.now();
+      try {
+        localStorage.setItem('streamlux_last_fixtures', JSON.stringify(finalResults));
+        localStorage.setItem('streamlux_last_fixtures_time', LAST_SUCCESS_TIME.toString());
+      } catch (e) {}
       return finalResults;
     } else {
-      // If we got 0 results, check if we have a relatively fresh backup
       const now = Date.now();
-      const BACKUP_WINDOW = 5 * 60 * 1000; // 5 minutes
+      const BACKUP_WINDOW = 15 * 60 * 1000; // Extend to 15 minutes for reliability
       if (LAST_KNOWN_GOOD_LIVE.length > 0 && (now - LAST_SUCCESS_TIME < BACKUP_WINDOW)) {
         console.warn("Live fetch returned 0. Using Persistence Guard fallback.");
         return LAST_KNOWN_GOOD_LIVE;

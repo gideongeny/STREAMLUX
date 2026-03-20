@@ -21,7 +21,9 @@ const UpcomingCalendar: FC<UpcomingCalendarProps> = ({
     title = "Upcoming Calendar",
     contentType = "movie"
 }) => {
-    const { data, isLoading } = useQuery(["upcoming-calendar", contentType], async () => {
+    const { data, isLoading } = useQuery(["upcoming", contentType], async () => {
+        const today = new Date().toISOString().split('T')[0];
+
         if (contentType === "sports") {
             const fixtures = await getUpcomingFixturesAPI();
             return fixtures.map(f => ({
@@ -36,26 +38,30 @@ const UpcomingCalendar: FC<UpcomingCalendarProps> = ({
                 awayTeamLogo: f.awayTeamLogo,
                 venue: f.venue,
                 leagueId: f.leagueId
-            })) as any[];
+            })).filter(f => f.release_date >= today) as any[];
         }
 
         if (contentType === "movie") {
             const res = await axios.get("/movie/upcoming", { params: { page: 1 } });
-            return res.data.results.map((m: any) => ({
-                ...m,
-                media_type: "movie",
-                title: m.title
-            })) as Item[];
+            return res.data.results
+                .filter((m: any) => (m.release_date || "") >= today)
+                .map((m: any) => ({
+                    ...m,
+                    media_type: "movie",
+                    title: m.title
+                })) as Item[];
         }
 
         if (contentType === "tv") {
             const res = await axios.get("/tv/on_the_air", { params: { page: 1 } });
-            return res.data.results.map((t: any) => ({
-                ...t,
-                media_type: "tv",
-                title: t.name,
-                release_date: t.first_air_date // Fix: Map first_air_date to release_date
-            })) as Item[];
+            return res.data.results
+                .filter((t: any) => (t.first_air_date || "") >= today)
+                .map((t: any) => ({
+                    ...t,
+                    media_type: "tv",
+                    title: t.name,
+                    release_date: t.first_air_date
+                })) as Item[];
         }
 
         return [] as Item[];
@@ -67,7 +73,7 @@ const UpcomingCalendar: FC<UpcomingCalendarProps> = ({
 
     // Function to generate a random "booked" count to mimic MovieBox style
     const getBookedCount = (id: string | number) => {
-        const idNum = typeof id === 'number' ? id : (id.split('-').pop() || '0').length * 100;
+        const idNum = typeof id === 'number' ? id : (id.toString().split('-').pop() || '0').length * 100;
         const base = (Number(idNum) % 1000) * 15 + 1200;
         return base.toLocaleString();
     };

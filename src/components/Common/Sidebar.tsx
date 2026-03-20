@@ -212,14 +212,14 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
         {/* 🎭 GENRES SECTION */}
         <div className="text-white text-lg font-bold uppercase tracking-widest mt-12 px-8 flex items-center gap-3 border-l-4 border-primary">{t('GENRES')}</div>
-        <div className="mt-8 px-8 flex flex-col gap-4 max-h-[400px] overflow-y-auto scrollbar-hide custom-sidebar-scroll">
+        <div className="mt-8 px-10 flex flex-col gap-5 pb-24 scroll-smooth">
           {GENRES.map((genre) => (
             <Link
               key={genre.id}
               to={`/explore?genre=${genre.id}`}
-              className="group flex items-center justify-between text-gray-400 hover:text-white transition-all duration-300"
+              className="group flex items-center justify-between text-gray-300/80 hover:text-white transition-all duration-300"
             >
-              <span className="text-sm font-semibold tracking-tight group-hover:translate-x-1 transition-transform">{genre.name}</span>
+              <span className="text-sm font-bold tracking-tight group-hover:translate-x-2 transition-transform">{genre.name}</span>
               <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-primary font-black">EXPLORE</span>
             </Link>
           ))}

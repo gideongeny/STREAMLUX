@@ -300,7 +300,25 @@ export const notifyTrendingContent = functions.pubsub
 
             const title = topItem.title || topItem.name;
             const type = topItem.media_type === "movie" ? "movie" : "tv";
-            const imageUrl = topItem.poster_path ? `https://image.tmdb.org/t/p/w500${topItem.poster_path}` : undefined;
+            const imageUrl = topItem.poster_path ? `https://image.tmdb.org/t/p/w780${topItem.poster_path}` : undefined; // Higher res for big picture
+
+            // Catchy message templates
+            const getCatchyMessage = (itemTitle: string, itemType: string) => {
+                const templates = [
+                    { title: `🔥 Trending Now: ${itemTitle}`, body: `Everyone is talking about this. Watch the buzz now on StreamLux!` },
+                    { title: `🍿 Movie Night?`, body: `${itemTitle} is topping the charts today. Ready to watch?` },
+                    { title: `✨ New for You`, body: `We found something you'll love: ${itemTitle}. Check it out!` },
+                    { title: `🎬 Now Playing`, body: `Start streaming ${itemTitle} and more trending ${itemType}s on StreamLux.` },
+                    { title: `🌟 Direct from TMDB`, body: `${itemTitle} is the #1 trending ${itemType} right now!` }
+                ];
+                // Add specific template for Pirates/Jack Sparrow style if title matches loosely (just an example of how to scale)
+                if (itemTitle.toLowerCase().includes('pirate') || itemTitle.toLowerCase().includes('jack')) {
+                    return { title: `Ready to set sail?`, body: `Captain Jack Sparrow is waiting for you in ${itemTitle}!` };
+                }
+                return templates[Math.floor(Math.random() * templates.length)];
+            };
+
+            const content = getCatchyMessage(title, type);
 
             // 2. Query all users from Firestore who have FCM tokens
             const usersSnapshot = await admin.firestore().collection('users').where('fcmTokens', '!=', null).get();
@@ -325,29 +343,36 @@ export const notifyTrendingContent = functions.pubsub
             const message: admin.messaging.MulticastMessage = {
                 tokens: uniqueTokens,
                 notification: {
-                    title: `🔥 Trending Now: ${title}`,
-                    body: `Everyone is talking about ${title}. Watch it now on StreamLux!`,
+                    title: content.title,
+                    body: content.body,
                     imageUrl: imageUrl
                 },
                 data: {
                     type: 'trending',
                     id: String(topItem.id),
                     mediaType: type,
-                    url: `/${type}/${topItem.id}`
+                    url: `/${type}/${topItem.id}`,
+                    image: imageUrl || ''
                 },
                 android: {
                     priority: 'high',
+                    ttl: 3600 * 1000, // 1 hour
                     notification: {
                         channelId: 'trending',
                         sticky: false,
                         visibility: 'public',
                         icon: 'mipmap/ic_launcher',
-                        color: '#E50914'
+                        color: '#E50914',
+                        imageUrl: imageUrl // Redundant for some SDK versions
                     }
                 },
                 webpush: {
                     fcmOptions: {
                         link: `/${type}/${topItem.id}`
+                    },
+                    notification: {
+                        icon: '/logo.svg',
+                        image: imageUrl
                     }
                 }
             };

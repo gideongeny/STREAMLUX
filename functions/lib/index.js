@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resolveStream = exports.proxy = exports.proxyScrapers = exports.geniusProxy = exports.proxyExternalAPI = exports.proxyYouTube = exports.proxyTMDB = exports.gateway = void 0;
+exports.resolveStream = exports.proxy = exports.proxyScrapers = exports.geniusProxy = exports.proxyExternalAPI = exports.proxyYouTube = exports.proxyTMDB = exports.notifyTrendingContent = exports.gateway = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const axios_1 = __importDefault(require("axios"));
@@ -287,6 +287,102 @@ exports.gateway = functions
             error: 'Gateway failed to fetch upstream',
             details: error.message
         });
+    }
+});
+/**
+ * Scheduled Function: Notify users of new trending content
+ * Runs every 12 hours
+ */
+exports.notifyTrendingContent = functions.pubsub
+    .schedule('every 12 hours')
+    .onRun(async (context) => {
+    try {
+        // 1. Fetch trending content from TMDB
+        const response = await axios_1.default.get(`${TMDB_BASE_URL}/trending/all/day`, {
+            params: { api_key: TMDB_API_KEY },
+            headers: { 'Authorization': `Bearer ${TMDB_BEARER_TOKEN}` }
+        });
+        const topItem = response.data.results[0];
+        if (!topItem)
+            return null;
+        const title = topItem.title || topItem.name;
+        const type = topItem.media_type === "movie" ? "movie" : "tv";
+        const imageUrl = topItem.poster_path ? `https://image.tmdb.org/t/p/w780${topItem.poster_path}` : undefined; // Higher res for big picture
+        // Catchy message templates
+        const getCatchyMessage = (itemTitle, itemType) => {
+            const templates = [
+                { title: `🔥 Trending Now: ${itemTitle}`, body: `Everyone is talking about this. Watch the buzz now on StreamLux!` },
+                { title: `🍿 Movie Night?`, body: `${itemTitle} is topping the charts today. Ready to watch?` },
+                { title: `✨ New for You`, body: `We found something you'll love: ${itemTitle}. Check it out!` },
+                { title: `🎬 Now Playing`, body: `Start streaming ${itemTitle} and more trending ${itemType}s on StreamLux.` },
+                { title: `🌟 Direct from TMDB`, body: `${itemTitle} is the #1 trending ${itemType} right now!` }
+            ];
+            // Add specific template for Pirates/Jack Sparrow style if title matches loosely (just an example of how to scale)
+            if (itemTitle.toLowerCase().includes('pirate') || itemTitle.toLowerCase().includes('jack')) {
+                return { title: `Ready to set sail?`, body: `Captain Jack Sparrow is waiting for you in ${itemTitle}!` };
+            }
+            return templates[Math.floor(Math.random() * templates.length)];
+        };
+        const content = getCatchyMessage(title, type);
+        // 2. Query all users from Firestore who have FCM tokens
+        const usersSnapshot = await admin.firestore().collection('users').where('fcmTokens', '!=', null).get();
+        const allTokens = [];
+        usersSnapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                allTokens.push(...data.fcmTokens);
+            }
+        });
+        if (allTokens.length === 0) {
+            console.log('No FCM tokens found to notify.');
+            return null;
+        }
+        // Remove duplicates and limit for multicast (max 500 tokens per call)
+        const uniqueTokens = Array.from(new Set(allTokens)).slice(0, 500);
+        // 3. Send Multicast Message
+        const message = {
+            tokens: uniqueTokens,
+            notification: {
+                title: content.title,
+                body: content.body,
+                imageUrl: imageUrl
+            },
+            data: {
+                type: 'trending',
+                id: String(topItem.id),
+                mediaType: type,
+                url: `/${type}/${topItem.id}`,
+                image: imageUrl || ''
+            },
+            android: {
+                priority: 'high',
+                ttl: 3600 * 1000, // 1 hour
+                notification: {
+                    channelId: 'trending',
+                    sticky: false,
+                    visibility: 'public',
+                    icon: 'mipmap/ic_launcher',
+                    color: '#E50914',
+                    imageUrl: imageUrl // Redundant for some SDK versions
+                }
+            },
+            webpush: {
+                fcmOptions: {
+                    link: `/${type}/${topItem.id}`
+                },
+                notification: {
+                    icon: '/logo.svg',
+                    image: imageUrl
+                }
+            }
+        };
+        const responseFCM = await admin.messaging().sendEachForMulticast(message);
+        console.log(`Successfully sent ${responseFCM.successCount} trending notifications for ${title}.`);
+        return null;
+    }
+    catch (error) {
+        console.error('Error in notifyTrendingContent:', error.message);
+        return null;
     }
 });
 // Maintain back-compat exports

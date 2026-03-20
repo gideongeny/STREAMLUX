@@ -91,7 +91,7 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical", items: 
                                         <iframe
                                             key={`${short.id}-${isCurrentlyViewed}-${isMuted}`}
                                             src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&controls=0&loop=1&playlist=${youtubeId}&mute=${(isCurrentlyViewed && !isMuted) ? 0 : 1}&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&enablejsapi=1`}
-                                            className="w-full h-full pointer-events-none scale-[1.05]"
+                                            className="w-full h-full"
                                             title={short.title}
                                             frameBorder="0"
                                             allow="autoplay; encrypted-media; picture-in-picture"
@@ -107,12 +107,12 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical", items: 
                                     )}
 
                                     {/* Overlays */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
 
                                     {/* Mute/Unmute Logic */}
                                     <button
                                         onClick={toggleMute}
-                                        className="absolute top-4 right-4 z-30 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 hover:bg-primary transition-colors text-white hover:text-black"
+                                        className="absolute top-4 right-4 z-30 w-10 h-10 bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 hover:bg-primary transition-colors text-white hover:text-black"
                                     >
                                         {(isMuted || !isCurrentlyViewed) ? (
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,8 +126,8 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical", items: 
                                         )}
                                     </button>
 
-                                    {/* Info */}
-                                    <div className="absolute left-4 bottom-4 z-20 pointer-events-none group-hover:translate-y-[-5px] transition-transform duration-300">
+                                    {/* Info - Allow interaction for title/creator links */}
+                                    <div className="absolute left-4 bottom-4 z-20 group-hover:translate-y-[-5px] transition-transform duration-300">
                                         <div className="flex items-center gap-1.5 mb-1.5">
                                             <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[8px] font-black text-black uppercase">
                                                 {(short as any).creator?.[0] || 'S'}
@@ -139,7 +139,7 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical", items: 
                                             href={`https://www.ssyoutube.com/watch?v=${youtubeId}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-primary hover:text-white transition-colors pointer-events-auto"
+                                            className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold text-primary hover:text-white transition-colors pointer-events-auto bg-black/40 px-3 py-1.5 rounded-full"
                                         >
                                             <AiOutlineDownload size={14} />
                                             DOWNLOAD CLIP
@@ -191,9 +191,9 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical", items: 
                                 >
                                     {Math.abs(index - activeIndex) <= 1 ? (
                                         <iframe
-                                            key={`${short.id}-${isCurrentlyViewed}-${isMuted}`}
+                                            key={`${short.id}-${isCurrentlyViewed}`}
                                             src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${(isCurrentlyViewed && isPlaying) ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&mute=${(isCurrentlyViewed && !isMuted) ? 0 : 1}&rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1`}
-                                            className="w-full h-full pointer-events-none scale-[1.02]"
+                                            className="w-full h-full scale-[1.02]"
                                             title={short.title}
                                             frameBorder="0"
                                             allow="autoplay; encrypted-media"
@@ -262,7 +262,7 @@ const VerticalShorts: FC<VerticalShortsProps> = ({ variant = "vertical", items: 
                                     </a>
                                 </div>
 
-                                <div className="absolute left-6 bottom-12 z-10 pointer-events-none">
+                                <div className="absolute left-6 bottom-12 z-10">
                                     <div className="flex items-center gap-2 mb-3">
                                         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-black font-bold text-xs uppercase">
                                             {(short as any).creator?.[0] || 'S'}
