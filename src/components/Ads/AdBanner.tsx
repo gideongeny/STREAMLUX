@@ -22,30 +22,24 @@ interface AdBannerProps {
     onClose?: () => void;
 }
 
-// AdSense Unit Component
-const GoogleAdUnit: React.FC<{ slot: string; format?: string }> = ({ slot, format = "auto" }) => {
+// Adsterra Native Banner Component
+const AdsterraAdUnit: React.FC = () => {
     React.useEffect(() => {
-        try {
-            if (typeof window !== 'undefined') {
-                (window as any).adsbygoogle = (window as any).adsbygoogle || [];
-                (window as any).adsbygoogle.push({});
-            }
-        } catch (e) {
-            console.error("AdSense error:", e);
+        // Load the Adsterra script dynamically when component mounts
+        const scriptId = 'adsterra-banner-script';
+        if (!document.getElementById(scriptId)) {
+            const script = document.createElement('script');
+            script.id = scriptId;
+            script.src = "https://pl28506141.profitablecpmratenetwork.com/e306b4e28d4fba3151a0a85384de410f/invoke.js";
+            script.async = true;
+            script.dataset.cfasync = "false";
+            document.body.appendChild(script);
         }
-    }, [slot]);
+    }, []);
 
     return (
-        <div className="adsbygoogle-container my-4 overflow-hidden rounded-lg bg-black/20 flex justify-center min-h-[100px]">
-            {/* Real AdSense Tag */}
-            <ins
-                className="adsbygoogle"
-                style={{ display: "block", width: "100%", minHeight: "100px" }}
-                data-ad-client="ca-pub-1281448884303417"
-                data-ad-slot={slot}
-                data-ad-format={format}
-                data-full-width-responsive="true"
-            />
+        <div className="adsterra-container my-4 overflow-hidden rounded-lg bg-black/20 flex justify-center min-h-[100px]">
+            <div id="container-e306b4e28d4fba3151a0a85384de410f"></div>
         </div>
     );
 };
@@ -93,7 +87,7 @@ const AdBanner: React.FC<AdBannerProps> = ({ position, onClose }) => {
             {/* Real Ad Unit (Only shown on Web, never in APK) */}
             {!isNativeApp && (
                 <div className="mb-4">
-                    <GoogleAdUnit slot={AD_SLOTS[position]} />
+                    <AdsterraAdUnit />
                 </div>
             )}
 

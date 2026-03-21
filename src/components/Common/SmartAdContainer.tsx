@@ -55,13 +55,7 @@ const SmartAdContainer: FC<SmartAdContainerProps> = ({
   if (position === 'sidebar') {
     return (
       <div className={className}>
-        <ins
-          className="adsbygoogle"
-          style={{ display: 'block', width: '300px', height: '250px' }}
-          data-ad-client="ca-pub-1281448884303417"
-          data-ad-slot="1234567890"
-          data-ad-format="rectangle"
-        />
+        <div id="container-e306b4e28d4fba3151a0a85384de410f"></div>
       </div>
     );
   }
@@ -70,14 +64,7 @@ const SmartAdContainer: FC<SmartAdContainerProps> = ({
   if (position === 'inline') {
     return (
       <div className={className}>
-        <ins
-          className="adsbygoogle"
-          style={{ display: 'block' }}
-          data-ad-client="ca-pub-1281448884303417"
-          data-ad-slot="5566778899"
-          data-ad-format="fluid"
-          data-full-width-responsive="true"
-        />
+        <div id="container-e306b4e28d4fba3151a0a85384de410f"></div>
       </div>
     );
   }
@@ -86,14 +73,7 @@ const SmartAdContainer: FC<SmartAdContainerProps> = ({
   if (position === 'banner' || position === 'footer') {
     return (
       <div className={className}>
-        <ins
-          className="adsbygoogle"
-          style={{ display: 'block' }}
-          data-ad-client="ca-pub-1281448884303417"
-          data-ad-slot={position === 'banner' ? '9876543210' : '1122334455'}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        />
+         <div id="container-e306b4e28d4fba3151a0a85384de410f"></div>
       </div>
     );
   }
