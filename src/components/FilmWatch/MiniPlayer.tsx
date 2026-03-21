@@ -58,26 +58,25 @@ const MiniPlayer: FC = () => {
                     title="StreamLux Mini Player"
                 />
 
-                {/* Glass Overlay Controls */}
-                <motion.div
-                    animate={{ opacity: isHovered ? 1 : 0 }}
-                    className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center gap-8 pointer-events-none group-hover:pointer-events-auto transition-opacity"
+                {/* Always-on Close Button (Top Right) */}
+                <button
+                    onClick={handleClose}
+                    className="absolute top-2 right-2 z-50 p-2 bg-black/60 hover:bg-red-500/80 rounded-full backdrop-blur-xl border border-white/20 transition-all text-white shadow-xl"
+                    title="Close"
                 >
-                    <button
-                        onClick={handleExpand}
-                        className="p-4 bg-white/10 hover:bg-primary/30 rounded-full backdrop-blur-xl border border-white/20 hover:border-primary/50 transition-all text-white hover:text-primary active:scale-90 shadow-xl"
-                        title="Expand"
-                    >
-                        <MdOpenInFull size={24} />
-                    </button>
-                    <button
-                        onClick={handleClose}
-                        className="p-4 bg-red-500/20 hover:bg-red-500/40 rounded-full backdrop-blur-xl border border-white/20 hover:border-red-500/50 transition-all text-white active:scale-90 shadow-xl"
-                        title="Close"
-                    >
-                        <MdClose size={24} />
-                    </button>
-                </motion.div>
+                    <MdClose size={20} />
+                </button>
+
+                {/* Expand Overlay (Click anywhere to expand) */}
+                <div
+                    onClick={handleExpand}
+                    className="absolute inset-0 z-40 cursor-pointer flex items-center justify-center group-hover:bg-black/30 transition-all"
+                >
+                    {/* Widen Icon only shows on hover for desktop, but mobile users just tap anywhere */}
+                    <div className="opacity-0 group-hover:opacity-100 p-4 bg-black/60 rounded-full text-white backdrop-blur-md border border-white/20 scale-90 group-hover:scale-100 transition-all duration-300">
+                        <MdOpenInFull size={32} />
+                    </div>
+                </div>
 
                 {/* Premium Title Bar */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent p-4 pt-10 pointer-events-none">

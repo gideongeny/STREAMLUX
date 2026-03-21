@@ -429,19 +429,45 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     const handleDownloadCurrentSource = async () => {
         if (!currentSource) return;
         hapticImpact();
-        toast.info(t('Starting Elite Download...'), { position: "top-center" });
         
         const s = searchParams.get('s');
         const e = searchParams.get('e');
+        const sNum = s ? Number(s) : undefined;
+        const eNum = e ? Number(e) : undefined;
         
-        downloadService.downloadSource(
-            id || "unknown",
-            title || "Unknown Title", 
-            currentSource.url, 
-            (mediaType as 'movie' | 'tv') || 'movie', 
-            s ? Number(s) : undefined,
-            e ? Number(e) : undefined
-        );
+        // Import Capacitor dynamically if not at top of file
+        const { Capacitor } = await import('@capacitor/core');
+
+        if (Capacitor.isNativePlatform()) {
+            toast.info(t('Added to Offline Downloads'), { position: "top-center" });
+            try {
+                const { offlineDownloadService } = await import('../../services/offlineDownload');
+                await offlineDownloadService.addToQueue({
+                    id: String(id || Date.now()),
+                    title: title || "Unknown Title",
+                    type: (mediaType as 'movie' | 'tv') || 'movie',
+                    thumbnail: poster || "https://images.unsplash.com/photo-1485846234645-a62644f84728",
+                    url: currentSource.url,
+                    quality: currentSource.quality as any || '720p',
+                    size: 0, // Capacitor calculates this
+                    seasonNumber: sNum,
+                    episodeNumber: eNum
+                });
+            } catch (err) {
+                console.error("Native download failed:", err);
+                toast.error(t('Failed to queue download'));
+            }
+        } else {
+            toast.info(t('Starting Elite Download...'), { position: "top-center" });
+            downloadService.downloadSource(
+                id || "unknown",
+                title || "Unknown Title", 
+                currentSource.url, 
+                (mediaType as 'movie' | 'tv') || 'movie', 
+                sNum,
+                eNum
+            );
+        }
     };
 
     const showIndicator = (type: 'volume' | 'brightness' | 'seek', value: string | number, icon: any) => {

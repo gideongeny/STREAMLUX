@@ -69,9 +69,9 @@ const Library: FC = () => {
 
     return (
         <>
-            <Title value="My Library | StreamLux" />
+            <Title value="Downloads | StreamLux" />
             <SEO
-                title="My Library"
+                title="Downloads"
                 description="Access your downloaded movies and TV shows anytime, anywhere. Your offline entertainment hub."
             />
 
@@ -108,7 +108,7 @@ const Library: FC = () => {
                             </button>
                             <div>
                                 <h1 className="text-4xl md:text-5xl font-black text-white flex items-center gap-4 tracking-tighter uppercase">
-                                    My <span className="text-primary">Library</span>
+                                    My <span className="text-primary">Downloads</span>
                                 </h1>
                                 <p className="text-gray-500 mt-2 font-medium tracking-wide font-montserrat italic">
                                     Access your downloaded content anytime, anywhere.
@@ -131,7 +131,7 @@ const Library: FC = () => {
                                 <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
                                     <MdCloudOff size={40} className="text-gray-600" />
                                 </div>
-                                <h2 className="text-2xl font-bold text-white mb-2 uppercase tracking-tight">Your library is empty</h2>
+                                <h2 className="text-2xl font-bold text-white mb-2 uppercase tracking-tight">No downloads yet</h2>
                                 <p className="text-gray-500 max-w-xs mx-auto mb-8 font-medium">
                                     Start downloading movies or shows to watch them without an internet connection.
                                 </p>

@@ -90,7 +90,7 @@ const SidebarMini: FunctionComponent = () => {
             onClick={() => personalPageHandler("/library")}
             className={`hover:text-primary transition duration-300 ${location.pathname === "/library" && "text-primary"
               }`}
-            title="My Library"
+            title="Downloads"
           >
             <MdFolderSpecial size={25} />
           </button>

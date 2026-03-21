@@ -269,10 +269,10 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={!currentUser}
-            title={!currentUser ? t("Sign in to access library") : ""}
+            title={!currentUser ? t("Sign in to access downloads") : ""}
           >
             <MdFolderSpecial size={25} />
-            <p className="font-bold tracking-tight">{t('My Library')}</p>
+            <p className="font-bold tracking-tight">{t('Downloads')}</p>
           </button>
 
           <button
@@ -296,7 +296,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             download
           >
             <FaDownload size={25} />
-            <p className="font-bold tracking-tight">{t('Download')}</p>
+            <p className="font-bold tracking-tight">{t('Download App')}</p>
           </a>
 
           <Link
