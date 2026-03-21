@@ -48,7 +48,7 @@ function parseFilename(filename: string) {
     clean = clean.replace(/vidvault\.ru/gi, '');
     clean = clean.replace(/yts\.(mx|ag|am|lt)/gi, '');
     
-    const seMatch = filename.match(/[Ss](\d{1,2})[Ee](\d{1,2})/);
+    const seMatch = filename.match(/[Ss](?:eason)?\s*(\d{1,2})[\s._-]*[Ee](?:pisode)?\s*(\d{1,2})/i);
     if (seMatch) {
         let cleanTitleTV = clean
             .substring(0, seMatch.index!)

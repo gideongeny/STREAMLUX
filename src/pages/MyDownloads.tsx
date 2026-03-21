@@ -8,7 +8,7 @@ import { indexedDBService, OfflineMediaMetadata } from '../services/indexedDB';
 import { IMAGE_URL } from '../shared/constants';
 import Title from '../components/Common/Title';
 import Sidebar from '../components/Common/Sidebar';
-import SidebarMini from '../components/Common/SidebarMini';
+
 import SearchBox from '../components/Common/SearchBox';
 import { useCurrentViewportView } from '../hooks/useCurrentViewportView';
 import { GiHamburgerMenu } from 'react-icons/gi';
@@ -119,7 +119,7 @@ const MyDownloads: FC = () => {
             </div>
 
             <div className="flex flex-col md:flex-row">
-                {!isMobile && <SidebarMini />}
+                
                 {isMobile && (
                     <Sidebar
                         onCloseSidebar={() => setIsSidebarActive(false)}
@@ -127,7 +127,7 @@ const MyDownloads: FC = () => {
                     />
                 )}
 
-                <div className="flex-grow px-[2vw] md:pt-11 pt-0 min-h-screen">
+                <div className="md:ml-[260px] flex-grow px-[2vw] md:pt-11 pt-0 min-h-screen">
                     {/* Header */}
                     <div className="mb-8">
                         <div className="flex items-center gap-3 mb-4">

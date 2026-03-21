@@ -6,7 +6,7 @@ import { RiRobot2Fill } from "react-icons/ri";
 
 import { getLiveFixturesAPI, getUpcomingFixturesAPI, getMatchEvents, getMatchStatistics } from "../../services/sportsAPI";
 import { getMatchDetails } from "../../services/sportmonksAPI";
-import SidebarMini from "../../components/Common/SidebarMini";
+
 import SearchBox from "../../components/Common/SearchBox";
 import Footer from "../../components/Footer/Footer";
 import { hapticImpact } from "../../shared/utils";
@@ -135,7 +135,7 @@ const MatchesDetails: FC = () => {
 
     return (
         <div className="min-h-screen bg-[#050505] text-white flex flex-col md:flex-row">
-            <SidebarMini />
+            
 
             <main className="flex-grow flex flex-col lg:flex-row h-screen overflow-hidden">
                 {/* Left Section: Match & Stream */}

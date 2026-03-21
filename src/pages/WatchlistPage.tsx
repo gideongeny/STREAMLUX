@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MdDeleteOutline, MdPlayArrow, MdBookmarkBorder, MdArrowBack } from 'react-icons/md';
 import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Common/Sidebar';
-import SidebarMini from '../components/Common/SidebarMini';
+
 import SEO from '../components/Common/SEO';
 import Title from '../components/Common/Title';
 import { useWatchlist } from '../components/Common/QuickWatchlist';
@@ -79,13 +79,13 @@ const WatchlistPage: FC = () => {
             )}
 
             <div className="flex items-start">
-                {!isMobile && <SidebarMini />}
+                
                 <Sidebar
                     isSidebarActive={isSidebarActive}
                     onCloseSidebar={() => setIsSidebarActive(false)}
                 />
 
-                <div className="flex-grow min-h-screen bg-dark p-6 md:p-10 relative z-0">
+                <div className="md:ml-[260px] flex-grow min-h-screen bg-dark p-6 md:p-10 relative z-0">
                     <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div className="flex flex-col gap-4">
                             <button

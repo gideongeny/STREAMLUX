@@ -64,7 +64,7 @@ const DownloadsPage: FC = () => {
                     isSidebarActive={isSidebarActive}
                 />
 
-                <div className="flex-grow md:pt-10 pt-4 px-4 md:px-8 pb-10 min-w-0">
+                <div className="md:ml-[260px] flex-grow md:pt-10 pt-4 px-4 md:px-8 pb-10 min-w-0">
                     <h1 className="text-3xl text-white font-bold mb-6 flex items-center gap-3">
                         <FaDownload className="text-primary" /> Direct Downloads
                     </h1>

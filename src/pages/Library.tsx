@@ -9,7 +9,7 @@ import { useAppDispatch } from '../store/hooks';
 import { setSource } from '../store/slice/movieSlice';
 import { useNavigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Common/Sidebar';
-import SidebarMini from '../components/Common/SidebarMini';
+
 import { useCurrentViewportView } from '../hooks/useCurrentViewportView';
 import SEO from '../components/Common/SEO';
 import Title from '../components/Common/Title';
@@ -93,13 +93,13 @@ const Library: FC = () => {
             )}
 
             <div className="flex items-start">
-                {!isMobile && <SidebarMini />}
+                
                 <Sidebar
                     isSidebarActive={isSidebarActive}
                     onCloseSidebar={() => setIsSidebarActive(false)}
                 />
 
-                <div className="flex-grow min-h-screen bg-dark p-6 md:p-10">
+                <div className="md:ml-[260px] flex-grow min-h-screen bg-dark p-6 md:p-10">
                     <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div className="flex flex-col gap-4">
                             <button
@@ -127,21 +127,7 @@ const Library: FC = () => {
                     </header>
 
                     <AnimatePresence mode="popLayout">
-                        {items.length === 0 ? (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="flex flex-col items-center justify-center py-24 text-center bg-white/5 rounded-[3rem] border border-dashed border-white/10"
-                            >
-                                <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
-                                    <MdCloudOff size={40} className="text-gray-600" />
-                                </div>
-                                <h2 className="text-2xl font-bold text-white mb-2 uppercase tracking-tight">No downloads yet</h2>
-                                <p className="text-gray-500 max-w-xs mx-auto mb-4 font-medium">
-                                    Start downloading movies or shows to watch them without an internet connection.
-                                </p>
-                            </motion.div>
-                        ) : (
+                        {items.length > 0 && (
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
                                 {items.map((item) => (
                                     <motion.div

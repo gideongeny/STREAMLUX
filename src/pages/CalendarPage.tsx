@@ -173,7 +173,7 @@ const CalendarPage: FC = () => {
                     isSidebarActive={isSidebarActive}
                 />
 
-                <div className="flex-grow flex flex-col min-h-screen">
+                <div className="md:ml-[260px] flex-grow flex flex-col min-h-screen">
                     {/* Mobile Header */}
                     <div className="flex md:hidden justify-between items-center px-5 py-5 bg-dark/80 backdrop-blur-md sticky top-0 z-40 border-b border-white/5">
                         <Link to="/" className="flex gap-2 items-center">

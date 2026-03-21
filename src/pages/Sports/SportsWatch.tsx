@@ -6,7 +6,7 @@ import { usePlayer } from "../../context/PlayerContext";
 import { useLocation } from "react-router-dom";
 
 import Sidebar from "../../components/Common/Sidebar";
-import SidebarMini from "../../components/Common/SidebarMini";
+
 import Title from "../../components/Common/Title";
 import Footer from "../../components/Footer/Footer";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
@@ -86,7 +86,7 @@ const SportsWatch: FC = () => {
       </div>
 
       <div className="flex flex-col md:flex-row">
-        {!isMobile && <SidebarMini />}
+        
         {isMobile && (
           <Sidebar
             onCloseSidebar={() => setIsSidebarActive(false)}
@@ -94,7 +94,7 @@ const SportsWatch: FC = () => {
           />
         )}
 
-        <div className="flex-grow px-[2vw] md:pt-11 pt-0 pb-10">
+        <div className="md:ml-[260px] flex-grow px-[2vw] md:pt-11 pt-0 pb-10">
           {!fixture ? (
             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center">
               <p className="text-2xl font-semibold text-white mb-3">

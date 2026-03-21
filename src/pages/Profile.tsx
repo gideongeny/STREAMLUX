@@ -216,7 +216,7 @@ const Profile: FunctionComponent<ProfileProps> = () => {
           onCloseSidebar={() => setIsSidebarActive(false)}
           isSidebarActive={isSidebarActive}
         />
-        <div className="flex-grow md:pl-10 px-3 relative overflow-hidden">
+        <div className="md:ml-[260px] flex-grow md:pl-10 px-3 relative overflow-hidden">
           {/* Elite Header Ambient Glow */}
           <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-primary/10 via-transparent to-transparent -z-10 blur-[100px] animate-pulse" />
 
