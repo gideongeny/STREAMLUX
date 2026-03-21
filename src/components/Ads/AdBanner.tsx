@@ -84,12 +84,10 @@ const AdBanner: React.FC<AdBannerProps> = ({ position, onClose }) => {
 
     return (
         <div className={`relative z-10 ${position === 'home' ? 'my-8 mx-auto max-w-6xl' : 'my-4'}`}>
-            {/* Real Ad Unit (Only shown on Web, never in APK) */}
-            {!isNativeApp && (
-                <div className="mb-4">
-                    <AdsterraAdUnit />
-                </div>
-            )}
+            {/* Real Ad Unit (Always shown now) */}
+            <div className="mb-4">
+                <AdsterraAdUnit />
+            </div>
 
             {/* fallback / App Promo Banner (Always shown as a backup or in app) */}
             <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-xl overflow-hidden border border-white/5 shadow-2xl backdrop-blur-sm">
