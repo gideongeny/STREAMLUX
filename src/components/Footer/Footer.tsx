@@ -190,8 +190,7 @@ const Footer: FunctionComponent<FooterProps> = () => {
             <p>
               &copy; {new Date().getFullYear()} StreamLux. {t('All rights reserved.')}
             </p>
-            <div className="flex items-center gap-4">
-              <BuyMeACoffee variant="badge" />
+              {/* BuyMeACoffee Removed */}
               <p className="text-xs">
                 {t('Made with ❤️ for movie and TV show enthusiasts worldwide')}
               </p>
