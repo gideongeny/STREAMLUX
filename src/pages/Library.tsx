@@ -1,4 +1,5 @@
 import { FC, useState, useEffect } from 'react';
+import WatchedFolderSection from '../components/Downloads/WatchedFolderSection';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdDownload, MdPlayArrow, MdDelete, MdCloudOff, MdFolderSpecial, MdArrowBack, MdPause, MdFolderOpen, MdSmartphone, MdAdd } from 'react-icons/md';
 import { GiHamburgerMenu } from 'react-icons/gi';
@@ -371,6 +372,8 @@ const Library: FC = () => {
                             </div>
                         </div>
                     )}
+                    {/* ── Watched Folder (Plex-style) ──────────────────── */}
+                    <WatchedFolderSection />
                 </div>
             </div>
             <Footer />
