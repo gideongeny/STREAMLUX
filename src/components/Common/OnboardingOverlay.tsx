@@ -10,8 +10,7 @@ const OnboardingOverlay: React.FC = () => {
     useEffect(() => {
         const hasSeen = safeStorage.get("has_seen_onboarding_v2");
         if (!hasSeen) {
-            const timer = setTimeout(() => setIsVisible(true), 2000);
-            return () => clearTimeout(timer);
+            setIsVisible(true);
         }
     }, []);
 

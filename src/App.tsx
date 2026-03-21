@@ -55,6 +55,7 @@ import { pushNotificationService } from "./services/pushNotifications";
 import { trendingNotificationService } from "./services/trendingNotifications";
 import { webNotificationService } from "./services/webNotificationService";
 import { setLanguage } from "./shared/axios";
+import { SplashScreen } from '@capacitor/splash-screen';
 
 import AppUpdater from "./components/Common/AppUpdater";
 
@@ -106,6 +107,13 @@ function App() {
         await pushNotificationService.initialize();
       } else {
         await webNotificationService.initialize();
+      }
+      
+      // Hide Splash screen precisely when React paints are ready
+      if (Capacitor.isNativePlatform()) {
+          setTimeout(() => {
+              SplashScreen.hide();
+          }, 300);
       }
     };
     initAds().catch(console.warn);
