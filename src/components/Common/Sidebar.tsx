@@ -265,7 +265,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
           <button
             onClick={() => personalPageHandler("/library")}
-            className={`flex gap-6 items-center  ${location.pathname === "/library" &&
+            className={`flex md:hidden gap-6 items-center  ${location.pathname === "/library" &&
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={!currentUser}
@@ -301,7 +301,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
           <Link
             to="/settings"
-            className={`flex gap-6 items-center tw-hit-target ${location.pathname === "/settings" &&
+            className={`flex md:hidden gap-6 items-center tw-hit-target ${location.pathname === "/settings" &&
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300`}
           >
@@ -316,7 +316,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
           <button
             onClick={() => personalPageHandler("/profile")}
-            className={`flex gap-6 items-center  ${location.pathname === "/profile" &&
+            className={`flex md:hidden gap-6 items-center  ${location.pathname === "/profile" &&
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300 ${!currentUser ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={!currentUser}

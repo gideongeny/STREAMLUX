@@ -181,7 +181,7 @@ const FilmListViewForBookmarkAndHistory: FunctionComponent<
           onCloseSidebar={() => setIsSidebarActive(false)}
           isSidebarActive={isSidebarActive}
         />
-        <div className="flex-grow px-[2vw] pb-16 pt-7 min-h-screen">
+        <div className="md:ml-[260px] flex-grow px-[2vw] pb-16 pt-7 min-h-screen">
           <h1 className="uppercase text-white font-semibold text-[35px] mb-4 ">
             {pageType === "bookmark" ? "My favourite films" : "Films I Watched"}
           </h1>

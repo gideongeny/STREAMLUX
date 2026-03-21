@@ -61,8 +61,7 @@ function parseFilename(filename: string) {
     
     let cleanTitleMovie = clean
         .replace(/[._\-\[\]()]/g, ' ')
-        .replace(/\b(vidvault|yts|yify|rarbg|1xbet|1080p|720p|480p|2160p|4k|uhd|bluray|webrip|web-dl|hdtv|x264|x265|hevc|aac|ac3|hdr|remux)\b/gi, '')
-        .replace(/\b(19|20)\d{2}\b/, '')
+        .replace(/\b(vidvault|yts|yify|rarbg|1xbet|1080p|720p|480p|2160p|4k|uhd|bluray|webrip|web-dl|web|hdtv|x264|x265|h264|hevc|aac|ac3|hdr|remux|xvid|dvdrip|hdcam|cam|ts)\b/gi, '')
         .replace(/\s+/g, ' ')
         .trim();
     return { cleanTitle: cleanTitleMovie || filename, isTV: false };
