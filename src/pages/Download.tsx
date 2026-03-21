@@ -27,8 +27,8 @@ const Download: FC = () => {
   const [isSidebarActive, setIsSidebarActive] = useState(false);
 
   const handleDownload = () => {
-    // Open specific GitHub release page in new tab
-    window.open("https://github.com/gideongeny/STREAMLUX/releases/tag/V1.00", "_blank");
+    // Trigger direct APK download instead of GitHub releases page
+    window.location.href = "https://github.com/gideongeny/STREAMLUX/releases/latest/download/app-release-unsigned.apk";
   };
 
   return (
@@ -80,7 +80,7 @@ const Download: FC = () => {
                   <h2 className="text-3xl font-bold text-white mb-2">
                     StreamLux Android App
                   </h2>
-                  <p className="text-gray-400 mb-4">Version 1.0.0</p>
+                  <p className="text-gray-400 mb-4">Version 1.2.0</p>
                   <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                     <FaCheckCircle className="text-green-500" />
                     <span>Latest Version</span>
@@ -88,7 +88,7 @@ const Download: FC = () => {
                 </div>
 
                 <a
-                  href="https://github.com/gideongeny/STREAMLUX/releases/tag/V1.00"
+                  href="https://github.com/gideongeny/STREAMLUX/releases/latest/download/app-release-unsigned.apk"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => {

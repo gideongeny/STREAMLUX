@@ -56,7 +56,10 @@ import { trendingNotificationService } from "./services/trendingNotifications";
 import { webNotificationService } from "./services/webNotificationService";
 import { setLanguage } from "./shared/axios";
 
+import AppUpdater from "./components/Common/AppUpdater";
+
 // Final deployment heartbeat for unified Vercel backend propagation
+// ... [Will manually assemble in target file to avoid full matching issues]
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -499,6 +502,7 @@ function App() {
               </Routes>
             </motion.div>
           </AnimatePresence>
+          <AppUpdater />
           <MiniPlayer />
           <SpotlightSearch />
           <DownloadTray />
