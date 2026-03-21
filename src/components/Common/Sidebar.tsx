@@ -347,6 +347,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           )}
 
           {/* Removed Buy Me a Coffee */}
+          <div className="pb-32" /> {/* Spacer to clear mobile bottom nav */}
         </div>
       </div>
 
