@@ -39,8 +39,13 @@ const SmartAdContainer: FC<SmartAdContainerProps> = ({
         <p className="text-xs font-black uppercase tracking-widest text-white/40">Premium Experience</p>
         <h4 className="text-sm font-bold text-white">Enjoying StreamLux?</h4>
         <p className="max-w-[200px] text-[10px] text-gray-500">Download our mobile app for an even faster and ad-free cinematic experience.</p>
-        <a href="/download" className="mt-2 rounded-full bg-white/10 px-4 py-1.5 text-[10px] font-bold text-white hover:bg-white/20 transition-colors">
-          Get the App
+        <a 
+          href="https://omg10.com/4/10759068" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="mt-2 text-center w-full rounded-full bg-white/10 px-4 py-2 text-[10px] sm:text-xs font-bold text-white hover:bg-white/20 transition-colors shadow-lg border border-white/5"
+        >
+          View Our Sponsors
         </a>
       </div>
     </div>
