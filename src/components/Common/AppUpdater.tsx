@@ -1,46 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaDownload, FaTimes, FaCodeBranch } from 'react-icons/fa';
-import { Capacitor } from '@capacitor/core';
-import packageJson from '../../../package.json';
-
-const CURRENT_VERSION = packageJson.version || "1.2.0";
-
-interface ReleaseData {
-  tag_name: string;
-  body: string;
-  assets: { browser_download_url: string }[];
-}
+import { checkForUpdates, ReleaseData, isNative } from '../../services/updateService';
+import { toast, ToastContainer } from 'react-toastify';
 
 const AppUpdater: React.FC = () => {
   const [updateAvailable, setUpdateAvailable] = useState<ReleaseData | null>(null);
   const [showModal, setShowModal] = useState(false);
 
+  const check = async (manual = false) => {
+    if (manual) {
+      toast.info("Checking for updates...", { autoClose: 2000 });
+    }
+
+    const data = await checkForUpdates();
+    if (data) {
+      setUpdateAvailable(data);
+      setShowModal(true);
+    } else if (manual) {
+      toast.success("You are on the latest version!", { autoClose: 3000 });
+    }
+  };
+
   useEffect(() => {
-    // Only check for updates if running as an Android APK (Native App)
-    if (!Capacitor.isNativePlatform()) return;
+    // Only check automatically if running as an Android APK (Native App)
+    if (isNative()) {
+       const timer = setTimeout(() => check(false), 4000);
+       return () => clearTimeout(timer);
+    }
+  }, []);
 
-    const checkUpdate = async () => {
-      try {
-        const res = await fetch('https://api.github.com/repos/gideongeny/STREAMLUX/releases/latest');
-        if (!res.ok) return;
-        
-        const data: ReleaseData = await res.json();
-        const latestVersion = data.tag_name.replace('v', '').replace('V', '');
-        
-        // Semantic version comparison
-        if (latestVersion.localeCompare(CURRENT_VERSION, undefined, { numeric: true, sensitivity: 'base' }) > 0) {
-          setUpdateAvailable(data);
-          setShowModal(true);
-        }
-      } catch (error) {
-        console.error("Failed to check for updates:", error);
-      }
-    };
-
-    // Delay check slightly to prevent blocking initial boot up sequence
-    const timer = setTimeout(checkUpdate, 4000);
-    return () => clearTimeout(timer);
+  useEffect(() => {
+    const handleManualCheck = () => check(true);
+    window.addEventListener('streamlux-check-update-manual', handleManualCheck);
+    return () => window.removeEventListener('streamlux-check-update-manual', handleManualCheck);
   }, []);
 
   if (!updateAvailable) return null;

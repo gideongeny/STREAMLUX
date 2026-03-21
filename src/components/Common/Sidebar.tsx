@@ -13,6 +13,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import { auth } from "../../shared/firebase";
 import { useAppSelector } from "../../store/hooks";
+import { triggerManualUpdateCheck, isNative } from "../../services/updateService";
 import BuyMeACoffee from "./BuyMeACoffee";
 import LanguageSelector from "./LanguageSelector";
 
@@ -290,13 +291,34 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
         <div className="text-white text-lg font-bold uppercase tracking-widest mt-12 px-4 flex items-center gap-3 border-l-4 border-primary">{t('GENERAL')}</div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
+          {isNative() ? (
+            <button
+              onClick={triggerManualUpdateCheck}
+              className={`flex gap-6 items-center hover:text-white transition duration-300`}
+            >
+              <FaDownload size={25} />
+              <p className="font-bold tracking-tight">{t('Check for Updates')}</p>
+            </button>
+          ) : (
+            <a
+              href="https://streamlux-67a84.web.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex gap-6 items-center hover:text-white transition duration-300`}
+            >
+              <FaDownload size={25} />
+              <p className="font-bold tracking-tight">{t('Visit Website')}</p>
+            </a>
+          )}
+
           <a
-            href="https://github.com/gideongeny/STREAMLUX/releases/latest/download/app-release-unsigned.apk"
+            href="https://www.google.com/search?q=StreamLux+Official+Streaming"
+            target="_blank"
+            rel="noopener noreferrer"
             className={`flex gap-6 items-center hover:text-white transition duration-300`}
-            download
           >
-            <FaDownload size={25} />
-            <p className="font-bold tracking-tight">{t('Download App')}</p>
+            <BiSearch size={25} />
+            <p className="font-bold tracking-tight">{t('Find us on Google')}</p>
           </a>
 
           <Link
