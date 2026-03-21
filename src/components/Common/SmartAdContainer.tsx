@@ -9,7 +9,7 @@ interface SmartAdContainerProps {
 const SmartAdContainer: FC<SmartAdContainerProps> = ({
   position,
   className = '',
-  minViewTime = 120000, // 2 minutes before showing ads (non-intrusive)
+  minViewTime = 10000, // 10 seconds before showing ads (easier for testing)
 }) => {
   const [showAd, setShowAd] = useState(false);
   const timerRef = useRef<NodeJS.Timeout>();

@@ -94,15 +94,29 @@ function App() {
   // Initialize Services (Theme, AdMob, Push Notifications)
   useEffect(() => {
     themeService.initialize();
-    initializeAdMob().catch(console.warn);
+    
+    // Initialize AdMob and show first banner if native
+    const initAds = async () => {
+      await initializeAdMob();
+      if (Capacitor.isNativePlatform()) {
+        await showBannerAd();
+        await pushNotificationService.initialize();
+      } else {
+        await webNotificationService.initialize();
+      }
+    };
+    initAds().catch(console.warn);
 
-    if (Capacitor.isNativePlatform()) {
-      pushNotificationService.initialize().catch(console.warn);
-      showBannerAd().catch(console.warn);
-    } else {
-      // PC/Web Notifications
-      webNotificationService.initialize().catch(console.warn);
-    }
+    // PopAds / Third-party Ad Trigger Helper
+    // Some ad networks (like PopAds) need a "real" click to trigger.
+    // We listen globally and can manually trigger a window event if needed.
+    const handleGlobalClick = () => {
+      // Logic for manual trigger if script is stuck
+      if ((window as any).popns) {
+          try { (window as any).popns(); } catch(e) {}
+      }
+    };
+    window.addEventListener('click', handleGlobalClick);
 
     // Check for trending content notification on startup and periodically
     trendingNotificationService.checkAndNotifyTrending();
@@ -110,7 +124,10 @@ function App() {
       trendingNotificationService.checkAndNotifyTrending();
     }, 10 * 60 * 1000); // Check every 10 minutes
 
-    return () => clearInterval(trendingInterval);
+    return () => {
+      clearInterval(trendingInterval);
+      window.removeEventListener('click', handleGlobalClick);
+    };
   }, []);
 
   // Handle Firebase Redirect Result (Google/Facebook Login fallback for native)

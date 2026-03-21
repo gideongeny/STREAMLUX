@@ -36,6 +36,7 @@ const resources = {
             "Sign Up": "Sign Up",
             "Logout": "Logout",
             "MENU": "MENU",
+            "GENRES": "GENRES",
             "PERSONAL": "PERSONAL",
             "GENERAL": "GENERAL",
             "Bookmarked": "Bookmarked",
@@ -120,6 +121,7 @@ const resources = {
             "Year": "Año",
             "Sort By": "Ordenar Por",
             "Language": "Idioma",
+            "GENRES": "GÉNEROS",
         }
     },
     fr: {
@@ -150,6 +152,7 @@ const resources = {
             "Year": "Année",
             "Sort By": "Trier Par",
             "Language": "Langue",
+            "GENRES": "GENRES",
         }
     },
     sw: {
@@ -180,6 +183,7 @@ const resources = {
             "Year": "Mwaka",
             "Sort By": "Panga Kwa",
             "Language": "Lugha",
+            "GENRES": "AINA",
         }
     },
     ar: {
@@ -213,6 +217,7 @@ const resources = {
             "Sign In": "تسجيل الدخول",
             "Sign Up": "إنشاء حساب",
             "Logout": "تسجيل الخروج",
+            "GENRES": "الأنواع",
             "Arena Dashboard": "لوحة الرياضة",
             "Live Now": "مباشر الآن",
             "Upcoming": "القادمة",
@@ -269,6 +274,7 @@ const resources = {
             "Year": "वर्ष",
             "Sort By": "क्रमबद्ध करें",
             "Language": "भाषा",
+            "GENRES": "शैलियां",
         }
     },
     id: {
@@ -299,6 +305,7 @@ const resources = {
             "Year": "Tahun",
             "Sort By": "Urutkan Berdasarkan",
             "Language": "Bahasa",
+            "GENRES": "GENRE",
         }
     },
     pt: {
@@ -329,6 +336,7 @@ const resources = {
             "Year": "Ano",
             "Sort By": "Ordenar Por",
             "Language": "Idioma",
+            "GENRES": "GÊNEROS",
         }
     },
     tl: {
@@ -359,6 +367,7 @@ const resources = {
             "Year": "Taon",
             "Sort By": "I-sort ayon sa",
             "Language": "Wika",
+            "GENRES": "MGA GENRE",
         }
     },
     ur: {
@@ -389,6 +398,7 @@ const resources = {
             "Year": "سال",
             "Sort By": "ترتیب دیں",
             "Language": "زبان",
+            "GENRES": "اصناف",
         }
     },
     zh: {
@@ -419,6 +429,7 @@ const resources = {
             "Year": "年份",
             "Sort By": "排序方式",
             "Language": "语言",
+            "GENRES": "类型",
         }
     },
     vi: {
@@ -449,6 +460,7 @@ const resources = {
             "Year": "Năm",
             "Sort By": "Sắp Xếp Theo",
             "Language": "Ngôn Ngữ",
+            "GENRES": "THỂ LOẠI",
         }
     },
     ja: {
@@ -479,6 +491,7 @@ const resources = {
             "Year": "年",
             "Sort By": "並び替え",
             "Language": "言語",
+            "GENRES": "ジャンル",
         }
     },
     ru: {
@@ -509,6 +522,7 @@ const resources = {
             "Year": "Год",
             "Sort By": "Сортировка",
             "Language": "Язык",
+            "GENRES": "ЖАНРЫ",
         }
     },
     de: {
@@ -539,6 +553,7 @@ const resources = {
             "Year": "Jahr",
             "Sort By": "Sortieren nach",
             "Language": "Sprache",
+            "GENRES": "GENRES",
         }
     }
 };
