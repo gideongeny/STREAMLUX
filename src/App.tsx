@@ -35,6 +35,7 @@ import MiniPlayer from "./components/FilmWatch/MiniPlayer";
 import SpotlightSearch from "./components/Common/SpotlightSearch";
 import MasterReveal from "./components/Common/MasterReveal";
 import Library from "./pages/Library";
+import LocalPlayer from "./pages/LocalPlayer";
 import WatchlistPage from "./pages/WatchlistPage";
 import AtmosphericBackground from "./components/Common/AtmosphericBackground";
 import MobileBottomNav from "./components/Navigation/MobileBottomNav";
@@ -481,6 +482,7 @@ function App() {
                 <Route path="disclaimer" element={<Disclaimer />} />
                 <Route path="download" element={<Download />} />
                 <Route path="library" element={<Library />} />
+                <Route path="watch" element={<LocalPlayer />} />
                 <Route path="watchlist" element={<WatchlistPage />} />
                 <Route
                   path="bookmarked"

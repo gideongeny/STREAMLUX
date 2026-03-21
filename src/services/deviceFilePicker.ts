@@ -13,6 +13,7 @@
 
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
+import { FilePicker } from '@capawesome/capacitor-file-picker';
 import { safeStorage } from '../utils/safeStorage';
 import { logger } from '../utils/logger';
 import axios from '../shared/axios';
@@ -99,14 +100,7 @@ async function enrichWithTMDB(cleanTitle: string, isTV: boolean, season?: number
 
 /* ─── File copy to persistent storage ────────────────────────────────────── */
 
-function readAsBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve((reader.result as string).split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
+// Removed readAsBase64 because it crashes the app on large videos
 
 async function ensureDir(path: string) {
     try { await Filesystem.mkdir({ path, directory: Directory.Data, recursive: true }); } catch { /* exists */ }
@@ -128,94 +122,88 @@ class DeviceFilePickerService {
      *   4. Matched on TMDB for poster art
      * Returns array of newly imported files.
      */
-    pickAndImport(onProgress?: (done: number, total: number) => void): Promise<ImportedVideoFile[]> {
-        return new Promise((resolve) => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'video/*';
-            input.multiple = true;
-            input.style.display = 'none';
-            document.body.appendChild(input);
+    async pickAndImport(onProgress?: (done: number, total: number) => void): Promise<ImportedVideoFile[]> {
+        try {
+            const result = await FilePicker.pickVideos({ limit: 0 });
+            const files = result.files;
+            if (files.length === 0) return [];
 
-            input.onchange = async () => {
-                const files = Array.from(input.files || []).filter(f => VIDEO_EXTS.test(f.name));
-                document.body.removeChild(input);
-                if (files.length === 0) { resolve([]); return; }
+            await ensureDir('imports');
+            const results: ImportedVideoFile[] = [];
+            const existingNames = new Set(this.imported.map(i => i.originalName));
 
-                await ensureDir('imports');
-                const results: ImportedVideoFile[] = [];
-                const existingNames = new Set(this.imported.map(i => i.originalName));
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                onProgress?.(i, files.length);
 
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    onProgress?.(i, files.length);
+                if (existingNames.has(file.name)) continue;
 
-                    // Skip duplicates
-                    if (existingNames.has(file.name)) continue;
+                try {
+                    logger.log(`[FilePicker] Importing ${file.name} (${((file.size || 0) / 1024 / 1024).toFixed(1)} MB) natively`);
 
-                    try {
-                        logger.log(`[FilePicker] Importing ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`);
+                    const safeFilename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._]/g, '_')}`;
+                    const internalPath = `imports/${safeFilename}`;
 
-                        // Copy to app storage
-                        const base64 = await readAsBase64(file);
-                        const safeFilename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._]/g, '_')}`;
-                        const internalPath = `imports/${safeFilename}`;
-
-                        await Filesystem.writeFile({
-                            path: internalPath,
-                            directory: Directory.Data,
-                            data: base64,
-                        });
-
-                        // Get persistent capacitor:// URI
-                        const uriResult = await Filesystem.getUri({ path: internalPath, directory: Directory.Data });
-                        const localUrl = Capacitor.convertFileSrc(uriResult.uri);
-
-                        // Parse filename
-                        const parsed = parseFilename(file.name);
-
-                        // Build entry
-                        const entry: ImportedVideoFile = {
-                            id: `imp_${Date.now()}_${i}`,
-                            originalName: file.name,
-                            title: parsed.cleanTitle,
-                            internalPath,
-                            localUrl,
-                            sizeBytes: file.size,
-                            mediaType: parsed.isTV ? 'tv' : 'movie',
-                            seasonNumber: (parsed as any).season,
-                            episodeNumber: (parsed as any).episode,
-                            importedAt: Date.now(),
-                            source: 'device_import',
-                        };
-
-                        // TMDB enrichment
-                        const tmdb = await enrichWithTMDB(
-                            parsed.cleanTitle,
-                            parsed.isTV,
-                            (parsed as any).season,
-                            (parsed as any).episode
-                        );
-                        Object.assign(entry, tmdb);
-                        if ((tmdb as any).title) entry.title = (tmdb as any).title;
-
-                        this.imported.push(entry);
-                        existingNames.add(file.name);
-                        results.push(entry);
-                    } catch (err) {
-                        logger.error('[FilePicker] Error importing file:', err);
+                    if (!file.path) {
+                        logger.error('[FilePicker] No native path received for file:', file.name);
+                        continue;
                     }
+
+                    // Native copy — extremely fast, does not freeze JS UI thread
+                    await Filesystem.copy({
+                        from: file.path,
+                        to: internalPath,
+                        toDirectory: Directory.Data
+                    });
+
+                    // Get persistent capacitor:// URI
+                    const uriResult = await Filesystem.getUri({ path: internalPath, directory: Directory.Data });
+                    const localUrl = Capacitor.convertFileSrc(uriResult.uri);
+
+                    const parsed = parseFilename(file.name);
+
+                    const entry: ImportedVideoFile = {
+                        id: `imp_${Date.now()}_${i}`,
+                        originalName: file.name,
+                        title: parsed.cleanTitle,
+                        internalPath,
+                        localUrl,
+                        sizeBytes: file.size || 0,
+                        mediaType: parsed.isTV ? 'tv' : 'movie',
+                        seasonNumber: (parsed as any).season,
+                        episodeNumber: (parsed as any).episode,
+                        importedAt: Date.now(),
+                        source: 'device_import',
+                    };
+
+                    const tmdb = await enrichWithTMDB(
+                        parsed.cleanTitle,
+                        parsed.isTV,
+                        (parsed as any).season,
+                        (parsed as any).episode
+                    );
+                    Object.assign(entry, tmdb);
+                    if ((tmdb as any).title) entry.title = (tmdb as any).title;
+
+                    this.imported.push(entry);
+                    existingNames.add(file.name);
+                    results.push(entry);
+                } catch (err) {
+                    logger.error('[FilePicker] Error importing file natively:', err);
                 }
+            }
 
-                onProgress?.(files.length, files.length);
-                this.save();
-                logger.log(`[FilePicker] Imported ${results.length} new files`);
-                resolve(results);
-            };
+            onProgress?.(files.length, files.length);
+            this.save();
+            logger.log(`[FilePicker] Imported ${results.length} new files`);
+            return results;
 
-            input.oncancel = () => { document.body.removeChild(input); resolve([]); };
-            input.click();
-        });
+        } catch (error: any) {
+            if (error.message !== 'pickFiles canceled') {
+                logger.error('[FilePicker] Plugin error:', error);
+            }
+            return [];
+        }
     }
 
     getAll(): ImportedVideoFile[] { return [...this.imported].reverse(); }

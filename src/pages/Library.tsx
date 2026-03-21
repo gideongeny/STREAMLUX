@@ -173,15 +173,9 @@ const Library: FC = () => {
                                     <MdCloudOff size={40} className="text-gray-600" />
                                 </div>
                                 <h2 className="text-2xl font-bold text-white mb-2 uppercase tracking-tight">No downloads yet</h2>
-                                <p className="text-gray-500 max-w-xs mx-auto mb-8 font-medium">
+                                <p className="text-gray-500 max-w-xs mx-auto mb-4 font-medium">
                                     Start downloading movies or shows to watch them without an internet connection.
                                 </p>
-                                <Link
-                                    to="/"
-                                    className="px-8 py-3 bg-primary text-white rounded-full font-black uppercase tracking-widest hover:bg-blue-600 transition shadow-lg shadow-primary/20"
-                                >
-                                    Start Exploring
-                                </Link>
                             </motion.div>
                         ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
