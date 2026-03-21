@@ -1,9 +1,9 @@
-import { FC, useState, useEffect, useCallback } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdDownload, MdPlayArrow, MdDelete, MdCloudOff, MdFolderSpecial, MdArrowBack, MdPause, MdSearch, MdSmartphone } from 'react-icons/md';
+import { MdDownload, MdPlayArrow, MdDelete, MdCloudOff, MdFolderSpecial, MdArrowBack, MdPause, MdFolderOpen, MdSmartphone, MdAdd } from 'react-icons/md';
 import { GiHamburgerMenu } from 'react-icons/gi';
 import { offlineDownloadService, DownloadItem } from '../services/offlineDownload';
-import { smartMediaScanner, DeviceVideoFile } from '../services/smartMediaScanner';
+import { deviceFilePicker, ImportedVideoFile } from '../services/deviceFilePicker';
 import { useAppDispatch } from '../store/hooks';
 import { setSource } from '../store/slice/movieSlice';
 import { useNavigate, Link } from 'react-router-dom';
@@ -15,12 +15,13 @@ import Title from '../components/Common/Title';
 import Footer from '../components/Footer/Footer';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { toast } from 'react-toastify';
 
 const Library: FC = () => {
     const [items, setItems] = useState<DownloadItem[]>([]);
-    const [deviceFiles, setDeviceFiles] = useState<DeviceVideoFile[]>([]);
+    const [importedFiles, setImportedFiles] = useState<ImportedVideoFile[]>([]);
+    const [isImporting, setIsImporting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [isScanning, setIsScanning] = useState(false);
     const [isSidebarActive, setIsSidebarActive] = useState(false);
     const { isMobile } = useCurrentViewportView();
     const dispatch = useAppDispatch();
@@ -29,8 +30,7 @@ const Library: FC = () => {
     useEffect(() => {
         loadLibrary();
         const interval = setInterval(loadLibrary, 1000);
-        // Load previously scanned device files on mount
-        setDeviceFiles(smartMediaScanner.getAll());
+        setImportedFiles(deviceFilePicker.getAll());
         return () => clearInterval(interval);
     }, []);
 
@@ -40,27 +40,26 @@ const Library: FC = () => {
         setIsLoading(false);
     };
 
-    const handleScanDevice = async () => {
-        setIsScanning(true);
+    /** Opens the real native file picker — Android SAF folder browser */
+    const handlePickVideoFromDevice = async () => {
+        setIsImporting(true);
+        toast.info('Opening your file browser...', { position: 'top-center', autoClose: 2000 });
         try {
-            // Build known content from the user's recently viewed titles
-            // In a real scenario you'd pull from watchedHistory or a local cache
-            const knownContent = items.map(i => ({
-                id: 0,
-                title: i.title,
-                mediaType: i.type,
-                thumbnail: i.thumbnail,
-            }));
-            const found = await smartMediaScanner.scan(knownContent);
-            setDeviceFiles(found);
+            const imported = await deviceFilePicker.pickAndImport();
+            if (imported) {
+                setImportedFiles(deviceFilePicker.getAll());
+                toast.success(`"${imported.title}" added to Downloads!`, { position: 'top-center' });
+            }
+        } catch (err) {
+            toast.error('Could not import video. Try again.', { position: 'top-center' });
         } finally {
-            setIsScanning(false);
+            setIsImporting(false);
         }
     };
 
-    const handleRemoveDeviceFile = (id: string) => {
-        smartMediaScanner.remove(id);
-        setDeviceFiles(smartMediaScanner.getAll());
+    const handleRemoveImported = async (id: string) => {
+        await deviceFilePicker.remove(id);
+        setImportedFiles(deviceFilePicker.getAll());
     };
 
     const handleDelete = async (id: string) => {
@@ -142,25 +141,23 @@ const Library: FC = () => {
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
                             <div className="bg-white/5 md:px-6 px-4 py-2.5 rounded-2xl border border-white/10 text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                                {items.length} {items.length === 1 ? 'Item' : 'Items'} Offline
+                                {items.length + importedFiles.length} {(items.length + importedFiles.length) === 1 ? 'Item' : 'Items'} Total
                             </div>
-                            {Capacitor.isNativePlatform() && (
-                                <button
-                                    onClick={handleScanDevice}
-                                    disabled={isScanning}
-                                    className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase tracking-widest hover:bg-emerald-500/20 transition disabled:opacity-50"
-                                >
-                                    {isScanning ? (
-                                        <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                                    ) : (
-                                        <MdSearch size={16} />
-                                    )}
-                                    {isScanning ? 'Scanning...' : 'Scan Device'}
-                                </button>
-                            )}
+                            <button
+                                onClick={handlePickVideoFromDevice}
+                                disabled={isImporting}
+                                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase tracking-widest hover:bg-emerald-500/20 transition disabled:opacity-50 active:scale-95"
+                            >
+                                {isImporting ? (
+                                    <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <MdFolderOpen size={16} />
+                                )}
+                                {isImporting ? 'Importing...' : 'Add from Device'}
+                            </button>
                         </div>
                     </header>
 
@@ -298,23 +295,23 @@ const Library: FC = () => {
                         )}
                     </AnimatePresence>
 
-                    {/* ── Device-Scanned Videos ──────────────────── */}
-                    {deviceFiles.length > 0 && (
+                    {/* ── Device Imported Videos ──────────────────── */}
+                    {importedFiles.length > 0 && (
                         <div className="mt-12">
                             <div className="flex items-center gap-3 mb-6">
                                 <MdSmartphone size={22} className="text-emerald-400" />
                                 <h2 className="text-xl font-black text-white uppercase tracking-tight">
-                                    Found on <span className="text-emerald-400">Your Device</span>
+                                    Added from <span className="text-emerald-400">Your Device</span>
                                 </h2>
                                 <span className="text-[10px] bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded-full font-black uppercase tracking-widest">
-                                    {deviceFiles.length} matched
+                                    {importedFiles.length} video{importedFiles.length !== 1 ? 's' : ''}
                                 </span>
                             </div>
                             <p className="text-gray-500 text-sm mb-6">
-                                These videos were found in your device storage and matched to StreamLux content. The original files stay in your gallery — we just link to them here!
+                                These videos were imported from your device. The original files stay in your gallery — a copy is kept here for offline playback!
                             </p>
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
-                                {deviceFiles.map((file) => (
+                                {importedFiles.map((file: ImportedVideoFile) => (
                                     <motion.div
                                         key={file.id}
                                         layout
@@ -345,7 +342,7 @@ const Library: FC = () => {
 
                                             {/* Remove from list */}
                                             <button
-                                                onClick={() => handleRemoveDeviceFile(file.id)}
+                                                onClick={() => handleRemoveImported(file.id)}
                                                 className="absolute top-4 right-4 p-2.5 rounded-2xl bg-black/60 backdrop-blur-md text-white/40 hover:text-red-500 hover:bg-black transition-all duration-300 border border-white/10 z-10"
                                             >
                                                 <MdDelete size={20} />
@@ -367,7 +364,7 @@ const Library: FC = () => {
                                                     S{file.seasonNumber}E{file.episodeNumber}
                                                 </p>
                                             )}
-                                            <p className="text-[9px] text-gray-600 mt-1 truncate">{file.displayName}</p>
+                                            <p className="text-[9px] text-gray-600 mt-1 truncate">{file.originalName}</p>
                                         </div>
                                     </motion.div>
                                 ))}
