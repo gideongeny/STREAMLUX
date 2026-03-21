@@ -43,23 +43,29 @@ const VIDEO_EXTS = /\.(mp4|mkv|avi|mov|m4v|webm|ts|flv)$/i;
 /* ─── Filename parser ─────────────────────────────────────────────────────── */
 
 function parseFilename(filename: string) {
+    let clean = filename.replace(/\.(mp4|mkv|avi|mov|m4v|webm|ts|flv)$/i, '');
+    // Remove known download site signatures
+    clean = clean.replace(/vidvault\.ru/gi, '');
+    clean = clean.replace(/yts\.(mx|ag|am|lt)/gi, '');
+    
     const seMatch = filename.match(/[Ss](\d{1,2})[Ee](\d{1,2})/);
     if (seMatch) {
-        const cleanTitle = filename
+        let cleanTitleTV = clean
             .substring(0, seMatch.index!)
             .replace(/[._\-\[\]()]/g, ' ')
+            .replace(/\b(vidvault|yts|yify|rarbg|1xbet|1080p|720p|480p|2160p|4k|uhd|bluray|webrip|web-dl|hdtv|x264|x265|hevc|aac|ac3|hdr|remux)\b/gi, '')
             .replace(/\s+/g, ' ')
             .trim();
-        return { cleanTitle: cleanTitle || filename, season: parseInt(seMatch[1]), episode: parseInt(seMatch[2]), isTV: true };
+        return { cleanTitle: cleanTitleTV || filename, season: parseInt(seMatch[1]), episode: parseInt(seMatch[2]), isTV: true };
     }
-    const cleanTitle = filename
-        .replace(/\.(mp4|mkv|avi|mov|m4v|webm|ts|flv)$/i, '')
+    
+    let cleanTitleMovie = clean
         .replace(/[._\-\[\]()]/g, ' ')
-        .replace(/\b(1080p|720p|480p|2160p|4K|UHD|BluRay|WEBRip|WEB-DL|HDTV|x264|x265|HEVC|AAC|AC3|HDR|REMUX)\b/gi, '')
+        .replace(/\b(vidvault|yts|yify|rarbg|1xbet|1080p|720p|480p|2160p|4k|uhd|bluray|webrip|web-dl|hdtv|x264|x265|hevc|aac|ac3|hdr|remux)\b/gi, '')
         .replace(/\b(19|20)\d{2}\b/, '')
         .replace(/\s+/g, ' ')
         .trim();
-    return { cleanTitle: cleanTitle || filename, isTV: false };
+    return { cleanTitle: cleanTitleMovie || filename, isTV: false };
 }
 
 /* ─── TMDB search ─────────────────────────────────────────────────────────── */

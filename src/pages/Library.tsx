@@ -20,8 +20,6 @@ import { toast } from 'react-toastify';
 
 const Library: FC = () => {
     const [items, setItems] = useState<DownloadItem[]>([]);
-    const [importedFiles, setImportedFiles] = useState<ImportedVideoFile[]>([]);
-    const [isImporting, setIsImporting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isSidebarActive, setIsSidebarActive] = useState(false);
     const { isMobile } = useCurrentViewportView();
@@ -31,7 +29,6 @@ const Library: FC = () => {
     useEffect(() => {
         loadLibrary();
         const interval = setInterval(loadLibrary, 1000);
-        setImportedFiles(deviceFilePicker.getAll());
         return () => clearInterval(interval);
     }, []);
 
@@ -41,27 +38,6 @@ const Library: FC = () => {
         setIsLoading(false);
     };
 
-    /** Opens the real native file picker — multi-select, copies to persistent storage */
-    const handlePickVideoFromDevice = async () => {
-        setIsImporting(true);
-        toast.info('Select one or more videos from your device…', { position: 'top-center', autoClose: 2000 });
-        try {
-            const imported = await deviceFilePicker.pickAndImport();
-            setImportedFiles(deviceFilePicker.getAll());
-            if (imported.length > 0) {
-                toast.success(`${imported.length} video${imported.length > 1 ? 's' : ''} added to Downloads!`, { position: 'top-center' });
-            }
-        } catch (err) {
-            toast.error('Could not import video. Try again.', { position: 'top-center' });
-        } finally {
-            setIsImporting(false);
-        }
-    };
-
-    const handleRemoveImported = async (id: string) => {
-        await deviceFilePicker.remove(id);
-        setImportedFiles(deviceFilePicker.getAll());
-    };
 
     const handleDelete = async (id: string) => {
         await offlineDownloadService.cancelDownload(id);
@@ -145,20 +121,8 @@ const Library: FC = () => {
                         <div className="flex items-center gap-3 flex-wrap">
                             <div className="bg-white/5 md:px-6 px-4 py-2.5 rounded-2xl border border-white/10 text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                                {items.length + importedFiles.length} {(items.length + importedFiles.length) === 1 ? 'Item' : 'Items'} Total
+                                {items.length} {items.length === 1 ? 'Item' : 'Items'} Total
                             </div>
-                            <button
-                                onClick={handlePickVideoFromDevice}
-                                disabled={isImporting}
-                                className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase tracking-widest hover:bg-emerald-500/20 transition disabled:opacity-50 active:scale-95"
-                            >
-                                {isImporting ? (
-                                    <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                    <MdFolderOpen size={16} />
-                                )}
-                                {isImporting ? 'Importing...' : 'Add from Device'}
-                            </button>
                         </div>
                     </header>
 
@@ -291,81 +255,7 @@ const Library: FC = () => {
                     </AnimatePresence>
 
                     {/* ── Device Imported Videos ──────────────────── */}
-                    {importedFiles.length > 0 && (
-                        <div className="mt-12">
-                            <div className="flex items-center gap-3 mb-6">
-                                <MdSmartphone size={22} className="text-emerald-400" />
-                                <h2 className="text-xl font-black text-white uppercase tracking-tight">
-                                    Added from <span className="text-emerald-400">Your Device</span>
-                                </h2>
-                                <span className="text-[10px] bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded-full font-black uppercase tracking-widest">
-                                    {importedFiles.length} video{importedFiles.length !== 1 ? 's' : ''}
-                                </span>
-                            </div>
-                            <p className="text-gray-500 text-sm mb-6">
-                                These videos were imported from your device. The original files stay in your gallery — a copy is kept here for offline playback!
-                            </p>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
-                                {importedFiles.map((file: ImportedVideoFile) => (
-                                    <motion.div
-                                        key={file.id}
-                                        layout
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="group relative bg-[#151515]/50 backdrop-blur-md rounded-3xl overflow-hidden border border-emerald-500/10 hover:border-emerald-400/40 transition-all duration-500 shadow-2xl"
-                                    >
-                                        <div className="aspect-[2/3] relative overflow-hidden">
-                                            <img
-                                                src={file.thumbnail || "https://images.unsplash.com/photo-1485846234645-a62644f84728"}
-                                                alt={file.title}
-                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
 
-                                            {/* Play button */}
-                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40 backdrop-blur-[2px]">
-                                                <button
-                                                    onClick={() => {
-                                                        dispatch(setSource(file.localUrl));
-                                                        navigate('/watch');
-                                                    }}
-                                                    className="w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-2xl"
-                                                >
-                                                    <MdPlayArrow size={36} />
-                                                </button>
-                                            </div>
-
-                                            {/* Remove from list */}
-                                            <button
-                                                onClick={() => handleRemoveImported(file.id)}
-                                                className="absolute top-4 right-4 p-2.5 rounded-2xl bg-black/60 backdrop-blur-md text-white/40 hover:text-red-500 hover:bg-black transition-all duration-300 border border-white/10 z-10"
-                                            >
-                                                <MdDelete size={20} />
-                                            </button>
-
-                                            {/* Device badge */}
-                                            <div className="absolute top-4 left-4 z-10">
-                                                <div className="backdrop-blur-md bg-emerald-500/20 border border-emerald-500/40 px-2 py-1 rounded-full flex items-center gap-1">
-                                                    <MdSmartphone size={10} className="text-emerald-400" />
-                                                    <span className="text-[9px] font-black uppercase tracking-tighter text-emerald-400">Device</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-4">
-                                            <h3 className="text-[13px] font-black text-white line-clamp-1 tracking-tight uppercase">{file.title}</h3>
-                                            {file.seasonNumber && (
-                                                <p className="text-[10px] text-emerald-400 font-black uppercase tracking-widest mt-1">
-                                                    S{file.seasonNumber}E{file.episodeNumber}
-                                                </p>
-                                            )}
-                                            <p className="text-[9px] text-gray-600 mt-1 truncate">{file.originalName}</p>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                     {/* ── Watched Folder (Plex-style) ──────────────────── */}
                     <WatchedFolderSection />
                 </div>
