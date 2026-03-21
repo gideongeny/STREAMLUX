@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { SiTiktok } from "react-icons/si";
 import { BsInstagram, BsWhatsapp, BsFacebook } from "react-icons/bs";
-import BuyMeACoffee from "../Common/BuyMeACoffee";
 
 interface FooterProps { }
 
@@ -190,11 +189,9 @@ const Footer: FunctionComponent<FooterProps> = () => {
             <p>
               &copy; {new Date().getFullYear()} StreamLux. {t('All rights reserved.')}
             </p>
-              {/* BuyMeACoffee Removed */}
-              <p className="text-xs">
-                {t('Made with ❤️ for movie and TV show enthusiasts worldwide')}
-              </p>
-            </div>
+            <p className="text-xs">
+              {t('Made with ❤️ for movie and TV show enthusiasts worldwide')}
+            </p>
           </div>
         </div>
       </div>
