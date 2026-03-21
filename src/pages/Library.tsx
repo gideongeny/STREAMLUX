@@ -41,15 +41,15 @@ const Library: FC = () => {
         setIsLoading(false);
     };
 
-    /** Opens the real native file picker — Android SAF folder browser */
+    /** Opens the real native file picker — multi-select, copies to persistent storage */
     const handlePickVideoFromDevice = async () => {
         setIsImporting(true);
-        toast.info('Opening your file browser...', { position: 'top-center', autoClose: 2000 });
+        toast.info('Select one or more videos from your device…', { position: 'top-center', autoClose: 2000 });
         try {
             const imported = await deviceFilePicker.pickAndImport();
-            if (imported) {
-                setImportedFiles(deviceFilePicker.getAll());
-                toast.success(`"${imported.title}" added to Downloads!`, { position: 'top-center' });
+            setImportedFiles(deviceFilePicker.getAll());
+            if (imported.length > 0) {
+                toast.success(`${imported.length} video${imported.length > 1 ? 's' : ''} added to Downloads!`, { position: 'top-center' });
             }
         } catch (err) {
             toast.error('Could not import video. Try again.', { position: 'top-center' });
