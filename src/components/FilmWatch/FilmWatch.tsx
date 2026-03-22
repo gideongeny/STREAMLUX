@@ -248,7 +248,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
               </div>
 
               {/* ── ELITE EXTERNAL CONTROL BAR ── */}
-              <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#0a0a18]/90 backdrop-blur-xl border border-white/10 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.6)] transition-all duration-700 w-full mt-2 ${
+              <div className={`flex flex-col md:flex-row items-center justify-between gap-4 px-6 py-4 rounded-3xl bg-dark/40 backdrop-blur-2xl border border-white/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-700 w-full mt-2 ${
                 isCinemaMode ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'
               }`}>
 
@@ -274,23 +274,22 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   )}
                 </div>
 
-                {/* Center: scrollable source pills — takes all remaining width */}
-                <div className="flex-1 min-w-0 overflow-hidden">
+                <div className="flex-1 min-w-0 relative">
                   <div
-                    className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-0.5"
+                    className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide px-2 pr-20"
                     style={{ touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
                   >
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 shrink-0">
-                      <FaServer className="text-primary text-[9px]" />
-                      <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest shrink-0">Sources</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 shrink-0">
+                      <FaServer className="text-primary text-[10px]" />
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest shrink-0">Sources</span>
                     </div>
                     {sources.map((src, i) => (
-                      <button
-                        key={i}
+                      <button 
+                        key={i} 
                         onClick={() => setSelectedSourceIndex(i)}
-                        className={`shrink-0 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 border ${
-                          i === selectedSourceIndex
-                            ? 'bg-primary text-black border-primary'
+                        className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border ${
+                          i === selectedSourceIndex 
+                            ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.4)]' 
                             : 'bg-white/5 text-gray-400 border-white/5 hover:border-white/20 hover:text-white'
                         }`}
                       >
@@ -301,15 +300,15 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 </div>
 
 
-                {/* Right: Cinema & Native Fullscreen */}
-                <div className="flex items-center gap-1.5 shrink-0">
+                {/* Right Section: Magic & Fullscreen */}
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => dispatch(toggleCinemaMode())}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all font-bold text-[9px] ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold text-xs ${
                       isCinemaMode ? 'bg-primary text-black' : 'bg-white/5 text-white hover:bg-white/10'
                     }`}
                   >
-                    <HiSparkles size={13} className={isCinemaMode ? 'animate-pulse' : 'text-primary'} />
+                    <HiSparkles size={16} className={isCinemaMode ? 'animate-pulse' : 'text-primary'} />
                     <span>Cinema</span>
                   </button>
 
@@ -318,7 +317,6 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                       const playerEl = document.getElementById('player-wrapper');
                       const doc = document as any;
                       if (!doc.fullscreenElement && !doc.webkitFullscreenElement) {
-                        // Enter native fullscreen on the player element
                         if (playerEl?.requestFullscreen) playerEl.requestFullscreen().catch(() => {});
                         else if ((playerEl as any)?.webkitRequestFullscreen) (playerEl as any).webkitRequestFullscreen();
                       } else {
@@ -326,9 +324,9 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                         else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
                       }
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 text-white hover:bg-primary hover:text-black transition-all font-bold text-[9px] group"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-white hover:bg-primary hover:text-black transition-all font-bold text-xs group"
                   >
-                    <MdFullscreen size={15} className="group-hover:scale-110 transition-transform" />
+                    <MdFullscreen size={18} className="group-hover:scale-110 transition-transform" />
                     <span>Fullscreen</span>
                   </button>
                 </div>
