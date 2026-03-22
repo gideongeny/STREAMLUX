@@ -248,7 +248,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
               </div>
 
               {/* ── ELITE EXTERNAL CONTROL BAR ── */}
-              <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-[2rem] bg-dark/40 backdrop-blur-2xl border border-white/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-700 w-full mt-2 ${
+              <div className={`flex items-center gap-6 px-4 py-3 rounded-[2rem] bg-[#1a1c22]/98 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-700 w-full mt-2 ${
                 isCinemaMode ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'
               }`}>
 
@@ -275,10 +275,10 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 </div>
 
                 {/* Center Section: Static Label + Independent Scroll Area */}
-                <div className="flex-[1_1_0%] flex items-center gap-2 min-w-0 overflow-hidden">
+                <div className="flex-1 flex items-center gap-3 min-w-0 overflow-hidden">
                   {/* Fixed Label on the left - visible from sm onwards */}
-                  <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/5 shrink-0 select-none">
-                    <FaServer className="text-primary text-[10px]" />
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 shrink-0 select-none">
+                    <FaServer className="text-secondary text-[10px]" />
                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest shrink-0">Sources</span>
                   </div>
 
