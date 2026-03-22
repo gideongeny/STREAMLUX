@@ -583,7 +583,8 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
             onMouseMove={() => !controlsVisible && resetHideTimer()}
             onTouchStart={() => !controlsVisible && resetHideTimer()}
         >
-            <AmbiFlowGlow videoRef={videoRef} poster={poster} isActive={isCinemaMode || isFullscreen} />
+            {/* AmbiFlowGlow disabled by default for better performance on TV/Low-end devices */}
+            {/* <AmbiFlowGlow videoRef={videoRef} poster={poster} isActive={isCinemaMode || isFullscreen} /> */}
 
             {/* Playback Lock Overlay */}
             <AnimatePresence>
