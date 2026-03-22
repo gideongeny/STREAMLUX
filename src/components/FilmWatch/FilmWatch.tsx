@@ -1,5 +1,5 @@
 import { arrayUnion, doc, getDoc, updateDoc } from "firebase/firestore";
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent, useEffect, useState, useRef, useCallback } from "react";
 import { AiFillStar, AiTwotoneCalendar } from "react-icons/ai";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { Link } from "react-router-dom";
@@ -64,6 +64,38 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const [isExternalFullscreen, setIsExternalFullscreen] = useState(false);
   const [showMagicTip, setShowMagicTip] = useState(false);
   const [selectedSourceIndex, setSelectedSourceIndex] = useState(0);
+
+  // ── ELITE DRAGGABLE SCROLL LOGIC ──
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    isDragging.current = true;
+    scrollRef.current.classList.add('cursor-grabbing');
+    startX.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current = scrollRef.current.scrollLeft;
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.classList.remove('cursor-grabbing');
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.classList.remove('cursor-grabbing');
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging.current || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 2; // Increase scroll speed
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+  }, []);
 
   const [title, setTitle] = useState("");
   const [poster, setPoster] = useState("");
@@ -277,14 +309,19 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 {/* Center Section: Static Label + Independent Scroll Area */}
                 <div className="flex-1 flex items-center gap-3 min-w-0 overflow-hidden">
                   {/* Fixed Label on the left - visible from sm onwards */}
-                  <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 shrink-0 select-none">
-                    <FaServer className="text-secondary text-[10px]" />
+                  <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 shrink-0 select-none">
+                    <FaServer className="text-primary text-[10px]" />
                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest shrink-0">Sources</span>
                   </div>
 
                   {/* Independent Scroll Area for Pills */}
                   <div 
-                    className="flex-1 flex items-center flex-nowrap gap-2 overflow-x-auto scrollbar-hide select-none px-1" 
+                    ref={scrollRef}
+                    onMouseDown={handleMouseDown}
+                    onMouseLeave={handleMouseLeave}
+                    onMouseUp={handleMouseUp}
+                    onMouseMove={handleMouseMove}
+                    className="flex-1 flex items-center flex-nowrap gap-2 overflow-x-auto scrollbar-hide select-none px-2 whitespace-nowrap cursor-grab active:cursor-grabbing" 
                     style={{ 
                       touchAction: 'pan-x', 
                       WebkitOverflowScrolling: 'touch',
@@ -296,12 +333,15 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                       <button 
                         key={i} 
                         onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedSourceIndex(i);
+                          // Only select if not dragging (simple threshold)
+                          if (!isDragging.current) {
+                            e.stopPropagation();
+                            setSelectedSourceIndex(i);
+                          }
                         }}
-                        className={`shrink-0 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border cursor-pointer active:scale-95 ${
+                        className={`shrink-0 flex-none px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border cursor-pointer active:scale-95 ${
                           i === selectedSourceIndex 
-                            ? 'bg-primary text-black border-primary shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.4)]' 
+                            ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.5)]' 
                             : 'bg-white/5 text-gray-400 border-white/5 hover:border-white/20 hover:text-white'
                         }`}
                       >
@@ -309,7 +349,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                       </button>
                     ))}
                     {/* Buffer space for smooth scroll end */}
-                    <div className="shrink-0 w-12 h-4" />
+                    <div className="shrink-0 w-20 h-4" />
                   </div>
                 </div>
 
