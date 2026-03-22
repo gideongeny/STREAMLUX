@@ -19,6 +19,7 @@ import { backgroundAudioService } from '../../services/backgroundAudio';
 import { setFullscreen } from '../../store/slice/uiSlice';
 import { useTranslation } from 'react-i18next';
 import LiveBuzz from './LiveBuzz';
+import SubtitleSelector from './SubtitleSelector';
 import { useSearchParams } from 'react-router-dom';
 import { downloadService } from '../../services/download';
 
@@ -77,7 +78,7 @@ const isDirectVideoUrl = (url: string): boolean => {
 const CLEAN_SOURCES = ['vidlink.pro', 'vidsrc.me', 'vidsrc.to', 'embed.su', 'superembed.stream', '2embed.org'];
 const isCleanSource = (url: string) => CLEAN_SOURCES.some((s) => url.includes(s));
 
-const HIDE_CONTROLS_DELAY = 30000; // 30 seconds
+const HIDE_CONTROLS_DELAY = 5000; // 5 seconds — fast fade so users can use embedded video controls
 
 const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     sources,
@@ -123,6 +124,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     const [showAudioMenu, setShowAudioMenu] = useState(false);
     const [activeSubtitle, setActiveSubtitle] = useState<string>('off');
     const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
+    const [selectedSubtitle, setSelectedSubtitle] = useState<any>(null); // For SubtitleSelector overlay
 
     // Ad-skip overlay state
     const [showAdSkip, setShowAdSkip] = useState(false);
@@ -740,6 +742,24 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                     {isFullscreen ? <MdFullscreenExit size={18} /> : <MdFullscreen size={18} />}
                     <span className="ml-1">{isFullscreen ? t('Exit') : t('Fullscreen')}</span>
                 </button>
+            </div>
+
+            {/* Subtitle Selector — shown for both direct & embed sources */}
+            <div
+                className="absolute bottom-14 right-3 z-50 transition-opacity duration-500"
+                style={{ opacity: controlsVisible ? 1 : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {id && mediaType && (
+                    <SubtitleSelector
+                        mediaType={mediaType}
+                        id={id}
+                        season={seasonId}
+                        episode={episodeId}
+                        onSelect={(sub) => setSelectedSubtitle(sub)}
+                        currentSubtitle={selectedSubtitle}
+                    />
+                )}
             </div>
 
             {isDirect ? (
