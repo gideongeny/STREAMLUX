@@ -339,3 +339,21 @@ input:-webkit-autofill:active {
 [dir="rtl"] .-translate-x-full {
   --tw-translate-x: 100% !important;
 }
+
+/* Subtitle Readability with Black Glow */
+::cue {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  color: #ffffff !important;
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 1.1em !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1) !important;
+}
+
+/* Scrollbar Utility for clean Elite UI */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none !important;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}

@@ -12,7 +12,8 @@ import {
   getWatchReturnedType,
   Item,
 } from "../../shared/types";
-import { useAppSelector } from "../../store/hooks";
+import { useAppSelector, useAppDispatch } from "../../store/hooks";
+import { toggleCinemaMode } from "../../store/slice/uiSlice";
 import { usePlayer } from "../../context/PlayerContext";
 import { useSearchParams } from "react-router-dom";
 import { downloadService } from "../../services/download";
@@ -49,6 +50,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   currentEpisode,
 }) => {
   const currentUser = useAppSelector((state) => state.auth.user);
+  const dispatch = useAppDispatch();
   const { isCinemaMode } = useAppSelector((state) => state.ui);
   const { isMobile } = useCurrentViewportView();
   const [isSidebarActive, setIsSidebarActive] = useState(false);
@@ -240,13 +242,13 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 )}
               </div>
 
-              {/* ── EXTERNAL PLAYER CONTROL BAR ── */}
-              <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-dark border border-white/5 shadow-lg transition-all duration-500 ${
-                isCinemaMode ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'
-              } ${isExternalFullscreen ? 'fixed bottom-4 left-1/2 -translate-x-1/2 z-[10000] bg-black/80 backdrop-blur-xl border-white/20 min-w-[320px]' : 'w-full'}`}>
+              {/* ── ELITE EXTERNAL CONTROL BAR ── */}
+              <div className={`flex flex-col md:flex-row items-center justify-between gap-4 px-6 py-4 rounded-3xl bg-dark/40 backdrop-blur-2xl border border-white/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-700 ${
+                isCinemaMode ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100 mt-2'
+              } ${isExternalFullscreen ? 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[10000] bg-black/60 min-w-[340px] max-w-[90vw] border-white/20' : 'w-full'}`}>
 
-                {/* Left: Subtitles */}
-                <div className="flex items-center gap-2">
+                {/* Left Section: Subtitles & Meta */}
+                <div className="flex items-center gap-3 shrink-0">
                   {detail?.id && (
                     <SubtitleSelector
                       mediaType={media_type}
@@ -258,40 +260,46 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     />
                   )}
                   {selectedSubtitle && (
-                    <span className="text-[10px] text-primary font-black uppercase tracking-widest animate-pulse">
-                      CC: {selectedSubtitle.language}
-                    </span>
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                      <span className="text-[10px] text-primary font-black uppercase tracking-widest">
+                        {selectedSubtitle.language}
+                      </span>
+                    </div>
                   )}
                 </div>
 
-                {/* Centre: Source pill */}
-                <div className="flex-1 flex items-center justify-center gap-1">
-                  {sources.map((src, i) => (
-                    <div key={i} className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border ${
-                      i === 0 ? 'border-primary text-primary bg-primary/10' : 'border-white/10 text-gray-500'
-                    }`}>
-                      {src.name || `S${i + 1}`}
-                    </div>
-                  ))}
+                {/* Middle Section: Source Pill Row (Scrollable) */}
+                <div className="flex-1 w-full md:w-auto overflow-hidden">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide px-2">
+                    <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mr-1 shrink-0">Sources</span>
+                    {sources.map((src, i) => (
+                      <button 
+                        key={i} 
+                        className={`shrink-0 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all duration-300 border ${
+                          i === 0 
+                            ? 'bg-primary text-black border-primary shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.3)]' 
+                            : 'bg-white/5 text-gray-400 border-white/5 hover:border-white/20 hover:text-white'
+                        }`}
+                      >
+                        {src.name || `Source ${i + 1}`}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Right: Magic Menu hint + Fullscreen */}
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <button
-                      onMouseEnter={() => setShowMagicTip(true)}
-                      onMouseLeave={() => setShowMagicTip(false)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-dark-lighten hover:bg-primary hover:text-black transition text-white text-xs font-bold"
-                    >
-                      <HiSparkles size={14} className="text-primary group-hover:text-black" />
-                      <span className="hidden sm:inline">Magic</span>
-                    </button>
-                    {showMagicTip && (
-                      <div className="absolute bottom-full right-0 mb-2 w-48 text-[10px] p-2 bg-black/90 rounded-lg text-gray-300 border border-white/10 z-50">
-                        Use the ✨ Magic Menu inside the video player for Cinema Mode, Skip Ad & more.
-                      </div>
-                    )}
-                  </div>
+                {/* Right Section: Magic & Fullscreen */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => dispatch(toggleCinemaMode())}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold text-xs ${
+                      isCinemaMode ? 'bg-primary text-black' : 'bg-white/5 text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <HiSparkles size={16} className={isCinemaMode ? 'animate-pulse' : 'text-primary'} />
+                    <span>Cinema</span>
+                  </button>
+
                   <button
                     onClick={() => {
                       setIsExternalFullscreen(f => !f);
@@ -301,10 +309,10 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                         document.exitFullscreen?.().catch(() => {});
                       }
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-dark-lighten hover:bg-primary hover:text-black transition text-white text-xs font-bold"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-white hover:bg-primary hover:text-black transition-all font-bold text-xs group"
                   >
-                    <MdFullscreen size={16} />
-                    <span className="hidden sm:inline">{isExternalFullscreen ? 'Exit' : 'Fullscreen'}</span>
+                    <MdFullscreen size={18} className="group-hover:scale-110 transition-transform" />
+                    <span>{isExternalFullscreen ? 'Exit' : 'Fullscreen'}</span>
                   </button>
                 </div>
               </div>

@@ -63,7 +63,7 @@ const SubtitleSelector: FC<SubtitleSelectorProps> = ({
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-                    <div className="absolute top-full mt-2 right-0 min-w-[200px] max-w-[280px] bg-dark-lighten border border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in flex flex-col">
+                    <div className="absolute bottom-full mb-3 left-0 min-w-[200px] max-w-[280px] bg-dark-lighten border border-white/10 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden z-50 animate-fade-in flex flex-col">
                         <div className="px-4 py-3 border-b border-gray-700 flex justify-between items-center bg-black/20">
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                                 SUBTITLES
