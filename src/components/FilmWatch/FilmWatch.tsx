@@ -274,10 +274,15 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   )}
                 </div>
 
-                <div className="flex-1 min-w-0 relative">
+                {/* Center Section: Scrollable Sources */}
+                <div className="flex-1 w-full min-w-0 overflow-hidden">
                   <div
-                    className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide px-2 pr-20"
-                    style={{ touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+                    className="flex items-center gap-2 overflow-x-auto scrollbar-hide px-2 py-1 select-none"
+                    style={{ 
+                      touchAction: 'pan-x', 
+                      WebkitOverflowScrolling: 'touch',
+                      maskImage: 'linear-gradient(to right, transparent, black 20px, black calc(100% - 40px), transparent)'
+                    } as React.CSSProperties}
                   >
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 shrink-0">
                       <FaServer className="text-primary text-[10px]" />
@@ -287,7 +292,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                       <button 
                         key={i} 
                         onClick={() => setSelectedSourceIndex(i)}
-                        className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border ${
+                        className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border cursor-pointer active:scale-95 ${
                           i === selectedSourceIndex 
                             ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.4)]' 
                             : 'bg-white/5 text-gray-400 border-white/5 hover:border-white/20 hover:text-white'
@@ -296,6 +301,8 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                         {src.name || `Source ${i + 1}`}
                       </button>
                     ))}
+                    {/* Add invisible spacer for the end of scroll */}
+                    <div className="shrink-0 w-8 h-4" />
                   </div>
                 </div>
 
