@@ -28,6 +28,9 @@ import EliteDownload from "../Common/EliteDownload";
 import StreamLuxPlayer from "./StreamLuxPlayer";
 import SmartAdContainer from "../Common/SmartAdContainer";
 import UserRating from "../Common/UserRating";
+import SubtitleSelector from "./SubtitleSelector";
+import { HiSparkles } from "react-icons/hi";
+import { MdFullscreen, MdSubtitles } from "react-icons/md";
 
 interface FilmWatchProps {
   media_type: "movie" | "tv";
@@ -54,6 +57,9 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
 
   const [sources, setSources] = useState<any[]>([]);
   const [isResolving, setIsResolving] = useState(true);
+  const [selectedSubtitle, setSelectedSubtitle] = useState<any>(null);
+  const [isExternalFullscreen, setIsExternalFullscreen] = useState(false);
+  const [showMagicTip, setShowMagicTip] = useState(false);
 
   const [title, setTitle] = useState("");
   const [poster, setPoster] = useState("");
@@ -205,7 +211,13 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
           <div className="flex flex-col xl:grid xl:grid-cols-4 gap-8 p-4 md:p-8">
             <div className="xl:col-span-3 col-span-4 space-y-8">
 
-              <div className={`aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl relative border border-white/5 group transition-all duration-700 ${isCinemaMode ? 'scale-[1.02] shadow-[0_0_100px_rgba(0,0,0,1)]' : ''}`}>
+              {/* ── VIDEO PLAYER ── */}
+              <div
+                id="player-wrapper"
+                className={`aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl relative border border-white/5 group transition-all duration-700 ${
+                  isCinemaMode ? 'scale-[1.02] shadow-[0_0_100px_rgba(0,0,0,1)]' : ''
+                } ${isExternalFullscreen ? 'fixed inset-0 z-[9999] rounded-none aspect-auto h-screen w-screen' : ''}`}
+              >
                 {isResolving ? (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-black text-white">
                     <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -226,6 +238,75 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     onError={() => console.log("Video playback error")}
                   />
                 )}
+              </div>
+
+              {/* ── EXTERNAL PLAYER CONTROL BAR ── */}
+              <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-dark border border-white/5 shadow-lg transition-all duration-500 ${
+                isCinemaMode ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'
+              } ${isExternalFullscreen ? 'fixed bottom-4 left-1/2 -translate-x-1/2 z-[10000] bg-black/80 backdrop-blur-xl border-white/20 min-w-[320px]' : 'w-full'}`}>
+
+                {/* Left: Subtitles */}
+                <div className="flex items-center gap-2">
+                  {detail?.id && (
+                    <SubtitleSelector
+                      mediaType={media_type}
+                      id={detail.id}
+                      season={seasonId}
+                      episode={episodeId}
+                      onSelect={(sub) => setSelectedSubtitle(sub)}
+                      currentSubtitle={selectedSubtitle}
+                    />
+                  )}
+                  {selectedSubtitle && (
+                    <span className="text-[10px] text-primary font-black uppercase tracking-widest animate-pulse">
+                      CC: {selectedSubtitle.language}
+                    </span>
+                  )}
+                </div>
+
+                {/* Centre: Source pill */}
+                <div className="flex-1 flex items-center justify-center gap-1">
+                  {sources.map((src, i) => (
+                    <div key={i} className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border ${
+                      i === 0 ? 'border-primary text-primary bg-primary/10' : 'border-white/10 text-gray-500'
+                    }`}>
+                      {src.name || `S${i + 1}`}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Right: Magic Menu hint + Fullscreen */}
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <button
+                      onMouseEnter={() => setShowMagicTip(true)}
+                      onMouseLeave={() => setShowMagicTip(false)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-dark-lighten hover:bg-primary hover:text-black transition text-white text-xs font-bold"
+                    >
+                      <HiSparkles size={14} className="text-primary group-hover:text-black" />
+                      <span className="hidden sm:inline">Magic</span>
+                    </button>
+                    {showMagicTip && (
+                      <div className="absolute bottom-full right-0 mb-2 w-48 text-[10px] p-2 bg-black/90 rounded-lg text-gray-300 border border-white/10 z-50">
+                        Use the ✨ Magic Menu inside the video player for Cinema Mode, Skip Ad & more.
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsExternalFullscreen(f => !f);
+                      if (!isExternalFullscreen) {
+                        document.documentElement.requestFullscreen?.().catch(() => {});
+                      } else {
+                        document.exitFullscreen?.().catch(() => {});
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-dark-lighten hover:bg-primary hover:text-black transition text-white text-xs font-bold"
+                  >
+                    <MdFullscreen size={16} />
+                    <span className="hidden sm:inline">{isExternalFullscreen ? 'Exit' : 'Fullscreen'}</span>
+                  </button>
+                </div>
               </div>
 
               <div className={`transition-all duration-1000 ease-in-out ${isCinemaMode ? 'opacity-20 grayscale pointer-events-none blur-sm scale-95' : 'opacity-100 grayscale-0'}`}>

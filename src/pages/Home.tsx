@@ -1,4 +1,5 @@
-import { FC, useState, useEffect, memo, useTransition } from "react";
+import { FC, useState, useEffect, memo, useTransition, useRef } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
@@ -146,6 +147,36 @@ const Home: FC = () => {
     });
   };
 
+  // Swipe gesture navigation (mobile)
+  const TABS: Array<"tv" | "movie" | "sports"> = ["tv", "movie", "sports"];
+  const swipeTouchStart = { x: 0, y: 0, time: 0 };
+  const swipeStartRef = React.useRef(swipeTouchStart);
+
+  const handleSwipeTouchStart = (e: React.TouchEvent) => {
+    swipeStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+      time: Date.now(),
+    };
+  };
+
+  const handleSwipeTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - swipeStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - swipeStartRef.current.y;
+    const dt = Date.now() - swipeStartRef.current.time;
+    // Only a fast, mostly-horizontal swipe of >60px
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 400) {
+      const idx = TABS.indexOf(currentTab);
+      if (dx < 0) {
+        // Swipe LEFT → next tab
+        handleTabChange(TABS[(idx + 1) % TABS.length]);
+      } else {
+        // Swipe RIGHT → previous tab
+        handleTabChange(TABS[(idx - 1 + TABS.length) % TABS.length]);
+      }
+    }
+  };
+
    const {
     data: dataMovie,
     isLoading: isLoadingMovie,
@@ -257,7 +288,11 @@ const Home: FC = () => {
       {/* Mobile Header Spacer */}
       <div className="h-[120px] md:hidden"></div>
 
-      <div className="flex items-start relative max-w-full overflow-x-hidden">
+      <div
+        className="flex items-start relative max-w-full overflow-x-hidden"
+        onTouchStart={handleSwipeTouchStart}
+        onTouchEnd={handleSwipeTouchEnd}
+      >
         <Sidebar
           onCloseSidebar={() => setIsSidebarActive(false)}
           isSidebarActive={isSidebarActive}
