@@ -270,7 +270,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   )}
                 </div>
 
-                <div className="flex-1 w-full md:w-auto relative group">
+                <div className="flex-1 w-full min-w-0 md:w-auto relative group overflow-hidden">
                   {/* Fade Indicators */}
                   <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-dark/80 to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-dark/80 to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
