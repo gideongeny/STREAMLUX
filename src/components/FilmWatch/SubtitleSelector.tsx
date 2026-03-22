@@ -63,7 +63,7 @@ const SubtitleSelector: FC<SubtitleSelectorProps> = ({
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-                    <div className="absolute top-full mt-3 left-0 md:left-4 min-w-[280px] max-w-[90vw] bg-[#0a0a1a]/95 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.7)] overflow-hidden z-[100] animate-fade-in flex flex-col max-h-[400px]">
+                    <div className="absolute top-full mt-3 left-0 md:left-4 min-w-[320px] max-w-[90vw] bg-[#050510] border border-white/10 rounded-2xl shadow-[0_35px_90px_-20px_rgba(0,0,0,0.9)] overflow-hidden z-[100] animate-fade-in flex flex-col max-h-[400px]">
                         <div className="px-5 py-4 border-b border-white/5 flex justify-between items-center bg-white/5">
                             <span className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">
                                 SUBTITLE TRACKS
@@ -79,7 +79,7 @@ const SubtitleSelector: FC<SubtitleSelectorProps> = ({
                                     onSelect(null);
                                     setIsOpen(false);
                                 }}
-                                className={`px-4 py-3 rounded-xl text-left text-sm transition-all flex justify-between items-center ${!currentSubtitle ? "bg-primary text-black font-black" : "text-gray-400 hover:bg-white/5 hover:text-white"
+                                className={`px-4 py-3 rounded-xl text-left text-sm transition-all flex justify-between items-center ${!currentSubtitle ? "bg-primary/20 text-primary font-black border border-primary/30" : "text-gray-400 hover:bg-white/5 hover:text-white"
                                     }`}
                             >
                                 <span>No Subtitles</span>
