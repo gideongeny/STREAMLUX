@@ -248,7 +248,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
               </div>
 
               {/* ── ELITE EXTERNAL CONTROL BAR ── */}
-              <div className={`flex flex-col md:flex-row items-center justify-between gap-4 px-6 py-4 rounded-3xl bg-dark/40 backdrop-blur-2xl border border-white/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-700 w-full mt-2 ${
+              <div className={`flex items-center justify-between gap-3 px-4 py-3 rounded-[2rem] bg-dark/40 backdrop-blur-2xl border border-white/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-700 w-full mt-2 ${
                 isCinemaMode ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'
               }`}>
 
@@ -275,51 +275,50 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 </div>
 
                 {/* Center Section: Static Label + Independent Scroll Area */}
-                <div className="flex-1 flex items-center gap-3 min-w-0 overflow-hidden">
-                  {/* Fixed Label on the left */}
-                  <div className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/5 shrink-0 select-none">
+                <div className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
+                  {/* Fixed Label on the left - visible from sm onwards */}
+                  <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/5 shrink-0 select-none">
                     <FaServer className="text-primary text-[10px]" />
                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest shrink-0">Sources</span>
                   </div>
 
                   {/* Independent Scroll Area for Pills */}
                   <div 
-                    className="flex-1 flex items-center flex-nowrap gap-2 overflow-x-auto scrollbar-hide select-none relative" 
+                    className="flex-1 flex items-center flex-nowrap gap-2 overflow-x-auto scrollbar-hide select-none px-1" 
                     style={{ 
                       touchAction: 'pan-x', 
                       WebkitOverflowScrolling: 'touch',
-                      maskImage: 'linear-gradient(to right, black 85%, transparent 100%)'
+                      maskImage: 'linear-gradient(to right, black 80%, transparent 100%)'
                     } as React.CSSProperties}
                   >
                     {sources.map((src, i) => (
                       <button 
                         key={i} 
                         onClick={() => setSelectedSourceIndex(i)}
-                        className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border cursor-pointer active:scale-95 ${
+                        className={`shrink-0 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border cursor-pointer active:scale-95 ${
                           i === selectedSourceIndex 
-                            ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.4)]' 
+                            ? 'bg-primary text-black border-primary shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.4)]' 
                             : 'bg-white/5 text-gray-400 border-white/5 hover:border-white/20 hover:text-white'
                         }`}
                       >
                         {src.name || `Source ${i + 1}`}
                       </button>
                     ))}
-                    {/* Buffer space at the end */}
-                    <div className="shrink-0 w-12 h-4" />
+                    {/* Buffer space for smooth scroll end */}
+                    <div className="shrink-0 w-10 h-4" />
                   </div>
                 </div>
 
-
                 {/* Right Section: Magic & Fullscreen */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => dispatch(toggleCinemaMode())}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold text-xs ${
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all font-bold text-[10px] ${
                       isCinemaMode ? 'bg-primary text-black' : 'bg-white/5 text-white hover:bg-white/10'
                     }`}
                   >
-                    <HiSparkles size={16} className={isCinemaMode ? 'animate-pulse' : 'text-primary'} />
-                    <span>Cinema</span>
+                    <HiSparkles size={14} className={isCinemaMode ? 'animate-pulse' : 'text-primary'} />
+                    <span className="hidden sm:inline">Cinema</span>
                   </button>
 
                   <button
@@ -334,10 +333,10 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                         else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
                       }
                     }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-white hover:bg-primary hover:text-black transition-all font-bold text-xs group"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 text-white hover:bg-primary hover:text-black transition-all font-bold text-[10px] group"
                   >
-                    <MdFullscreen size={18} className="group-hover:scale-110 transition-transform" />
-                    <span>Fullscreen</span>
+                    <MdFullscreen size={16} className="group-hover:scale-110 transition-transform" />
+                    <span className="hidden sm:inline">Fullscreen</span>
                   </button>
                 </div>
               </div>
