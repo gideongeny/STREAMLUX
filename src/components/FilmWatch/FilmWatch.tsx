@@ -275,7 +275,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 </div>
 
                 {/* Center Section: Static Label + Independent Scroll Area */}
-                <div className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
+                <div className="flex-[1_1_0%] flex items-center gap-2 min-w-0 overflow-hidden">
                   {/* Fixed Label on the left - visible from sm onwards */}
                   <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/5 shrink-0 select-none">
                     <FaServer className="text-primary text-[10px]" />
@@ -288,13 +288,17 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     style={{ 
                       touchAction: 'pan-x', 
                       WebkitOverflowScrolling: 'touch',
-                      maskImage: 'linear-gradient(to right, black 80%, transparent 100%)'
+                      msOverflowStyle: 'none',
+                      scrollbarWidth: 'none'
                     } as React.CSSProperties}
                   >
                     {sources.map((src, i) => (
                       <button 
                         key={i} 
-                        onClick={() => setSelectedSourceIndex(i)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedSourceIndex(i);
+                        }}
                         className={`shrink-0 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border cursor-pointer active:scale-95 ${
                           i === selectedSourceIndex 
                             ? 'bg-primary text-black border-primary shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.4)]' 
@@ -305,7 +309,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                       </button>
                     ))}
                     {/* Buffer space for smooth scroll end */}
-                    <div className="shrink-0 w-10 h-4" />
+                    <div className="shrink-0 w-12 h-4" />
                   </div>
                 </div>
 
