@@ -43,7 +43,7 @@ export const useHomeData = (type: "movie" | "tv", history?: Item[], enabled: boo
           () => (otherType === "movie" ? getHomeMovies(history) : getHomeTVs(history)),
           { staleTime: 1000 * 60 * 60 }
         );
-      }, 3000); // 3-second delay to prioritize current tab
+      }, 6000); // 6-second delay to prioritize current tab and critical path rendering
       return () => clearTimeout(prefetchTimer);
     }
   }, [enabled, type, i18n.language, history, queryClient]);

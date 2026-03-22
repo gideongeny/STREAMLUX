@@ -1,7 +1,8 @@
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
 import { FunctionComponent, MouseEvent, memo, useState, useEffect, useRef } from "react";
 import { AiFillStar } from "react-icons/ai";
-import { LazyLoadImage } from "react-lazy-load-image-component";
+import { LazyLoadImage, LazyLoadComponent } from "react-lazy-load-image-component";
+import "react-lazy-load-image-component/src/effects/opacity.css";
 import { Link } from "react-router-dom";
 import { Item } from "../../shared/types";
 import { hapticImpact, resizeImage } from "../../shared/utils";
@@ -109,7 +110,10 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
       }}
       className="block w-full"
     >
-      <motion.div
+      <LazyLoadComponent
+        placeholder={<div className={`w-full ${item.media_type === 'sports_video' ? 'aspect-video' : 'aspect-[2/3]'} bg-dark-lighten rounded-md animate-pulse`} />}
+      >
+        <motion.div
         whileTap={{ scale: 0.95 }}
         style={{
           rotateX: !isNative && isFullyHovered ? rotateX : 0,
@@ -165,8 +169,9 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
 
         {/* Poster — with elegant no-poster fallback */}
         {(item.poster_path || item.backdrop_path || (item as any).thumb || (item.media_type === "person" && item.profile_path)) ? (
-          <img
+          <LazyLoadImage
             alt={item.title || item.name}
+            effect="opacity"
             src={
               item.media_type === "person"
                 ? resizeImage(item.profile_path || "", "w185")
@@ -177,8 +182,6 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
                     : resizeImage((item as any).thumb || "", "w185")
             }
             className={`object-cover w-full ${item.media_type === 'sports_video' ? 'aspect-video' : 'aspect-[2/3]'}`}
-            loading="lazy"
-            decoding="async"
             onError={(e: any) => {
               // Replace with styled fallback on image load error
               const parent = e.target.parentElement;
@@ -215,6 +218,7 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
           </div>
         )}
       </motion.div>
+      </LazyLoadComponent>
     </Link >
   );
 };
