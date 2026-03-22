@@ -23,6 +23,7 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isFullyHovered, setIsFullyHovered] = useState(false); // Used for tilt
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
   const hoverTimer = useRef<NodeJS.Timeout | null>(null);
   const tiltTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -168,10 +169,11 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
         </AnimatePresence>
 
         {/* Poster — with elegant no-poster fallback */}
-        {(item.poster_path || item.backdrop_path || (item as any).thumb || (item.media_type === "person" && item.profile_path)) ? (
+        {(item.poster_path || item.backdrop_path || (item as any).thumb || (item.media_type === "person" && item.profile_path)) && !imgError ? (
           <LazyLoadImage
             alt={item.title || item.name}
             effect="opacity"
+            wrapperClassName="w-full block"
             src={
               item.media_type === "person"
                 ? resizeImage(item.profile_path || "", "w185")
@@ -182,17 +184,7 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
                     : resizeImage((item as any).thumb || "", "w185")
             }
             className={`object-cover w-full ${item.media_type === 'sports_video' ? 'aspect-video' : 'aspect-[2/3]'}`}
-            onError={(e: any) => {
-              // Replace with styled fallback on image load error
-              const parent = e.target.parentElement;
-              if (parent && !parent.querySelector('.no-poster-fallback')) {
-                e.target.style.display = 'none';
-                const fallback = document.createElement('div');
-                fallback.className = `no-poster-fallback w-full ${item.media_type === 'sports_video' ? 'aspect-video' : 'aspect-[2/3]'} flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-dark to-gray-800 border border-white/5`;
-                fallback.innerHTML = `<svg xmlns='http://www.w3.org/2000/svg' class='w-10 h-10 text-gray-600 mb-2' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='1' d='M7 4v16M17 4v16M3 8h4m10 0h4M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z'/></svg><p class='text-gray-500 text-[10px] text-center px-4 leading-tight'>${(item.title || item.name || '').slice(0, 32)}</p>`;
-                parent.insertBefore(fallback, e.target.nextSibling);
-              }
-            }}
+            onError={() => setImgError(true)}
           />
         ) : (
           /* Direct no-poster fallback when poster_path is null */
