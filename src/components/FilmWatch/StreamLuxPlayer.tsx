@@ -774,9 +774,27 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                         style={{ opacity: controlsVisible ? 1 : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}
                         onClick={(e) => e.stopPropagation()}
                     >
+                        {/* Cinema Mode Toggle */}
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                dispatch(toggleCinemaMode());
+                                hapticImpact();
+                            }}
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all text-xs font-bold ${
+                                isCinemaMode 
+                                    ? 'bg-primary text-black shadow-[0_0_10px_rgba(var(--color-primary-rgb),0.5)]' 
+                                    : 'bg-black/70 backdrop-blur border border-white/10 text-white hover:bg-black/90'
+                            }`}
+                            title={isCinemaMode ? t("Exit Cinema Mode") : t("Cinema Mode")}
+                        >
+                            <HiSparkles size={14} className={isCinemaMode ? 'animate-pulse' : 'text-primary'} />
+                            <span className="hidden sm:inline">Cinema</span>
+                        </button>
+
                         {audioTracks.length > 0 && (
                             <div className="relative">
-                                <button onClick={() => setShowAudioMenu(!showAudioMenu)} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white hover:bg-black/90 transition text-xs font-medium">
+                                <button onClick={(e) => { e.stopPropagation(); setShowAudioMenu(!showAudioMenu); }} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white hover:bg-black/90 transition text-xs font-medium">
                                     <FaVolumeUp size={13} />
                                     <span>{audioTracks.find(t => t.id === activeAudio)?.label || 'Audio'}</span>
                                 </button>
