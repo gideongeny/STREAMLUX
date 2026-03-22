@@ -4,6 +4,7 @@ import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { IMAGE_URL } from '../../shared/constants';
 import axios from '../../shared/axios';
 import { Item } from '../../shared/types';
+import { safeStorage } from '../../utils/safeStorage';
 
 interface NavigationItem {
   title: string;
@@ -21,6 +22,14 @@ const DiverseNavigation: React.FC = () => {
     const fetchImages = async () => {
       // Get current tab from localStorage to determine default type
       const currentTab = (localStorage.getItem("currentTab") || "movie") as "movie" | "tv";
+      
+      const cacheKey = `diverse-navigation-cache-${currentTab}`;
+      const cachedItems = safeStorage.getParsed<NavigationItem[] | null>(cacheKey, null);
+      
+      if (cachedItems) {
+        setNavigationItems(cachedItems);
+        return; // Zero latency! No 24x API waterfalls
+      }
       
       const baseItems: NavigationItem[] = [
         {
@@ -252,6 +261,7 @@ const DiverseNavigation: React.FC = () => {
       );
       
       setNavigationItems(updatedItems);
+      safeStorage.set(cacheKey, JSON.stringify(updatedItems));
     };
 
     fetchImages();

@@ -1,7 +1,7 @@
 import { FC, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LazyLoadImage } from "react-lazy-load-image-component";
+import { LazyLoadImage, LazyLoadComponent } from "react-lazy-load-image-component";
 import { Item } from "../../shared/types";
 import {
   getAfricanContent,
@@ -18,6 +18,7 @@ import {
   getNollywoodMovies,
 } from "../../services/globalContent";
 import { resizeImage } from "../../shared/utils";
+import { safeStorage } from "../../utils/safeStorage";
 
 interface RegionSlider {
   title: string;
@@ -43,6 +44,14 @@ const GlobalWorldTV: FC = () => {
 
   useEffect(() => {
     const loadAll = async () => {
+      const cacheKey = "global-world-tv-cache";
+      const cachedData = safeStorage.getParsed<RegionSlider[] | null>(cacheKey, null);
+      
+      if (cachedData) {
+        setSliders(cachedData);
+        return; // Zero-latency hydration
+      }
+
       // Fetch in batches to avoid hitting rate limits
       const [korean, japanese, african, turkish, indian, asian, british, latin, nollywood, bollywood] =
         await Promise.allSettled([
@@ -58,7 +67,7 @@ const GlobalWorldTV: FC = () => {
           getBollywoodMovies().then(res => res.slice(0, 30)),
         ]);
 
-      setSliders([
+      const newSliders: RegionSlider[] = [
         { title: "🇰🇷 K-Dramas & Korean Cinema", emoji: "🇰🇷", items: korean.status === "fulfilled" ? korean.value.slice(0, 20) : [], isLoading: false },
         { title: "🇯🇵 Anime & J-Dramas", emoji: "🇯🇵", items: japanese.status === "fulfilled" ? japanese.value.slice(0, 20) : [], isLoading: false },
         { title: "🌍 African Originals", emoji: "🌍", items: african.status === "fulfilled" ? african.value.slice(0, 20) : [], isLoading: false },
@@ -69,7 +78,10 @@ const GlobalWorldTV: FC = () => {
         { title: "🌎 Latin American Content", emoji: "🌎", items: latin.status === "fulfilled" ? latin.value.slice(0, 20) : [], isLoading: false },
         { title: "🎬 Nollywood Movies", emoji: "🎬", items: nollywood.status === "fulfilled" ? nollywood.value.slice(0, 20) : [], isLoading: false },
         { title: "💃 Bollywood Movies", emoji: "💃", items: bollywood.status === "fulfilled" ? bollywood.value.slice(0, 20) : [], isLoading: false },
-      ]);
+      ];
+      
+      setSliders(newSliders);
+      safeStorage.set(cacheKey, JSON.stringify(newSliders));
     };
     loadAll();
   }, []);
@@ -114,18 +126,19 @@ const GlobalWorldTV: FC = () => {
                   />
                 ))
               : slider.items.map((item) => (
+                  <LazyLoadComponent key={item.id} placeholder={<div className="flex-shrink-0 w-32 h-48 bg-dark-lighten rounded-xl animate-pulse" />}>
                   <motion.div
-                    key={item.id}
                     whileHover={{ scale: 1.05, y: -4 }}
                     transition={{ duration: 0.2 }}
-                    className="flex-shrink-0 w-32 cursor-pointer group relative"
+                    className="flex-shrink-0 w-32 cursor-pointer group relative block"
                     onClick={() => handleClick(item)}
                   >
-                    <div className="relative rounded-xl overflow-hidden shadow-lg bg-dark/40">
+                    <div className="relative rounded-xl overflow-hidden shadow-lg bg-dark/40 block w-full">
                       <LazyLoadImage
                         src={(item as any).isScraped ? "/logo.svg" : resizeImage(item.poster_path, "w342")}
                         alt={item.title || item.name || ""}
-                        className="w-32 h-48 object-cover"
+                        className="w-32 h-48 object-cover block"
+                        wrapperClassName="w-full block"
                         effect="opacity"
                       />
                       <div className={`absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent ${(item as any).isScraped ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200 flex items-end p-2`}>
@@ -148,6 +161,7 @@ const GlobalWorldTV: FC = () => {
                     </div>
                     <p className="text-gray-300 text-xs mt-1.5 truncate">{item.title || item.name}</p>
                   </motion.div>
+                  </LazyLoadComponent>
                 ))}
           </div>
         </div>
