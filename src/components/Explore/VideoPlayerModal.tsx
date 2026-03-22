@@ -37,15 +37,13 @@ const StreamLuxPlayerModal: React.FC<StreamLuxPlayerModalProps> = ({ videoId, on
                         </button>
                     </div>
 
-                    {/* YouTube Embed with Ad Blocking Sandbox */}
+                    {/* YouTube Embed */}
                     <iframe
                         src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
                         title="YouTube video player"
                         className="w-full h-full border-0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
-                        // Restricted sandbox to block ad-tech and external popups
-                        sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
                     ></iframe>
                 </motion.div>
             </div>

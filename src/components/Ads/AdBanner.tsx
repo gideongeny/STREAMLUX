@@ -44,16 +44,42 @@ const AdsterraAdUnit: React.FC = () => {
     );
 };
 
-const AdBanner: React.FC<AdBannerProps> = ({ position, onClose }) => {
-    // Check if running in native app
-    const isNativeApp = React.useMemo(() => {
-        if (typeof window === 'undefined') return false;
-        return !!(window as any).Capacitor || 
-               !!(window as any).cordova || 
-               navigator.userAgent.includes('StreamLuxApp') ||
-               window.location.protocol === 'capacitor:';
+// Adsterra 468x60 Banner Component
+const AdsterraBanner468x60: React.FC = () => {
+    React.useEffect(() => {
+        const scriptId = 'adsterra-468x60-script';
+        if (!document.getElementById(scriptId)) {
+            const container = document.getElementById('ad-468x60-container');
+            if (!container) return;
+
+            const script = document.createElement('script');
+            script.id = scriptId;
+            script.innerHTML = `
+                atOptions = {
+                    'key' : '9e00c96fb20d6634af7710f519d7e1cb',
+                    'format' : 'iframe',
+                    'height' : 60,
+                    'width' : 468,
+                    'params' : {}
+                };
+            `;
+            container.appendChild(script);
+
+            const adScript = document.createElement('script');
+            adScript.src = "//www.highperformanceformat.com/9e00c96fb20d6634af7710f519d7e1cb/invoke.js";
+            adScript.async = true;
+            container.appendChild(adScript);
+        }
     }, []);
 
+    return (
+        <div className="flex justify-center my-4 overflow-hidden rounded-lg bg-black/10 p-2">
+            <div id="ad-468x60-container"></div>
+        </div>
+    );
+};
+
+const AdBanner: React.FC<AdBannerProps> = ({ position, onClose }) => {
     const [isVisible, setIsVisible] = React.useState(true);
     const [canClose, setCanClose] = React.useState(false);
 
@@ -84,7 +110,10 @@ const AdBanner: React.FC<AdBannerProps> = ({ position, onClose }) => {
 
     return (
         <div className={`relative z-10 ${position === 'home' ? 'my-8 mx-auto max-w-6xl' : 'my-4'}`}>
-            {/* Real Ad Unit (Always shown now) */}
+            {/* Adsterra 468x60 Banner */}
+            <AdsterraBanner468x60 />
+
+            {/* Adsterra Native Unit */}
             <div className="mb-4">
                 <AdsterraAdUnit />
             </div>
@@ -125,8 +154,14 @@ const AdBanner: React.FC<AdBannerProps> = ({ position, onClose }) => {
                             <AiOutlineDownload size={22} />
                             <span>DOWNLOAD AD-FREE</span>
                         </Link>
-                        <span className="text-[10px] text-gray-500 uppercase tracking-tighter">Verified & Secure APK</span>
-                    </div>
+                        <a 
+          href="https://omg10.com/4/10759068" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="mt-2 text-center w-full rounded-full bg-white/10 px-4 py-2 text-[10px] sm:text-xs font-bold text-white hover:bg-white/20 transition-colors shadow-lg border border-white/5"
+        >
+          View Our Sponsors
+        </a>                    </div>
                 </div>
 
                 {/* Loading Progress for Close Button */}

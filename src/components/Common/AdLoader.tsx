@@ -21,43 +21,24 @@ const AdLoader: FC<AdLoaderProps> = ({ src, adSlot, className = "" }) => {
         // Prevent double loading
         if (loadedRef.current) return;
 
-        if (!src && !adSlot) return;
+        // Only proceed if adSlot is provided for AdSense
+        if (!adSlot) return;
 
         try {
-            if (src) {
-                // External Script Injection
-                const script = document.createElement("script");
-                script.src = src;
-                script.async = true;
-                script.crossOrigin = "anonymous";
-                script.onload = () => {
-                    console.log(`Ad script loaded: ${src}`);
-                };
-                script.onerror = () => {
-                    console.warn(`Ad script failed to load: ${src}`);
-                };
-                document.body.appendChild(script);
-                loadedRef.current = true;
-            } else if (adSlot) {
-                // Google AdSense Push
-                try {
-                    (window.adsbygoogle = window.adsbygoogle || []).push({});
-                    loadedRef.current = true;
-                } catch (e) {
-                    console.error("AdSense push error:", e);
-                }
-            }
+            // Google AdSense Push
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+            loadedRef.current = true;
         } catch (error) {
             console.warn("AdLoader error:", error);
         }
-    }, [src, adSlot]);
+    }, [adSlot]);
 
-    // If using generic script loader (src provided)
+    // If using generic script loader (src provided) - DISABLED for safety
     if (src) {
-        return <div ref={adRef} className={`hidden ${className}`} />;
+        return null;
     }
 
-    // If using AdSense (adSlot provided)
+    // If using AdSense unit
     return (
         <div className={`ad-container my-4 flex justify-center ${className}`}>
             <ins className="adsbygoogle"

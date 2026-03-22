@@ -79,7 +79,7 @@ const SmartAdContainer: FC<SmartAdContainerProps> = ({
   }
 
   // Toast and other positions — don't render
-  return <Fallback />;
+  return null;
 };
 
 export default SmartAdContainer;

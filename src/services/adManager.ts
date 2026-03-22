@@ -60,9 +60,12 @@ class AdManager {
         if (this.isInitialized) return;
 
         try {
-            await AdMobPlugin.initialize();
+            const { MaxAdContentRating } = await import('@capacitor-community/admob');
+            await AdMobPlugin.initialize({
+                maxAdContentRating: MaxAdContentRating.General,
+            });
             this.isInitialized = true;
-            logger.log('AdMob initialized');
+            logger.log('AdMob initialized with General content rating');
         } catch (error) {
             logger.error('AdMob initialization failed:', error);
         }

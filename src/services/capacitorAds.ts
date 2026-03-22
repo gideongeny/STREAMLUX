@@ -37,9 +37,13 @@ let admobPlugin: any = null;
 export async function initializeAdMob(): Promise<void> {
     if (!isNative) return;
     try {
-        const { AdMob } = await import('@capacitor-community/admob');
+        const { AdMob, MaxAdContentRating } = await import('@capacitor-community/admob');
         admobPlugin = AdMob;
-        await AdMob.initialize();
+        await AdMob.initialize({
+            maxAdContentRating: MaxAdContentRating.General,
+            tagForChildDirectedTreatment: false,
+            tagForUnderAgeOfConsent: false,
+        });
         console.log('[AdMob] Initialized');
     } catch (e) {
         console.warn('[AdMob] Failed to initialize:', e);

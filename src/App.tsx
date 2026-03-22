@@ -10,38 +10,33 @@ import { DownloadManagerProvider } from "./contexts/DownloadManagerContext";
 import DownloadTray from "./components/Common/DownloadTray";
 
 import Protected from "./components/Common/Protected";
-import Auth from "./pages/Auth";
-import Bookmarked from "./pages/Bookmarked";
-import Copyright from "./pages/Copyright";
-import Error from "./pages/Error";
-import Explore from "./pages/Explore";
-import History from "./pages/History";
-import Home from "./pages/Home";
-import MovieInfo from "./pages/Movie/MovieInfo";
-import MovieWatch from "./pages/Movie/MovieWatch";
-import SportsHome from "./pages/Sports/SportsHome";
-import SportsWatch from "./pages/Sports/SportsWatch";
-import Profile from "./pages/Profile";
-import Search from "./pages/Search";
-import TVInfo from "./pages/TV/TVInfo";
-import TVWatch from "./pages/TV/TVWatch";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import UserAgreement from "./pages/UserAgreement";
-import Disclaimer from "./pages/Disclaimer";
-import Download from "./pages/Download";
-import CalendarPage from "./pages/CalendarPage";
-import Settings from "./pages/Settings";
-import MiniPlayer from "./components/FilmWatch/MiniPlayer";
-import SpotlightSearch from "./components/Common/SpotlightSearch";
-import MasterReveal from "./components/Common/MasterReveal";
-import Library from "./pages/Library";
-import LocalPlayer from "./pages/LocalPlayer";
-import WatchlistPage from "./pages/WatchlistPage";
-import AtmosphericBackground from "./components/Common/AtmosphericBackground";
-import MobileBottomNav from "./components/Navigation/MobileBottomNav";
-import GeniusAI from "./components/Common/GeniusAI";
-import OnboardingOverlay from "./components/Common/OnboardingOverlay";
-import MatchesDetails from "./pages/Sports/MatchesDetails";
+import { Suspense, lazy } from "react";
+
+const Auth = lazy(() => import("./pages/Auth"));
+const Bookmarked = lazy(() => import("./pages/Bookmarked"));
+const Copyright = lazy(() => import("./pages/Copyright"));
+const Error = lazy(() => import("./pages/Error"));
+const Explore = lazy(() => import("./pages/Explore"));
+const History = lazy(() => import("./pages/History"));
+const Home = lazy(() => import("./pages/Home"));
+const MovieInfo = lazy(() => import("./pages/Movie/MovieInfo"));
+const MovieWatch = lazy(() => import("./pages/Movie/MovieWatch"));
+const SportsHome = lazy(() => import("./pages/Sports/SportsHome"));
+const SportsWatch = lazy(() => import("./pages/Sports/SportsWatch"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Search = lazy(() => import("./pages/Search"));
+const TVInfo = lazy(() => import("./pages/TV/TVInfo"));
+const TVWatch = lazy(() => import("./pages/TV/TVWatch"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const UserAgreement = lazy(() => import("./pages/UserAgreement"));
+const Disclaimer = lazy(() => import("./pages/Disclaimer"));
+const Download = lazy(() => import("./pages/Download"));
+const CalendarPage = lazy(() => import("./pages/CalendarPage"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Library = lazy(() => import("./pages/Library"));
+const LocalPlayer = lazy(() => import("./pages/LocalPlayer"));
+const WatchlistPage = lazy(() => import("./pages/WatchlistPage"));
+const MatchesDetails = lazy(() => import("./pages/Sports/MatchesDetails"));
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
@@ -59,6 +54,20 @@ import { setLanguage } from "./shared/axios";
 import { SplashScreen } from '@capacitor/splash-screen';
 
 import AppUpdater from "./components/Common/AppUpdater";
+
+import MiniPlayer from "./components/FilmWatch/MiniPlayer";
+import SpotlightSearch from "./components/Common/SpotlightSearch";
+import MasterReveal from "./components/Common/MasterReveal";
+import AtmosphericBackground from "./components/Common/AtmosphericBackground";
+import MobileBottomNav from "./components/Navigation/MobileBottomNav";
+import GeniusAI from "./components/Common/GeniusAI";
+import OnboardingOverlay from "./components/Common/OnboardingOverlay";
+
+const GlobalLoader = () => (
+  <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f172a', color: '#fff' }}>
+    <div style={{ width: '40px', height: '40px', border: '3px solid #334155', borderTopColor: '#ef4444', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+  </div>
+);
 
 // Final deployment heartbeat for unified Vercel backend propagation
 // ... [Will manually assemble in target file to avoid full matching issues]
@@ -100,7 +109,12 @@ function App() {
   useEffect(() => {
     themeService.initialize();
     
-    // Initialize AdMob and show first banner if native
+    // Immediately hide Splash screen so the user sees the App (or Suspense Loader) without artificial delay
+    if (Capacitor.isNativePlatform()) {
+      SplashScreen.hide();
+    }
+
+    // Initialize AdMob and show first banner if native - DEFERRED to avoid blocking paint
     const initAds = async () => {
       await initializeAdMob();
       if (Capacitor.isNativePlatform()) {
@@ -109,34 +123,33 @@ function App() {
       } else {
         await webNotificationService.initialize();
       }
-      
-      // Hide Splash screen precisely when React paints are ready
-      if (Capacitor.isNativePlatform()) {
-          setTimeout(() => {
-              SplashScreen.hide();
-          }, 300);
-      }
     };
-    initAds().catch(console.warn);
+    
+    // Defer heavy third-party initialization by 1.5 seconds so main UI thread is entirely free for React render
+    const adTimer = setTimeout(() => {
+      initAds().catch(console.warn);
+    }, 1500);
 
     // PopAds / Third-party Ad Trigger Helper
-    // Some ad networks (like PopAds) need a "real" click to trigger.
-    // We listen globally and can manually trigger a window event if needed.
     const handleGlobalClick = () => {
-      // Logic for manual trigger if script is stuck
       if ((window as any).popns) {
           try { (window as any).popns(); } catch(e) {}
       }
     };
     window.addEventListener('click', handleGlobalClick);
 
-    // Check for trending content notification on startup and periodically
-    trendingNotificationService.checkAndNotifyTrending();
+    // Check for trending content notification non-blockingly
+    const trendingTimer = setTimeout(() => {
+      trendingNotificationService.checkAndNotifyTrending();
+    }, 3000);
+
     const trendingInterval = setInterval(() => {
       trendingNotificationService.checkAndNotifyTrending();
     }, 10 * 60 * 1000); // Check every 10 minutes
 
     return () => {
+      clearTimeout(adTimer);
+      clearTimeout(trendingTimer);
       clearInterval(trendingInterval);
       window.removeEventListener('click', handleGlobalClick);
     };
@@ -462,54 +475,56 @@ function App() {
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} // Cinematic custom cubic-bezier
               className="w-full flex-grow"
             >
-              <Routes location={location} key={location.pathname}>
-                <Route index element={<Home />} />
-                <Route path="movie/:id" element={<MovieInfo />} />
-                <Route path="tv/:id" element={<TVInfo />} />
-                <Route path="movie/:id/watch" element={<MovieWatch />} />
-                <Route path="tv/:id/watch" element={<TVWatch />} />
-                <Route path="sports" element={<SportsHome />} />
-                <Route path="sports/:leagueId/:matchId/watch" element={<SportsWatch />} />
-                <Route path="matches/details/:fixtureId" element={<MatchesDetails />} />
-                <Route path="explore" element={<Explore />} />
-                <Route path="calendar" element={<CalendarPage />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="search" element={<Search />} />
-                <Route path="auth" element={<Auth />} />
-                <Route path="copyright" element={<Copyright />} />
-                <Route path="privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="user-agreement" element={<UserAgreement />} />
-                <Route path="disclaimer" element={<Disclaimer />} />
-                <Route path="download" element={<Download />} />
-                <Route path="library" element={<Library />} />
-                <Route path="watch" element={<LocalPlayer />} />
-                <Route path="watchlist" element={<WatchlistPage />} />
-                <Route
-                  path="bookmarked"
-                  element={
-                    <Protected isSignedIn={isSignedIn}>
-                      <Bookmarked />
-                    </Protected>
-                  }
-                />
-                <Route
-                  path="history"
-                  element={
-                    <Protected isSignedIn={isSignedIn}>
-                      <History />
-                    </Protected>
-                  }
-                />
-                <Route
-                  path="profile"
-                  element={
-                    <Protected isSignedIn={isSignedIn}>
-                      <Profile />
-                    </Protected>
-                  }
-                />
-                <Route path="*" element={<Error />} />
-              </Routes>
+              <Suspense fallback={<GlobalLoader />}>
+                <Routes location={location} key={location.pathname}>
+                  <Route index element={<Home />} />
+                  <Route path="movie/:id" element={<MovieInfo />} />
+                  <Route path="tv/:id" element={<TVInfo />} />
+                  <Route path="movie/:id/watch" element={<MovieWatch />} />
+                  <Route path="tv/:id/watch" element={<TVWatch />} />
+                  <Route path="sports" element={<SportsHome />} />
+                  <Route path="sports/:leagueId/:matchId/watch" element={<SportsWatch />} />
+                  <Route path="matches/details/:fixtureId" element={<MatchesDetails />} />
+                  <Route path="explore" element={<Explore />} />
+                  <Route path="calendar" element={<CalendarPage />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="search" element={<Search />} />
+                  <Route path="auth" element={<Auth />} />
+                  <Route path="copyright" element={<Copyright />} />
+                  <Route path="privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="user-agreement" element={<UserAgreement />} />
+                  <Route path="disclaimer" element={<Disclaimer />} />
+                  <Route path="download" element={<Download />} />
+                  <Route path="library" element={<Library />} />
+                  <Route path="watch" element={<LocalPlayer />} />
+                  <Route path="watchlist" element={<WatchlistPage />} />
+                  <Route
+                    path="bookmarked"
+                    element={
+                      <Protected isSignedIn={isSignedIn}>
+                        <Bookmarked />
+                      </Protected>
+                    }
+                  />
+                  <Route
+                    path="history"
+                    element={
+                      <Protected isSignedIn={isSignedIn}>
+                        <History />
+                      </Protected>
+                    }
+                  />
+                  <Route
+                    path="profile"
+                    element={
+                      <Protected isSignedIn={isSignedIn}>
+                        <Profile />
+                      </Protected>
+                    }
+                  />
+                  <Route path="*" element={<Error />} />
+                </Routes>
+              </Suspense>
             </motion.div>
           </AnimatePresence>
           <AppUpdater />
