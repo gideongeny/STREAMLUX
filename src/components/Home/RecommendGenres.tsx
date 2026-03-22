@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { getRecommendGenres2 } from "../../services/search";
 import { getRecommendGenres2Type } from "../../shared/types";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 const getRandomGenres = (genres: { id: number; name: string }[]) => {
   // const NUMBER_OF_GENRES = 6;
@@ -23,10 +24,11 @@ interface RecommendGenresProps {
 }
 
 const RecommendGenres: FC<RecommendGenresProps> = ({ currentTab }) => {
+  const { i18n } = useTranslation();
   const { isLoading, data, isError, error } = useQuery<
     getRecommendGenres2Type,
     Error
-  >(["genres"], getRecommendGenres2);
+  >(["genres", i18n.language], getRecommendGenres2);
 
   if (isError) return <div>ERROR: {error.message}</div>;
 

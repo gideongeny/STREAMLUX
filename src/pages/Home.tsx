@@ -39,6 +39,7 @@ import { useTranslation } from "react-i18next";
 import SectionSlider from "../components/Slider/SectionSlider";
 import LazySection from "../components/Common/LazySection";
 import HomeSkeleton from "../components/Home/HomeSkeleton";
+import Logo from "../components/Common/Logo";
 import { Item } from "../shared/types";
 
 const Home: FC = () => {
@@ -234,11 +235,7 @@ const Home: FC = () => {
         }`}>
         <div className="flex justify-between items-center px-5 py-4">
           <Link to="/" className="flex gap-2 items-center shrink-0">
-            <img
-              src="/logo.svg"
-              alt="StreamLux Logo"
-              className="h-10 w-10"
-            />
+            <Logo className="w-10 h-10" />
           </Link>
           {/* MovieBox-style search bar on mobile top bar */}
           <TopSearchBar className="flex-1 mx-3" />
@@ -451,7 +448,7 @@ const FilmTypeButton: FC<FilmTypeButtonProps> = memo(({
   const { t } = useTranslation();
   const getButtonText = () => {
     if (buttonType === "movie") return t("Movies");
-    if (buttonType === "tv") return t("TV Show");
+    if (buttonType === "tv") return t("TV Shows");
     return t("Sports");
   };
 

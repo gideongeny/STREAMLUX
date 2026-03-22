@@ -1,9 +1,9 @@
 import { FC } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { AiOutlineHome } from "react-icons/ai";
-import { MdOutlineExplore, MdFolderSpecial } from "react-icons/md";
-import { BiUserCircle } from "react-icons/bi";
-import { useTranslation } from "react-i18next";
+import { MdExplore, MdFolderSpecial, MdSportsSoccer, MdHomeFilled } from 'react-icons/md';
+import { BiSearch } from 'react-icons/bi';
+import { useTranslation } from 'react-i18next';
+import Logo from '../Common/Logo';
 import { motion } from "framer-motion";
 
 const MobileBottomNav: FC = () => {
@@ -11,31 +11,24 @@ const MobileBottomNav: FC = () => {
   const location = useLocation();
 
   const NAV_ITEMS = [
-    { icon: <AiOutlineHome size={26} />, label: t("Home"), path: "/" },
-    { icon: <MdOutlineExplore size={26} />, label: t("Explore"), path: "/explore" },
-    { 
+    { icon: <MdHomeFilled size={26} />, label: t("Home"), path: "/" },
+    { icon: <MdExplore size={26} />, label: t("Explore"), path: "/explore" },
+    {
       icon: (
-        <div className="relative -top-6">
-          <motion.div 
-            animate={{ 
-              boxShadow: ["0 0 20px rgba(59, 130, 246, 0.4)", "0 0 40px rgba(139, 92, 246, 0.6)", "0 0 20px rgba(59, 130, 246, 0.4)"],
-              scale: [1, 1.05, 1]
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="w-16 h-16 rounded-full bg-gradient-to-tr from-primary via-blue-600 to-purple-600 p-1 ring-4 ring-dark shadow-2xl shadow-primary/40"
-          >
-            <div className="w-full h-full rounded-full bg-dark flex items-center justify-center overflow-hidden">
-               <img src="/logo.svg" alt="Hub" className="w-10 h-10" />
-            </div>
-          </motion.div>
-        </div>
-      ), 
-      label: "", 
-      path: "/download",
-      special: true 
+        <Link
+          to="/"
+          className={`flex flex-col items-center justify-center -mt-8 mx-2 tw-hit-target w-16 h-16 rounded-full p-2 border-4 transition-all duration-300 transform outline-none border-dark shadow-2xl ${location.pathname === '/' || location.pathname === '/sports' || location.pathname === '/explore' || location.pathname === '/search' ? 'border-primary/50 bg-dark-lighten scale-105 shadow-primary/30' : 'border-gray-darken bg-dark shadow-[0_0_15px_rgba(0,0,0,0.5)]'}`}
+        >
+          <Logo className="w-10 h-10 filter drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
+          <div className={`absolute -bottom-2 w-1.5 h-1.5 rounded-full bg-primary transition-opacity duration-300 ${location.pathname === '/' ? 'opacity-100' : 'opacity-0'}`}></div>
+        </Link>
+      ),
+      label: "",
+      path: "/", // This path is used for the central logo, but the Link inside the icon handles navigation
+      special: true
     },
-    { icon: <MdFolderSpecial size={26} />, label: t("Downloads"), path: "/library" },
-    { icon: <BiUserCircle size={26} />, label: t("Me"), path: "/profile" },
+    { icon: <MdSportsSoccer size={26} />, label: t("Sports"), path: "/sports" },
+    { icon: <BiSearch size={26} />, label: t("Search"), path: "/search" },
   ];
 
   return (

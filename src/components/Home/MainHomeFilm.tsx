@@ -3,6 +3,7 @@ import { BannerInfo, HomeFilms } from "../../shared/types";
 import Skeleton from "../Common/Skeleton";
 import BannerSlider from "../Slider/BannerSlider";
 import SectionSlider from "../Slider/SectionSlider";
+import { useTranslation } from "react-i18next";
 
 interface MainHomeFilmsProps {
   data: HomeFilms | undefined;
@@ -19,6 +20,7 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
   isLoadingSection,
   onActiveImageChange,
 }) => {
+  const { t } = useTranslation();
   return (
     <>
       <BannerSlider
@@ -61,7 +63,7 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
                 <li key={index}>
                   <SectionSlider
                     films={section[1]}
-                    title={section[0]}
+                    title={t(section[0])}
                     seeMoreParams={seeMoreParams}
                   />
                 </li>

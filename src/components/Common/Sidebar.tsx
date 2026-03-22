@@ -16,6 +16,7 @@ import { useAppSelector } from "../../store/hooks";
 import { triggerManualUpdateCheck, isNative } from "../../services/updateService";
 import BuyMeACoffee from "./BuyMeACoffee";
 import LanguageSelector from "./LanguageSelector";
+import Logo from "./Logo";
 
 const GENRES = [
   // 🎬 MOVIE HIGHLIGHTS
@@ -147,11 +148,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
       >
         {!isMobile && (
           <Link to="/" className="flex items-center gap-3">
-            <img
-              alt="StreamLux Logo"
-              src="/logo.svg"
-              className="w-10 h-10"
-            />
+            <Logo className="w-10 h-10" />
             <h1 className="text-xl text-white tracking-widest font-semibold uppercase">
               <span>Stream</span>
               <span className="text-primary">Lux</span>
@@ -220,7 +217,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
               to={`/explore?genre=${genre.id}`}
               className="group flex items-center justify-between text-gray-300/80 hover:text-white transition-all duration-300"
             >
-              <span className="text-sm font-bold tracking-tight group-hover:translate-x-2 transition-transform">{genre.name}</span>
+              <span className="text-sm font-bold tracking-tight group-hover:translate-x-2 transition-transform">{t(genre.name)}</span>
               <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-primary font-black">EXPLORE</span>
             </Link>
           ))}
