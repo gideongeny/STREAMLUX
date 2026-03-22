@@ -275,7 +275,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-dark/80 to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-dark/80 to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
                   
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide px-2 select-none">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide px-2 select-none pr-10">
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 shrink-0 select-none">
                       <FaServer className="text-primary text-[10px]" />
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest shrink-0">Sources</span>
