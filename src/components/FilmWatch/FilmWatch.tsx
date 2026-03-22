@@ -274,20 +274,23 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   )}
                 </div>
 
-                {/* Center Section: Robust Scrollable Sources */}
-                <div className="flex-1 w-full min-w-0 overflow-hidden">
-                  <div
-                    className="flex items-center flex-nowrap gap-2 overflow-x-auto scrollbar-hide px-2 py-1 select-none"
+                {/* Center Section: Static Label + Independent Scroll Area */}
+                <div className="flex-1 flex items-center gap-3 min-w-0 overflow-hidden">
+                  {/* Fixed Label on the left */}
+                  <div className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/5 shrink-0 select-none">
+                    <FaServer className="text-primary text-[10px]" />
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest shrink-0">Sources</span>
+                  </div>
+
+                  {/* Independent Scroll Area for Pills */}
+                  <div 
+                    className="flex-1 flex items-center flex-nowrap gap-2 overflow-x-auto scrollbar-hide select-none relative" 
                     style={{ 
                       touchAction: 'pan-x', 
                       WebkitOverflowScrolling: 'touch',
-                      maxWidth: '100%'
+                      maskImage: 'linear-gradient(to right, black 85%, transparent 100%)'
                     } as React.CSSProperties}
                   >
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 shrink-0">
-                      <FaServer className="text-primary text-[10px]" />
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest shrink-0">Sources</span>
-                    </div>
                     {sources.map((src, i) => (
                       <button 
                         key={i} 
@@ -301,8 +304,8 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                         {src.name || `Source ${i + 1}`}
                       </button>
                     ))}
-                    {/* Add invisible spacer for the end of scroll */}
-                    <div className="shrink-0 w-8 h-4" />
+                    {/* Buffer space at the end */}
+                    <div className="shrink-0 w-12 h-4" />
                   </div>
                 </div>
 
