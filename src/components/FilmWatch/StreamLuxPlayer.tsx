@@ -752,72 +752,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                             </div>
                         )}
 
-                        {subtitleTracks.length > 0 && (
-                            <div className="relative">
-                                <button onClick={() => setShowSubtitleMenu(!showSubtitleMenu)} className={`flex items-center gap-1.5 px-2.5 py-1.5 ${activeSubtitle !== 'off' ? 'bg-primary text-black' : 'bg-black/70 text-white'} backdrop-blur border border-white/10 rounded-lg hover:bg-primary hover:text-black transition text-xs font-medium`}>
-                                    <FaClosedCaptioning size={14} />
-                                    <span>{activeSubtitle === 'off' ? 'Sub' : activeSubtitle.toUpperCase()}</span>
-                                </button>
-                                <AnimatePresence>
-                                    {showSubtitleMenu && (
-                                        <motion.div 
-                                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                                            className="absolute bottom-full right-0 mb-3 w-48 bg-[#0a0a1a]/95 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-3 z-[100]"
-                                        >
-                                            <div className="px-4 pb-2 text-[10px] text-gray-500 uppercase tracking-widest font-black flex items-center gap-2 border-b border-white/5 mb-2">
-                                                <FaClosedCaptioning className="text-primary" /> {t('Subtitles')}
-                                            </div>
-                                            <button 
-                                                onClick={() => handleSubtitleChange('off')} 
-                                                className={`w-full text-left px-4 py-3 text-xs transition-all flex items-center justify-between ${activeSubtitle === 'off' ? 'text-primary bg-primary/10 font-bold' : 'text-gray-300 hover:bg-white/5'}`}
-                                            >
-                                                Off
-                                                {activeSubtitle === 'off' && <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(255,255,255,0.5)]" />}
-                                            </button>
-                                            {subtitleTracks.map((track) => (
-                                                <button 
-                                                    key={track.language} 
-                                                    onClick={() => handleSubtitleChange(track.language)} 
-                                                    className={`w-full text-left px-4 py-3 text-xs transition-all flex items-center justify-between ${activeSubtitle === track.language ? 'text-primary bg-primary/10 font-bold' : 'text-gray-300 hover:bg-white/5'}`}
-                                                >
-                                                    {track.label}
-                                                    {activeSubtitle === track.language && <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(255,255,255,0.5)]" />}
-                                                </button>
-                                            ))}
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        )}
 
-                        {currentSource.quality && (
-                            <div className="flex items-center px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white text-xs font-bold">{currentSource.quality}</div>
-                        )}
-
-                        <div className="relative">
-                            <button onClick={() => setShowSpeedMenu(!showSpeedMenu)} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white hover:bg-black/90 transition text-xs font-medium">
-                                <MdSpeed size={15} />
-                                <span>{playbackRate}x</span>
-                            </button>
-                            {showSpeedMenu && (
-                                <div className="absolute bottom-full right-0 mb-1 w-24 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-xl overflow-hidden py-1">
-                                    {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((rate) => (
-                                        <button key={rate} onClick={() => handleSpeedChange(rate)} className={`w-full text-left px-3 py-2 text-xs hover:bg-white/5 transition ${playbackRate === rate ? 'text-primary bg-white/5' : 'text-gray-300'}`}>{rate}x</button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {document.pictureInPictureEnabled && (
-                            <button 
-                                onClick={handlePiPToggle} 
-                                className={`flex items-center px-2.5 py-1.5 ${document.pictureInPictureElement ? 'bg-primary text-black' : 'bg-black/70 text-white'} backdrop-blur border border-white/10 rounded-lg hover:bg-primary hover:text-black transition`}
-                            >
-                                <MdPictureInPicture size={15} />
-                            </button>
-                        )}
                     </div>
                 </div>
             ) : (
@@ -846,48 +781,11 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                             }}
                         />
                     )}
-                    <div
-                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-2 z-30 flex items-center justify-between transition-opacity duration-500"
-                        style={{ opacity: controlsVisible ? 1 : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="flex items-center gap-2">
-                            <span className="text-white text-xs font-medium bg-white/10 px-2 py-1 rounded">{currentSource.name}</span>
-                            {currentSource.quality && <span className="text-white text-xs bg-primary/80 px-2 py-1 rounded font-bold">{currentSource.quality}</span>}
-                        </div>
-                        <div className="text-xs text-gray-400 italic">Streaming</div>
-                    </div>
+
                 </div>
             )}
 
-            {normalizedSources.length > 1 && (
-                <div
-                    className="absolute top-3 left-3 z-30 transition-opacity duration-500"
-                    style={{ opacity: controlsVisible ? 1 : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <div className="relative">
-                        <button onClick={() => setShowSourceMenu(!showSourceMenu)} className="flex items-center gap-2 px-3 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-full text-white hover:bg-black/90 transition shadow-lg text-xs">
-                            <FaServer className="text-primary" size={12} />
-                            <span className="font-medium max-w-[90px] truncate">{currentSource.name}</span>
-                        </button>
-                        {showSourceMenu && (
-                            <div className="absolute top-full left-0 mt-2 w-64 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-xl overflow-hidden py-2 max-h-[300px] overflow-y-auto no-scrollbar">
-                                <div className="px-4 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Select Source</div>
-                                {normalizedSources.map((src, idx) => (
-                                    <button key={idx} onClick={() => { setCurrentIndex(idx); setShowSourceMenu(false); }} className={`w-full text-left px-4 py-3 flex items-center justify-between hover:bg-white/5 transition text-sm ${currentIndex === idx ? 'text-primary bg-white/5' : 'text-gray-300'}`}>
-                                        <div className="flex items-center gap-2 overflow-hidden">
-                                            <FaServer size={12} className={currentIndex === idx ? 'text-primary' : 'text-gray-500'} />
-                                            <span className="truncate">{src.name}</span>
-                                        </div>
-                                        {src.quality && <span className="text-xs bg-black/40 px-1.5 py-0.5 rounded border border-white/5 flex-shrink-0">{src.quality}</span>}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+
 
             <VisionCastOverlay
                 mediaId={id || ""}

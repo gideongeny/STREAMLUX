@@ -32,6 +32,7 @@ import UserRating from "../Common/UserRating";
 import SubtitleSelector from "./SubtitleSelector";
 import { HiSparkles } from "react-icons/hi";
 import { MdFullscreen, MdSubtitles } from "react-icons/md";
+import { FaServer } from "react-icons/fa";
 
 interface FilmWatchProps {
   media_type: "movie" | "tv";
@@ -269,16 +270,27 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   )}
                 </div>
 
-                {/* Middle Section: Source Pill Row (Scrollable) */}
-                <div className="flex-1 w-full md:w-auto overflow-hidden">
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide px-2">
-                    <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest mr-1 shrink-0">Sources</span>
+                <div className="flex-1 w-full md:w-auto relative group">
+                  {/* Fade Indicators */}
+                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-dark/80 to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-dark/80 to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide px-2 select-none">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 shrink-0 select-none">
+                      <FaServer className="text-primary text-[10px]" />
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest shrink-0">Sources</span>
+                    </div>
                     {sources.map((src, i) => (
                       <button 
                         key={i} 
-                        className={`shrink-0 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all duration-300 border ${
+                        onClick={() => {
+                          // Note: In a real app, this would change the source. 
+                          // Currently this is a UI-only pill row for source indication.
+                          // If we wanted to trigger source change, we'd need to lift currentSource state up.
+                        }}
+                        className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border ${
                           i === 0 
-                            ? 'bg-primary text-black border-primary shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.3)]' 
+                            ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.4)]' 
                             : 'bg-white/5 text-gray-400 border-white/5 hover:border-white/20 hover:text-white'
                         }`}
                       >
