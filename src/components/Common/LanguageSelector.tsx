@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { MdLanguage, MdCheck, MdKeyboardArrowUp } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
 import { safeStorage } from "../../utils/safeStorage";
+import { apiCache } from "../../shared/apiCache";
 
 const LANGUAGES = [
     { code: "en", label: "English", flag: "🇺🇸" },
@@ -33,6 +34,8 @@ const LanguageSelector: FC<LanguageSelectorProps> = ({ className = "" }) => {
     const handleLanguageChange = async (code: string) => {
         await i18n.changeLanguage(code);
         safeStorage.set("streamlux_language", code);
+        // Flush API cache so TMDB re-fetches everything in the new locale
+        apiCache.clear();
         setIsHovered(false);
         window.dispatchEvent(new CustomEvent('languageChanged', { detail: code }));
     };

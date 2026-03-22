@@ -166,8 +166,35 @@ function cacheKeyParamsFromConfig(config: AxiosRequestConfig): any {
     return config.params || {};
 }
 
+// Maps short i18n codes → TMDB full locale codes
+// TMDB uses ISO 639-1 + ISO 3166-1 format (e.g. en-US, fr-FR)
+const TMDB_LOCALE_MAP: Record<string, string> = {
+  en: 'en-US',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  de: 'de-DE',
+  ru: 'ru-RU',
+  ja: 'ja-JP',
+  vi: 'vi-VN',
+  ar: 'ar-SA',
+  hi: 'hi-IN',
+  id: 'id-ID',
+  pt: 'pt-BR',
+  tl: 'tl-PH',
+  ur: 'ur-PK',
+  sw: 'sw-KE',
+  zh: 'zh-CN',
+};
+
+/**
+ * Convert a short app language code to a TMDB-compatible locale string.
+ * Falls back to "en-US" if the code is not in the map.
+ */
+export const toTmdbLocale = (lang: string): string =>
+  TMDB_LOCALE_MAP[lang] ?? `${lang}-${lang.toUpperCase()}`;
+
 export const setLanguage = (lang: string) => {
-  globalLang = lang;
+  globalLang = toTmdbLocale(lang);
 };
 
 export default instance;
