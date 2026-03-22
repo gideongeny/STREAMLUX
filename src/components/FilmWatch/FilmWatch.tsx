@@ -63,6 +63,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const [selectedSubtitle, setSelectedSubtitle] = useState<any>(null);
   const [isExternalFullscreen, setIsExternalFullscreen] = useState(false);
   const [showMagicTip, setShowMagicTip] = useState(false);
+  const [selectedSourceIndex, setSelectedSourceIndex] = useState(0);
 
   const [title, setTitle] = useState("");
   const [poster, setPoster] = useState("");
@@ -227,7 +228,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     <p>Resolving best quality sources...</p>
                   </div>
                 ) : (
-                  <StreamLuxPlayer
+                <StreamLuxPlayer
                     key={`${detail?.id}-${seasonId}-${episodeId}`}
                     sources={sources}
                     poster={`https://image.tmdb.org/t/p/original${poster}`}
@@ -239,6 +240,8 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     episodeId={episodeId}
                     startAt={Number(searchParams.get("time")) || 0}
                     onError={() => console.log("Video playback error")}
+                    selectedSourceIndex={selectedSourceIndex}
+                    onSourceIndexChange={setSelectedSourceIndex}
                   />
                 )}
               </div>
@@ -279,13 +282,9 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     {sources.map((src, i) => (
                       <button 
                         key={i} 
-                        onClick={() => {
-                          // Note: In a real app, this would change the source. 
-                          // Currently this is a UI-only pill row for source indication.
-                          // If we wanted to trigger source change, we'd need to lift currentSource state up.
-                        }}
+                        onClick={() => setSelectedSourceIndex(i)}
                         className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 border ${
-                          i === 0 
+                          i === selectedSourceIndex 
                             ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.4)]' 
                             : 'bg-white/5 text-gray-400 border-white/5 hover:border-white/20 hover:text-white'
                         }`}

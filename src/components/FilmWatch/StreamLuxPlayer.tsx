@@ -54,6 +54,8 @@ interface VideoPlayerProps {
     releaseYear?: string;
     seasonId?: number;
     episodeId?: number;
+    selectedSourceIndex?: number;
+    onSourceIndexChange?: (index: number) => void;
 }
 
 const getSetting = (key: string, defaultValue: boolean): boolean => {
@@ -92,6 +94,8 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     releaseYear,
     seasonId,
     episodeId,
+    selectedSourceIndex,
+    onSourceIndexChange,
 }) => {
     const dispatch = useAppDispatch();
     const { t } = useTranslation();
@@ -102,7 +106,14 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         typeof s === 'string' ? { name: 'Default', url: s } : s
     );
 
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [currentIndex, setCurrentIndex] = useState(selectedSourceIndex ?? 0);
+
+    // Sync with external selectedSourceIndex prop
+    useEffect(() => {
+        if (selectedSourceIndex !== undefined) {
+            setCurrentIndex(selectedSourceIndex);
+        }
+    }, [selectedSourceIndex]);
     const videoRef = useRef<HTMLVideoElement>(null);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const playerRootRef = useRef<HTMLDivElement>(null);
