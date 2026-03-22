@@ -242,6 +242,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                     onError={() => console.log("Video playback error")}
                     selectedSourceIndex={selectedSourceIndex}
                     onSourceIndexChange={setSelectedSourceIndex}
+                    externalSubtitle={selectedSubtitle}
                   />
                 )}
               </div>
@@ -274,7 +275,10 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 </div>
 
                 <div className="flex-1 min-w-0 relative">
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide px-2 whitespace-nowrap pr-20">
+                  <div
+                    className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide px-2 pr-20"
+                    style={{ touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+                  >
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 shrink-0 select-none">
                       <FaServer className="text-primary text-[10px]" />
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest shrink-0">Sources</span>

@@ -56,6 +56,7 @@ interface VideoPlayerProps {
     episodeId?: number;
     selectedSourceIndex?: number;
     onSourceIndexChange?: (index: number) => void;
+    externalSubtitle?: any | null;
 }
 
 const getSetting = (key: string, defaultValue: boolean): boolean => {
@@ -96,6 +97,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     episodeId,
     selectedSourceIndex,
     onSourceIndexChange,
+    externalSubtitle,
 }) => {
     const dispatch = useAppDispatch();
     const { t } = useTranslation();
@@ -108,12 +110,6 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
 
     const [currentIndex, setCurrentIndex] = useState(selectedSourceIndex ?? 0);
 
-    // Sync with external selectedSourceIndex prop
-    useEffect(() => {
-        if (selectedSourceIndex !== undefined) {
-            setCurrentIndex(selectedSourceIndex);
-        }
-    }, [selectedSourceIndex]);
     const videoRef = useRef<HTMLVideoElement>(null);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const playerRootRef = useRef<HTMLDivElement>(null);
@@ -126,35 +122,82 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     const [isPiP, setIsPiP] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [controlsVisible, setControlsVisible] = useState(true);
-    const [showClickShield, setShowClickShield] = useState(true); // New Click-Shield State
+    const [showClickShield, setShowClickShield] = useState(true);
     const controlsHideTimer = useRef<NodeJS.Timeout | null>(null);
-
-    // Audio/Subtitle state
     const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
     const [activeAudio, setActiveAudio] = useState<string>('');
     const [showAudioMenu, setShowAudioMenu] = useState(false);
     const [activeSubtitle, setActiveSubtitle] = useState<string>('off');
     const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
-    const [selectedSubtitle, setSelectedSubtitle] = useState<any>(null); // For SubtitleSelector overlay
-
-    // Ad-skip overlay state
+    const [selectedSubtitle, setSelectedSubtitle] = useState<any>(null);
     const [showAdSkip, setShowAdSkip] = useState(false);
     const [showVisionCast, setShowVisionCast] = useState(false);
-    const [showMagicMenu, setShowMagicMenu] = useState(false); // Magic Menu state
-    const [showReactions, setShowReactions] = useState(false); // Reactions (LiveBuzz) state
-    const [autoplayBlocked, setAutoplayBlocked] = useState(false); // Policy Handler
-    const [isLocked, setIsLocked] = useState(false); // Playback Lock State
+    const [showMagicMenu, setShowMagicMenu] = useState(false);
+    const [showReactions, setShowReactions] = useState(false);
+    const [autoplayBlocked, setAutoplayBlocked] = useState(false);
+    const [isLocked, setIsLocked] = useState(false);
     const [showLockHint, setShowLockHint] = useState(false);
     const lockTimerRef = useRef<NodeJS.Timeout | null>(null);
     const adTimerRef = useRef<NodeJS.Timeout | null>(null);
     const bufferCheckTimer = useRef<NodeJS.Timeout | null>(null);
     const retryCount = useRef(0);
-
-    // Gesture / Indicator state
     const [indicator, setIndicator] = useState<{ type: 'volume' | 'brightness' | 'seek', value: string | number, icon: any } | null>(null);
     const indicatorTimerRef = useRef<NodeJS.Timeout | null>(null);
     const lastTapTime = useRef<number>(0);
     const swipeStart = useRef<{ x: number, y: number } | null>(null);
+
+    // Sync with external selectedSourceIndex prop
+    useEffect(() => {
+        if (selectedSourceIndex !== undefined) {
+            setCurrentIndex(selectedSourceIndex);
+        }
+    }, [selectedSourceIndex]);
+
+    // Apply external subtitle from the FilmWatch external bar to the HTML5 video element
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video || !isDirect) return;
+
+        const existing = video.querySelectorAll('track[data-external="true"]');
+        existing.forEach(el => el.remove());
+
+        if (!externalSubtitle) {
+            for (let i = 0; i < video.textTracks.length; i++) {
+                video.textTracks[i].mode = 'hidden';
+            }
+            return;
+        }
+
+        const applySubtitle = async () => {
+            try {
+                const { resolveSubtitleUrl } = await import('../../services/subtitles');
+                const url = await resolveSubtitleUrl(externalSubtitle);
+                if (!url) return;
+
+                const track = document.createElement('track');
+                track.kind = 'subtitles';
+                track.label = externalSubtitle.language;
+                track.srclang = externalSubtitle.lang || 'en';
+                track.src = url;
+                track.default = true;
+                track.setAttribute('data-external', 'true');
+                video.appendChild(track);
+
+                setTimeout(() => {
+                    for (let i = 0; i < video.textTracks.length; i++) {
+                        video.textTracks[i].mode =
+                            video.textTracks[i].label === externalSubtitle.language
+                                ? 'showing' : 'hidden';
+                    }
+                }, 300);
+            } catch (err) {
+                console.warn('[SubtitleApply] Failed to apply external subtitle:', err);
+            }
+        };
+
+        applySubtitle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [externalSubtitle, isDirect]);
 
     const currentSource = normalizedSources[currentIndex];
 
