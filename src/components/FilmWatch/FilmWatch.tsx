@@ -274,14 +274,14 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   )}
                 </div>
 
-                {/* Center Section: Scrollable Sources */}
+                {/* Center Section: Robust Scrollable Sources */}
                 <div className="flex-1 w-full min-w-0 overflow-hidden">
                   <div
-                    className="flex items-center gap-2 overflow-x-auto scrollbar-hide px-2 py-1 select-none"
+                    className="flex items-center flex-nowrap gap-2 overflow-x-auto scrollbar-hide px-2 py-1 select-none"
                     style={{ 
                       touchAction: 'pan-x', 
                       WebkitOverflowScrolling: 'touch',
-                      maskImage: 'linear-gradient(to right, transparent, black 20px, black calc(100% - 40px), transparent)'
+                      maxWidth: '100%'
                     } as React.CSSProperties}
                   >
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 shrink-0">
