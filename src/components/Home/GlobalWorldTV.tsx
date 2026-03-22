@@ -1,5 +1,6 @@
 import { FC, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { LazyLoadImage, LazyLoadComponent } from "react-lazy-load-image-component";
 import { Item } from "../../shared/types";
@@ -28,18 +29,19 @@ interface RegionSlider {
 }
 
 const GlobalWorldTV: FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [sliders, setSliders] = useState<RegionSlider[]>([
-    { title: "🇰🇷 K-Dramas & Korean Cinema", emoji: "🇰🇷", items: [], isLoading: true },
-    { title: "🇯🇵 Anime & J-Dramas", emoji: "🇯🇵", items: [], isLoading: true },
-    { title: "🌍 African Originals", emoji: "🌍", items: [], isLoading: true },
-    { title: "🇹🇷 Turkish Dramas (Diziler)", emoji: "🇹🇷", items: [], isLoading: true },
-    { title: "🇮🇳 Bollywood & Indian Cinema", emoji: "🇮🇳", items: [], isLoading: true },
-    { title: "🌏 Asian Dramas", emoji: "🌏", items: [], isLoading: true },
-    { title: "🇬🇧 British & European Originals", emoji: "🇬🇧", items: [], isLoading: true },
-    { title: "🌎 Latin American TV & Film", emoji: "🌎", items: [], isLoading: true },
-    { title: "🎬 Nollywood Movies", emoji: "🎬", items: [], isLoading: true },
-    { title: "💃 Bollywood Movies", emoji: "💃", items: [], isLoading: true },
+    { title: t("K-Dramas & Korean Cinema"), emoji: "🇰🇷", items: [], isLoading: true },
+    { title: t("Anime & J-Dramas"), emoji: "🇯🇵", items: [], isLoading: true },
+    { title: t("African Originals"), emoji: "🌍", items: [], isLoading: true },
+    { title: t("Turkish Dramas (Diziler)"), emoji: "🇹🇷", items: [], isLoading: true },
+    { title: t("Bollywood & Indian Cinema"), emoji: "🇮🇳", items: [], isLoading: true },
+    { title: t("Asian Dramas"), emoji: "🌏", items: [], isLoading: true },
+    { title: t("British & European Originals"), emoji: "🇬🇧", items: [], isLoading: true },
+    { title: t("Latin American TV & Film"), emoji: "🌎", items: [], isLoading: true },
+    { title: t("Nollywood Movies"), emoji: "🎬", items: [], isLoading: true },
+    { title: t("Bollywood Movies"), emoji: "💃", items: [], isLoading: true },
   ]);
 
   useEffect(() => {
@@ -68,16 +70,16 @@ const GlobalWorldTV: FC = () => {
         ]);
 
       const newSliders: RegionSlider[] = [
-        { title: "🇰🇷 K-Dramas & Korean Cinema", emoji: "🇰🇷", items: korean.status === "fulfilled" ? korean.value.slice(0, 20) : [], isLoading: false },
-        { title: "🇯🇵 Anime & J-Dramas", emoji: "🇯🇵", items: japanese.status === "fulfilled" ? japanese.value.slice(0, 20) : [], isLoading: false },
-        { title: "🌍 African Originals", emoji: "🌍", items: african.status === "fulfilled" ? african.value.slice(0, 20) : [], isLoading: false },
-        { title: "🇹🇷 Turkish Dramas (Diziler)", emoji: "🇹🇷", items: turkish.status === "fulfilled" ? turkish.value.slice(0, 20) : [], isLoading: false },
-        { title: "🇮🇳 Indian TV & Web Series", emoji: "🇮🇳", items: indian.status === "fulfilled" ? indian.value.slice(0, 20) : [], isLoading: false },
-        { title: "🌏 K/J/Thai/Chinese Dramas", emoji: "🌏", items: asian.status === "fulfilled" ? asian.value.slice(0, 20) : [], isLoading: false },
-        { title: "🇬🇧 British & European TV", emoji: "🇬🇧", items: british.status === "fulfilled" ? british.value.slice(0, 20) : [], isLoading: false },
-        { title: "🌎 Latin American Content", emoji: "🌎", items: latin.status === "fulfilled" ? latin.value.slice(0, 20) : [], isLoading: false },
-        { title: "🎬 Nollywood Movies", emoji: "🎬", items: nollywood.status === "fulfilled" ? nollywood.value.slice(0, 20) : [], isLoading: false },
-        { title: "💃 Bollywood Movies", emoji: "💃", items: bollywood.status === "fulfilled" ? bollywood.value.slice(0, 20) : [], isLoading: false },
+        { title: t("K-Dramas & Korean Cinema"), emoji: "🇰🇷", items: korean.status === "fulfilled" ? korean.value.slice(0, 20) : [], isLoading: false },
+        { title: t("Anime & J-Dramas"), emoji: "🇯🇵", items: japanese.status === "fulfilled" ? japanese.value.slice(0, 20) : [], isLoading: false },
+        { title: t("African Originals"), emoji: "🌍", items: african.status === "fulfilled" ? african.value.slice(0, 20) : [], isLoading: false },
+        { title: t("Turkish Dramas (Diziler)"), emoji: "🇹🇷", items: turkish.status === "fulfilled" ? turkish.value.slice(0, 20) : [], isLoading: false },
+        { title: t("Indian TV & Web Series"), emoji: "🇮🇳", items: indian.status === "fulfilled" ? indian.value.slice(0, 20) : [], isLoading: false },
+        { title: t("K/J/Thai/Chinese Dramas"), emoji: "🌏", items: asian.status === "fulfilled" ? asian.value.slice(0, 20) : [], isLoading: false },
+        { title: t("British & European TV"), emoji: "🇬🇧", items: british.status === "fulfilled" ? british.value.slice(0, 20) : [], isLoading: false },
+        { title: t("Latin American Content"), emoji: "🌎", items: latin.status === "fulfilled" ? latin.value.slice(0, 20) : [], isLoading: false },
+        { title: t("Nollywood Movies"), emoji: "🎬", items: nollywood.status === "fulfilled" ? nollywood.value.slice(0, 20) : [], isLoading: false },
+        { title: t("Bollywood Movies"), emoji: "💃", items: bollywood.status === "fulfilled" ? bollywood.value.slice(0, 20) : [], isLoading: false },
       ];
       
       setSliders(newSliders);
@@ -108,14 +110,14 @@ const GlobalWorldTV: FC = () => {
         transition={{ duration: 0.5 }}
         className="mb-6"
       >
-        <h2 className="text-2xl font-bold text-white mb-1">🌐 World TV & Cinema</h2>
-        <p className="text-gray-400 text-sm">Millions of shows & movies from every nation on the globe</p>
+        <h2 className="text-2xl font-bold text-white mb-1">🌐 {t("World TV & Cinema")}</h2>
+        <p className="text-gray-400 text-sm">{t("Millions of shows & movies from every nation on the globe")}</p>
       </motion.div>
 
       {visibleSliders.map((slider, sliderIndex) => (
         <div key={slider.title} className="mb-8">
           <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-            {slider.title}
+            {slider.emoji} {slider.title}
           </h3>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {slider.isLoading

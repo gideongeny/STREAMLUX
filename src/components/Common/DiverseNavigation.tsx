@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { IMAGE_URL } from '../../shared/constants';
 import axios from '../../shared/axios';
@@ -16,6 +17,7 @@ interface NavigationItem {
 }
 
 const DiverseNavigation: React.FC = () => {
+  const { t } = useTranslation();
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
 
   useEffect(() => {
@@ -33,57 +35,57 @@ const DiverseNavigation: React.FC = () => {
       
       const baseItems: NavigationItem[] = [
         {
-          title: "African Cinema",
-          description: "Nollywood, South African, Kenyan & more",
+          title: t("African Cinema"),
+          description: t("Nollywood, South African, Kenyan & more"),
           path: `/explore?region=africa&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "NG|ZA|KE|GH|TZ|UG|ET|RW|ZM|EG" }
         },
         {
-          title: "Asian Cinema",
-          description: "Bollywood, Korean, Japanese, Chinese",
+          title: t("Asian Cinema"),
+          description: t("Bollywood, Korean, Japanese, Chinese"),
           path: `/explore?region=asia&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "IN|KR|JP|CN" }
         },
         {
-          title: "Latin American",
-          description: "Mexican, Brazilian, Argentine cinema",
+          title: t("Latin American"),
+          description: t("Mexican, Brazilian, Argentine cinema"),
           path: `/explore?region=latin&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "MX|BR|AR" }
         },
         {
-          title: "Middle Eastern",
-          description: "Turkish, Egyptian, Saudi cinema",
+          title: t("Middle Eastern"),
+          description: t("Turkish, Egyptian, Saudi cinema"),
           path: `/explore?region=middleeast&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "TR|EG|SA" }
         },
         {
-          title: "Nollywood",
-          description: "Movies from the Nollywood industry (Nigeria)",
+          title: t("Nollywood"),
+          description: t("Movies from the Nollywood industry (Nigeria)"),
           path: `/explore?region=nollywood&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "NG" }
         },
         {
-          title: "Bollywood",
-          description: "Indian movies & TV shows",
+          title: t("Bollywood"),
+          description: t("Indian movies & TV shows"),
           path: `/explore?region=bollywood&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "IN" }
         },
         {
-          title: "Filipino",
-          description: "ABS-CBN, iWantTFC shows & films",
+          title: t("Filipino"),
+          description: t("ABS-CBN, iWantTFC shows & films"),
           path: `/explore?region=philippines&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "PH" }
         },
         {
-          title: "Kenyan",
-          description: "Citizen, NTV, KTN, Showmax",
+          title: t("Kenyan"),
+          description: t("Citizen, NTV, KTN, Showmax"),
           path: `/explore?region=kenya&type=${currentTab}`,
           fallbackImage: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1280&h=720&fit=crop",
           fetchQuery: { with_origin_country: "KE" }
@@ -271,10 +273,10 @@ const DiverseNavigation: React.FC = () => {
     <div className="py-8">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-4">
-          🌍 Discover World Cinema
+          🌍 {t("Discover World Cinema")}
         </h2>
         <p className="text-gray-400 text-lg">
-          Explore movies and TV shows from around the world
+          {t("Explore movies and TV shows from around the world")}
         </p>
       </div>
       

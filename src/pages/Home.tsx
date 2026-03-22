@@ -448,10 +448,11 @@ const FilmTypeButton: FC<FilmTypeButtonProps> = memo(({
   currentTab,
   buttonType,
 }) => {
+  const { t } = useTranslation();
   const getButtonText = () => {
-    if (buttonType === "movie") return "Movies";
-    if (buttonType === "tv") return "TV Show";
-    return "Sports";
+    if (buttonType === "movie") return t("Movies");
+    if (buttonType === "tv") return t("TV Show");
+    return t("Sports");
   };
 
   const isActive = currentTab === buttonType;
