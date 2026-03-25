@@ -269,16 +269,21 @@ export const gateway = functions
                     } catch (e) { }
                 }
 
-                // --- NEW SOURCE: STREAMSPORTS99.RU ---
+                // --- MULTI-SOURCE SCRAPING (In Parallel) ---
                 try {
-                    const ssMatches = await scrapeStreamSports();
-                    const filteredSS = wantLive 
-                        ? ssMatches.filter(m => m.status === 'live')
-                        : ssMatches.filter(m => m.status === 'upcoming');
+                    const [ssMatches, fsMatches] = await Promise.all([
+                        scrapeStreamSports().catch(() => []),
+                        scrapeAllSports().catch(() => [])
+                    ]);
+                    
+                    const combinedScraped = [...ssMatches, ...fsMatches];
+                    const filteredScraped = wantLive 
+                        ? combinedScraped.filter(m => m.status === 'live' || m.isLive)
+                        : combinedScraped.filter(m => m.status === 'upcoming' && !m.isLive);
                         
-                    fixtures.push(...filteredSS);
+                    fixtures.push(...filteredScraped);
                 } catch (e) {
-                    console.error("StreamSports scraping failed:", e);
+                    console.error("Scraping orchestration failed:", e);
                 }
 
                 // Deduplicate by teams

@@ -1,5 +1,5 @@
-import * as playwright from 'playwright-core';
-import chromium from 'chrome-aws-lambda';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 
 export interface StreamSportsMatch {
     id: string;
@@ -17,84 +17,63 @@ export interface StreamSportsMatch {
 }
 
 /**
- * Scrape matches from streamsports99.ru
+ * Scrape matches from streamsports99.ru using axios/cheerio (FAST)
  */
 export async function scrapeStreamSports(): Promise<StreamSportsMatch[]> {
     const targetUrl = 'https://streamsports99.ru/';
-    let browser: playwright.Browser | null = null;
     const matches: StreamSportsMatch[] = [];
 
     try {
-        browser = await playwright.chromium.launch({
-            args: chromium.args,
-            executablePath: await chromium.executablePath,
-            headless: chromium.headless,
+        const { data } = await axios.get(targetUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+            },
+            timeout: 5000
         });
 
-        const context = await browser.newContext({
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        });
+        const $ = cheerio.load(data);
+        const matchRows = $('div[class*="match"], div[class*="game-row"], .match-item');
 
-        const page = await context.newPage();
-        await page.goto(targetUrl, { waitUntil: 'networkidle', timeout: 30000 });
-        
-        // Wait for the match sections to be visible
-        await page.waitForSelector('.match-item, .game-row', { timeout: 10000 }).catch(() => {});
-
-        const scrapedData = await page.evaluate(() => {
-            const results: any[] = [];
+        matchRows.each((index, element) => {
+            const row = $(element);
+            const text = row.text() || "";
+            const linkElement = row.find('a[href*="/game/"], a[href*="/player/"]');
+            const link = linkElement.attr('href') || "";
             
-            // This is a generic selector - we'll refine it based on visual inspection
-            // Standard rows on streamsports99.ru usually look like this
-            const matchRows = document.querySelectorAll('div[class*="match"], div[class*="game-row"], .match-item');
-            
-            matchRows.forEach((row: any) => {
-                const text = row.innerText || "";
-                const linkElement = row.querySelector('a[href*="/game/"], a[href*="/player/"]');
-                const link = linkElement ? linkElement.href : "";
+            if (link && (text.includes(' vs ') || text.includes(' - '))) {
+                const teams = text.split(/\s+vs\s+|\s+-\s+/);
+                const logos: string[] = [];
+                row.find('img[src*="team"]').each((i, img) => {
+                    const src = $(img).attr('src');
+                    if (src) logos.push(src.startsWith('http') ? src : `https://streamsports99.ru${src}`);
+                });
                 
-                if (link && (text.includes(' vs ') || text.includes(' - '))) {
-                    const teams = text.split(/\s+vs\s+|\s+-\s+/);
-                    const logos = Array.from(row.querySelectorAll('img[src*="team"]')).map((img: any) => img.src);
-                    
-                    const isLive = row.textContent.toLowerCase().includes('live') || row.querySelector('.live-indicator');
-                    
-                    results.push({
-                        home: teams[0]?.trim() || "Team A",
-                        away: teams[1]?.trim() || "Team B",
-                        homeLogo: logos[0] || "",
-                        awayLogo: logos[1] || "",
-                        link: link,
-                        isLive: !!isLive,
-                        time: row.querySelector('.time, .match-time')?.innerText?.trim() || ""
-                    });
-                }
-            });
-            return results;
+                const isLive = text.toLowerCase().includes('live') || row.find('.live-indicator').length > 0;
+                const timeStr = row.find('.time, .match-time').text().trim();
+
+                const home = teams[0]?.trim().split('\n').pop()?.trim() || "Team A";
+                const away = teams[1]?.trim().split('\n')[0]?.trim() || "Team B";
+
+                matches.push({
+                    id: `ss99-${index}-${Date.now()}`,
+                    homeTeam: home,
+                    awayTeam: away,
+                    homeTeamLogo: logos[0] || "",
+                    awayTeamLogo: logos[1] || "",
+                    status: isLive ? 'live' : 'upcoming',
+                    isLive: isLive,
+                    kickoffTimeFormatted: timeStr || "TBD",
+                    link: link.startsWith('http') ? link : `https://streamsports99.ru${link}`,
+                    league: "StreamSports",
+                    sport: "Sports"
+                });
+            }
         });
 
-        scrapedData.forEach((m: any, index: number) => {
-            matches.push({
-                id: `ss99-${index}-${Date.now()}`,
-                homeTeam: m.home,
-                awayTeam: m.away,
-                homeTeamLogo: m.homeLogo,
-                awayTeamLogo: m.awayLogo,
-                status: m.isLive ? 'live' : 'upcoming',
-                isLive: m.isLive,
-                kickoffTimeFormatted: m.time || "TBD",
-                link: m.link,
-                league: "StreamSports",
-                sport: "Sports"
-            });
-        });
-
-        await browser.close();
         return matches;
 
     } catch (error) {
-        console.error('Error scraping StreamSports99:', error);
-        if (browser) await browser.close();
+        console.error('Error in fast StreamSports scraping:', error);
         return [];
     }
 }
