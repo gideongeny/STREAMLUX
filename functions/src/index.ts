@@ -42,18 +42,7 @@ const MAX_REQUESTS_PER_WINDOW = 100; // 100 requests per minute
 export const gateway = functions
     .runWith({ 
         memory: '1GB', 
-        timeoutSeconds: 120,
-        secrets: [
-            "TMDB_API_KEY",
-            "TMDB_BEARER_TOKEN",
-            "YT_KEYS",
-            "SPORTMONKS_KEY",
-            "APISPORTS_KEY",
-            "SCOREBAT_TOKEN",
-            "OMDB_API_KEY",
-            "WATCHMODE_API_KEY",
-            "RAPIDAPI_KEY"
-        ] 
+        timeoutSeconds: 120
     })
     .https.onRequest(async (req, res) => {
         // --- RATE LIMITING ---
@@ -406,6 +395,10 @@ export const notifyTrendingContent = functions.pubsub
     .schedule('every 12 hours')
     .onRun(async (context) => {
         try {
+            if (!TMDB_API_KEY) {
+                console.warn("TMDB_API_KEY not configured; skipping notifyTrendingContent.");
+                return null;
+            }
             // 1. Fetch trending content from TMDB
         const response = await axios.get(`${TMDB_BASE_URL}/trending/all/day`, {
             params: { api_key: TMDB_API_KEY },
