@@ -82,4 +82,8 @@ const LeagueStreamEmbed = ({ leagueId }: LeagueStreamEmbedProps) => {
                     Powered by StreamSports99
                 </a>
             </div>
-     
+        </div>
+    );
+};
+
+export default LeagueStreamEmbed;
