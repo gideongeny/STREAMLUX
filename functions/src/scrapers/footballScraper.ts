@@ -67,7 +67,7 @@ export async function scrapeAllSports(): Promise<ScrapedMatch[]> {
                 }
             });
             return results;
-        } catch (e) {
+        } catch (e: any) {
             console.warn(`Failed to fast-scrape ${source.name}:`, e.message);
             return [];
         }
