@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "streamlux-67a84"
-  }
+    "default": "streamlux-67a84",
+    "streamlux": "streamlux-67a84"
+  },
+  "targets": {},
+  "etags": {}
 }
