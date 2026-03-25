@@ -4,7 +4,7 @@
 import { FC, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SportsFixtureConfig } from "../../shared/constants";
-import { getLiveScores, subscribeToLiveScores } from "../../services/sportsAPI";
+import { getLiveScores, getUpcomingFixturesAPI, subscribeToLiveScores } from "../../services/sportsAPI";
 
 const LiveScoreboard: FC = () => {
   const [fixtures, setFixtures] = useState<SportsFixtureConfig[]>([]);
@@ -15,7 +15,12 @@ const LiveScoreboard: FC = () => {
       setIsLoading(true);
       try {
         const live = await getLiveScores();
-        setFixtures(live.slice(0, 8)); // Show top 8 live matches
+        if (live.length > 0) {
+          setFixtures(live.slice(0, 8)); // Show top 8 live matches
+        } else {
+          const upcoming = await getUpcomingFixturesAPI();
+          setFixtures(upcoming.slice(0, 8)); // Fallback: upcoming preview
+        }
       } catch (error) {
         console.error("Error fetching live scores:", error);
       } finally {
@@ -27,7 +32,7 @@ const LiveScoreboard: FC = () => {
 
     // Subscribe to live updates
     const unsubscribe = subscribeToLiveScores((liveFixtures) => {
-      setFixtures(liveFixtures.slice(0, 8));
+      if (liveFixtures.length > 0) setFixtures(liveFixtures.slice(0, 8));
     }, 30000); // Update every 30 seconds
 
     return () => {
@@ -49,15 +54,7 @@ const LiveScoreboard: FC = () => {
   if (fixtures.length === 0) {
     return (
       <div className="bg-dark-lighten rounded-lg border border-gray-800 p-6 text-center">
-        <p className="text-gray-400">No live matches at the moment</p>
-        <a
-          href="https://sportslive.run/live?utm_source=MB_Website&sportType=football"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline mt-2 inline-block"
-        >
-          View all sports →
-        </a>
+        <p className="text-gray-400">No matches available right now</p>
       </div>
     );
   }
@@ -74,33 +71,19 @@ const LiveScoreboard: FC = () => {
             </span>
             <h2 className="text-xl font-bold text-white">Live Scoreboard</h2>
           </div>
-          <a
-            href="https://sportslive.run/live?utm_source=MB_Website&sportType=football"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary text-sm font-semibold hover:underline"
-          >
-            View All →
-          </a>
+          <Link to="/sports" className="text-primary text-sm font-semibold hover:underline">
+            Sports →
+          </Link>
         </div>
       </div>
 
       {/* Scoreboard Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
         {fixtures.map((fixture) => {
-          const matchLink = fixture.matchId
-            ? `https://sportslive.run/matches/${fixture.matchId}?utm_source=MB_Website&sportType=football`
-            : `https://sportslive.run/live?utm_source=MB_Website&sportType=football&home=${encodeURIComponent(fixture.homeTeam)}&away=${encodeURIComponent(fixture.awayTeam)}`;
-
           return (
             <Link
               key={fixture.id}
               to={`/sports/${fixture.leagueId}/${fixture.id}/watch`}
-              onClick={(e) => {
-                // Open live match in new tab
-                window.open(matchLink, '_blank');
-                e.preventDefault();
-              }}
               className="bg-gray-900/50 rounded-lg border border-gray-700 hover:border-primary/50 hover:bg-gray-900 transition p-4 group"
             >
               {/* League and Status */}
@@ -113,7 +96,7 @@ const LiveScoreboard: FC = () => {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-400"></span>
                   </span>
-                  LIVE
+                  {fixture.status === "live" ? "LIVE" : "UPCOMING"}
                 </span>
               </div>
 

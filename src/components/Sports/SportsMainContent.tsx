@@ -174,9 +174,9 @@ const SportsMainContent: FC = () => {
                 {!isMobile && (
                     <div className="flex flex-col items-end gap-4 w-full max-w-sm">
                         <SearchBox relative={true} />
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-                            <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
-                            <span className="text-[10px] font-black text-primary uppercase tracking-widest">Sportmonks Real-time Data Active</span>
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10">
+                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                            <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Live data: ESPN / TheSportsDB + fallbacks</span>
                         </div>
                     </div>
                 )}

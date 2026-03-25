@@ -297,7 +297,8 @@ input:-webkit-autofill:active {
 
 /* Elite Focus Rings for Accessibility/TV */
 .tw-focus-ring:focus-visible {
-  @apply outline-none ring-4 ring-primary ring-offset-2 ring-offset-dark;
+  /* Softer focus ring (avoid harsh square white outline) */
+  @apply outline-none ring-2 ring-primary ring-opacity-60 ring-offset-0;
 }
 
 /* Accessibility: Increased Hit Targets */

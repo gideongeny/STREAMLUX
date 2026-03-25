@@ -159,9 +159,11 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
               className="absolute inset-0 z-20 bg-black overflow-hidden pointer-events-none"
             >
               <iframe
-                src={`https://www.youtube.com/embed/${item.isYouTube ? item.youtubeId : trailerKey}?autoplay=1&mute=1&controls=0&loop=1&playlist=${item.isYouTube ? item.youtubeId : trailerKey}&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1`}
+                src={`https://www.youtube-nocookie.com/embed/${item.isYouTube ? item.youtubeId : trailerKey}?autoplay=1&mute=1&controls=0&loop=1&playlist=${item.isYouTube ? item.youtubeId : trailerKey}&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&playsinline=1`}
                 className="w-full h-full scale-[1.5] object-cover"
-                allow="autoplay; encrypted-media"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                referrerPolicy="strict-origin-when-cross-origin"
+                title={`${item.title || item.name || "Trailer"} preview`}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-transparent opacity-60" />
             </motion.div>

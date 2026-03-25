@@ -1,6 +1,6 @@
 import { FC, FormEvent, useState, useEffect, useRef } from "react";
 import { BiSearch } from "react-icons/bi";
-import { MdClose, MdArrowBack } from "react-icons/md";
+import { MdClose, MdArrowBack, MdDarkMode, MdLightMode } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -9,6 +9,8 @@ import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import { useTypedPlaceholder } from "../../hooks/useTypedPlaceholder";
 import { Item } from "../../shared/types";
 import { tmdbImageSrc } from "../../shared/utils";
+import { safeStorage } from "../../utils/safeStorage";
+import { themeService } from "../../services/theme";
 
 interface TopSearchBarProps {
   className?: string;
@@ -25,6 +27,16 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "" }) => {
   const { isMobile } = useCurrentViewportView();
   const dynamicPlaceholder = useTypedPlaceholder();
   const typedPlaceholder = isMobile ? "Search..." : dynamicPlaceholder;
+  const [surfaceMode, setSurfaceMode] = useState<"midnight" | "night">(() => {
+    const saved = (safeStorage.get("surface_mode") as "midnight" | "night") || "midnight";
+    return saved === "night" ? "night" : "midnight";
+  });
+
+  const toggleSurface = () => {
+    const next = surfaceMode === "night" ? "midnight" : "night";
+    setSurfaceMode(next);
+    themeService.applySurfaceMode(next);
+  };
 
   useEffect(() => {
     if (!debounced.trim()) { setSuggestions([]); return; }
@@ -105,6 +117,19 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "" }) => {
           placeholder={isFocused ? "Type to search..." : typedPlaceholder}
           className="flex-1 bg-transparent outline-none text-white placeholder-gray-500 text-sm min-w-0"
         />
+
+        {/* Light/Dark toggle */}
+        {!isMobile && (
+          <button
+            type="button"
+            onClick={toggleSurface}
+            className="shrink-0 w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:border-primary/30 hover:bg-primary/10 transition flex items-center justify-center text-white"
+            title={surfaceMode === "night" ? "Switch to Midnight" : "Switch to Night"}
+          >
+            {surfaceMode === "night" ? <MdLightMode size={18} /> : <MdDarkMode size={18} />}
+          </button>
+        )}
+
         {(input || (isMobile && isFocused)) && (
           <button
             type="button"

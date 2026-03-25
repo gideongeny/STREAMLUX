@@ -28,6 +28,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
   const { isMobile } = useCurrentViewportView();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
+  const [trailerReadyIndex, setTrailerReadyIndex] = useState<number | null>(null);
 
   // Elite Optimization: Preload backdrops for next slides
   useEffect(() => {
@@ -40,6 +41,11 @@ const BannerSlider: FC<BannerSliderProps> = ({
       img.src = resizeImage(films[idx].backdrop_path, "w1280");
     });
   }, [activeIndex, films]);
+
+  useEffect(() => {
+    // When slide changes, require the new trailer to load before hiding the backdrop.
+    setTrailerReadyIndex(null);
+  }, [activeIndex]);
 
   return (
     <div className="mt-6 relative w-full h-0 md:pb-[35%] pb-[56.25%] tw-banner-slider bg-dark-lighten rounded-lg overflow-hidden max-h-[85vh]">
@@ -69,10 +75,13 @@ const BannerSlider: FC<BannerSliderProps> = ({
                     src={resizeImage(film.backdrop_path, "w1280")}
                     alt="Backdrop image"
                     effect="blur"
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ${activeIndex === index && dataDetail?.[index]?.trailer
-                      ? 'opacity-0'
-                      : 'opacity-100'
-                      }`}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1200ms] ${
+                      activeIndex === index &&
+                      dataDetail?.[index]?.trailer &&
+                      trailerReadyIndex === index
+                        ? "opacity-0"
+                        : "opacity-100"
+                    }`}
                     style={{ display: 'block', zIndex: 1 }}
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.backgroundColor = '#1C1C1E';
@@ -86,12 +95,13 @@ const BannerSlider: FC<BannerSliderProps> = ({
                   {activeIndex === index && dataDetail?.[index]?.trailer && (
                     <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 0 }}>
                       <iframe
-                        src={`https://www.youtube.com/embed/${dataDetail[index].trailer}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${dataDetail[index].trailer}&rel=0&showinfo=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1`}
+                        src={`https://www.youtube-nocookie.com/embed/${dataDetail[index].trailer}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${dataDetail[index].trailer}&rel=0&showinfo=0&iv_load_policy=3&modestbranding=1&playsinline=1`}
                         className="absolute top-1/2 left-1/2 w-[120%] h-[120%] -translate-x-1/2 -translate-y-1/2 scale-125"
                         allow="autoplay; encrypted-media; picture-in-picture"
                         allowFullScreen={false}
                         title="Film Trailer"
                         style={{ pointerEvents: 'none', opacity: isMobile ? 0.35 : 0.65 }}
+                        onLoad={() => setTrailerReadyIndex(index)}
                       />
                     </div>
                   )}
