@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import * as React from "react";
 import Hls from "hls.js";
 import { LEAGUE_STREAMS } from "../../shared/leagueStreams";
 
@@ -7,13 +7,15 @@ interface LeagueStreamEmbedProps {
 }
 
 const LeagueStreamEmbed = ({ leagueId }: LeagueStreamEmbedProps) => {
-    const videoRef = useRef<HTMLVideoElement>(null);
+    const videoRef = React.useRef<HTMLVideoElement>(null);
     
     // Select stream with dynamic fallback based on league type if not explicitly mapped
-    const stream: { title: string; type: 'iframe' | 'hls'; src: string } = LEAGUE_STREAMS[leagueId] || 
-        (leagueId.includes('soccer') || leagueId.includes('football') ? LEAGUE_STREAMS.default_fox : LEAGUE_STREAMS.default_espn);
+    const streamId = LEAGUE_STREAMS[leagueId] ? leagueId : 
+        (leagueId.includes('soccer') || leagueId.includes('football') ? 'default_fox' : 'default_espn');
+        
+    const stream = LEAGUE_STREAMS[streamId];
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (stream.type === 'hls' && videoRef.current) {
             const video = videoRef.current;
             const hls = new Hls();
@@ -34,7 +36,7 @@ const LeagueStreamEmbed = ({ leagueId }: LeagueStreamEmbedProps) => {
     if (!stream) return null;
 
     return (
-        <div className="w-full max-w-4xl mx-auto font-sans overflow-hidden rounded-[2rem] border border-white/10 shadow-2xl bg-dark-lighten/20 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="w-full max-w-4xl mx-auto font-sans overflow-hidden rounded-[2rem] border border-white/10 shadow-2xl bg-[#1a1a2e]/20 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header */}
             <div className="bg-[#1a1a2e]/80 backdrop-blur-md px-6 py-4 border-b border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
