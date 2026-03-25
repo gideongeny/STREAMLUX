@@ -18,6 +18,9 @@ const YT_KEYS_PARAM = process.env.YT_KEYS || ""; // Comma-separated
 const SPORTMONKS_KEY = process.env.SPORTMONKS_KEY || "";
 const APISPORTS_KEY = process.env.APISPORTS_KEY || "";
 const SCOREBAT_TOKEN = process.env.SCOREBAT_TOKEN || "";
+const OMDB_API_KEY = process.env.OMDB_API_KEY || "";
+const WATCHMODE_API_KEY = process.env.WATCHMODE_API_KEY || "";
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || "";
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const YT_BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -40,7 +43,17 @@ export const gateway = functions
     .runWith({ 
         memory: '1GB', 
         timeoutSeconds: 120,
-        secrets: ["TMDB_API_KEY", "TMDB_BEARER_TOKEN", "YT_KEYS", "SPORTMONKS_KEY", "APISPORTS_KEY", "SCOREBAT_TOKEN"] 
+        secrets: [
+            "TMDB_API_KEY",
+            "TMDB_BEARER_TOKEN",
+            "YT_KEYS",
+            "SPORTMONKS_KEY",
+            "APISPORTS_KEY",
+            "SCOREBAT_TOKEN",
+            "OMDB_API_KEY",
+            "WATCHMODE_API_KEY",
+            "RAPIDAPI_KEY"
+        ] 
     })
     .https.onRequest(async (req, res) => {
         // --- RATE LIMITING ---
@@ -92,6 +105,67 @@ export const gateway = functions
         const rawPath = reqPath.replace(/^\/api\//, '').replace(/^\/+/, '');
         
         try {
+            // --- OMDB PROXY (server-side key) ---
+            if (rawPath === 'omdb' || rawPath.startsWith('omdb/')) {
+                if (!OMDB_API_KEY) {
+                    res.status(500).json({ error: 'OMDB_API_KEY not configured' });
+                    return;
+                }
+
+                const params = { ...(req.query || {}), ...(req.body?.params || {}), ...(req.body || {}) } as any;
+                delete params.params;
+
+                const response = await axios.get(`https://www.omdbapi.com/`, {
+                    params: { ...params, apikey: OMDB_API_KEY },
+                    timeout: 10000
+                });
+                res.status(200).json(response.data);
+                return;
+            }
+
+            // --- WATCHMODE PROXY (server-side key) ---
+            if (rawPath === 'watchmode' || rawPath.startsWith('watchmode/')) {
+                if (!WATCHMODE_API_KEY) {
+                    res.status(500).json({ error: 'WATCHMODE_API_KEY not configured' });
+                    return;
+                }
+
+                const subPath = rawPath.replace(/^watchmode\/?/, '');
+                const target = `https://api.watchmode.com/v1/${subPath}`;
+                const params = { ...(req.query || {}), ...(req.body || {}) } as any;
+
+                const response = await axios.get(target, {
+                    params: { ...params, apiKey: WATCHMODE_API_KEY },
+                    timeout: 10000
+                });
+                res.status(200).json(response.data);
+                return;
+            }
+
+            // --- RAPIDAPI PROXY (server-side key) ---
+            if (rawPath === 'rapidapi/streaming-availability' || rawPath.startsWith('rapidapi/streaming-availability/')) {
+                if (!RAPIDAPI_KEY) {
+                    res.status(500).json({ error: 'RAPIDAPI_KEY not configured' });
+                    return;
+                }
+
+                const subPath = rawPath.replace(/^rapidapi\/streaming-availability\/?/, '');
+                const target = `https://streaming-availability.p.rapidapi.com/${subPath}`;
+                const params = { ...(req.query || {}), ...(req.body || {}) } as any;
+
+                const response = await axios.get(target, {
+                    params,
+                    headers: {
+                        'X-RapidAPI-Key': RAPIDAPI_KEY,
+                        'X-RapidAPI-Host': 'streaming-availability.p.rapidapi.com',
+                        'Accept': 'application/json'
+                    },
+                    timeout: 10000
+                });
+                res.status(200).json(response.data);
+                return;
+            }
+
             // --- TMDB PROXY ---
             // Stricter matching: only if path strictly includes 'tmdb'
             if (rawPath === 'tmdb' || rawPath.startsWith('proxy/tmdb') || rawPath.includes('tmdb')) {

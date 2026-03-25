@@ -1,12 +1,10 @@
 // OMDB API Integration
 // Free tier available at https://www.omdbapi.com/
 
-import axios from "axios";
+import axios from "../shared/axios";
 import { Item } from "../shared/types";
 
-const OMDB_BASE_URL = "https://www.omdbapi.com";
-// Using public OMDB API (free tier) - user can add their own key via env var if needed
-const OMDB_API_KEY = process.env.REACT_APP_OMDB_API_KEY || "demo"; // Demo key, replace with your own
+const OMDB_BASE_PATH = "/omdb";
 
 export interface OMDBTitle {
   imdbID: string;
@@ -66,14 +64,8 @@ export const searchOMDBTitles = async (
   page: number = 1
 ): Promise<Item[]> => {
   try {
-    if (!OMDB_API_KEY || OMDB_API_KEY === "demo") {
-      console.warn("OMDB API key not configured. Add REACT_APP_OMDB_API_KEY to .env");
-      return [];
-    }
-
-    const response = await axios.get(OMDB_BASE_URL, {
+    const response = await axios.get(OMDB_BASE_PATH, {
       params: {
-        apikey: OMDB_API_KEY,
         s: query,
         type: type,
         page: page,
@@ -100,11 +92,6 @@ export const getOMDBPopular = async (
   year?: number
 ): Promise<Item[]> => {
   try {
-    if (!OMDB_API_KEY || OMDB_API_KEY === "demo") {
-      console.warn("OMDB API key not configured");
-      return [];
-    }
-
     // Popular search queries for OMDB
     const queries = year
       ? [`${year} popular ${type}`]
@@ -116,9 +103,8 @@ export const getOMDBPopular = async (
 
     for (const query of queries.slice(0, 2)) { // Limit to 2 queries
       try {
-        const response = await axios.get(OMDB_BASE_URL, {
+        const response = await axios.get(OMDB_BASE_PATH, {
           params: {
-            apikey: OMDB_API_KEY,
             s: query,
             type: type,
             page: 1,
@@ -157,16 +143,10 @@ export const getOMDBByGenre = async (
   page: number = 1
 ): Promise<Item[]> => {
   try {
-    if (!OMDB_API_KEY || OMDB_API_KEY === "demo") {
-      console.warn("OMDB API key not configured");
-      return [];
-    }
-
     const query = `${genre} ${type || "movie"}`;
 
-    const response = await axios.get(OMDB_BASE_URL, {
+    const response = await axios.get(OMDB_BASE_PATH, {
       params: {
-        apikey: OMDB_API_KEY,
         s: query,
         type: type,
         page: page,

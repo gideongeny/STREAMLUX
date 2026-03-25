@@ -1,1 +1,0 @@
-import"./axios-DChScPKo.js";import"./download-CGmdVVnf.js";import{t as e}from"./sportmonksAPI-_qZN8j06.js";export{e as getLiveScores};

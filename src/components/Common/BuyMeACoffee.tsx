@@ -7,7 +7,7 @@ interface BuyMeACoffeeProps {
 }
 
 const BuyMeACoffee: FC<BuyMeACoffeeProps> = ({ variant = 'button', className = '' }) => {
-  const bmcUsername = process.env.REACT_APP_BMC_USERNAME || 'gideongeny';
+  const bmcUsername = import.meta.env.VITE_BMC_USERNAME || 'gideongeny';
   const bmcUrl = `https://buymeacoffee.com/${bmcUsername}`;
 
   if (variant === 'floating') {

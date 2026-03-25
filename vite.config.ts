@@ -10,5 +10,12 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/streamlux-67a84/us-central1/gateway/api'),
+      },
+    },
   },
 });

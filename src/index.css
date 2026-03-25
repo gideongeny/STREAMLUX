@@ -1,9 +1,9 @@
+/* Optimized Google Fonts loading - using font-display: swap to prevent render blocking */
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Optimized Google Fonts loading - using font-display: swap to prevent render blocking */
-@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap");
 
 html {
   @apply bg-dark;

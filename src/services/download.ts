@@ -1,35 +1,20 @@
 import { DetailMovie, DetailTV, Episode } from "../shared/types";
 import { EMBED_ALTERNATIVES } from "../shared/constants";
 
-/** Production backend: Using the project's native Firebase Functions for 100% uptime and sync */
-const PRODUCTION_BACKEND_BASE = "https://us-central1-streamlux-67a84.cloudfunctions.net";
-
-/** Use for all backend API URLs (sniff, download, resolve). */
+/**
+ * Base origin for opening backend-powered pages in a new tab.
+ *
+ * For normal web hosting, we use same-origin + `/api/*` Hosting rewrites.
+ * For local dev, Vite proxies `/api/*` to the Functions emulator (see `vite.config.ts`).
+ *
+ * You can override with `VITE_APP_ORIGIN` (useful for Capacitor builds).
+ */
 export function getBackendBase(): string {
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-    
-    // CAPACITOR/ANDROID PRODUCTION CHECK
-    // On Android, hostname is 'localhost', but window.Capacitor exists.
-    // We also check for port 5001/3000 to avoid confusing dev with production.
-    const isCapacitor = (window as any).Capacitor !== undefined || window.location.protocol === 'capacitor:';
-    
-    if (isLocalhost && !isCapacitor && (window.location.port === '3000' || window.location.port === '5001' || !window.location.port)) {
-        // Traditional Local PC Development
-        return "http://localhost:5001/streamlux-648cf/us-central1"; // Local Firebase Emulator
-    }
-    
-    // PROD: Firebase Domain
-    if (hostname.includes('firebaseapp.com') || hostname.includes('web.app')) {
-        return window.location.origin;
-    }
-    
-    // PROD: All other environments (Vercel, Android App, etc.)
-    return "https://streamlux-67a84.web.app";
-  }
+  const configured = import.meta.env.VITE_APP_ORIGIN?.trim();
+  if (configured) return configured.replace(/\/+$/, "");
 
-  return ""; 
+  if (typeof window !== "undefined") return window.location.origin;
+  return "";
 }
 
 export interface DownloadInfo {

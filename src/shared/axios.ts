@@ -1,14 +1,8 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { API_URL } from "./constants";
 import { apiCache } from "./apiCache";
 
-import { getBackendBase } from "../services/download";
-
-// Use the new Vercel Serverless Proxy for all TMDB requests
-const PROXY_URL = `${getBackendBase()}/api/proxy/tmdb`;
-
 const instance = axios.create({
-  baseURL: PROXY_URL,
+  baseURL: "/api",
 });
 
 // For efficiency, we use a global variable for language to avoid leaking interceptors
@@ -17,35 +11,13 @@ let globalLang = 'en-US';
 // Request interceptor - Add caching, rate limiting, and format the proxy payload
 instance.interceptors.request.use(
   async (config: AxiosRequestConfig) => {
-    // 1. Transform the standard TMDB config to the Proxy Payload format
-    // proxyTMDB expects { data: { endpoint: string, params: object } }
-    
-    // Hard check: If the URL starts with / find the baseURL is PROXY_URL, it's a TMDB request
-    const isTmdbProxy = !config.url || config.url === PROXY_URL || config.url.startsWith('/') || config.url.startsWith('tmdb');
-    
-    // Recovery of original endpoint for caching purposes
-    let cacheKeyUrl = config.url || '';
-    let cacheKeyParams = { ...config.params, language: globalLang };
+    const cacheKeyUrl = config.url || "";
+    const cacheKeyParams = { ...config.params };
 
-    if (isTmdbProxy) {
-        // Extract the original endpoint (e.g., /movie/popular)
-        const originalEndpoint = config.url || config.data?.endpoint || '';
-        
-        if (originalEndpoint && !config.data?.endpoint) {
-            config.data = {
-                endpoint: originalEndpoint,
-                params: { ...config.params, language: globalLang }
-            };
-            // For TMDB proxy requests, the endpoint is what we want to cache, NOT the proxy path
-            cacheKeyUrl = originalEndpoint;
-        }
-        
-        // Clear the URL and Params since they are now in the POST body for the proxy
-        if (config.data?.endpoint) {
-            config.url = ''; 
-            config.params = {};
-            config.method = 'POST';
-        }
+    const url = (config.url || "").toString();
+    const isTmdb = url === "/tmdb" || url.startsWith("/tmdb/") || url.includes("tmdb");
+    if (isTmdb) {
+      config.params = { ...config.params, language: globalLang };
     }
 
     // Check cache first

@@ -3,7 +3,7 @@
  * Use this instead of console.log/error/warn for better production performance
  */
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment = import.meta.env.DEV;
 
 export const logger = {
   /**

@@ -3,18 +3,9 @@
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
 
-// Initialize the Firebase app in the service worker by passing in
-// your app's Firebase config object.
-// We use the same config values from your frontend.
-firebase.initializeApp({
-  apiKey: "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY",
-  authDomain: "streamlux-67a84.firebaseapp.com",
-  projectId: "streamlux-67a84",
-  storageBucket: "streamlux-67a84.firebasestorage.app",
-  messagingSenderId: "242283846154",
-  appId: "1:242283846154:web:c25b7416322f092cc49df3",
-  measurementId: "G-3C0V66LLLR"
-});
+// Initialize Firebase using Hosting-provided config (no hardcoded keys).
+// Firebase Hosting serves `/__/firebase/init.js` with the project config.
+importScripts('/__/firebase/init.js');
 
 // Retrieve an instance of Firebase Messaging so that it can handle background
 // messages.

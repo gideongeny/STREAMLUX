@@ -1,11 +1,10 @@
 // WatchMode API Integration
-// API Key: hYQoz7vtpJ0hp4vysj5KuZlmSN1PcxWwEklLGquM
+// Proxied via Firebase Functions to avoid exposing API keys in the client.
 
-import axios from "axios";
+import axios from "../shared/axios";
 import { Item } from "../shared/types";
 
-const WATCHMODE_API_KEY = "hYQoz7vtpJ0hp4vysj5KuZlmSN1PcxWwEklLGquM";
-const WATCHMODE_BASE_URL = "https://api.watchmode.com/v1";
+const WATCHMODE_BASE_PATH = "/watchmode";
 
 export interface WatchModeTitle {
   id: number;
@@ -58,7 +57,6 @@ export const searchWatchModeTitles = async (
 ): Promise<Item[]> => {
   try {
     const params: any = {
-      apiKey: WATCHMODE_API_KEY,
       search_field: "name",
       search_value: query,
       page,
@@ -68,7 +66,7 @@ export const searchWatchModeTitles = async (
       params.types = type;
     }
 
-    const response = await axios.get(`${WATCHMODE_BASE_URL}/autocomplete-search/`, {
+    const response = await axios.get(`${WATCHMODE_BASE_PATH}/autocomplete-search`, {
       params,
       timeout: 10000,
     });
@@ -91,7 +89,6 @@ export const getWatchModePopular = async (
 ): Promise<Item[]> => {
   try {
     const params: any = {
-      apiKey: WATCHMODE_API_KEY,
       sort_by: "popularity_score",
       sort_order: "desc",
       page,
@@ -102,7 +99,7 @@ export const getWatchModePopular = async (
       params.types = type;
     }
 
-    const response = await axios.get(`${WATCHMODE_BASE_URL}/list-titles/`, {
+    const response = await axios.get(`${WATCHMODE_BASE_PATH}/list-titles`, {
       params,
       timeout: 10000,
     });
@@ -126,7 +123,6 @@ export const getWatchModeByGenre = async (
 ): Promise<Item[]> => {
   try {
     const params: any = {
-      apiKey: WATCHMODE_API_KEY,
       genres: genreId,
       page,
       limit: 50,
@@ -136,7 +132,7 @@ export const getWatchModeByGenre = async (
       params.types = type;
     }
 
-    const response = await axios.get(`${WATCHMODE_BASE_URL}/list-titles/`, {
+    const response = await axios.get(`${WATCHMODE_BASE_PATH}/list-titles`, {
       params,
       timeout: 10000,
     });

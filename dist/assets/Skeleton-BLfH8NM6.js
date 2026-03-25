@@ -1,2 +1,0 @@
-import{t as e}from"./jsx-runtime-B6am4dOB.js";var t=e(),n=({className:e,children:n,...r})=>(0,t.jsx)(`div`,{className:`${e} overflow-hidden relative bg-dark-lighten rounded-md before:content-[''] before:absolute before:inset-0 before:tw-shimmer`,...r,children:n});export{n as t};
-//# sourceMappingURL=Skeleton-BLfH8NM6.js.map

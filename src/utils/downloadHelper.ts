@@ -53,8 +53,7 @@ export async function downloadVideoFile(
 
   // Strategy 2: Use backend proxy for CORS-restricted URLs
   try {
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001/api';
-    const proxyUrl = `${backendUrl}/proxy?url=${encodeURIComponent(url)}`;
+    const proxyUrl = `/api/proxy/external?url=${encodeURIComponent(url)}`;
     
     const response = await fetch(proxyUrl);
     if (response.ok) {
@@ -100,8 +99,7 @@ export async function extractVideoUrl(embedUrl: string): Promise<string | null> 
   try {
     // For now, return the embed URL - actual extraction should be done on backend
     // Backend can scrape the embed page and extract the actual video URL
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001/api';
-    const response = await fetch(`${backendUrl}/extract-video?url=${encodeURIComponent(embedUrl)}`);
+    const response = await fetch(`/api/extract-video?url=${encodeURIComponent(embedUrl)}`);
     
     if (response.ok) {
       const data = await response.json();

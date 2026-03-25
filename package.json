@@ -63,12 +63,8 @@
     "yup": "^0.32.11"
   },
   "scripts": {
-    "dev": "npm start",
-    "start": "concurrently \"npm run server\" \"npm run client\"",
-    "setup:backend": "cd backend && npm install",
-    "server": "npm run setup:backend && cd backend && npm run dev",
-    "build-server": "cd backend && npm run build",
-    "client": "vite",
+    "dev": "vite",
+    "start": "vite",
     "build": "vite build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "cap:init": "npx cap init",
@@ -82,8 +78,10 @@
     "android:apk:linux": "npm run build && npx cap sync android && cd android && ./gradlew assembleRelease",
     "android:bundle": "npm run build && npx cap sync android && cd android && gradlew.bat bundleRelease",
     "android:bundle:linux": "npm run build && npx cap sync android && cd android && ./gradlew bundleRelease",
-    "backend:build": "cd backend && npm install && npm run build",
-    "backend:start": "cd backend && npm start",
+    "functions:install": "cd functions && npm install",
+    "functions:build": "cd functions && npm run build",
+    "functions:serve": "cd functions && npm run serve",
+    "firebase:emulators": "firebase emulators:start --only hosting,functions",
     "postinstall": "node scripts/postinstall.js"
   },
   "eslintConfig": {

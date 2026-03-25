@@ -1,11 +1,10 @@
 // RapidAPI Streaming Availability Integration
-// API Key: 657ad5984dmshd705a0d17442ac1p1a4f55jsn028771a8955f
+// Proxied via Firebase Functions to avoid exposing API keys in the client.
 
-import axios from "axios";
+import axios from "../shared/axios";
 import { Item } from "../shared/types";
 
-const RAPIDAPI_KEY = "657ad5984dmshd705a0d17442ac1p1a4f55jsn028771a8955f";
-const RAPIDAPI_BASE_URL = "https://streaming-availability.p.rapidapi.com";
+const RAPIDAPI_BASE_PATH = "/rapidapi/streaming-availability";
 
 export interface StreamingAvailabilityTitle {
   imdbId?: string;
@@ -44,7 +43,7 @@ export interface StreamingSearchResponse {
 // Convert Streaming Availability title to Item format
 export const convertStreamingToItem = (title: StreamingAvailabilityTitle): Item => {
   return {
-    id: title.tmdbId || parseInt(title.imdbId?.replace("tt", "") || "0") || Date.now(),
+    id: title.tmdbId || Number.parseInt(title.imdbId?.replace("tt", "") || "0") || Date.now(),
     title: title.title,
     name: title.title,
     overview: title.overview || "",
@@ -69,16 +68,12 @@ export const searchStreamingTitles = async (
   page?: number
 ): Promise<Item[]> => {
   try {
-    const response = await axios.get(`${RAPIDAPI_BASE_URL}/search/title`, {
+    const response = await axios.get(`${RAPIDAPI_BASE_PATH}/search/title`, {
       params: {
         title: query,
         country: country,
         show_type: type,
         output_language: "en",
-      },
-      headers: {
-        "X-RapidAPI-Key": RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "streaming-availability.p.rapidapi.com",
       },
       timeout: 10000,
     });
@@ -113,12 +108,8 @@ export const getStreamingTitles = async (
       params.genres = genre;
     }
 
-    const response = await axios.get(`${RAPIDAPI_BASE_URL}/search/filters`, {
+    const response = await axios.get(`${RAPIDAPI_BASE_PATH}/search/filters`, {
       params,
-      headers: {
-        "X-RapidAPI-Key": RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "streaming-availability.p.rapidapi.com",
-      },
       timeout: 10000,
     });
 

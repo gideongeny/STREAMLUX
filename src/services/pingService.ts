@@ -4,7 +4,7 @@
 class PingService {
     private pingInterval: NodeJS.Timeout | null = null;
     private readonly PING_FREQUENCY = 10 * 60 * 1000; // 10 minutes
-    private readonly BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001/api';
+    private readonly BACKEND_URL = '/api';
     private isActive: boolean = false;
 
     /**

@@ -1,2 +1,0 @@
-import{a as e}from"./chunk-BEqpzyXh.js";import{d as t}from"./jsx-runtime-B6am4dOB.js";var n=e(t()),r=(e,t=500)=>{let[r,i]=(0,n.useState)(e);return(0,n.useEffect)(()=>{let n=setTimeout(()=>i(e),t);return()=>clearTimeout(n)},[e,t]),r};export{r as t};
-//# sourceMappingURL=useDebounce-BkAc05jo.js.map

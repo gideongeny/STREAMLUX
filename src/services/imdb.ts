@@ -1,11 +1,10 @@
 // IMDB/OMDB API Integration for movies and TV shows
 // OMDB API provides IMDB data
 
-import axios from "axios";
+import axios from "../shared/axios";
 import { Item } from "../shared/types";
 
-const OMDB_API_KEY = process.env.REACT_APP_OMDB_API_KEY || "";
-const OMDB_BASE = "https://www.omdbapi.com";
+const OMDB_BASE_PATH = "/omdb";
 
 // Search movies/TV shows by title
 export const searchIMDBContent = async (
@@ -13,15 +12,9 @@ export const searchIMDBContent = async (
   type: "movie" | "series" = "movie",
   page: number = 1
 ): Promise<Item[]> => {
-  if (!OMDB_API_KEY) {
-    console.warn("OMDB API key not configured");
-    return [];
-  }
-
   try {
-    const response = await axios.get(OMDB_BASE, {
+    const response = await axios.get(OMDB_BASE_PATH, {
       params: {
-        apikey: OMDB_API_KEY,
         s: query,
         type: type === "movie" ? "movie" : "series",
         page,
@@ -60,14 +53,9 @@ export const searchIMDBContent = async (
 
 // Get content by IMDB ID
 export const getIMDBContentById = async (imdbId: string): Promise<any> => {
-  if (!OMDB_API_KEY) {
-    return null;
-  }
-
   try {
-    const response = await axios.get(OMDB_BASE, {
+    const response = await axios.get(OMDB_BASE_PATH, {
       params: {
-        apikey: OMDB_API_KEY,
         i: imdbId,
         plot: "full",
       },

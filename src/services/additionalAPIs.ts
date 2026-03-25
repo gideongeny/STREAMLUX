@@ -9,8 +9,6 @@ import { getBackendBase } from "./download";
 // Use the project's unified backend entry point
 const getApiBase = () => getBackendBase() + "/api";
 
-const TMDB_API_KEY = process.env.REACT_APP_API_KEY || "8c247ea0b4b56ed2ff7d41c9a833aa77";
-
 // Helper to convert API response to Item format
 const convertToItem = (item: any, mediaType: "movie" | "tv"): Item => {
   return {
