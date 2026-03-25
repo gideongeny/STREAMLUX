@@ -8,6 +8,7 @@ import * as crypto from 'crypto';
 admin.initializeApp();
 
 import { scrapeAllSports } from './scrapers/footballScraper';
+import { scrapeStreamSports } from './scrapers/streamSportsScraper';
 import { searchFzMovies, searchNetNaija, search123Movies } from './scrapers/movieScrapers'; 
 import { resolveStream } from './resolver';
 
@@ -266,6 +267,18 @@ export const gateway = functions
                             }
                         }
                     } catch (e) { }
+                }
+
+                // --- NEW SOURCE: STREAMSPORTS99.RU ---
+                try {
+                    const ssMatches = await scrapeStreamSports();
+                    const filteredSS = wantLive 
+                        ? ssMatches.filter(m => m.status === 'live')
+                        : ssMatches.filter(m => m.status === 'upcoming');
+                        
+                    fixtures.push(...filteredSS);
+                } catch (e) {
+                    console.error("StreamSports scraping failed:", e);
                 }
 
                 // Deduplicate by teams

@@ -1,16 +1,12 @@
-import { FC, useMemo, useState, useEffect } from "react";
+import { FC, useState } from "react";
 import { Link } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
-import { MdSportsSoccer } from "react-icons/md";
-
 import Sidebar from "../../components/Common/Sidebar";
 import SidebarMini from "../../components/Common/SidebarMini";
-import SearchBox from "../../components/Common/SearchBox";
 import Title from "../../components/Common/Title";
 import Footer from "../../components/Footer/Footer";
-import SportsMainContent from "../../components/Sports/SportsMainContent";
-
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
+import SportsHub from "../../features/sports/SportsHub";
 
 const SportsHome: FC = () => {
   const { isMobile } = useCurrentViewportView();
@@ -18,25 +14,22 @@ const SportsHome: FC = () => {
 
   return (
     <>
-      <Title value="StreamLux | Live Sports Streaming" />
+      <Title value="StreamLux | Premium Sports Hub" />
 
-      <div className="flex md:hidden justify-between items-center px-5 my-5">
+      {/* Mobile Header Only */}
+      <div className="flex md:hidden justify-between items-center px-6 py-4 bg-[#0A0A0A]/50 backdrop-blur-xl border-b border-white/5 sticky top-0 z-[100]">
         <Link to="/" className="flex gap-2 items-center">
-          <img
-            src="/logo.svg"
-            alt="StreamLux Logo"
-            className="h-10 w-10"
-          />
-          <p className="text-xl text-white font-medium tracking-wider uppercase">
-            Stream<span className="text-primary">Lux</span>
+          <img src="/logo.svg" alt="StreamLux" className="h-8 w-8" />
+          <p className="text-lg text-white font-black tracking-tighter uppercase italic">
+            STREAM<span className="text-primary tracking-normal not-italic font-medium">LUX</span>
           </p>
         </Link>
-        <button onClick={() => setIsSidebarActive((prev) => !prev)}>
-          <GiHamburgerMenu size={25} />
+        <button onClick={() => setIsSidebarActive(true)} className="text-white">
+          <GiHamburgerMenu size={22} />
         </button>
       </div>
 
-      <div className="flex flex-col md:flex-row">
+      <div className="flex flex-col md:flex-row min-h-screen bg-black">
         {!isMobile && <SidebarMini />}
         {isMobile && (
           <Sidebar
@@ -45,8 +38,9 @@ const SportsHome: FC = () => {
           />
         )}
 
-        <div className="flex-grow md:pt-11 pt-0 pb-10">
-          <SportsMainContent />
+        <div className="flex-grow">
+          {/* Main Sports Hub Component */}
+          <SportsHub />
         </div>
       </div>
 
