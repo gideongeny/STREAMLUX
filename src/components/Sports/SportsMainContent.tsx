@@ -8,7 +8,6 @@ import { SPORTS_LEAGUES, SportsFixtureConfig } from "../../shared/constants";
 import { getLiveFixturesAPI, getUpcomingFixturesAPI, getVarietySports, subscribeToLiveScores, getMatchLink } from "../../services/sportsAPI";
 import SportsHero from "./SportsHero";
 import LeagueBentoGrid from "./LeagueBentoGrid";
-import LeagueStreamEmbed from "./LeagueStreamEmbed";
 import SportsPremiumMatchCard from "./SportsPremiumMatchCard";
 import SectionSlider from "../Slider/SectionSlider";
 import MatchCenterModal from "./MatchCenterModal";
@@ -186,12 +185,6 @@ const SportsMainContent: FC = () => {
             {/* League Navigation Grid */}
             <LeagueBentoGrid activeLeague={activeLeague} onLeagueSelect={setActiveLeague} />
 
-            {/* Live Stream Embed for selected league */}
-            {activeLeague !== "all" && (
-                <div className="mt-8">
-                    <LeagueStreamEmbed leagueId={activeLeague} />
-                </div>
-            )}
 
             {/* Live Scoreboard */}
             <div className="my-12">
