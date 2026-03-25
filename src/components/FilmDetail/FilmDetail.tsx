@@ -1,0 +1,693 @@
+import {
+  arrayRemove,
+  arrayUnion,
+  doc,
+  onSnapshot,
+  updateDoc,
+} from "firebase/firestore";
+import { FC, useEffect, useState } from "react";
+import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
+import { AiFillHeart } from "react-icons/ai";
+import { BsFillPlayFill, BsShareFill, BsThreeDots } from "react-icons/bs";
+import { GiHamburgerMenu } from "react-icons/gi";
+import { MdSmartphone } from "react-icons/md";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast, ToastContainer } from "react-toastify";
+import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
+import { db } from "../../shared/firebase";
+import { DetailMovie, DetailTV, FilmInfo } from "../../shared/types";
+import { hapticImpact, hapticNotification, resizeImage } from "../../shared/utils";
+import { useAppSelector } from "../../store/hooks";
+import RightbarFilms from "../Common/RightbarFilms";
+import SearchBox from "../Common/SearchBox";
+import Sidebar from "../Common/Sidebar";
+import SidebarMini from "../Common/SidebarMini";
+import Skeleton from "../Common/Skeleton";
+import Title from "../Common/Title";
+import Footer from "../Footer/Footer";
+import FilmTabInfo from "./FilmTabInfo";
+import DownloadButton from "../Common/DownloadButton";
+import { downloadService, getBackendBase } from "../../services/download";
+import HeroTrailer from "../Home/HeroTrailer";
+import AmbientGlow from "../Common/AmbientGlow";
+import { vibeService } from "../../services/vibe";
+import StarRating from "../Common/StarRating";
+import QuickWatchlist from "../Common/QuickWatchlist";
+import { useWatchProgress } from "../../hooks/useWatchProgress";
+
+const formatTime = (seconds: number) => {
+  if (!seconds) return "0:00";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+};
+
+const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const { isMobile } = useCurrentViewportView();
+  const [isSidebarActive, setIsSidebarActive] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+
+  // Resume Anywhere logic
+  const { getProgress } = useWatchProgress();
+  const [resumeData, setResumeData] = useState<{ time: number, s?: number, e?: number } | null>(null);
+
+  useEffect(() => {
+    if (detail?.id && detail?.media_type) {
+      getProgress(Number(detail.id), detail.media_type as 'movie' | 'tv').then(prog => {
+        if (prog && prog.progress > 0.01 && prog.progress < 0.95) { // 1% to 95% watched
+          setResumeData({
+            time: prog.currentTime,
+            s: prog.seasonNumber,
+            e: prog.episodeNumber
+          });
+        }
+      });
+    }
+  }, [detail, getProgress]);
+
+  // Sync with global banner mute state if possible, or keep local
+  const [showMuteButton, setShowMuteButton] = useState(false);
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    const unsubDoc = onSnapshot(doc(db, "users", currentUser.uid), (doc) => {
+      setIsBookmarked(
+        doc.data()?.bookmarks.some((item: any) => item.id === detail?.id)
+      );
+    });
+
+    return () => unsubDoc();
+  }, [currentUser, detail?.id]);
+
+  useEffect(() => {
+    if (detail?.backdrop_path) {
+      const fullImageUrl = resizeImage(detail.backdrop_path, "w300");
+      vibeService.extractAverageColor(fullImageUrl).then((color) => {
+        vibeService.applyVibe(color);
+      });
+    }
+
+    return () => {
+      vibeService.resetVibe();
+    };
+  }, [detail?.backdrop_path]);
+
+  // Vision AI Silent Warmup: Pre-sniff streams in background
+  useEffect(() => {
+    if (detail && !isMobile) {
+      const timeoutId = setTimeout(async () => {
+        try {
+          const backendBase = getBackendBase();
+
+          const info = downloadService.generateDownloadInfo(detail, detail.media_type as "movie" | "tv");
+          if (info.sources.length > 0) {
+            console.log('[VisionAI] Silent Warmup initiated...');
+            // We just ping it, the backend handles the caching
+            fetch(`${backendBase}/api/vision/sniff?url=${encodeURIComponent(info.sources[0])}`).catch(() => { });
+          }
+        } catch (e) {
+          // Silence is magic
+        }
+      }, 3000); // Wait 3s before warming up to prioritize initial page load
+      return () => clearTimeout(timeoutId);
+    }
+  }, [detail, isMobile]);
+
+  const bookmarkedHandler = async () => {
+    if (!detail) return;
+
+    if (!currentUser) {
+      toast.error("You need to sign in to bookmark films", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+
+      return;
+    }
+
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      bookmarks: !isBookmarked
+        ? arrayUnion({
+          poster_path: detail?.poster_path,
+          id: detail?.id,
+          vote_average: detail?.vote_average,
+          media_type: detail?.media_type,
+          ...(detail?.media_type === "movie" && { title: (detail as DetailMovie).title }),
+          ...(detail?.media_type === "tv" && { name: (detail as DetailTV).name }),
+        })
+        : arrayRemove({
+          poster_path: detail?.poster_path,
+          id: detail?.id,
+          vote_average: detail?.vote_average,
+          media_type: detail?.media_type,
+          ...(detail?.media_type === "movie" && { title: (detail as DetailMovie).title }),
+          ...(detail?.media_type === "tv" && { name: (detail as DetailTV).name }),
+        }),
+    });
+
+    if (!isBookmarked) {
+      hapticNotification();
+    } else {
+      hapticImpact();
+    }
+
+    toast.success(
+      `${!isBookmarked
+        ? "This film is now bookmarked"
+        : "This film is removed from your bookmarks"
+      }`,
+      {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      }
+    );
+  };
+
+  const handleShareExperience = async () => {
+    if (!detail) return;
+    hapticImpact();
+    const title = (detail as DetailMovie).title || (detail as DetailTV).name;
+    const shareData = {
+      title: `Watching ${title} on StreamLux`,
+      text: `Elevating my entertainment with ${title}. Check it out on StreamLux!`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.info("Link copied to clipboard! Share the luxury.");
+      }
+    } catch (err) {
+      console.error("Sharing failed:", err);
+    }
+  };
+
+  const handleWatchInApp = () => {
+    hapticNotification();
+    const mediaId = detail?.id;
+    const mediaType = detail?.media_type;
+
+    // 1. Attempt to open via Custom URL Scheme
+    const appScheme = `streamlux://watch/${mediaType}/${mediaId}`;
+
+    toast.info("Opening StreamLux Mobile...", {
+      icon: "📱",
+      position: "bottom-center",
+      autoClose: 2500,
+    });
+
+    // Detect if app opened by checking if window loses focus
+    let didOpen = false;
+    const onBlur = () => {
+      didOpen = true;
+      window.removeEventListener('blur', onBlur);
+    };
+    window.addEventListener('blur', onBlur);
+
+    // Try to trigger the app
+    window.location.href = appScheme;
+
+    // 2. Fallback to APK Download if app didn't open within 2.5s
+    setTimeout(() => {
+      window.removeEventListener('blur', onBlur);
+      if (!didOpen) {
+        toast.warning("App not installed. Triggering download...", {
+          icon: "📥",
+          position: "bottom-center",
+        });
+        // Direct link to the hosted APK
+        window.location.href = "https://github.com/gideongeny/STREAMLUX/releases/latest/download/app-release-unsigned.apk";
+      }
+    }, 2500);
+  };
+
+  return (
+    <>
+      {detail && (
+        <Title
+          value={`${(detail as DetailMovie).title || (detail as DetailTV).name
+            } | StreamLux`}
+        />
+      )}
+      <AmbientGlow imageUrl={resizeImage(detail?.backdrop_path || "")} />
+
+      <div className="flex md:hidden justify-between items-center px-5 my-3">
+        <Link to="/" className="flex gap-2 items-center">
+          <img
+            src="/logo.svg"
+            alt="StreamLux Logo"
+            className="h-10 w-10"
+          />
+          <p className="text-xl text-white font-medium tracking-wider uppercase">
+            Stream<span className="text-primary">Lux</span>
+          </p>
+        </Link>
+        <button onClick={() => setIsSidebarActive((prev) => !prev)}>
+          <GiHamburgerMenu size={25} />
+        </button>
+      </div>
+
+      <ToastContainer />
+
+      <div className="flex flex-col md:flex-row">
+        {!isMobile && <SidebarMini />}
+        {isMobile && (
+          <Sidebar
+            onCloseSidebar={() => setIsSidebarActive(false)}
+            isSidebarActive={isSidebarActive}
+          />
+        )}
+
+        <div className="flex-grow min-h-screen">
+          {/* BACKDROP AND GENERAL INFORMATION */}
+          {!detail && (
+            <Skeleton className="h-[400px] rounded-bl-2xl "></Skeleton>
+          )}
+          {detail && (
+            <div
+              style={{
+                backgroundImage: `url(${resizeImage(detail.backdrop_path)})`,
+              }}
+              className="bg-cover bg-center bg-no-repeat md:h-[400px] h-[300px] rounded-bl-2xl relative overflow-hidden"
+            >
+              {/* Auto-playing Trailer Backdrop - World-Class Feature */}
+              <HeroTrailer
+                mediaId={detail.id}
+                mediaType={detail.media_type as "movie" | "tv"}
+                isActive={true}
+                muted={isMuted}
+              />
+
+              {/* Mute/Unmute Toggle - Detail Page Overlay */}
+              <div className="absolute bottom-6 right-6 z-50">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setIsMuted(!isMuted)}
+                  className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-primary/80 transition-all duration-300"
+                  title={isMuted ? "Unmute Trailer" : "Mute Trailer"}
+                >
+                  <BsShareFill size={16} className="hidden" /> {/* Spacer/Reference */}
+                  {isMuted ? <span className="text-xl">🔇</span> : <span className="text-xl">🔊</span>}
+                </motion.button>
+              </div>
+
+              <div className="bg-gradient-to-br from-transparent to-black/70 h-full rounded-bl-2xl relative z-10">
+                <div className="flex flex-col md:flex-row bottom-[-40%] md:bottom-[-20%]  items-start tw-absolute-center-horizontal w-full max-w-[1000px]">
+                  {/* POSTER */}
+                  <div className="flex flex-col md:flex-row gap-5 items-start md:items-center">
+                    <div className="shrink-0 w-[185px] ml-3 md:ml-0">
+                      <LazyLoadImage
+                        src={resizeImage(detail.poster_path, "w185")}
+                        effect="opacity"
+                        className="w-full h-full object-cover rounded-md shadow-2xl scale-[1.1] origin-bottom"
+                        alt="Poster"
+                      />
+                    </div>
+                    {isMobile && (
+                      <div className="flex flex-col gap-3 mt-4 ml-3 md:ml-0 w-full pr-6">
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="w-full"
+                        >
+                          <Link
+                            to={resumeData 
+                              ? `watch?time=${resumeData.time}${resumeData.s ? `&season=${resumeData.s}&episode=${resumeData.e}` : ''}` 
+                              : "watch"}
+                            onClick={() => hapticImpact()}
+                            className="flex gap-2 items-center justify-center px-4 py-3 rounded-full bg-primary text-white hover:bg-blue-600 shadow-lg shadow-primary/20 transition duration-300 w-full"
+                          >
+                            <BsFillPlayFill size={24} />
+                            <span className="text-sm font-black uppercase tracking-widest">
+                               {resumeData 
+                                  ? `Resume ${resumeData.s ? `S${resumeData.s}E${resumeData.e}` : formatTime(resumeData.time)}` 
+                                  : "Watch Now"}
+                            </span>
+                          </Link>
+                        </motion.div>
+
+                        <button
+                          onClick={handleWatchInApp}
+                          className="flex gap-2 items-center justify-center px-4 py-3 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20 transition duration-300 w-full"
+                        >
+                          <MdSmartphone size={20} />
+                          <span className="text-sm font-black uppercase tracking-widest">Watch in App</span>
+                        </button>
+
+                        {detail && (
+                          <DownloadButton
+                            downloadInfo={downloadService.generateDownloadInfo(
+                              detail,
+                              detail.media_type as "movie" | "tv"
+                            )}
+                            variant="outline"
+                            size="lg"
+                            className="w-full justify-center"
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* FILM TITLE */}
+                  <div className="flex-grow md:ml-14 ml-6 mt-6 md:mt-0">
+                    <div className="md:h-28 flex items-end">
+                      <h1 className=" text-white text-[45px] font-black leading-tight tracking-tighter uppercase drop-shadow-2xl">
+                        {(detail as DetailMovie).title ||
+                          (detail as DetailTV).name}
+                      </h1>
+                    </div>
+                    {/* Show release date for unreleased movies */}
+                    {detail.media_type === "movie" && (detail as DetailMovie).release_date &&
+                      new Date((detail as DetailMovie).release_date) > new Date() && (
+                        <div className="md:mt-4 mt-2">
+                          <span className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 border border-amber-500/50 rounded-full text-amber-300 text-sm font-semibold">
+                            <span>📅</span>
+                            <span>Releases: {new Date((detail as DetailMovie).release_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                          </span>
+                        </div>
+                      )}
+                    <ul className="flex gap-3 flex-wrap md:mt-7 mt-3">
+                      {detail.genres.slice(0, 3).map((genre) => (
+                        <li key={genre.id} className="mb-3">
+                          <Link
+                            to={`/explore?genre=${genre.id}`}
+                            className="md:px-5 px-3 md:py-2 py-1 rounded-full uppercase font-black tracking-widest border border-white/20 md:text-white bg-white/5 backdrop-blur-sm hover:bg-primary/20 hover:border-primary transition duration-300 text-[10px]"
+                          >
+                            {genre.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* WATCH NOW SECTION */}
+                  {!isMobile && (
+                    <div className="flex flex-col gap-4 items-center mt-24">
+                      <div className="flex gap-4 items-center">
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          animate={{
+                            boxShadow: ["0 0 0px rgba(59,130,246,0)", "0 0 25px rgba(59,130,246,0.5)", "0 0 0px rgba(59,130,246,0)"]
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          <Link
+                            to={resumeData 
+                              ? `watch?time=${resumeData.time}${resumeData.s ? `&season=${resumeData.s}&episode=${resumeData.e}` : ''}` 
+                              : "watch"}
+                            onClick={() => hapticImpact()}
+                            className="flex gap-6 items-center pl-6 pr-12 py-3.5 rounded-full bg-primary text-white hover:bg-blue-600 shadow-2xl shadow-primary/40 transition duration-300"
+                          >
+                            <BsFillPlayFill size={28} />
+                            <span className="text-xl font-black uppercase tracking-[0.2em]">
+                              {resumeData 
+                                  ? `Resume ${resumeData.s ? `S${resumeData.s}E${resumeData.e}` : formatTime(resumeData.time)}` 
+                                  : "Watch"}
+                            </span>
+                          </Link>
+                        </motion.div>
+
+                        {detail && (
+                          <DownloadButton
+                            downloadInfo={downloadService.generateDownloadInfo(
+                              detail,
+                              detail.media_type as "movie" | "tv"
+                            )}
+                            variant="outline"
+                            size="lg"
+                          />
+                        )}
+                      </div>
+
+                      <motion.button
+                        whileHover={{ y: -2 }}
+                        onClick={handleWatchInApp}
+                        className="flex gap-2 items-center justify-center px-10 py-3 rounded-full bg-white/10 backdrop-blur-xl text-white border border-white/10 hover:bg-white/20 transition-all duration-300 group"
+                      >
+                        <MdSmartphone size={20} className="group-hover:scale-110 transition-transform" />
+                        <span className="text-xs font-black uppercase tracking-[0.15em]">Watch in App</span>
+                      </motion.button>
+                    </div>
+                  )}
+                </div>
+
+                {/* BOOKMARK BUTTONS */}
+                <div className="flex gap-3 absolute top-[5%] right-[3%] z-50">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={bookmarkedHandler}
+                    className={`tw-flex-center h-12 w-12 rounded-full border-[3px] border-white/30 backdrop-blur-xl shadow-lg hover:border-primary transition duration-300 group ${isBookmarked && "!border-primary"
+                      }`}
+                  >
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={isBookmarked ? "booked" : "not-booked"}
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 1.5, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      >
+                        <AiFillHeart
+                          size={20}
+                          className={`text-white group-hover:text-primary transition duration-300 ${isBookmarked && "!text-primary"
+                            }`}
+                        />
+                      </motion.div>
+                    </AnimatePresence>
+                  </motion.button>
+                  {!isMobile && (
+                    <>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={handleShareExperience}
+                        className="tw-flex-center h-12 w-12 rounded-full border-[3px] border-white/30 backdrop-blur-xl shadow-lg hover:border-primary transition duration-300 group"
+                      >
+                        <BsShareFill
+                          size={18}
+                          className="text-white group-hover:text-primary transition duration-300"
+                        />
+                      </motion.button>
+                      <button className="tw-flex-center h-12 w-12 rounded-full border-[3px] border-white/30 backdrop-blur-xl shadow-lg hover:border-primary transition duration-300 group text-white">
+                        <QuickWatchlist
+                          item={{
+                            id: detail.id,
+                            title: (detail as DetailMovie).title || (detail as DetailTV).name,
+                            posterPath: detail.poster_path,
+                            mediaType: detail.media_type as 'movie' | 'tv'
+                          }}
+                          size="md"
+                        />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* DETAIL INFORMATION */}
+          <div className="flex z-20 relative flex-col md:flex-row mt-48 md:mt-0">
+            {!isMobile && (
+              <div className="shrink-0 md:max-w-[150px] w-full flex items-center md:flex-col justify-center flex-row gap-20 mt-20 md:border-r border-dark-lighten pt-16">
+                <div className="flex flex-col gap-6 items-center">
+                  <p className="text-white/40 font-black text-xs uppercase tracking-[0.2em]">RATING</p>
+                  {!isMobile && (
+                    <div className="w-16">
+                      {detail && (
+                        <CircularProgressbar
+                          value={detail.vote_average}
+                          maxValue={10}
+                          text={`${detail.vote_average.toFixed(1)}`}
+                          styles={buildStyles({
+                            textSize: "30px",
+                            pathColor: `#3b82f6`,
+                            textColor: "#fff",
+                            trailColor: "rgba(255,255,255,0.05)",
+                            backgroundColor: "transparent",
+                          })}
+                        />
+                      )}
+                      {!detail && (
+                        <Skeleton className="w-16 h-16 rounded-full" />
+                      )}
+                    </div>
+                  )}
+                  {/* User Star Rating */}
+                  {detail && (
+                    <div className="mt-4">
+                      <StarRating
+                        mediaId={detail.id}
+                        mediaType={detail.media_type as 'movie' | 'tv'}
+                        tmdbRating={detail.vote_average}
+                      />
+                    </div>
+                  )}
+                  {isMobile && detail && (
+                    <p className="text-2xl font-black text-white">
+                      {detail.vote_average.toFixed(1)}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-3 items-center">
+                  {detail && (
+                    <>
+                      <p className="text-white/40 font-black text-xs uppercase tracking-[0.2em]">
+                        {detail.media_type === "movie"
+                          ? "RUNTIME"
+                          : "EP LENGTH"}
+                      </p>
+                      <div className="flex flex-col items-center">
+                        {detail.media_type === "movie" && (
+                          <p className="text-3xl font-black text-white">
+                            {(detail as DetailMovie).runtime}
+                          </p>
+                        )}
+                        {detail.media_type === "tv" && (
+                          <p className="text-3xl font-black text-white">
+                            {(detail as DetailTV).episode_run_time[0]}
+                          </p>
+                        )}
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-1">minutes</span>
+                      </div>
+                    </>
+                  )}
+                  {!detail && (
+                    <>
+                      <p className="text-white font-medium text-lg">RUNTIME</p>
+                      <Skeleton className="w-14 h-6" />
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex-grow min-h-[500px] md:border-r border-dark-lighten md:px-16 px-5 md:py-7 pt-40">
+              {/* {!detail && <Skeleton className="w-full h-[500px]" />} */}
+              <FilmTabInfo detail={detail} {...others} />
+            </div>
+
+            <div className="shrink-0 md:max-w-[300px] w-full px-6 pt-6">
+              <p className="text-white/40 font-black text-xs uppercase tracking-[0.2em] mb-8">MEDIA GALLERY</p>
+              <ul className="flex flex-col md:gap-[40px] gap-8">
+                {videos &&
+                  videos.slice(0, 3).map((video) => (
+                    <li key={video.id} className="group">
+                      <div className="relative h-0 pb-[56.25%] rounded-2xl overflow-hidden border border-white/5 shadow-2xl transition-transform duration-500 group-hover:scale-[1.05] group-hover:border-primary/30">
+                        <iframe
+                          frameBorder="0"
+                          allowFullScreen
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          title="Video trailer"
+                          width="100%"
+                          height="100%"
+                          src={`https://www.youtube.com/embed/${video.key}?enablejsapi=1&amp;origin=https%3A%2F%2Fstreamlux.vercel.app&amp;widgetid=1`}
+                          id={`widget-${video.id}`}
+                          className="absolute top-0 left-0 w-full h-full"
+                        ></iframe>
+                      </div>
+                      <p className="mt-4 text-sm font-black uppercase tracking-tight line-clamp-2 text-white/60 group-hover:text-primary transition-colors">
+                        {video.name}
+                      </p>
+                    </li>
+                  ))}
+                {!videos &&
+                  [...new Array(2)].map((_, index) => (
+                    <li key={index}>
+                      <div className="w-full h-0 pb-[56.25%] relative">
+                        <Skeleton className="absolute w-full h-full rounded-2xl" />
+                      </div>
+                      <Skeleton className="h-4 w-[70%] mt-4" />
+                    </li>
+                  ))}
+              </ul>
+            </div>
+
+            {isMobile && (
+              <div className="shrink-0 md:max-w-[150px] w-full flex items-center md:flex-col justify-center flex-row gap-20  md:border-r border-dark-lighten md:pt-16 pt-0 md:mt-20 mt-12 bg-white/5 py-10 rounded-t-[3rem] border border-white/10">
+                <div className="flex flex-col gap-6 items-center">
+                  <p className="text-white/40 font-black text-xs uppercase tracking-widest">RATING</p>
+                  {isMobile && detail && (
+                    <div className="flex items-baseline gap-1">
+                      <p className="text-4xl font-black text-white">
+                        {detail.vote_average.toFixed(1)}
+                      </p>
+                      <span className="text-xs text-primary font-black">/ 10</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-3 items-center">
+                  {detail && (
+                    <>
+                      <p className="text-white/40 font-black text-xs uppercase tracking-widest">
+                        {detail.media_type === "movie"
+                          ? "RUNTIME"
+                          : "EP LENGTH"}
+                      </p>
+                      <div className="flex gap-2 items-baseline">
+                        {detail.media_type === "movie" && (
+                          <p className="text-3xl font-black text-white">
+                            {(detail as DetailMovie).runtime}
+                          </p>
+                        )}
+                        {detail.media_type === "tv" && (
+                          <p className="text-3xl font-black text-white">
+                            {(detail as DetailTV).episode_run_time[0]}
+                          </p>
+                        )}
+                        <span className="text-xs font-bold text-gray-500">MIN</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="shrink-0 md:max-w-[310px] w-full relative px-6 bg-dark/40 backdrop-blur-xl md:bg-transparent">
+          {!isMobile && <SearchBox />}
+          {/* <RecommendGenres /> */}
+          <RightbarFilms
+            name="Elite Suggestions"
+            films={similar?.filter((item) => item.id !== detail?.id)}
+            limitNumber={5}
+            isLoading={!similar}
+            className="md:mt-24 mt-12 pb-10"
+          />
+        </div>
+      </div>
+
+      <Footer />
+    </>
+  );
+};
+
+export default FilmDetail;

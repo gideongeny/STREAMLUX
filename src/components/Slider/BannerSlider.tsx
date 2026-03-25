@@ -1,0 +1,229 @@
+import { FC, useState, useEffect } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Autoplay } from "swiper";
+import { BannerInfo, Item } from "../../shared/types";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import { resizeImage } from "../../shared/utils";
+import { AiFillStar } from "react-icons/ai";
+import { Link } from "react-router-dom";
+import { BsFillPlayFill, BsVolumeMuteFill, BsVolumeUpFill, BsDownload } from "react-icons/bs";
+import { motion, AnimatePresence } from "framer-motion";
+import Skeleton from "../Common/Skeleton";
+import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
+import { downloadService } from "../../services/download";
+
+interface BannerSliderProps {
+  films: Item[] | undefined;
+  dataDetail: BannerInfo[] | undefined;
+  isLoadingBanner: boolean;
+  onActiveImageChange?: (imageUrl: string) => void;
+}
+
+const BannerSlider: FC<BannerSliderProps> = ({
+  films,
+  dataDetail,
+  isLoadingBanner,
+  onActiveImageChange,
+}) => {
+  const { isMobile } = useCurrentViewportView();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isMuted, setIsMuted] = useState(true);
+
+  // Elite Optimization: Preload backdrops for next slides
+  useEffect(() => {
+    if (!films || films.length === 0) return;
+    
+    // Preload next 2 slides for instant switching
+    const nextIndices = [(activeIndex + 1) % films.length, (activeIndex + 2) % films.length];
+    nextIndices.forEach(idx => {
+      const img = new Image();
+      img.src = resizeImage(films[idx].backdrop_path, "w1280");
+    });
+  }, [activeIndex, films]);
+
+  return (
+    <div className="mt-6 relative w-full h-0 md:pb-[35%] pb-[56.25%] tw-banner-slider bg-dark-lighten rounded-lg overflow-hidden max-h-[85vh]">
+      {isLoadingBanner || !films ? (
+        <Skeleton className="absolute top-0 left-0 w-full h-full !rounded-lg" />
+      ) : (
+        <>
+          <Swiper
+            modules={[Navigation, Autoplay]}
+            navigation
+            autoplay={{ delay: 30000, disableOnInteraction: false }}
+            slidesPerView={1}
+            onSlideChange={(swiper) => {
+              const index = swiper.activeIndex;
+              setActiveIndex(index);
+              if (onActiveImageChange && films[index]) {
+                onActiveImageChange(resizeImage(films[index].backdrop_path, "w1280"));
+              }
+            }}
+            className="!absolute !top-0 !left-0 !w-full !h-full  !rounded-lg"
+          >
+            {films.map((film, index) => (
+              <SwiperSlide key={film.id}>
+                <div className="relative w-full h-full">
+                  {/* Poster image - always visible as base layer */}
+                  <LazyLoadImage
+                    src={resizeImage(film.backdrop_path, "w1280")}
+                    alt="Backdrop image"
+                    effect="blur"
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ${activeIndex === index && dataDetail?.[index]?.trailer && !isMobile
+                      ? 'opacity-0'
+                      : 'opacity-100'
+                      }`}
+                    style={{ display: 'block', zIndex: 1 }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.backgroundColor = '#1C1C1E';
+                    }}
+                  />
+
+                  {/* Dark gradient overlay (always on) */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent pointer-events-none" style={{ zIndex: 2 }} />
+
+                  {/* Trailer Video Player */}
+                  {activeIndex === index && dataDetail?.[index]?.trailer && (
+                    <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 0 }}>
+                      <iframe
+                        src={`https://www.youtube.com/embed/${dataDetail[index].trailer}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${dataDetail[index].trailer}&rel=0&showinfo=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1`}
+                        className="absolute top-1/2 left-1/2 w-[120%] h-[120%] -translate-x-1/2 -translate-y-1/2 scale-125"
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allowFullScreen={false}
+                        title="Film Trailer"
+                        style={{ pointerEvents: 'none', opacity: isMobile ? 0.4 : 0.65 }}
+                      />
+                    </div>
+                  )}
+
+                  <Link
+                    to={
+                      film.media_type === "movie"
+                        ? `/movie/${film.id}`
+                        : film.media_type === "tv"
+                          ? `/tv/${film.id}`
+                          : `/sports/${film.id}/watch`
+                    }
+                    className="group absolute inset-0 block"
+                    style={{ zIndex: 3 }}
+                  >
+                    {/* Rating badge */}
+                    <div className="hidden md:flex absolute top-[5%] right-[3%] bg-primary px-3 py-1 rounded-full text-white items-center gap-1" style={{ zIndex: 4 }}>
+                      <span>{film.vote_average.toFixed(1)}</span>
+                      <AiFillStar size={15} />
+                    </div>
+
+                    {/* Play button */}
+                    <div className="tw-absolute-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-[#c353b4] tw-flex-center z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-700">
+                      <BsFillPlayFill size={35} className="text-white" />
+                    </div>
+
+                    <div className="absolute top-1/2 -translate-y-1/2 left-[5%] md:max-w-2xl max-w-[280px]">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={`${film.id}-${activeIndex}`}
+                          initial={{ opacity: 0, x: -30 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                        >
+                          {film.media_type === "sports" ? (
+                            <div className="flex flex-col gap-4">
+                              <div className="flex items-center gap-6 md:gap-10">
+                                <div className="flex flex-col items-center gap-2">
+                                  <motion.div
+                                    whileHover={{ scale: 1.1, rotate: 5 }}
+                                    className="w-16 h-16 md:w-28 md:h-28 bg-white/10 backdrop-blur-md rounded-2xl p-3 flex items-center justify-center border border-white/20 shadow-2xl"
+                                  >
+                                    <img src={(film as any).homeLogo} alt="" className="w-full h-full object-contain drop-shadow-lg" />
+                                  </motion.div>
+                                  <span className="text-white font-bold text-xs md:text-sm text-center uppercase tracking-tighter">{(film as any).homeTeam || 'Home'}</span>
+                                </div>
+
+                                <div className="flex flex-col items-center">
+                                  <span className="text-primary font-black text-2xl md:text-5xl italic drop-shadow-[0_0_15px_rgba(255,0,0,0.5)]">VS</span>
+                                </div>
+
+                                <div className="flex flex-col items-center gap-2">
+                                  <motion.div
+                                    whileHover={{ scale: 1.1, rotate: -5 }}
+                                    className="w-16 h-16 md:w-28 md:h-28 bg-white/10 backdrop-blur-md rounded-2xl p-3 flex items-center justify-center border border-white/20 shadow-2xl"
+                                  >
+                                    <img src={(film as any).awayLogo} alt="" className="w-full h-full object-contain drop-shadow-lg" />
+                                  </motion.div>
+                                  <span className="text-white font-bold text-xs md:text-sm text-center uppercase tracking-tighter">{(film as any).awayTeam || 'Away'}</span>
+                                </div>
+                              </div>
+
+                              <h2 className="md:text-4xl text-xl text-white font-black tracking-tight drop-shadow-xl mt-2">
+                                {film.title || film.name}
+                              </h2>
+                            </div>
+                          ) : (
+                            <>
+                              <h2 className="md:text-5xl text-xl text-white font-black tracking-wide md:tw-multiline-ellipsis-2 tw-multiline-ellipsis-3 drop-shadow-lg mb-2">
+                                {film.title || film.name}
+                              </h2>
+                              {/* MovieBox Style Meta info overlay */}
+                              <div className="flex items-center gap-3 text-gray-300 font-bold text-sm mb-4">
+                                <img src="/icons/tmdb.svg" alt="" className="w-5 h-5 grayscale opacity-70" />
+                                <span>{film.release_date?.split('-')[0] || "2026"}</span>
+                                <span className="w-1 h-1 rounded-full bg-gray-600" />
+                                <span className="text-xs uppercase tracking-widest">{dataDetail?.[index]?.genre?.[0]?.name || "Action"}</span>
+                                
+                                <button 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const info = downloadService.generateDownloadInfo(film as any, film.media_type as "movie" | "tv");
+                                    downloadService.smartRedirect(info);
+                                  }}
+                                  className="ml-4 w-10 h-10 rounded-full bg-primary/20 backdrop-blur-xl flex items-center justify-center text-primary border border-primary/30 hover:bg-primary hover:text-white transition-all duration-300 shadow-lg shadow-primary/20"
+                                >
+                                   <BsDownload size={20} />
+                                </button>
+                              </div>
+                            </>
+                          )}
+
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3, duration: 0.6 }}
+                            className="hidden md:block" // Keep description on desktop only for clean mobile look
+                          >
+                            <p className="text-white font-semibold text-lg mt-2 drop-shadow-md tw-multiline-ellipsis-2">
+                              {film.overview}
+                            </p>
+                          </motion.div>
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+                  </Link>
+                </div>
+              </SwiperSlide>
+            ))}
+
+            {/* Navigation Overlay Safety */}
+            <div className="absolute top-0 left-0 w-[8%] h-[11%] z-10"></div>
+          </Swiper>
+
+          {/* Mute/Unmute Toggle Button */}
+          <div className="absolute bottom-[5%] right-[3%] z-[50]">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsMuted(!isMuted)}
+              className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-primary transition-all duration-300"
+              title={isMuted ? "Unmute Trailer" : "Mute Trailer"}
+            >
+              {isMuted ? <BsVolumeMuteFill size={22} /> : <BsVolumeUpFill size={22} />}
+            </motion.button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default BannerSlider;
