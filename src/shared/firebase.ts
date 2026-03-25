@@ -5,7 +5,7 @@ import { getFirestore } from "firebase/firestore";
 import { getMessaging } from "firebase/messaging";
 
 // StreamLux Firebase Configuration
-const firebaseConfig = {
+const envConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -14,6 +14,24 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
+
+// Firebase web config is not a secret, but we keep it configurable via env.
+// If env is missing (common for direct Hosting deployments), fall back to the
+// known project config so the app still boots.
+const fallbackConfig = {
+  apiKey: "AIzaSyAsdilIMvU76E8XbMc0bl8b0lEnNnUw4jY",
+  authDomain: "streamlux-67a84.firebaseapp.com",
+  projectId: "streamlux-67a84",
+  storageBucket: "streamlux-67a84.firebasestorage.app",
+  messagingSenderId: "242283846154",
+  appId: "1:242283846154:web:c25b7416322f092cc49df3",
+  measurementId: "G-3C0V66LLLR",
+};
+
+const firebaseConfig =
+  envConfig.apiKey && envConfig.authDomain && envConfig.projectId
+    ? envConfig
+    : fallbackConfig;
 
 import { getFunctions } from "firebase/functions";
 
