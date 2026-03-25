@@ -68,11 +68,11 @@ export const searchStreamingTitles = async (
   page?: number
 ): Promise<Item[]> => {
   try {
-    const response = await axios.get(`${RAPIDAPI_BASE_PATH}/search/title`, {
+    const response = await axios.get(`${RAPIDAPI_BASE_PATH}/shows/search/title`, {
       params: {
         title: query,
         country: country,
-        show_type: type,
+        show_type: type === "series" ? "series" : type, // keep existing callers working
         output_language: "en",
       },
       timeout: 10000,
@@ -101,14 +101,14 @@ export const getStreamingTitles = async (
       country,
       output_language: "en",
       order_by: "original_title",
-      show_type: type,
+      show_type: type === "series" ? "series" : type,
     };
 
     if (genre) {
       params.genres = genre;
     }
 
-    const response = await axios.get(`${RAPIDAPI_BASE_PATH}/search/filters`, {
+    const response = await axios.get(`${RAPIDAPI_BASE_PATH}/shows/search/filters`, {
       params,
       timeout: 10000,
     });
