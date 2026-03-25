@@ -12,15 +12,15 @@ import { searchFzMovies, searchNetNaija, search123Movies } from './scrapers/movi
 import { resolveStream } from './resolver';
 
 // Access Secure Parameters via process.env (loaded from .env)
-const TMDB_API_KEY = process.env.TMDB_API_KEY || "";
-const TMDB_BEARER_TOKEN = process.env.TMDB_BEARER_TOKEN || "";
-const YT_KEYS_PARAM = process.env.YT_KEYS || ""; // Comma-separated
-const SPORTMONKS_KEY = process.env.SPORTMONKS_KEY || "";
-const APISPORTS_KEY = process.env.APISPORTS_KEY || "";
-const SCOREBAT_TOKEN = process.env.SCOREBAT_TOKEN || "";
-const OMDB_API_KEY = process.env.OMDB_API_KEY || "";
-const WATCHMODE_API_KEY = process.env.WATCHMODE_API_KEY || "";
-const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || "";
+const TMDB_API_KEY = (process.env.TMDB_API_KEY || "").trim();
+const TMDB_BEARER_TOKEN = (process.env.TMDB_BEARER_TOKEN || "").trim();
+const YT_KEYS_PARAM = (process.env.YT_KEYS || "").trim(); // Comma-separated
+const SPORTMONKS_KEY = (process.env.SPORTMONKS_KEY || "").trim();
+const APISPORTS_KEY = (process.env.APISPORTS_KEY || "").trim();
+const SCOREBAT_TOKEN = (process.env.SCOREBAT_TOKEN || "").trim();
+const OMDB_API_KEY = (process.env.OMDB_API_KEY || "").trim();
+const WATCHMODE_API_KEY = (process.env.WATCHMODE_API_KEY || "").trim();
+const RAPIDAPI_KEY = (process.env.RAPIDAPI_KEY || "").trim();
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const YT_BASE_URL = 'https://www.googleapis.com/youtube/v3';
