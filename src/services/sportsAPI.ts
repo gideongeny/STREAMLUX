@@ -403,6 +403,32 @@ const getUpcomingFixturesAPISports = async (signal?: AbortSignal): Promise<Sport
   } catch (e) { return []; }
 };
 
+const getGatewaySports = async (kind: "live" | "upcoming"): Promise<SportsFixtureConfig[]> => {
+  try {
+    const res = await axios.get(`/sports/${kind}`, { timeout: 10000 });
+    const rows = (res.data?.data || res.data?.response || res.data) as any[];
+    if (!Array.isArray(rows)) return [];
+    return rows.map((r: any) => ({
+      id: r.id || `${kind}-${Math.random()}`,
+      leagueId: r.leagueId || getLeagueIdFromName(r.leagueName || ""),
+      leagueName: r.leagueName,
+      homeTeam: r.homeTeam,
+      awayTeam: r.awayTeam,
+      homeTeamLogo: r.homeTeamLogo,
+      awayTeamLogo: r.awayTeamLogo,
+      status: r.status || kind,
+      kickoffTimeFormatted: r.kickoffTimeFormatted || r.kickoffTime || "",
+      venue: r.venue || "Arena",
+      homeScore: r.homeScore,
+      awayScore: r.awayScore,
+      minute: r.minute,
+      isLive: r.isLive,
+    })) as SportsFixtureConfig[];
+  } catch (e) {
+    return [];
+  }
+};
+
 export const getScrapedMatches = async (): Promise<SportsFixtureConfig[]> => {
   try {
     const response = await axios.post(`${getBackendBase()}/api/proxy/external`, {
@@ -447,6 +473,9 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
 
     // 1. Fetch from ALL sources in parallel
     const results = await Promise.allSettled([
+      // Gateway aggregated route (server-side; fastest & most reliable)
+      getGatewaySports("live").catch(() => []),
+
       // Sportmonks (Elite Data)
       (async () => {
         const { getLiveScores } = await import("./sportmonksAPI");
@@ -540,11 +569,12 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
 
 export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
   try {
+    const gateway = await getGatewaySports("upcoming").catch(() => []);
     const pub = await getUpcomingFixturesPublic().catch(() => []);
     const apiS = await getUpcomingFixturesAPISports().catch(() => []);
 
     // Merge all and add hardcoded as base layer
-    const combined = [...pub, ...apiS, ...HARDCODED_UPCOMING_FIXTURES];
+    const combined = [...gateway, ...pub, ...apiS, ...HARDCODED_UPCOMING_FIXTURES];
 
     // Deduplicate by teams (avoid showing same match twice)
     const seen = new Set();

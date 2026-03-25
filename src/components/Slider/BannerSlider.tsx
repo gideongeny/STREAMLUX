@@ -69,7 +69,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
                     src={resizeImage(film.backdrop_path, "w1280")}
                     alt="Backdrop image"
                     effect="blur"
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ${activeIndex === index && dataDetail?.[index]?.trailer && !isMobile
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms] ${activeIndex === index && dataDetail?.[index]?.trailer
                       ? 'opacity-0'
                       : 'opacity-100'
                       }`}
@@ -91,7 +91,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
                         allow="autoplay; encrypted-media; picture-in-picture"
                         allowFullScreen={false}
                         title="Film Trailer"
-                        style={{ pointerEvents: 'none', opacity: isMobile ? 0.4 : 0.65 }}
+                        style={{ pointerEvents: 'none', opacity: isMobile ? 0.35 : 0.65 }}
                       />
                     </div>
                   )}

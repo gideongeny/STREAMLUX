@@ -268,6 +268,30 @@ export const SPORTS_LEAGUES: SportsLeagueConfig[] = [
   { id: "esports", name: "Esports & Gaming Events", shortName: "Esports", country: "World", flag: "🎮", primaryColor: "#6441a5", logo: "/images/logos/esports-logo-template-for-gaming-team-or-tournament-vector.jpg" },
 ];
 
+export type LeagueStreamConfig = {
+  leagueId: string;
+  title: string;
+  src: string;
+  providerUrl?: string;
+};
+
+export const LEAGUE_STREAMS: LeagueStreamConfig[] = [
+  { leagueId: "nba", title: "NBA TV - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=NBA%20TV&code=us&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "wwe", title: "WWE - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=WWE&code=us&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "mlb", title: "MLB Network - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=MLB%20Network&code=us&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "f1", title: "Sky Sports F1 - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20F1&code=gb&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "epl", title: "Sky Sports Premier League - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Premier%20League&code=gb&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "laliga", title: "LaLiga TV - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=LaLiga%20TV&code=gb&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "ucl", title: "DAZN 1 - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=DAZN%201&code=es&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "uel", title: "TNT Sports 1 - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=TNT%20Sports%201&code=gb&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "ligue1", title: "beIN SPORTS 2 - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=beIN%20SPORTS%202&code=us&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "bundesliga", title: "DAZN 1 - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=DAZN%201&code=de&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "seriea", title: "DAZN 1 - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=DAZN%201&code=it&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "eredivisie", title: "Ziggo Sport 1 - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=Ziggo%20Sport%201&code=nl&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "nascar", title: "FOX Sports 2 - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=FOX%20Sports%202&code=us&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+  { leagueId: "ufc", title: "ESPN - Live Stream", src: "https://cdn-live.tv/api/v1/channels/player/?name=ESPN&code=us&user=cdnlivetv&plan=free", providerUrl: "https://StreamSports99.website" },
+];
+
 export const SPORTS_FIXTURES: SportsFixtureConfig[] = [];
 export const reactionColorForTailwindCSS = {
   haha: "text-yellow-500",

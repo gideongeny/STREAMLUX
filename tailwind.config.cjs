@@ -5,10 +5,10 @@ module.exports = {
     extend: {
       colors: {
         primary: "var(--color-primary)",
-        dark: "#0b0b0f",
-        "dark-lighten": "#14141a",
-        "dark-lighten-2": "#1b1b24",
-        "gray-lighten": "#b3b3c1",
+        dark: "var(--sl-surface-0)",
+        "dark-lighten": "var(--sl-surface-1)",
+        "dark-lighten-2": "var(--sl-surface-2)",
+        "gray-lighten": "var(--sl-text-muted)",
       },
       fontFamily: {
         roboto: ["Roboto", "ui-sans-serif", "system-ui", "sans-serif"],

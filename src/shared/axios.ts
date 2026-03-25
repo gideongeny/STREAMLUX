@@ -8,9 +8,38 @@ const instance = axios.create({
 // For efficiency, we use a global variable for language to avoid leaking interceptors
 let globalLang = 'en-US';
 
+const TMDB_PATH_PREFIXES = [
+  "/movie",
+  "/tv",
+  "/trending",
+  "/discover",
+  "/search",
+  "/genre",
+  "/person",
+  "/collection",
+  "/configuration",
+];
+
 // Request interceptor - Add caching, rate limiting, and format the proxy payload
 instance.interceptors.request.use(
   async (config: AxiosRequestConfig) => {
+    // Normalize "TMDB native" calls like axios.get("/movie/123") to our gateway:
+    //   /api/tmdb?endpoint=/movie/123
+    // This keeps the existing app code working after moving all traffic behind Firebase Functions.
+    const rawUrl = (config.url || "").toString();
+    const isShortTmdbPath =
+      rawUrl.startsWith("/") &&
+      TMDB_PATH_PREFIXES.some((p) => rawUrl.startsWith(p));
+
+    const isLegacyProxyTmdb =
+      rawUrl === "/proxy/tmdb" || rawUrl.startsWith("/proxy/tmdb/");
+
+    if (isShortTmdbPath || isLegacyProxyTmdb) {
+      const endpoint = isLegacyProxyTmdb ? rawUrl.replace(/^\/proxy\/tmdb/, "") || "/" : rawUrl;
+      config.url = "/tmdb";
+      config.params = { ...(config.params || {}), endpoint };
+    }
+
     const cacheKeyUrl = config.url || "";
     const cacheKeyParams = { ...config.params };
 

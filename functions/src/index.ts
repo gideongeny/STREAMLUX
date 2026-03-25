@@ -105,6 +105,182 @@ export const gateway = functions
         const rawPath = reqPath.replace(/^\/api\//, '').replace(/^\/+/, '');
         
         try {
+            // --- SPORTS AGGREGATION (server-side, no client placeholders) ---
+            if (rawPath === 'sports/live' || rawPath === 'sports/upcoming') {
+                const wantLive = rawPath.endsWith('/live');
+                const fixtures: any[] = [];
+
+                const mapEspnEvent = (event: any) => {
+                    const comp = event?.competitions?.[0];
+                    const competitors = comp?.competitors || [];
+                    const home = competitors.find((c: any) => c.homeAway === 'home');
+                    const away = competitors.find((c: any) => c.homeAway === 'away');
+                    if (!home?.team || !away?.team) return null;
+
+                    const statusName = event?.status?.type?.name || '';
+                    const isLive =
+                        statusName.includes('LIVE') ||
+                        statusName.includes('IN_PROGRESS') ||
+                        statusName.includes('STATUS_IN_PROGRESS');
+
+                    if (wantLive && !isLive) return null;
+
+                    return {
+                        id: `espn-${event.id}`,
+                        leagueId: "epl",
+                        leagueName: event?.league?.name || event?.season?.name || "Live Sports",
+                        homeTeam: home.team.displayName,
+                        awayTeam: away.team.displayName,
+                        homeTeamLogo: home.team.logo,
+                        awayTeamLogo: away.team.logo,
+                        status: wantLive ? "live" : "upcoming",
+                        isLive: wantLive ? true : isLive,
+                        homeScore: home.score ? Number(home.score) : 0,
+                        awayScore: away.score ? Number(away.score) : 0,
+                        minute: event?.status?.displayClock || event?.status?.type?.shortDetail,
+                        venue: comp?.venue?.fullName || "Stadium",
+                        kickoffTimeFormatted: event?.date ? new Date(event.date).toISOString() : "",
+                    };
+                };
+
+                // ESPN scoreboards (free / stable)
+                const espnEndpoints = [
+                    "/soccer/eng.1/scoreboard",
+                    "/soccer/uefa.champions/scoreboard",
+                    "/soccer/esp.1/scoreboard",
+                    "/soccer/ger.1/scoreboard",
+                    "/soccer/ita.1/scoreboard",
+                    "/soccer/fra.1/scoreboard",
+                    "/basketball/nba/scoreboard",
+                    "/football/nfl/scoreboard",
+                    "/baseball/mlb/scoreboard",
+                    "/hockey/nhl/scoreboard",
+                    "/mma/ufc/scoreboard",
+                    "/racing/f1/scoreboard",
+                ];
+
+                const espnResults = await Promise.allSettled(
+                    espnEndpoints.map((endpoint) =>
+                        axios.get(`https://site.api.espn.com/apis/site/v2/sports${endpoint}`, { timeout: 8000 })
+                    )
+                );
+
+                for (const r of espnResults) {
+                    if (r.status !== "fulfilled") continue;
+                    const events = r.value.data?.events;
+                    if (!Array.isArray(events)) continue;
+                    for (const e of events.slice(0, 40)) {
+                        const mapped = mapEspnEvent(e);
+                        if (mapped) fixtures.push(mapped);
+                    }
+                }
+
+                // TheSportsDB fallback (no key required)
+                try {
+                    const today = new Date().toISOString().split("T")[0].replace(/-/g, "/");
+                    const tsdb = await axios.get("https://www.thesportsdb.com/api/v1/json/3/eventsday.php", {
+                        params: { d: today },
+                        timeout: 8000,
+                    });
+
+                    const events = tsdb.data?.events;
+                    if (Array.isArray(events)) {
+                        const filtered = wantLive
+                            ? events.filter((e: any) => String(e.strStatus || "").toLowerCase().includes("live"))
+                            : events;
+                        for (const e of filtered.slice(0, 40)) {
+                            fixtures.push({
+                                id: `tsdb-${e.idEvent}`,
+                                leagueId: "epl",
+                                leagueName: e.strLeague || "Sports",
+                                homeTeam: e.strHomeTeam || "Home",
+                                awayTeam: e.strAwayTeam || "Away",
+                                status: wantLive ? "live" : "upcoming",
+                                isLive: wantLive ? true : false,
+                                kickoffTimeFormatted: e.dateEvent || "",
+                                venue: e.strVenue || "Arena",
+                                homeScore: e.intHomeScore ? Number(e.intHomeScore) : undefined,
+                                awayScore: e.intAwayScore ? Number(e.intAwayScore) : undefined,
+                                minute: e.strTime || e.strStatus || undefined,
+                            });
+                        }
+                    }
+                } catch (e) {
+                    // ignore fallback errors
+                }
+
+                // Keyed providers (only if configured)
+                if (wantLive && SPORTMONKS_KEY) {
+                    try {
+                        const sm = await axios.get("https://api.sportmonks.com/v3/football/livescores/inplay", {
+                            params: { api_token: SPORTMONKS_KEY, include: "participants;scores;periods;league.country;round" },
+                            timeout: 8000,
+                        });
+                        const rows = sm.data?.data;
+                        if (Array.isArray(rows)) {
+                            for (const row of rows.slice(0, 30)) {
+                                fixtures.push({
+                                    id: `sm-${row.id}`,
+                                    leagueId: "epl",
+                                    leagueName: row.league?.name,
+                                    homeTeam: row.participants?.find((p: any) => p.meta?.location === "home")?.name || "Home",
+                                    awayTeam: row.participants?.find((p: any) => p.meta?.location === "away")?.name || "Away",
+                                    homeTeamLogo: row.participants?.find((p: any) => p.meta?.location === "home")?.image_path,
+                                    awayTeamLogo: row.participants?.find((p: any) => p.meta?.location === "away")?.image_path,
+                                    status: "live",
+                                    isLive: true,
+                                    kickoffTimeFormatted: "Live Now",
+                                    minute: row.periods?.[row.periods.length - 1]?.minutes ? `${row.periods[row.periods.length - 1].minutes}'` : "Live",
+                                });
+                            }
+                        }
+                    } catch (e) { }
+                }
+
+                if (wantLive && APISPORTS_KEY) {
+                    try {
+                        const as = await axios.get("https://v3.football.api-sports.io/fixtures", {
+                            params: { live: "all" },
+                            headers: { "x-apisports-key": APISPORTS_KEY },
+                            timeout: 8000,
+                        });
+                        const rows = as.data?.response;
+                        if (Array.isArray(rows)) {
+                            for (const row of rows.slice(0, 30)) {
+                                fixtures.push({
+                                    id: `as-${row.fixture?.id}`,
+                                    leagueId: "epl",
+                                    leagueName: row.league?.name,
+                                    homeTeam: row.teams?.home?.name,
+                                    awayTeam: row.teams?.away?.name,
+                                    homeTeamLogo: row.teams?.home?.logo,
+                                    awayTeamLogo: row.teams?.away?.logo,
+                                    status: "live",
+                                    isLive: true,
+                                    kickoffTimeFormatted: "Live Now",
+                                    homeScore: row.goals?.home,
+                                    awayScore: row.goals?.away,
+                                    minute: row.fixture?.status?.elapsed ? `${row.fixture.status.elapsed}'` : "Live",
+                                    venue: row.fixture?.venue?.name,
+                                });
+                            }
+                        }
+                    } catch (e) { }
+                }
+
+                // Deduplicate by teams
+                const seen = new Set<string>();
+                const unique = fixtures.filter((f) => {
+                    const k = `${String(f.homeTeam || "").toLowerCase()}-${String(f.awayTeam || "").toLowerCase()}`;
+                    if (seen.has(k)) return false;
+                    seen.add(k);
+                    return true;
+                });
+
+                res.status(200).json({ success: true, data: unique });
+                return;
+            }
+
             // --- OMDB PROXY (server-side key) ---
             if (rawPath === 'omdb' || rawPath.startsWith('omdb/')) {
                 if (!OMDB_API_KEY) {

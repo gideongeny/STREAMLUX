@@ -23,6 +23,7 @@ const MovieInfo = lazy(() => import("./pages/Movie/MovieInfo"));
 const MovieWatch = lazy(() => import("./pages/Movie/MovieWatch"));
 const SportsHome = lazy(() => import("./pages/Sports/SportsHome"));
 const SportsWatch = lazy(() => import("./pages/Sports/SportsWatch"));
+const LeagueStreamWatch = lazy(() => import("./pages/Sports/LeagueStreamWatch"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Search = lazy(() => import("./pages/Search"));
 const TVInfo = lazy(() => import("./pages/TV/TVInfo"));
@@ -43,7 +44,7 @@ import { setCurrentUser } from "./store/slice/authSlice";
 import { backendHealthService } from "./services/backendHealth";
 import { safeStorage } from "./utils/safeStorage";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
-import { MdWifiOff } from "react-icons/md";
+import { MdDarkMode, MdLightMode, MdWifiOff } from "react-icons/md";
 import { initializeAdMob, showBannerAd } from "./services/capacitorAds";
 import { App as CapApp } from "@capacitor/app";
 import { themeService } from "./services/theme";
@@ -105,6 +106,11 @@ function App() {
   };
 
   const [isSignedIn, setIsSignedIn] = useState<boolean>(() => getInitialSignedIn());
+
+  const [surfaceMode, setSurfaceMode] = useState<"midnight" | "night">(() => {
+    const saved = (safeStorage.get("surface_mode") as "midnight" | "night") || "midnight";
+    return saved === "night" ? "night" : "midnight";
+  });
 
     const isPremium = useAppSelector((state) => state.auth.user?.isPremium);
 
@@ -452,6 +458,12 @@ function App() {
 
   const isOnline = useOnlineStatus();
 
+  const toggleSurface = () => {
+    const next = surfaceMode === "night" ? "midnight" : "night";
+    setSurfaceMode(next);
+    themeService.applySurfaceMode(next);
+  };
+
   return (
     <div className="relative">
       {/* Offline Status Bar */}
@@ -494,6 +506,7 @@ function App() {
                   <Route path="tv/:id/watch" element={<TVWatch />} />
                   <Route path="sports" element={<SportsHome />} />
                   <Route path="sports/:leagueId/:matchId/watch" element={<SportsWatch />} />
+                  <Route path="sports/league/:leagueId/watch" element={<LeagueStreamWatch />} />
                   <Route path="matches/details/:fixtureId" element={<MatchesDetails />} />
                   <Route path="explore" element={<Explore />} />
                   <Route path="calendar" element={<CalendarPage />} />
@@ -544,6 +557,15 @@ function App() {
           <MobileBottomNav />
           <GeniusAI />
           <OnboardingOverlay />
+
+          {/* Global Light/Dark (Surface) Toggle */}
+          <button
+            onClick={toggleSurface}
+            className="fixed top-3 right-3 z-[9999] w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/15 text-white flex items-center justify-center hover:bg-primary/30 hover:border-primary/30 transition"
+            title={surfaceMode === "night" ? "Switch to Midnight" : "Switch to Night"}
+          >
+            {surfaceMode === "night" ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
+          </button>
         </div>
       </DownloadManagerProvider>
     </div>

@@ -2,7 +2,7 @@ import { FC } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Item } from "../../shared/types";
 import SectionSlider from "../Slider/SectionSlider";
-import axios from "axios";
+import axios from "../../shared/axios";
 
 // Fetch only truly upcoming, unreleased movies from TMDB
 const getComingSoonMovies = async (): Promise<Item[]> => {

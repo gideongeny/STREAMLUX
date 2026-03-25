@@ -9,9 +9,17 @@ export const themes = [
     { name: "Emerald", color: "#10b981", glow: "rgba(16, 185, 129, 0.3)" },
 ];
 
+export type SurfaceMode = "midnight" | "night";
+
 export const themeService = {
+    applySurfaceMode: (mode: SurfaceMode) => {
+        const attr = mode === "night" ? "night" : "midnight";
+        document.documentElement.dataset.surface = attr;
+        safeStorage.set("surface_mode", mode);
+    },
+
     applyTheme: (color: string, glow?: string) => {
-        const finalGlow = glow || `rgba(${parseInt(color.slice(1, 3), 16)}, ${parseInt(color.slice(3, 5), 16)}, ${parseInt(color.slice(5, 7), 16)}, 0.3)`;
+        const finalGlow = glow || `rgba(${Number.parseInt(color.slice(1, 3), 16)}, ${Number.parseInt(color.slice(3, 5), 16)}, ${Number.parseInt(color.slice(5, 7), 16)}, 0.3)`;
 
         document.documentElement.style.setProperty("--color-primary", color);
         document.documentElement.style.setProperty("--color-primary-glow", finalGlow);
@@ -49,6 +57,9 @@ export const themeService = {
     },
 
     initialize: () => {
+        const savedSurface = (safeStorage.get("surface_mode") as SurfaceMode) || "midnight";
+        themeService.applySurfaceMode(savedSurface);
+
         const savedColor = safeStorage.get("theme_primary_color");
         const savedGlow = safeStorage.get("theme_primary_glow");
         if (savedColor) {

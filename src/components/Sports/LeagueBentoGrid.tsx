@@ -1,6 +1,7 @@
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { motion } from "framer-motion";
-import { SPORTS_LEAGUES } from "../../shared/constants";
+import { LEAGUE_STREAMS, SPORTS_LEAGUES } from "../../shared/constants";
+import { Link } from "react-router-dom";
 
 interface LeagueBentoGridProps {
     activeLeague: string;
@@ -25,6 +26,12 @@ const LEAGUE_THEMES: Record<string, { color: string; glow: string; logo?: string
 };
 
 const LeagueBentoGrid: FC<LeagueBentoGridProps> = ({ activeLeague, onLeagueSelect }) => {
+    const streams = useMemo(() => LEAGUE_STREAMS, []);
+
+    const activeStream =
+        streams.find((s) => s.leagueId === activeLeague) ||
+        (activeLeague === "all" ? streams[0] : undefined);
+
     return (
         <section className="py-8">
             <div className="flex items-center justify-between mb-8">
@@ -89,6 +96,19 @@ const LeagueBentoGrid: FC<LeagueBentoGridProps> = ({ activeLeague, onLeagueSelec
                                 </p>
                             </div>
 
+                            {/* Watch overlay (if stream exists) */}
+                            {streams.some((s) => s.leagueId === league.id) && (
+                                <div className="absolute inset-x-0 top-0 p-2 flex justify-end">
+                                    <Link
+                                        to={`/sports/league/${league.id}/watch`}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="px-3 py-2 rounded-full text-[10px] font-black uppercase tracking-widest bg-black/50 backdrop-blur border border-white/15 text-white hover:bg-primary/30 hover:border-primary/30 transition"
+                                    >
+                                        Watch
+                                    </Link>
+                                </div>
+                            )}
+
                             {/* Glow & Particles effect on active */}
                             {isActive && (
                                 <div className="absolute inset-0 bg-primary/10 animate-pulse pointer-events-none" />
@@ -96,6 +116,65 @@ const LeagueBentoGrid: FC<LeagueBentoGridProps> = ({ activeLeague, onLeagueSelec
                         </motion.button>
                     );
                 })}
+            </div>
+
+            {/* Live League Stream Embed */}
+            <div className="mt-10">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg md:text-xl font-black text-white tracking-tight">
+                        LIVE <span className="text-primary italic">STREAM</span>
+                    </h3>
+                    <a
+                        href={activeStream?.providerUrl || "https://StreamSports99.website"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] font-bold text-primary hover:underline"
+                    >
+                        Powered by StreamSports99
+                    </a>
+                </div>
+
+                <div className="bg-dark-lighten border border-white/10 rounded-2xl overflow-hidden">
+                    <div className="flex flex-wrap gap-2 p-3 border-b border-white/10">
+                        {streams.slice(0, 12).map((s) => (
+                            <button
+                                key={s.leagueId}
+                                onClick={() => onLeagueSelect(s.leagueId)}
+                                className={`px-3 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition ${
+                                    activeLeague === s.leagueId
+                                        ? "bg-white text-black border-white"
+                                        : "border-white/10 text-gray-300 hover:border-white/30 hover:text-white"
+                                }`}
+                            >
+                                {s.leagueId}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="p-4">
+                        {activeStream ? (
+                            <div className="max-w-[900px] mx-auto">
+                                <div className="bg-[#1a1a2e] px-4 py-3 rounded-xl rounded-b-none border border-[#333] border-b-0">
+                                    <p className="text-white font-bold text-sm">{activeStream.title}</p>
+                                </div>
+                                <div className="relative w-full overflow-hidden border border-[#333] rounded-xl rounded-t-none bg-black" style={{ paddingBottom: "56.25%" }}>
+                                    <iframe
+                                        src={activeStream.src}
+                                        className="absolute inset-0 w-full h-full border-0"
+                                        allow="autoplay; encrypted-media; picture-in-picture"
+                                        allowFullScreen
+                                        referrerPolicy="no-referrer"
+                                        title={activeStream.title}
+                                    />
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-gray-400 text-sm">
+                                Select a league above to load its live stream.
+                            </p>
+                        )}
+                    </div>
+                </div>
             </div>
         </section>
     );

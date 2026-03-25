@@ -5,6 +5,22 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Surface palette (default: Midnight) */
+  --sl-surface-0: #0b0b0f;
+  --sl-surface-1: #14141a;
+  --sl-surface-2: #1b1b24;
+  --sl-text-muted: #b3b3c1;
+}
+
+[data-surface="night"] {
+  /* Night mode: still dark, but not pure-black */
+  --sl-surface-0: #0f172a;
+  --sl-surface-1: #111c33;
+  --sl-surface-2: #162545;
+  --sl-text-muted: #cbd5e1;
+}
+
 html {
   @apply bg-dark;
   -webkit-text-size-adjust: 100%;

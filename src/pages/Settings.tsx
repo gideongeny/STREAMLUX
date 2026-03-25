@@ -5,7 +5,6 @@ import { toast, ToastContainer } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
 import Sidebar from "../components/Common/Sidebar";
 import Title from "../components/Common/Title";
-import NotificationRequest from "../components/Common/NotificationRequest";
 import NotificationSettings from "../components/Settings/NotificationSettings";
 import LanguageSelector from "../components/Common/LanguageSelector";
 import { validateYouTubeKey } from "../services/youtube";
@@ -15,8 +14,7 @@ import { updateProfile } from "../services/user";
 import { UserProfile } from "../shared/types";
 import { safeStorage } from "../utils/safeStorage";
 import { biometricAuthService } from "../services/biometricAuth";
-import { backgroundAudioService } from "../services/backgroundAudio";
-import { themeService, themes } from "../services/theme";
+import { SurfaceMode, themeService, themes } from "../services/theme";
 
 interface SettingsProps { }
 
@@ -56,6 +54,11 @@ const Settings: FunctionComponent<SettingsProps> = () => {
     const [m3uProvider, setM3uProvider] = useState("");
     const m3uInputRef = useRef<HTMLInputElement>(null);
 
+    const [surfaceMode, setSurfaceMode] = useState<SurfaceMode>(() => {
+        const saved = (safeStorage.get("surface_mode") as SurfaceMode) || "midnight";
+        return saved === "night" ? "night" : "midnight";
+    });
+
     useEffect(() => {
         // Load saved keys on mount
         const savedKey = safeStorage.get("user_youtube_api_key");
@@ -64,6 +67,13 @@ const Settings: FunctionComponent<SettingsProps> = () => {
         const savedM3u = safeStorage.get("m3u_provider_url");
         if (savedM3u) setM3uProvider(savedM3u);
     }, []);
+
+    const handleSurfaceToggle = () => {
+        const next: SurfaceMode = surfaceMode === "night" ? "midnight" : "night";
+        setSurfaceMode(next);
+        themeService.applySurfaceMode(next);
+        toast.info(next === "night" ? "Night mode enabled" : "Night mode disabled", { position: "top-right", autoClose: 1200 });
+    };
 
     const handleSaveKey = async () => {
         const newKey = keyInputRef.current?.value.trim();
@@ -207,6 +217,40 @@ const Settings: FunctionComponent<SettingsProps> = () => {
                     </div>
 
                     <div className="max-w-2xl">
+                        {/* Surface Mode */}
+                        <div className="bg-dark p-6 rounded-xl border border-white/5 shadow-lg mb-8">
+                            <h2 className="text-xl text-white font-bold mb-2 flex items-center gap-2">
+                                <span className="text-primary">🌙</span> Night Mode
+                            </h2>
+                            <p className="text-gray-400 text-sm mb-5 leading-relaxed">
+                                Switch between a pure black “Midnight” look and a softer “Night” palette (better contrast, less harsh).
+                            </p>
+                            <button
+                                onClick={handleSurfaceToggle}
+                                className={`w-full flex items-center justify-between px-5 py-4 rounded-xl border transition ${
+                                    surfaceMode === "night"
+                                        ? "bg-primary/10 border-primary/30"
+                                        : "bg-white/5 border-white/10 hover:border-white/20"
+                                }`}
+                            >
+                                <div className="text-left">
+                                    <p className="text-white font-bold">{surfaceMode === "night" ? "Night" : "Midnight"}</p>
+                                    <p className="text-gray-400 text-xs">Tap to toggle</p>
+                                </div>
+                                <div
+                                    className={`w-12 h-7 rounded-full p-1 transition ${
+                                        surfaceMode === "night" ? "bg-primary/30" : "bg-white/10"
+                                    }`}
+                                >
+                                    <div
+                                        className={`w-5 h-5 rounded-full bg-white transition ${
+                                            surfaceMode === "night" ? "translate-x-5" : "translate-x-0"
+                                        }`}
+                                    />
+                                </div>
+                            </button>
+                        </div>
+
                         {/* API Key Section */}
                         <div className="bg-dark p-6 rounded-xl border border-white/5 shadow-lg mb-8">
                             <h2 className="text-xl text-white font-bold mb-4 flex items-center gap-2">
