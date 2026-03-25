@@ -1,0 +1,2 @@
+import{t as e}from"./jsx-runtime-B6am4dOB.js";var t=e(),n=({className:e,children:n,onCloseBlackBackdrop:r,...i})=>(0,t.jsx)(`div`,{...i,onClick:r,className:`fixed top-0 left-0 w-full h-full bg-black/60 z-[5] ${e}`,children:n});export{n as t};
+//# sourceMappingURL=BlackBackdrop-_Kp-4Jx3.js.map

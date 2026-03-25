@@ -1,0 +1,2 @@
+import{a as e}from"./chunk-BEqpzyXh.js";import{d as t,t as n}from"./jsx-runtime-B6am4dOB.js";var r=e(t()),i=n(),a=({value:e})=>((0,r.useEffect)(()=>{document.title=e},[e]),(0,i.jsx)(i.Fragment,{}));export{a as t};
+//# sourceMappingURL=Title-DenVM5Bu.js.map
