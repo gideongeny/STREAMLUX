@@ -552,13 +552,6 @@ export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
         localStorage.setItem('streamlux_last_fixtures_time', LAST_SUCCESS_TIME.toString());
       } catch (e) {}
       return finalResults;
-    } else {
-      const now = Date.now();
-      const BACKUP_WINDOW = 15 * 60 * 1000; // Extend to 15 minutes for reliability
-      if (LAST_KNOWN_GOOD_LIVE.length > 0 && (now - LAST_SUCCESS_TIME < BACKUP_WINDOW)) {
-        console.warn("Live fetch returned 0. Using Persistence Guard fallback.");
-        return LAST_KNOWN_GOOD_LIVE;
-      }
       return [];
     }
   } catch (e) { 
@@ -577,6 +570,7 @@ export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> =
     const combined = [...gateway, ...pub, ...apiS, ...HARDCODED_UPCOMING_FIXTURES];
 
     // Deduplicate by teams (avoid showing same match twice)
+    const CACHE_VERSION = "v3.0_live_optimized"; // Force refresh for new scraper engine
     const seen = new Set();
     return combined.filter(f => {
       const key = `${f.homeTeam}-${f.awayTeam}`.toLowerCase();

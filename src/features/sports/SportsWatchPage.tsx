@@ -36,12 +36,15 @@ const SportsWatchPage: React.FC = () => {
         fetchSidebarData();
     }, [matchId]);
 
-    // Handle initial state from navigation
+    // Handle initial state from navigation or direct match find
     useEffect(() => {
         if (location.state?.streamUrl) {
             setActiveSource(location.state.streamUrl);
+        } else if (matchId && matchId.startsWith('http')) {
+            // Fallback for when ID itself is the link (rare)
+            setActiveSource(decodeURIComponent(matchId));
         }
-    }, [location.state]);
+    }, [location.state, matchId]);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 

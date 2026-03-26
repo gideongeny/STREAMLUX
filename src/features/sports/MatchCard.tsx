@@ -15,6 +15,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
     // Using dummy leagueId if not available to match existing route pattern
     const leagueId = match.leagueId || 'general';
     const matchId = match.id;
+    console.log(`Navigating to match ${matchId} with link: ${match.link}`);
     navigate(`/sports/${leagueId}/${matchId}/watch`, { state: { streamUrl: match.link } });
   };
 
