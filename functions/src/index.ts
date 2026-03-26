@@ -93,6 +93,8 @@ export const gateway = functions
         const origin = req.headers.origin;
         if (origin && allowedOrigins.includes(origin)) {
             res.set('Access-Control-Allow-Origin', origin);
+        } else {
+            res.set('Access-Control-Allow-Origin', '*'); // Fallback to accept custom Vercel deployments seamlessly
         }
         res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');

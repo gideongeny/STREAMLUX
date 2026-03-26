@@ -4,8 +4,8 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://streamlux-67a84.web.app/api/$1"
+      "source": "/api/:match*",
+      "destination": "https://streamlux-67a84.web.app/api/:match*"
     },
     {
       "source": "/(.*)",
