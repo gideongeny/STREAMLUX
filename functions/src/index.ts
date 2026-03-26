@@ -116,9 +116,21 @@ export const gateway = functions
                 const mapEspnEvent = (event: any) => {
                     const comp = event?.competitions?.[0];
                     const competitors = comp?.competitors || [];
-                    const home = competitors.find((c: any) => c.homeAway === 'home');
-                    const away = competitors.find((c: any) => c.homeAway === 'away');
-                    if (!home?.team || !away?.team) return null;
+                    
+                    const leagueName = event?.league?.name || event?.season?.name || "Live Sports";
+                    const isCompetition = 
+                        leagueName.toLowerCase().includes('formula 1') || 
+                        leagueName.toLowerCase().includes('f1') ||
+                        leagueName.toLowerCase().includes('motogp') ||
+                        leagueName.toLowerCase().includes('nascar') ||
+                        leagueName.toLowerCase().includes('golf') ||
+                        competitors.length < 2;
+
+                    const home = competitors.find((c: any) => c.homeAway === 'home') || competitors[0];
+                    const away = competitors.find((c: any) => c.homeAway === 'away') || competitors[1];
+
+                    // If it's a competition and we only have 1 or 0 "real" teams, we handle it specially
+                    if (!home?.team && !event.name) return null;
 
                     const statusName = event?.status?.type?.name || '';
                     const isLive =
@@ -139,18 +151,19 @@ export const gateway = functions
                     return {
                         id: `espn-${event.id}`,
                         leagueId: "epl",
-                        leagueName: event?.league?.name || event?.season?.name || "Live Sports",
-                        homeTeam: home.team.displayName,
-                        awayTeam: away.team.displayName,
-                        homeTeamLogo: home.team.logo,
-                        awayTeamLogo: away.team.logo,
+                        leagueName: leagueName,
+                        homeTeam: isCompetition ? (event.shortName || event.name) : (home?.team?.displayName || "Team A"),
+                        awayTeam: isCompetition ? (comp?.venue?.fullName || "") : (away?.team?.displayName || "Team B"),
+                        homeTeamLogo: home?.team?.logo,
+                        awayTeamLogo: away?.team?.logo,
                         status: wantLive ? "live" : (isLive ? "live" : "upcoming"),
                         isLive: isLive,
-                        homeScore: home.score ? Number(home.score) : 0,
-                        awayScore: away.score ? Number(away.score) : 0,
+                        homeScore: home?.score ? Number(home.score) : 0,
+                        awayScore: away?.score ? Number(away.score) : 0,
                         minute: event?.status?.displayClock || event?.status?.type?.shortDetail,
                         venue: comp?.venue?.fullName || "Stadium",
                         kickoffTimeFormatted: kickoffDate ? kickoffDate.toISOString() : "",
+                        isCompetition: isCompetition
                     };
                 };
 

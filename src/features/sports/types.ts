@@ -15,6 +15,7 @@ export interface SportMatch {
   minute?: string;
   venue?: string;
   link: string; // The URL to watch the stream
+  isCompetition?: boolean; // Flag for racing/mma/golf that aren't 'vs' matches
 }
 
 export interface SportLeague {

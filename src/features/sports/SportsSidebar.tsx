@@ -39,7 +39,7 @@ const SportsSidebar: React.FC<SportsSidebarProps> = ({
           {match.leagueName || 'League'}
         </span>
         <span className="text-xs font-bold truncate w-full text-left">
-          {match.homeTeam} vs {match.awayTeam}
+          {match.isCompetition ? match.homeTeam : `${match.homeTeam} vs ${match.awayTeam}`}
         </span>
         {!isLive && (
           <span className="text-[9px] font-medium text-primary/80">
@@ -54,9 +54,11 @@ const SportsSidebar: React.FC<SportsSidebarProps> = ({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
           </span>
-          <span className="text-[10px] font-bold text-white tabular-nums">
-            {match.homeScore ?? 0}:{match.awayScore ?? 0}
-          </span>
+          {!match.isCompetition && (
+            <span className="text-[10px] font-bold text-white tabular-nums">
+                {match.homeScore ?? 0}:{match.awayScore ?? 0}
+            </span>
+          )}
         </div>
       ) : (
         <div className="text-[8px] font-bold uppercase tracking-tighter text-gray-600">

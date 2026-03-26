@@ -138,7 +138,9 @@ const SportsWatchPage: React.FC = () => {
                     </button>
                     <div className="flex flex-col">
                         <h1 className="text-lg font-bold text-white uppercase tracking-tight leading-snug">
-                            {currentMatch ? `${currentMatch.homeTeam} vs ${currentMatch.awayTeam}` : 'Sports Live'}
+                            {currentMatch 
+                                ? (currentMatch.isCompetition ? currentMatch.homeTeam : `${currentMatch.homeTeam} vs ${currentMatch.awayTeam}`)
+                                : 'Sports Live'}
                         </h1>
                         <p className="text-[10px] text-primary font-black uppercase tracking-widest flex items-center gap-2 mt-0.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
