@@ -113,12 +113,19 @@ export const gateway = functions
                 const wantLive = rawPath.endsWith('/live');
                 const fixtures: any[] = [];
 
-                const mapEspnEvent = (event: any) => {
+                const mapEspnEvent = (event: any, endpoint: string) => {
                     const comp = event?.competitions?.[0];
                     const competitors = comp?.competitors || [];
                     
+                    // Identify sport/category from the endpoint URL
+                    const endpointParts = endpoint.split('/');
+                    const sportCat = endpointParts[1] || "sports"; // "soccer", "racing", "mma", etc.
+                    const leagueSub = endpointParts[2] || "league";
+
                     const leagueName = event?.league?.name || event?.season?.name || "Live Sports";
                     const isCompetition = 
+                        sportCat === 'racing' ||
+                        sportCat === 'mma' ||
                         leagueName.toLowerCase().includes('formula 1') || 
                         leagueName.toLowerCase().includes('f1') ||
                         leagueName.toLowerCase().includes('motogp') ||
@@ -150,7 +157,8 @@ export const gateway = functions
 
                     return {
                         id: `espn-${event.id}`,
-                        leagueId: "epl",
+                        leagueId: leagueSub === 'scoreboard' ? sportCat : leagueSub,
+                        sport: sportCat.charAt(0).toUpperCase() + sportCat.slice(1),
                         leagueName: leagueName,
                         homeTeam: isCompetition ? (event.shortName || event.name) : (home?.team?.displayName || "Team A"),
                         awayTeam: isCompetition ? (comp?.venue?.fullName || "") : (away?.team?.displayName || "Team B"),
@@ -223,11 +231,12 @@ export const gateway = functions
                 for (const r of espnResults) {
                     if (r.status !== "fulfilled") continue;
                     const events = r.value.data?.events;
+                    const endpointUsed = r.value.config?.url?.split('/sports')?.[1]?.split('?')?.[0] || "";
                     if (!Array.isArray(events)) continue;
                     
                     // Allow up to 60 events per endpoint slice to ensure wealthy diversity!
                     for (const e of events.slice(0, 60)) {
-                        const mapped = mapEspnEvent(e);
+                        const mapped = mapEspnEvent(e, endpointUsed);
                         // Prevent duplicates if multiple queries return the same event
                         if (mapped && !fixtures.some(f => f.id === mapped.id)) {
                             fixtures.push(mapped);
