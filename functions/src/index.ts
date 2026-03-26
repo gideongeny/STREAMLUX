@@ -263,6 +263,7 @@ export const gateway = functions
                                     awayScore: row.goals?.away,
                                     minute: row.fixture?.status?.elapsed ? `${row.fixture.status.elapsed}'` : "Live",
                                     venue: row.fixture?.venue?.name,
+                                    source: "APISports"
                                 });
                             }
                         }
@@ -277,9 +278,18 @@ export const gateway = functions
                     ]);
                     
                     const combinedScraped = [...ssMatches, ...fsMatches];
-                    const filteredScraped = wantLive 
-                        ? combinedScraped.filter(m => m.status === 'live' || m.isLive)
-                        : combinedScraped.filter(m => m.status === 'upcoming' && !m.isLive);
+                    const now = Date.now();
+                    const filteredScraped = combinedScraped.filter(m => {
+                        const kickoff = (m as any).kickoffTimeFormatted || (m as any).time;
+                        // Filter out old dates (anything more than 6 hours in the past is suspicious for 'upcoming')
+                        if (m.status === 'upcoming' && kickoff) {
+                            const date = new Date(kickoff);
+                            if (!isNaN(date.getTime()) && date.getTime() < now - (6 * 3600000)) return false;
+                        }
+                        
+                        if (wantLive) return m.status === 'live' || m.isLive;
+                        return m.status === 'upcoming';
+                    });
                         
                     fixtures.push(...filteredScraped);
                 } catch (e) {
@@ -295,6 +305,7 @@ export const gateway = functions
                     return true;
                 });
 
+                res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
                 res.status(200).json({ success: true, data: unique });
                 return;
             }
