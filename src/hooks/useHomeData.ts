@@ -28,7 +28,7 @@ export const useHomeData = (type: "movie" | "tv", history?: Item[], enabled: boo
     },
     {
       initialData: initialData,
-      staleTime: 1000 * 60 * 60, // 1 hour for home data (very stable)
+      staleTime: 1000 * 60 * 5, // 5 minutes (trigger background refetches for freshness while keeping instant UI)
       enabled: enabled, // Only fetch if this tab is active
     }
   );
