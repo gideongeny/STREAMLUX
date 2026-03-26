@@ -23,8 +23,13 @@ export const sportsService = {
       
       if (response.data?.success && Array.isArray(response.data.data)) {
         response.data.data = response.data.data.filter((match: any) => {
-          if (!match.kickoffTime) return true;
-          return new Date(match.kickoffTime).getTime() > STALE_THRESHOLD;
+          if (!match.kickoffTimeFormatted) return true;
+          
+          const timeValue = new Date(match.kickoffTimeFormatted).getTime();
+          // If the date string is something like "TBD" or "Live Now", parsing fails (isNaN) - keep it
+          if (isNaN(timeValue)) return true;
+          
+          return timeValue > STALE_THRESHOLD;
         });
       }
       
