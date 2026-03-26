@@ -1,6 +1,8 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation } from 'swiper';
 
 // Each channel: id used in URL, display name, local logo, iframe src, stream type
 const PREMIUM_NETWORKS = [
@@ -188,11 +190,8 @@ const PREMIUM_NETWORKS = [
 
 const SportsChannelsCarousel: React.FC = () => {
   const navigate = useNavigate();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const handleChannelClick = (channel: typeof PREMIUM_NETWORKS[0]) => {
-    // Route format: /sports/:leagueId/:matchId/watch
-    // We use the channel id for both leagueId and matchId slots
     navigate(`/sports/${channel.id}/channel-${channel.id}/watch`, {
       state: {
         streamUrl: channel.type === 'iframe' ? channel.iframeSrc : channel.hlsSrc,
@@ -214,54 +213,60 @@ const SportsChannelsCarousel: React.FC = () => {
         </span>
       </div>
       
-      <div 
-        ref={scrollContainerRef}
-        className="flex gap-3 overflow-x-auto pb-4 px-1 snap-x snap-mandatory scroll-smooth"
-        style={{ scrollbarWidth: 'none' }}
-      >
-        {PREMIUM_NETWORKS.map((network, index) => (
-          <motion.div
-            key={network.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.04 }}
-            onClick={() => handleChannelClick(network)}
-            className="shrink-0 cursor-pointer snap-center group"
-          >
-            <div className={`w-[130px] h-[185px] md:w-[155px] md:h-[220px] rounded-2xl bg-gradient-to-b ${network.bg} border border-white/8 overflow-hidden relative flex flex-col items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:border-primary/40 group-hover:shadow-[0_0_24px_rgba(229,62,62,0.25)]`}>
-              
-              {/* Gradient shine overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-white/5 z-10 pointer-events-none" />
-              
-              {/* Logo */}
-              <div className="z-20 px-4 flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ height: '55%' }}>
-                <img 
-                  src={network.logo} 
-                  alt={network.name}
-                  className="max-w-[90px] md:max-w-[110px] max-h-[90px] md:max-h-[110px] object-contain drop-shadow-2xl opacity-90 group-hover:opacity-100"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              </div>
+      <div className="relative tw-section-slider">
+        <Swiper
+          modules={[Navigation]}
+          navigation
+          slidesPerView="auto"
+          slidesPerGroupAuto
+          spaceBetween={15}
+          className="!py-4 px-1"
+        >
+          {PREMIUM_NETWORKS.map((network, index) => (
+            <SwiperSlide key={network.id} className="!w-[135px] md:!w-[160px]">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.04 }}
+                onClick={() => handleChannelClick(network)}
+                className="shrink-0 cursor-pointer group h-full"
+              >
+                <div className={`w-full h-[185px] md:h-[220px] rounded-2xl bg-gradient-to-b ${network.bg} border border-white/8 overflow-hidden relative flex flex-col items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:border-primary/40 group-hover:shadow-[0_0_24px_rgba(229,62,62,0.25)]`}>
+                  
+                  {/* Gradient shine overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-white/5 z-10 pointer-events-none" />
+                  
+                  {/* Logo */}
+                  <div className="z-20 px-4 flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{ height: '55%' }}>
+                    <img 
+                      src={network.logo} 
+                      alt={network.name}
+                      className="max-w-full max-h-full object-contain drop-shadow-2xl opacity-90 group-hover:opacity-100"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
 
-              {/* Label */}
-              <div className="absolute bottom-0 left-0 right-0 pb-3 pt-8 bg-gradient-to-t from-black/90 to-transparent z-20 flex flex-col items-center px-2">
-                <p className="text-[8px] text-primary font-black uppercase tracking-[0.2em]">{network.label}</p>
-                <p className="text-white text-[10px] md:text-[11px] font-bold text-center leading-tight mt-0.5">{network.name}</p>
-              </div>
+                  {/* Label */}
+                  <div className="absolute bottom-0 left-0 right-0 pb-3 pt-8 bg-gradient-to-t from-black/90 to-transparent z-20 flex flex-col items-center px-2">
+                    <p className="text-[8px] text-primary font-black uppercase tracking-[0.2em]">{network.label}</p>
+                    <p className="text-white text-[10px] md:text-[11px] font-bold text-center leading-tight mt-0.5">{network.name}</p>
+                  </div>
 
-              {/* Play button overlay on hover */}
-              <div className="absolute inset-0 z-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 backdrop-blur-[2px]">
-                <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/50">
-                  <svg className="w-5 h-5 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
+                  {/* Play button overlay on hover */}
+                  <div className="absolute inset-0 z-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 backdrop-blur-[2px]">
+                    <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/50">
+                      <svg className="w-5 h-5 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+              </motion.div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
     </div>
   );
