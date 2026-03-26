@@ -48,13 +48,20 @@ export const useHomeData = (type: "movie" | "tv", history?: Item[], enabled: boo
     }
   }, [enabled, type, i18n.language, history, queryClient]);
 
+  const detailCacheKey = `detail-cache-${type}-${i18n.language}`;
+  const initialDetailData = safeStorage.getParsed<BannerInfo[] | undefined>(detailCacheKey, undefined);
+
   const detailQuery = useQuery<BannerInfo[], Error>(
     [`detail${type.charAt(0).toUpperCase() + type.slice(1)}`, data?.Trending],
-    () =>
-      type === "movie"
-        ? getMovieBannerInfo(data?.Trending as Item[])
-        : getTVBannerInfo(data?.Trending as Item[]),
+    async () => {
+      const result = type === "movie"
+        ? await getMovieBannerInfo(data?.Trending as Item[])
+        : await getTVBannerInfo(data?.Trending as Item[]);
+      safeStorage.set(detailCacheKey, JSON.stringify(result));
+      return result;
+    },
     {
+      initialData: initialDetailData,
       enabled: enabled && !!data?.Trending,
       staleTime: 1000 * 60 * 30, // 30 minutes
     }

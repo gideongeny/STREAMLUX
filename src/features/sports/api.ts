@@ -17,6 +17,17 @@ export const sportsService = {
   getUpcomingMatches: async (): Promise<SportsDataResponse> => {
     try {
       const response = await axios.get(`${API_BASE}/sports/upcoming`);
+      
+      // Strict frontend filtering to remove any stale "upcoming" matches stuck in ESPN cache
+      const STALE_THRESHOLD = Date.now() - (4 * 60 * 60 * 1000); // 4 hours ago
+      
+      if (response.data?.success && Array.isArray(response.data.data)) {
+        response.data.data = response.data.data.filter((match: any) => {
+          if (!match.kickoffTime) return true;
+          return new Date(match.kickoffTime).getTime() > STALE_THRESHOLD;
+        });
+      }
+      
       return response.data;
     } catch (error) {
       console.error('Error fetching upcoming matches:', error);

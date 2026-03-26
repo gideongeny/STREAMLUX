@@ -61,6 +61,18 @@ const CinematicMoments: FC = () => {
         }
     };
 
+    const handleNext = () => {
+        const nextIdx = (currentIndex + 1) % trending.length;
+        handleOpenStory(nextIdx);
+        setProgress(0);
+    };
+
+    const handlePrev = () => {
+        const prevIdx = (currentIndex - 1 + trending.length) % trending.length;
+        handleOpenStory(prevIdx);
+        setProgress(0);
+    };
+
     if (isLoading) return (
         <div className="my-8 flex gap-4 overflow-hidden px-1">
             {[...Array(5)].map((_, i) => (
@@ -80,7 +92,7 @@ const CinematicMoments: FC = () => {
             >
                 {trending.map((item, index) => (
                     <SwiperSlide key={item.id} className="!w-20">
-                        <motion.button
+                         <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleOpenStory(index)}
@@ -113,16 +125,19 @@ const CinematicMoments: FC = () => {
                         exit={{ opacity: 0, scale: 0.9 }}
                         className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/95 backdrop-blur-3xl"
                     >
+                        {/* Background Click to Close */}
+                        <div className="absolute inset-0 cursor-pointer" onClick={() => setActiveStory(null)} />
+                        
                         <button
                             onClick={() => setActiveStory(null)}
-                            className="absolute top-8 right-8 z-50 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition"
+                            className="absolute top-8 right-8 z-50 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition cursor-pointer"
                         >
-                            <FiX size={24} />
+                            <FiX size={24} className="pointer-events-none" />
                         </button>
 
                         <div className="relative w-full max-w-[450px] aspect-[9/16] rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-black">
                             {/* Progress Bars */}
-                            <div className="absolute top-4 left-0 right-0 z-50 px-4 flex gap-1.5">
+                            <div className="absolute top-4 left-0 right-0 z-50 px-4 flex gap-1.5 pointer-events-none">
                                 {trending.map((_, i) => (
                                     <div key={i} className="h-1 flex-grow rounded-full bg-white/20 overflow-hidden">
                                         <motion.div
@@ -135,25 +150,31 @@ const CinematicMoments: FC = () => {
                                 ))}
                             </div>
 
+                            {/* Invisible Touch Overlay for Story Skip Navigation */}
+                            <div className="absolute inset-0 z-10 flex">
+                                 <div className="w-1/3 h-full" onClick={(e) => { e.stopPropagation(); handlePrev(); }} title="Previous Story" />
+                                 <div className="w-2/3 h-full" onClick={(e) => { e.stopPropagation(); handleNext(); }} title="Next Story" />
+                            </div>
+
                             <iframe
-                                src={`https://www.youtube.com/embed/${activeStory.videoId}?autoplay=1&controls=0&rel=0&modestbranding=1&iv_load_policy=3`}
-                                className="w-full h-full scale-[1.05]"
-                                allow="autoplay; encrypted-media"
+                                src={`https://www.youtube.com/embed/${activeStory.videoId}?autoplay=1&controls=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1`}
+                                className="w-[120%] h-[120%] -ml-[10%] -mt-[10%] scale-[1.05]"
+                                allow="autoplay; encrypted-media; playsinline; picture-in-picture"
                             />
 
-                            <div className="absolute top-6 left-6 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full border-2 border-primary overflow-hidden">
+                            <div className="absolute top-8 left-6 flex items-center gap-3 z-20 pointer-events-none">
+                                <div className="w-10 h-10 rounded-full border-2 border-primary overflow-hidden shadow-lg">
                                     <img src={resizeImage(activeStory.poster_path || "", "w92")} className="w-full h-full object-cover" alt="" />
                                 </div>
                                 <div>
-                                    <h3 className="text-white font-black uppercase text-sm tracking-tight">{activeStory.title || activeStory.name}</h3>
-                                    <p className="text-primary text-[10px] font-bold">LIVE ON STREAMLUX</p>
+                                    <h3 className="text-white font-black uppercase text-sm tracking-tight drop-shadow-md">{activeStory.title || activeStory.name}</h3>
+                                    <p className="text-primary text-[10px] font-bold drop-shadow-md">LIVE ON STREAMLUX</p>
                                 </div>
                             </div>
 
-                            <div className="absolute bottom-10 left-0 right-0 px-8">
-                                <button className="w-full py-4 bg-white text-black font-black uppercase tracking-tighter rounded-2xl hover:bg-primary transition shadow-xl"
-                                    onClick={() => window.location.href = `/${activeStory.media_type}/${activeStory.id}`}
+                            <div className="absolute bottom-10 left-0 right-0 px-8 z-20 pointer-events-none">
+                                <button className="w-full py-4 bg-white text-black font-black uppercase tracking-tighter rounded-2xl hover:bg-primary hover:text-white transition-all shadow-xl pointer-events-auto active:scale-95"
+                                    onClick={(e) => { e.stopPropagation(); window.location.href = `/${activeStory.media_type}/${activeStory.id}`; }}
                                 >
                                     Watch Full Feature
                                 </button>
