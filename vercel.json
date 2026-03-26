@@ -1,5 +1,15 @@
 {
   "installCommand": "rm -f package-lock.json && npm install --force --legacy-peer-deps --include=optional",
   "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://streamlux-67a84.web.app/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
