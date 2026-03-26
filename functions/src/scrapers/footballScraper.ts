@@ -60,7 +60,7 @@ export async function scrapeAllSports(): Promise<ScrapedMatch[]> {
                             isLive: true,
                             link: link,
                             league: source.name,
-                            sport: "Football",
+                            sport: "Sports",
                             time: "Live Now"
                         });
                     }

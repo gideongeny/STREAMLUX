@@ -113,13 +113,58 @@ export const gateway = functions
                 const wantLive = rawPath.endsWith('/live');
                 const fixtures: any[] = [];
 
+                /**
+                 * Universal Normalizer to ensure consistency across all providers 
+                 */
+                const normalizeMatch = (m: any) => {
+                    if (!m) return null;
+                    
+                    const home = String(m.homeTeam || "").toLowerCase();
+                    const away = String(m.awayTeam || "").toLowerCase();
+                    const league = String(m.leagueName || m.league || "").toLowerCase();
+                    const currentSport = String(m.sport || "").toLowerCase();
+                    const allText = `${home} ${away} ${league} ${currentSport}`;
+
+                    // 1. Aggressive Sport Detection
+                    let sport = m.sport || "Sports";
+                    const isSoccer = allText.includes('soccer') || allText.includes('football') || allText.includes('premier league') || allText.includes('laliga') || allText.includes('serie a') || allText.includes('bundesliga');
+                    const isRacing = allText.includes('racing') || allText.includes('f1') || allText.includes('formula 1') || allText.includes('motogp') || allText.includes('nascar') || allText.includes('grand prix') || allText.includes('prix');
+                    const isMMA = allText.includes('mma') || allText.includes('ufc') || allText.includes('bellator') || allText.includes('fighting') || allText.includes('knockout');
+                    const isBasketball = allText.includes('basketball') || allText.includes('nba') || allText.includes('euroleague');
+
+                    if (isSoccer) sport = "Soccer";
+                    if (isBasketball) sport = "Basketball";
+                    if (isMMA) sport = "MMA";
+                    if (isRacing) sport = "Racing"; // Racing takes priority for things like "Grand Prix"
+
+                    // 2. Competition Detection (Universal)
+                    const isCompetition = 
+                        m.isCompetition === true || 
+                        sport === 'Racing' || 
+                        sport === 'MMA' || 
+                        allText.includes('golf') || 
+                        allText.includes('tour de france') ||
+                        allText.includes('open championship') ||
+                        (m.homeTeam && !m.awayTeam);
+
+                    // 3. Clean Labels & ID Normalization
+                    const isF1 = allText.includes('f1') || allText.includes('formula 1');
+                    const isMotoGP = allText.includes('motogp');
+                    
+                    return {
+                        ...m,
+                        sport: sport,
+                        isCompetition: isCompetition,
+                        leagueId: isF1 ? 'f1' : (isMotoGP ? 'motogp' : (m.leagueId || 'general')),
+                    };
+                };
+
                 const mapEspnEvent = (event: any, endpoint: string) => {
                     const comp = event?.competitions?.[0];
                     const competitors = comp?.competitors || [];
                     
-                    // Identify sport/category from the endpoint URL
                     const endpointParts = endpoint.split('/');
-                    const sportCat = endpointParts[1] || "sports"; // "soccer", "racing", "mma", etc.
+                    const sportCat = endpointParts[1] || "sports"; 
                     const leagueSub = endpointParts[2] || "league";
 
                     const leagueName = event?.league?.name || event?.season?.name || "Live Sports";
@@ -128,34 +173,19 @@ export const gateway = functions
                         sportCat === 'mma' ||
                         leagueName.toLowerCase().includes('formula 1') || 
                         leagueName.toLowerCase().includes('f1') ||
-                        leagueName.toLowerCase().includes('motogp') ||
-                        leagueName.toLowerCase().includes('nascar') ||
-                        leagueName.toLowerCase().includes('golf') ||
-                        competitors.length < 2;
+                        leagueName.toLowerCase().includes('motogp');
 
                     const home = competitors.find((c: any) => c.homeAway === 'home') || competitors[0];
                     const away = competitors.find((c: any) => c.homeAway === 'away') || competitors[1];
 
-                    // If it's a competition and we only have 1 or 0 "real" teams, we handle it specially
                     if (!home?.team && !event.name) return null;
 
                     const statusName = event?.status?.type?.name || '';
-                    const isLive =
-                        statusName.includes('LIVE') ||
-                        statusName.includes('IN_PROGRESS') ||
-                        statusName.includes('STATUS_IN_PROGRESS');
+                    const isLive = statusName.includes('LIVE') || statusName.includes('IN_PROGRESS');
 
                     const kickoffDate = event?.date ? new Date(event.date) : null;
-                    const now = new Date();
-
-                    // STRICT FILTER: If not live and started > 3 hours ago, it's a stale past match
-                    if (!isLive && kickoffDate && kickoffDate.getTime() < now.getTime() - (3 * 3600000)) {
-                        return null;
-                    }
-
-                    if (wantLive && !isLive) return null;
-
-                    return {
+                    
+                    return normalizeMatch({
                         id: `espn-${event.id}`,
                         leagueId: leagueSub === 'scoreboard' ? sportCat : leagueSub,
                         sport: sportCat.charAt(0).toUpperCase() + sportCat.slice(1),
@@ -172,7 +202,7 @@ export const gateway = functions
                         venue: comp?.venue?.fullName || "Stadium",
                         kickoffTimeFormatted: kickoffDate ? kickoffDate.toISOString() : "",
                         isCompetition: isCompetition
-                    };
+                    });
                 };
 
                 // ESPN scoreboards (free / stable)
@@ -281,19 +311,17 @@ export const gateway = functions
                         const filtered = allEvents.filter((e: any) => {
                             const status = String(e.strStatus || "").toLowerCase();
                             const isLive = status.includes("live");
-                            
-                            // Temporal filter for TSDB
                             const kickoff = e.dateEvent ? new Date(`${e.dateEvent}T${e.strTime || '00:00:00'}`) : null;
                             if (!isLive && kickoff && kickoff.getTime() < now - (3 * 3600000)) return false;
-
                             if (wantLive) return isLive;
                             return !isLive;
                         });
                         
-                        for (const e of filtered.slice(0, 60)) {
-                            fixtures.push({
+                        for (const e of filtered.slice(0, 70)) {
+                            const normalized = normalizeMatch({
                                 id: `tsdb-${e.idEvent}`,
-                                leagueId: "epl",
+                                sport: e.strSport || "Sports",
+                                leagueId: String(e.idLeague || "general"),
                                 leagueName: e.strLeague || "Sports",
                                 homeTeam: e.strHomeTeam || "Home",
                                 awayTeam: e.strAwayTeam || "Away",
@@ -301,77 +329,85 @@ export const gateway = functions
                                 isLive: String(e.strStatus || "").toLowerCase().includes("live"),
                                 kickoffTimeFormatted: e.dateEvent || "",
                                 venue: e.strVenue || "Arena",
-                                homeScore: e.intHomeScore ? Number(e.intHomeScore) : undefined,
-                                awayScore: e.intAwayScore ? Number(e.intAwayScore) : undefined,
+                                homeScore: e.intHomeScore ? Number(e.intHomeScore) : 0,
+                                awayScore: e.intAwayScore ? Number(e.intAwayScore) : 0,
                                 minute: e.strTime || e.strStatus || undefined,
                             });
+                            if (normalized && !fixtures.some(f => f.id === normalized.id)) {
+                                fixtures.push(normalized);
+                            }
                         }
                     }
-                } catch (e) {
-                    // ignore fallback errors
-                }
+                } catch (e) {}
 
-                // Keyed providers (only if configured)
-                if (wantLive && SPORTMONKS_KEY) {
-                    try {
-                        const sm = await axios.get("https://api.sportmonks.com/v3/football/livescores/inplay", {
-                            params: { api_token: SPORTMONKS_KEY, include: "participants;scores;periods;league.country;round" },
-                            timeout: 8000,
-                        });
-                        const rows = sm.data?.data;
-                        if (Array.isArray(rows)) {
-                            for (const row of rows.slice(0, 30)) {
-                                fixtures.push({
-                                    id: `sm-${row.id}`,
-                                    leagueId: "epl",
-                                    leagueName: row.league?.name,
-                                    homeTeam: row.participants?.find((p: any) => p.meta?.location === "home")?.name || "Home",
-                                    awayTeam: row.participants?.find((p: any) => p.meta?.location === "away")?.name || "Away",
-                                    homeTeamLogo: row.participants?.find((p: any) => p.meta?.location === "home")?.image_path,
-                                    awayTeamLogo: row.participants?.find((p: any) => p.meta?.location === "away")?.image_path,
-                                    status: "live",
-                                    isLive: true,
-                                    kickoffTimeFormatted: "Live Now",
-                                    minute: row.periods?.[row.periods.length - 1]?.minutes ? `${row.periods[row.periods.length - 1].minutes}'` : "Live",
+                // Keyed providers
+                if (wantLive) {
+                    // SportMonks
+                    if (SPORTMONKS_KEY) {
+                        try {
+                            const sm = await axios.get("https://api.sportmonks.com/v3/football/livescores/inplay", {
+                                params: { api_token: SPORTMONKS_KEY, include: "participants;scores;periods;league.country;round" },
+                                timeout: 8000,
+                            });
+                            const smData = sm.data?.data;
+                            if (Array.isArray(smData)) {
+                                smData.forEach((match: any) => {
+                                    const normalized = normalizeMatch({
+                                        id: `sm-${match.id}`,
+                                        sport: "Soccer",
+                                        leagueId: match.league?.id || "epl",
+                                        leagueName: match.league?.name || "Football",
+                                        homeTeam: match.participants?.[0]?.name || "Home",
+                                        awayTeam: match.participants?.[1]?.name || "Away",
+                                        homeTeamLogo: match.participants?.[0]?.image_path,
+                                        awayTeamLogo: match.participants?.[1]?.image_path,
+                                        status: "live",
+                                        isLive: true,
+                                        homeScore: match.scores?.find((s: any) => s.description === "CURRENT")?.score?.participants?.[0]?.score || 0,
+                                        awayScore: match.scores?.find((s: any) => s.description === "CURRENT")?.score?.participants?.[1]?.score || 0,
+                                        venue: match.venue?.name || "Stadium",
+                                    });
+                                    if (normalized && !fixtures.some(f => f.id === normalized.id)) fixtures.push(normalized);
                                 });
                             }
-                        }
-                    } catch (e) { }
-                }
+                        } catch (e) {}
+                    }
 
-                if (wantLive && APISPORTS_KEY) {
-                    try {
-                        const as = await axios.get("https://v3.football.api-sports.io/fixtures", {
-                            params: { live: "all" },
-                            headers: { "x-apisports-key": APISPORTS_KEY },
-                            timeout: 8000,
-                        });
-                        const rows = as.data?.response;
-                        if (Array.isArray(rows)) {
-                            for (const row of rows.slice(0, 30)) {
-                                fixtures.push({
-                                    id: `as-${row.fixture?.id}`,
-                                    leagueId: "epl",
-                                    leagueName: row.league?.name,
-                                    homeTeam: row.teams?.home?.name,
-                                    awayTeam: row.teams?.away?.name,
-                                    homeTeamLogo: row.teams?.home?.logo,
-                                    awayTeamLogo: row.teams?.away?.logo,
-                                    status: "live",
-                                    isLive: true,
-                                    kickoffTimeFormatted: "Live Now",
-                                    homeScore: row.goals?.home,
-                                    awayScore: row.goals?.away,
-                                    minute: row.fixture?.status?.elapsed ? `${row.fixture.status.elapsed}'` : "Live",
-                                    venue: row.fixture?.venue?.name,
-                                    source: "APISports"
-                                });
+                    // APISports
+                    if (APISPORTS_KEY) {
+                        try {
+                            const as = await axios.get("https://v3.football.api-sports.io/fixtures", {
+                                params: { live: "all" },
+                                headers: { "x-apisports-key": APISPORTS_KEY },
+                                timeout: 8000,
+                            });
+                            const rows = as.data?.response;
+                            if (Array.isArray(rows)) {
+                                for (const row of rows.slice(0, 30)) {
+                                    const normalized = normalizeMatch({
+                                        id: `as-${row.fixture?.id}`,
+                                        sport: "Soccer",
+                                        leagueId: "epl",
+                                        leagueName: row.league?.name || "Football",
+                                        homeTeam: row.teams?.home?.name,
+                                        awayTeam: row.teams?.away?.name,
+                                        homeTeamLogo: row.teams?.home?.logo,
+                                        awayTeamLogo: row.teams?.away?.logo,
+                                        status: "live",
+                                        isLive: true,
+                                        homeScore: row.goals?.home,
+                                        awayScore: row.goals?.away,
+                                        minute: row.fixture?.status?.elapsed ? `${row.fixture.status.elapsed}'` : "Live",
+                                        venue: row.fixture?.venue?.name,
+                                    });
+                                    if (normalized && !fixtures.some(f => f.id === normalized.id)) fixtures.push(normalized);
+                                }
                             }
-                        }
-                    } catch (e) { }
+                        } catch (e) {}
+                    }
                 }
 
-                // --- MULTI-SOURCE SCRAPING (In Parallel) ---
+                // --- MULTI-SOURCE SCRAPING ---
                 try {
                     const [ssMatches, fsMatches] = await Promise.all([
                         scrapeStreamSports().catch(() => []),
@@ -382,22 +418,24 @@ export const gateway = functions
                     const now = Date.now();
                     const filteredScraped = combinedScraped.filter(m => {
                         const kickoff = (m as any).kickoffTimeFormatted || (m as any).time;
-                        // Filter out old dates (anything more than 6 hours in the past is suspicious for 'upcoming')
                         if (m.status === 'upcoming' && kickoff) {
                             const date = new Date(kickoff);
                             if (!isNaN(date.getTime()) && date.getTime() < now - (6 * 3600000)) return false;
                         }
-                        
-                        if (wantLive) return m.status === 'live' || m.isLive;
-                        return m.status === 'upcoming';
+                        return wantLive ? (m.status === 'live' || m.isLive) : m.status === 'upcoming';
                     });
                         
-                    fixtures.push(...filteredScraped);
+                    filteredScraped.forEach(m => {
+                        const normalized = normalizeMatch(m);
+                        if (normalized && !fixtures.some(f => f.id === normalized.id)) {
+                            fixtures.push(normalized);
+                        }
+                    });
                 } catch (e) {
                     console.error("Scraping orchestration failed:", e);
                 }
 
-                // Deduplicate by teams
+                // Final Deduplication by Team Names
                 const seen = new Set<string>();
                 const unique = fixtures.filter((f) => {
                     const k = `${String(f.homeTeam || "").toLowerCase()}-${String(f.awayTeam || "").toLowerCase()}`;
