@@ -154,8 +154,8 @@ export const getESPNScores = async (date?: string): Promise<SportsFixtureConfig[
           const now = new Date();
           const hoursDiff = eventDate ? (now.getTime() - eventDate.getTime()) / (1000 * 60 * 60) : 0;
 
-          // Include: live, upcoming, or recently finished (within 72 hours)
-          const isTooOld = status === 'STATUS_FINAL' && hoursDiff > 72;
+          // Include ONLY live and upcoming. Filter out finished or old games.
+          const isTooOld = status === 'STATUS_FINAL' || hoursDiff > 4;
           const isCanceled = status === 'STATUS_CANCELED';
           if (isTooOld || isCanceled) return;
 
