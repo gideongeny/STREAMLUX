@@ -46,7 +46,7 @@ const HeroTrailer: FC<HeroTrailerProps> = ({ mediaId, mediaType, isActive, youtu
                 allow="autoplay; encrypted-media; picture-in-picture"
                 referrerPolicy="strict-origin-when-cross-origin"
                 onLoad={() => {
-                    setTimeout(() => setIsLoaded(true), 1000);
+                    setTimeout(() => setIsLoaded(true), 200);
                 }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-dark-lighten via-transparent to-black/30" />

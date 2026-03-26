@@ -14,7 +14,7 @@ import TrendingNow from "../components/Home/TrendingNow";
 import DiverseNavigation from "../components/Common/DiverseNavigation";
 import DiverseContent from "../components/Home/DiverseContent";
 import CategoricalHero from "../components/Home/CategoricalHero";
-import SportsMainContent from "../components/Sports/SportsMainContent";
+import SportsHub from "../features/sports/SportsHub";
 import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
 import ContinueWatching from "../components/Home/ContinueWatching";
 import SmartRecommendations from "../components/Home/SmartRecommendations";
@@ -301,7 +301,7 @@ const Home: FC = () => {
         {/* 🌟 FIXED DESKTOP HEADER (STATIONARY LIKE MOVIEBOX) */}
         <div className="hidden md:flex fixed top-0 left-[260px] right-0 h-20 items-center justify-between px-8 bg-dark/80 backdrop-blur-xl border-b border-gray-darken z-[80] transition-all duration-500">
            <div className="flex items-center gap-10">
-              <div className="flex gap-10 border-b border-gray-darken/30">
+              <div className="flex gap-10 pb-4">
                  <FilmTypeButton buttonType="tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
                  <FilmTypeButton buttonType="movie" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
                  <FilmTypeButton buttonType="sports" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
@@ -323,7 +323,7 @@ const Home: FC = () => {
         </div>
 
         <div
-          className="flex-grow md:pt-28 pt-0 pb-7 border-x md:px-[2vw] px-[4vw] border-gray-darken min-h-screen bg-dark relative z-0 max-w-full overflow-x-hidden md:ml-[260px]"
+          className="flex-grow md:pt-28 pt-0 pb-7 md:px-[2vw] px-[4vw] min-h-screen bg-dark relative z-0 max-w-full overflow-x-hidden md:ml-[260px]"
         >
 
           <CinematicMoments />
@@ -359,7 +359,7 @@ const Home: FC = () => {
           {/* Conditional Sections based on Tab */}
           {currentTab === "sports" ? (
             <div className="mt-6">
-              <SportsMainContent />
+              <SportsHub />
             </div>
           ) : (
             <>

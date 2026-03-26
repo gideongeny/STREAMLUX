@@ -13,6 +13,10 @@ module.exports = {
       fontFamily: {
         roboto: ["Roboto", "ui-sans-serif", "system-ui", "sans-serif"],
       },
+      gridTemplateColumns: {
+        sm: "repeat(auto-fill, minmax(130px, 1fr))",
+        lg: "repeat(auto-fill, minmax(160px, 1fr))",
+      },
     },
   },
   plugins: [],
