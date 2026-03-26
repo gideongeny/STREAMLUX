@@ -126,6 +126,14 @@ export const gateway = functions
                         statusName.includes('IN_PROGRESS') ||
                         statusName.includes('STATUS_IN_PROGRESS');
 
+                    const kickoffDate = event?.date ? new Date(event.date) : null;
+                    const now = new Date();
+
+                    // STRICT FILTER: If not live and started > 3 hours ago, it's a stale past match
+                    if (!isLive && kickoffDate && kickoffDate.getTime() < now.getTime() - (3 * 3600000)) {
+                        return null;
+                    }
+
                     if (wantLive && !isLive) return null;
 
                     return {
@@ -136,13 +144,13 @@ export const gateway = functions
                         awayTeam: away.team.displayName,
                         homeTeamLogo: home.team.logo,
                         awayTeamLogo: away.team.logo,
-                        status: wantLive ? "live" : "upcoming",
-                        isLive: wantLive ? true : isLive,
+                        status: wantLive ? "live" : (isLive ? "live" : "upcoming"),
+                        isLive: isLive,
                         homeScore: home.score ? Number(home.score) : 0,
                         awayScore: away.score ? Number(away.score) : 0,
                         minute: event?.status?.displayClock || event?.status?.type?.shortDetail,
                         venue: comp?.venue?.fullName || "Stadium",
-                        kickoffTimeFormatted: event?.date ? new Date(event.date).toISOString() : "",
+                        kickoffTimeFormatted: kickoffDate ? kickoffDate.toISOString() : "",
                     };
                 };
 
@@ -150,11 +158,23 @@ export const gateway = functions
                 const espnEndpoints = [
                     "/soccer/eng.1/scoreboard",
                     "/soccer/uefa.champions/scoreboard",
+                    "/soccer/uefa.europa/scoreboard",
+                    "/soccer/uefa.euro/scoreboard",
+                    "/soccer/uefa.nations/scoreboard",
+                    "/soccer/fifa.world/scoreboard",
+                    "/soccer/fifa.worldq/scoreboard",
+                    "/soccer/fifa.friendly/scoreboard",
                     "/soccer/esp.1/scoreboard",
                     "/soccer/ger.1/scoreboard",
                     "/soccer/ita.1/scoreboard",
                     "/soccer/fra.1/scoreboard",
+                    "/soccer/usa.1/scoreboard",
+                    "/soccer/mex.1/scoreboard",
+                    "/soccer/bra.1/scoreboard",
+                    "/soccer/arg.1/scoreboard",
+                    "/soccer/scoreboard", // General aggregate
                     "/basketball/nba/scoreboard",
+                    "/basketball/mens-college-basketball/scoreboard",
                     "/football/nfl/scoreboard",
                     "/baseball/mlb/scoreboard",
                     "/hockey/nhl/scoreboard",
@@ -163,7 +183,8 @@ export const gateway = functions
                 ];
 
                 // Fetch for Today AND Tomorrow to guarantee UPCOMING global sports exist even during late-night hours
-                const dateObj = new Date();
+                // We add a 3-hour buffer to 'now' to ensure we roll over to 'Today' slightly earlier, matching night-owl viewing habits
+                const dateObj = new Date(Date.now() + (3 * 3600000)); 
                 const todayStr = dateObj.toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
                 
                 dateObj.setDate(dateObj.getDate() + 1);
@@ -234,9 +255,18 @@ export const gateway = functions
                     }
 
                     if (allEvents.length > 0) {
-                        const filtered = wantLive
-                            ? allEvents.filter((e: any) => String(e.strStatus || "").toLowerCase().includes("live"))
-                            : allEvents;
+                        const now = Date.now();
+                        const filtered = allEvents.filter((e: any) => {
+                            const status = String(e.strStatus || "").toLowerCase();
+                            const isLive = status.includes("live");
+                            
+                            // Temporal filter for TSDB
+                            const kickoff = e.dateEvent ? new Date(`${e.dateEvent}T${e.strTime || '00:00:00'}`) : null;
+                            if (!isLive && kickoff && kickoff.getTime() < now - (3 * 3600000)) return false;
+
+                            if (wantLive) return isLive;
+                            return !isLive;
+                        });
                         
                         for (const e of filtered.slice(0, 60)) {
                             fixtures.push({
@@ -245,8 +275,8 @@ export const gateway = functions
                                 leagueName: e.strLeague || "Sports",
                                 homeTeam: e.strHomeTeam || "Home",
                                 awayTeam: e.strAwayTeam || "Away",
-                                status: wantLive ? "live" : "upcoming",
-                                isLive: wantLive ? true : false,
+                                status: wantLive ? "live" : (String(e.strStatus || "").toLowerCase().includes("live") ? "live" : "upcoming"),
+                                isLive: String(e.strStatus || "").toLowerCase().includes("live"),
                                 kickoffTimeFormatted: e.dateEvent || "",
                                 venue: e.strVenue || "Arena",
                                 homeScore: e.intHomeScore ? Number(e.intHomeScore) : undefined,
