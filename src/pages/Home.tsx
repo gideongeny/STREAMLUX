@@ -14,6 +14,7 @@ import TrendingNow from "../components/Home/TrendingNow";
 import DiverseNavigation from "../components/Common/DiverseNavigation";
 import DiverseContent from "../components/Home/DiverseContent";
 import CategoricalHero from "../components/Home/CategoricalHero";
+import SportsChannelsCarousel from "../components/Sports/SportsChannelsCarousel";
 import SportsHub from "../features/sports/SportsHub";
 import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
 import ContinueWatching from "../components/Home/ContinueWatching";
@@ -325,8 +326,7 @@ const Home: FC = () => {
         <div
           className="flex-grow md:pt-28 pt-0 pb-7 md:px-[2vw] px-[4vw] min-h-screen bg-dark relative z-0 max-w-full overflow-x-hidden md:ml-[260px]"
         >
-
-          <CinematicMoments />
+          {currentTab !== "sports" && <CinematicMoments />}
 
           {/* Main Banner Slider for Movies/TV */}
           {currentTab === "movie" && (
@@ -358,8 +358,11 @@ const Home: FC = () => {
 
           {/* Conditional Sections based on Tab */}
           {currentTab === "sports" ? (
-            <div className="mt-6">
-              <SportsHub />
+            <div className="mt-6 flex flex-col">
+              <SportsChannelsCarousel />
+              <div className="mt-4">
+                <SportsHub />
+              </div>
             </div>
           ) : (
             <>

@@ -49,7 +49,17 @@ const SportsWatchPage: React.FC = () => {
         let sources: SportsChannel[] = [];
         let primaryLink = location.state?.streamUrl;
         
-        if (!primaryLink && currentMatch?.link && !currentMatch.link.includes('espn.com')) {
+        let headerName = 'Live Event';
+        let channelId = '';
+
+        if (matchId && matchId.startsWith('channel-')) {
+             channelId = matchId.replace('channel-', '');
+             const targetChannel = ALL_SPORTS_CHANNELS.find(c => c.name.toLowerCase().includes(channelId.toLowerCase()) || c.url.toLowerCase().includes(channelId.toLowerCase()));
+             if (targetChannel) {
+                  primaryLink = targetChannel.url;
+                  headerName = targetChannel.name;
+             }
+        } else if (!primaryLink && currentMatch?.link && !currentMatch.link.includes('espn.com')) {
             primaryLink = currentMatch.link;
         } else if (matchId && matchId.startsWith('http')) {
             primaryLink = decodeURIComponent(matchId);
@@ -57,18 +67,17 @@ const SportsWatchPage: React.FC = () => {
 
         if (primaryLink) {
             sources.push({ 
-                name: 'Direct Stream', 
+                name: channelId ? headerName : 'Direct Stream', 
                 type: primaryLink.includes('.m3u8') ? 'hls' : 'iframe', 
                 url: primaryLink 
             });
         }
 
         // Add Fallback Channel based on sport/league
-        const leagueContext = currentMatch?.leagueId || currentMatch?.leagueName || 'network';
+        const leagueContext = currentMatch?.leagueId || currentMatch?.leagueName || (channelId ? headerName : 'network');
         const fallback = getFallbackChannel(leagueContext);
         
-        const channelExists = sources.some(s => s.url === fallback.url);
-        if (!channelExists) {
+        if (!sources.some(s => s.url === fallback.url)) {
              sources.push(fallback);
         }
         
@@ -78,18 +87,21 @@ const SportsWatchPage: React.FC = () => {
              sources.push(universalFallback);
         }
 
-        // Add all remaining premium networks for user multiplexing
+        // Add all remaining premium networks for user multiplexing structurally!
+        const fullCatalogue = [...sources];
         ALL_SPORTS_CHANNELS.forEach(channel => {
-            if (!sources.some(s => s.url === channel.url)) {
-                sources.push(channel);
+            if (!fullCatalogue.some(s => s.url === channel.url)) {
+                fullCatalogue.push({ ...channel }); // shallow clone to guarantee fresh ref
             }
         });
 
-        setAvailableSources(sources);
-        if (sources.length > 0 && (!activeSource || !sources.find(s => s.url === activeSource.url))) {
-            setActiveSource(sources[0]);
-        }
+        setAvailableSources(fullCatalogue);
         
+        if (fullCatalogue.length > 0) {
+            if (!activeSource || !fullCatalogue.some(s => s.url === activeSource.url)) {
+                setActiveSource(fullCatalogue[0]);
+            }
+        }
     }, [currentMatch, location.state, matchId]);
 
     // HLS Support effect

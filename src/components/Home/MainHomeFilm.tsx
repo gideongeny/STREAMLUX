@@ -24,7 +24,7 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
   return (
     <>
       <BannerSlider
-        films={data?.Trending}
+        films={data?.Trending?.slice(0, 6)}
         dataDetail={dataDetail}
         isLoadingBanner={isLoadingBanner}
         onActiveImageChange={onActiveImageChange}

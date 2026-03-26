@@ -125,7 +125,7 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         layoutId={`item-${item.id}`}
-        className="shadow-sm bg-dark-darken pb-2 rounded-md overflow-hidden transition-all duration-300 relative group hover:shadow-[0_0_25px_rgba(255,107,53,0.35)] tw-focus-ring will-change-transform"
+        className="shadow-sm bg-dark-darken pb-2 rounded-md overflow-hidden transition-all duration-300 relative group hover:shadow-[0_0_25px_rgba(255,107,53,0.35)] will-change-transform"
       >
         {/* Moving Glossy Highlight - Disabled on native for perf */}
         {!isNative && (
@@ -171,7 +171,7 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
         </AnimatePresence>
 
         {/* Poster — with elegant no-poster fallback */}
-        {(item.poster_path || item.backdrop_path || (item as any).thumb || (item.media_type === "person" && item.profile_path)) && !imgError ? (
+        {(item.poster_path || (item as any).posterPath || item.backdrop_path || (item as any).thumb || (item.media_type === "person" && item.profile_path)) && !imgError ? (
           <LazyLoadImage
             alt={item.title || item.name}
             effect="opacity"
@@ -179,8 +179,8 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
             src={
               item.media_type === "person"
                 ? resizeImage(item.profile_path || "", "w185")
-                : item.poster_path
-                  ? resizeImage(item.poster_path, "w185")
+                : (item.poster_path || (item as any).posterPath)
+                  ? resizeImage(item.poster_path || (item as any).posterPath, "w185")
                   : item.backdrop_path
                     ? resizeImage(item.backdrop_path, "w185")
                     : resizeImage((item as any).thumb || "", "w185")

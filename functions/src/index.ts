@@ -162,36 +162,83 @@ export const gateway = functions
                     "/racing/f1/scoreboard",
                 ];
 
-                const espnResults = await Promise.allSettled(
-                    espnEndpoints.map((endpoint) =>
-                        axios.get(`https://site.api.espn.com/apis/site/v2/sports${endpoint}`, { timeout: 8000 })
-                    )
-                );
+                // Fetch for Today AND Tomorrow to guarantee UPCOMING global sports exist even during late-night hours
+                const dateObj = new Date();
+                const todayStr = dateObj.toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
+                
+                dateObj.setDate(dateObj.getDate() + 1);
+                const tomorrowStr = dateObj.toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
+
+                const espnRequests: Promise<any>[] = [];
+
+                espnEndpoints.forEach((endpoint) => {
+                    // Fetch Today
+                    espnRequests.push(
+                        axios.get(`https://site.api.espn.com/apis/site/v2/sports${endpoint}?dates=${todayStr}`, { timeout: 8000 })
+                    );
+                    // Fetch Tomorrow (Only if we want Upcoming, saves API calls for Live)
+                    if (!wantLive) {
+                        espnRequests.push(
+                            axios.get(`https://site.api.espn.com/apis/site/v2/sports${endpoint}?dates=${tomorrowStr}`, { timeout: 8000 })
+                        );
+                    }
+                });
+
+                const espnResults = await Promise.allSettled(espnRequests);
 
                 for (const r of espnResults) {
                     if (r.status !== "fulfilled") continue;
                     const events = r.value.data?.events;
                     if (!Array.isArray(events)) continue;
-                    for (const e of events.slice(0, 40)) {
+                    
+                    // Allow up to 60 events per endpoint slice to ensure wealthy diversity!
+                    for (const e of events.slice(0, 60)) {
                         const mapped = mapEspnEvent(e);
-                        if (mapped) fixtures.push(mapped);
+                        // Prevent duplicates if multiple queries return the same event
+                        if (mapped && !fixtures.some(f => f.id === mapped.id)) {
+                            fixtures.push(mapped);
+                        }
                     }
                 }
 
                 // TheSportsDB fallback (no key required)
                 try {
-                    const today = new Date().toISOString().split("T")[0].replace(/-/g, "/");
-                    const tsdb = await axios.get("https://www.thesportsdb.com/api/v1/json/3/eventsday.php", {
-                        params: { d: today },
-                        timeout: 8000,
-                    });
+                    const d = new Date();
+                    const todayUrl = d.toISOString().split("T")[0].replace(/-/g, "-"); 
+                    d.setDate(d.getDate() + 1);
+                    const tomorrowUrl = d.toISOString().split("T")[0].replace(/-/g, "-");
 
-                    const events = tsdb.data?.events;
-                    if (Array.isArray(events)) {
+                    const requests = [
+                        axios.get("https://www.thesportsdb.com/api/v1/json/3/eventsday.php", {
+                            params: { d: todayUrl },
+                            timeout: 8000,
+                        })
+                    ];
+                    
+                    if (!wantLive) {
+                        requests.push(
+                            axios.get("https://www.thesportsdb.com/api/v1/json/3/eventsday.php", {
+                                params: { d: tomorrowUrl },
+                                timeout: 8000,
+                            })
+                        );
+                    }
+
+                    const tsdbResults = await Promise.allSettled(requests);
+                    let allEvents: any[] = [];
+                    
+                    for(const r of tsdbResults) {
+                        if (r.status === "fulfilled" && Array.isArray(r.value.data?.events)) {
+                            allEvents.push(...r.value.data.events);
+                        }
+                    }
+
+                    if (allEvents.length > 0) {
                         const filtered = wantLive
-                            ? events.filter((e: any) => String(e.strStatus || "").toLowerCase().includes("live"))
-                            : events;
-                        for (const e of filtered.slice(0, 40)) {
+                            ? allEvents.filter((e: any) => String(e.strStatus || "").toLowerCase().includes("live"))
+                            : allEvents;
+                        
+                        for (const e of filtered.slice(0, 60)) {
                             fixtures.push({
                                 id: `tsdb-${e.idEvent}`,
                                 leagueId: "epl",

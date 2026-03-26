@@ -1,0 +1,6 @@
+{
+	"appId": "com.gideongeny.streamlux",
+	"appName": "streamlux",
+	"webDir": "dist",
+	"bundledWebRuntime": false
+}
