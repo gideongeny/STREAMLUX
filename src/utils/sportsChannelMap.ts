@@ -4,6 +4,37 @@ export interface SportsChannel {
   url: string;
 }
 
+export const ALL_SPORTS_CHANNELS: SportsChannel[] = [
+  { name: 'ESPN', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=ESPN&code=us&user=cdnlivetv&plan=free' },
+  { name: 'ESPN 2', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=ESPN%202&code=us&user=cdnlivetv&plan=free' },
+  { name: 'ESPN 3', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=ESPN%203&code=us&user=cdnlivetv&plan=free' },
+  { name: 'TNT', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=TNT&code=us&user=cdnlivetv&plan=free' },
+  { name: 'ABC', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=ABC&code=us&user=cdnlivetv&plan=free' },
+  { name: 'Fox Sports 1', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=FS1&code=us&user=cdnlivetv&plan=free' },
+  { name: 'Fox Sports 2', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=FS2&code=us&user=cdnlivetv&plan=free' },
+  { name: 'CBS Sports', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=CBS%20Sports%20Network&code=us&user=cdnlivetv&plan=free' },
+  { name: 'NBA TV', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=NBA%20TV&code=us&user=cdnlivetv&plan=free' },
+  { name: 'NFL Network', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=NFL%20Network&code=us&user=cdnlivetv&plan=free' },
+  { name: 'MLB Network', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=MLB%20Network&code=us&user=cdnlivetv&plan=free' },
+  { name: 'NHL Network', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=NHL%20Network&code=us&user=cdnlivetv&plan=free' },
+  { name: 'Sky Sports Premier League', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Premier%20League&code=gb&user=cdnlivetv&plan=free' },
+  { name: 'Sky Sports Main Event', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Main%20Event&code=gb&user=cdnlivetv&plan=free' },
+  { name: 'Sky Sports Football', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Football&code=gb&user=cdnlivetv&plan=free' },
+  { name: 'Sky Sports F1', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20F1&code=gb&user=cdnlivetv&plan=free' },
+  { name: 'Sky Sports Golf', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Golf&code=gb&user=cdnlivetv&plan=free' },
+  { name: 'Sky Sports Cricket', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Cricket&code=gb&user=cdnlivetv&plan=free' },
+  { name: 'Sky Sports Tennis', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Tennis&code=gb&user=cdnlivetv&plan=free' },
+  { name: 'TNT Sports 1 (UK)', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=TNT%20Sports%201&code=gb&user=cdnlivetv&plan=free' },
+  { name: 'TNT Sports 2 (UK)', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=TNT%20Sports%202&code=gb&user=cdnlivetv&plan=free' },
+  { name: 'beIN SPORTS (US)', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=beIN%20SPORTS&code=us&user=cdnlivetv&plan=free' },
+  { name: 'USA Network', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=USA%20Network&code=us&user=cdnlivetv&plan=free' },
+  { name: '123HD - ESPN', type: 'iframe', url: 'https://cdnb.123hdtv.com/server/espn.php?' },
+  { name: '123HD - ESPN 2', type: 'iframe', url: 'https://cdnb.123hdtv.com/server/espn2.php?' },
+  { name: '123HD - TNT', type: 'iframe', url: 'https://cdnb.123hdtv.com/server/tnt.php?' },
+  { name: '123HD - NBA TV', type: 'iframe', url: 'https://cdnb.123hdtv.com/server/nba.php?' },
+  { name: '123HD - FS1', type: 'iframe', url: 'https://cdnb.123hdtv.com/server/fs1.php?' }
+];
+
 export const getFallbackChannel = (leagueId: string): SportsChannel => {
   const normalized = leagueId?.toLowerCase() || '';
 

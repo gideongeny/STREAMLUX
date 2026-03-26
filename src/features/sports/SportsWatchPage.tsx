@@ -5,7 +5,7 @@ import Hls from 'hls.js';
 import { sportsService } from './api';
 import { SportMatch } from './types';
 import SportsSidebar from './SportsSidebar';
-import { getFallbackChannel, SportsChannel } from '../../utils/sportsChannelMap';
+import { getFallbackChannel, SportsChannel, ALL_SPORTS_CHANNELS } from '../../utils/sportsChannelMap';
 
 const SportsWatchPage: React.FC = () => {
     const { matchId } = useParams();
@@ -78,6 +78,13 @@ const SportsWatchPage: React.FC = () => {
              sources.push(universalFallback);
         }
 
+        // Add all remaining premium networks for user multiplexing
+        ALL_SPORTS_CHANNELS.forEach(channel => {
+            if (!sources.some(s => s.url === channel.url)) {
+                sources.push(channel);
+            }
+        });
+
         setAvailableSources(sources);
         if (sources.length > 0 && (!activeSource || !sources.find(s => s.url === activeSource.url))) {
             setActiveSource(sources[0]);
@@ -148,7 +155,7 @@ const SportsWatchPage: React.FC = () => {
                                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                          animate={{ opacity: 1, y: 0, scale: 1 }}
                                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                         className="absolute right-0 top-full mt-3 w-56 bg-[#0F0F0F] border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-50 p-2"
+                                         className="absolute right-0 top-full mt-3 w-56 max-h-[60vh] overflow-y-auto bg-[#0F0F0F] border border-white/10 rounded-2xl shadow-2xl z-50 p-2 custom-scrollbar"
                                      >
                                          {availableSources.map((source, idx) => (
                                              <button
