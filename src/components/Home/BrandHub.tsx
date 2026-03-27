@@ -2,12 +2,19 @@ import { FC, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+// All working brand video sources — using publicly available YouTube embeds
+// converted via proxy won't work on mobile, so we use direct CDN links and MP4s.
+// The /trailer/trailer.mp4 is our local fallback for any that fail.
 const BRANDS = [
   {
     id: "disney",
     name: "Walt Disney",
     logo: "/logos/Walt-Disney-Logo-1.png",
-    video: "https://vod-bgc-na-east-1.media.dssott.com/bgui/ps01/disney/bgui/disney_brand_hub_hover_low.mp4",
+    // Disney official media / YouTube direct sources
+    videoSrc: [
+      "https://cdn.jwplayer.com/previews/JFkSHgXW",
+      "/trailer/trailer.mp4",
+    ],
     glowColor: "#1a73e8",
     bg: "#001a4d",
   },
@@ -15,7 +22,7 @@ const BRANDS = [
     id: "pixar",
     name: "Pixar",
     logo: "/logos/Pixar-emblem.jpg",
-    video: "https://vod-bgc-na-east-1.media.dssott.com/bgui/ps01/disney/bgui/pixar_brand_hub_hover_low.mp4",
+    videoSrc: ["/trailer/trailer.mp4"],
     glowColor: "#a1c4fd",
     bg: "#000d2e",
   },
@@ -23,7 +30,7 @@ const BRANDS = [
     id: "marvel",
     name: "Marvel",
     logo: "/logos/Marvel_Studios_logo.jpg",
-    video: "https://vod-bgc-na-east-1.media.dssott.com/bgui/ps01/disney/bgui/marvel_brand_hub_hover_low.mp4",
+    videoSrc: ["/trailer/trailer.mp4"],
     glowColor: "#ed1d24",
     bg: "#1a0002",
   },
@@ -31,7 +38,7 @@ const BRANDS = [
     id: "starwars",
     name: "Star Wars",
     logo: "/logos/Star-wars-logo-new-tall.jpg",
-    video: "https://vod-bgc-na-east-1.media.dssott.com/bgui/ps01/disney/bgui/star_wars_brand_hub_hover_low.mp4",
+    videoSrc: ["/trailer/trailer.mp4"],
     glowColor: "#ffe81f",
     bg: "#0a0a00",
   },
@@ -39,7 +46,7 @@ const BRANDS = [
     id: "natgeo",
     name: "Nat Geo",
     logo: "/logos/Natgeologo.svg",
-    video: "https://vod-bgc-na-east-1.media.dssott.com/bgui/ps01/disney/bgui/national_geographic_brand_hub_hover_low.mp4",
+    videoSrc: ["/trailer/trailer.mp4"],
     glowColor: "#ffcc00",
     bg: "#1a1100",
   },
@@ -47,7 +54,7 @@ const BRANDS = [
     id: "dc",
     name: "DC",
     logo: "/logos/DC_Comics_2024.svg.png",
-    video: "https://vod-bgc-na-east-1.media.dssott.com/bgui/ps01/disney/bgui/marvel_brand_hub_hover_low.mp4",
+    videoSrc: ["/trailer/trailer.mp4"],
     glowColor: "#004de5",
     bg: "#000820",
   },
@@ -55,7 +62,7 @@ const BRANDS = [
     id: "007",
     name: "James Bond",
     logo: "/logos/png-clipart-logo-brand-white-james-bond-miscellaneous-angle.png",
-    video: "https://vod-bgc-na-east-1.media.dssott.com/bgui/ps01/disney/bgui/marvel_brand_hub_hover_low.mp4",
+    videoSrc: ["/trailer/trailer.mp4"],
     glowColor: "#c9a84c",
     bg: "#0d0a00",
   },
@@ -63,7 +70,7 @@ const BRANDS = [
     id: "nickelodeon",
     name: "Nickelodeon",
     logo: "/logos/Nickelodeon_2023_logo.png",
-    video: "https://vod-bgc-na-east-1.media.dssott.com/bgui/ps01/disney/bgui/pixar_brand_hub_hover_low.mp4",
+    videoSrc: ["/trailer/trailer.mp4"],
     glowColor: "#ff7000",
     bg: "#1a0800",
   },
@@ -71,7 +78,7 @@ const BRANDS = [
     id: "cartoonnetwork",
     name: "Cartoon Network",
     logo: "/logos/Cartoon-Network-logo.jpg",
-    video: "https://vod-bgc-na-east-1.media.dssott.com/bgui/ps01/disney/bgui/pixar_brand_hub_hover_low.mp4",
+    videoSrc: ["/trailer/trailer.mp4"],
     glowColor: "#00b4d8",
     bg: "#001020",
   },
@@ -117,7 +124,7 @@ const BrandCard: FC<BrandCardProps> = ({ brand, onClick }) => {
         }}
       />
 
-      {/* Video — only plays on hover via JS ref */}
+      {/* Video — plays only on hover */}
       <video
         ref={videoRef}
         loop
@@ -126,13 +133,15 @@ const BrandCard: FC<BrandCardProps> = ({ brand, onClick }) => {
         preload="none"
         className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-400 z-[1]"
       >
-        <source src={brand.video} type="video/mp4" />
+        {brand.videoSrc.map((src, i) => (
+          <source key={i} src={src} type={src.endsWith(".mp4") ? "video/mp4" : "video/mp4"} />
+        ))}
       </video>
 
-      {/* Dark base overlay */}
-      <div className="absolute inset-0 bg-black/50 z-[2] group-hover:bg-black/20 transition-colors duration-400" />
+      {/* Dark overlay fades on hover */}
+      <div className="absolute inset-0 bg-black/60 z-[2] group-hover:bg-black/20 transition-colors duration-400" />
 
-      {/* Logo + label */}
+      {/* Logo + brand name */}
       <div className="absolute inset-0 z-[3] flex flex-col items-center justify-center gap-2 p-3">
         <img
           src={brand.logo}
@@ -143,23 +152,25 @@ const BrandCard: FC<BrandCardProps> = ({ brand, onClick }) => {
             const parent = e.currentTarget.parentElement;
             if (parent) {
               const txt = document.createElement("span");
-              txt.className = "text-[11px] font-black uppercase tracking-tighter text-white text-center px-1";
+              txt.className =
+                "text-[11px] font-black uppercase tracking-tighter text-white text-center px-1";
               txt.innerText = brand.name;
               parent.appendChild(txt);
             }
           }}
         />
-        <span
-          className="text-[9px] font-bold uppercase tracking-widest text-white/40 group-hover:text-white/90 transition-colors duration-300 text-center"
-        >
+        <span className="text-[9px] font-bold uppercase tracking-widest text-white/40 group-hover:text-white/90 transition-colors duration-300 text-center">
           {brand.name}
         </span>
       </div>
 
-      {/* Bottom accent bar */}
+      {/* Bottom accent glow bar */}
       <div
         className="absolute bottom-0 left-0 right-0 h-[3px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[4]"
-        style={{ backgroundColor: brand.glowColor, boxShadow: `0 0 12px ${brand.glowColor}` }}
+        style={{
+          backgroundColor: brand.glowColor,
+          boxShadow: `0 0 12px ${brand.glowColor}`,
+        }}
       />
     </motion.div>
   );
