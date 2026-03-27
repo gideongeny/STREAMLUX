@@ -74,14 +74,26 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
 
           {!isActuallyCompetition && (
             <>
-                <div className="flex flex-col items-center gap-1">
-                    <span className="text-xl font-black text-white/20 italic tracking-tighter">VS</span>
-                    {match.isLive && (
-                    <div className="text-xl font-bold text-primary tabular-nums">
-                        {match.homeScore ?? 0}:{match.awayScore ?? 0}
+              <div className="flex flex-col items-center gap-1 min-w-[60px]">
+                {match.isLive ? (
+                  // Live: show score prominently
+                  <>
+                    <div className="text-2xl font-black text-white tabular-nums tracking-tighter leading-none">
+                      {match.homeScore ?? 0}
+                      <span className="text-primary mx-1">–</span>
+                      {match.awayScore ?? 0}
                     </div>
+                    {match.minute && (
+                      <span className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                        {match.minute}'
+                      </span>
                     )}
-                </div>
+                  </>
+                ) : (
+                  // Upcoming: show VS
+                  <span className="text-xl font-black text-white/20 italic tracking-tighter">VS</span>
+                )}
+              </div>
 
                 <div className="flex flex-col items-center gap-3 flex-1">
                     <div className="w-16 h-16 rounded-full bg-white/5 p-2 flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-500">

@@ -44,17 +44,31 @@ const SportsHub: React.FC = () => {
       return ['All', ...Array.from(new Set(all.map(m => m.sport || 'Sports')))];
   }, [liveMatches, upcomingMatches]);
 
-  const filteredLive = liveMatches.filter(m => 
-    (selectedSport === 'All' || m.sport === selectedSport) &&
-    (m.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) || 
-     m.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const TWO_HOURS = 2 * 60 * 60 * 1000;
 
-  const filteredUpcoming = upcomingMatches.filter(m => 
-    (selectedSport === 'All' || m.sport === selectedSport) &&
-    (m.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) || 
-     m.awayTeam.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Filter live matches: hide if kicked off more than 2 hours ago (match should be over)
+  const filteredLive = liveMatches.filter(m => {
+    if (selectedSport !== 'All' && m.sport !== selectedSport) return false;
+    const q = searchQuery.toLowerCase();
+    if (q && !m.homeTeam.toLowerCase().includes(q) && !m.awayTeam.toLowerCase().includes(q)) return false;
+    if (m.kickoffTimeFormatted) {
+      const kickoff = new Date(m.kickoffTimeFormatted).getTime();
+      if (!isNaN(kickoff) && Date.now() - kickoff > TWO_HOURS) return false;
+    }
+    return true;
+  });
+
+  // Filter upcoming: hide anything that already started more than 2 hours ago
+  const filteredUpcoming = upcomingMatches.filter(m => {
+    if (selectedSport !== 'All' && m.sport !== selectedSport) return false;
+    const q = searchQuery.toLowerCase();
+    if (q && !m.homeTeam.toLowerCase().includes(q) && !m.awayTeam.toLowerCase().includes(q)) return false;
+    if (m.kickoffTimeFormatted) {
+      const kickoff = new Date(m.kickoffTimeFormatted).getTime();
+      if (!isNaN(kickoff) && Date.now() - kickoff > TWO_HOURS) return false;
+    }
+    return true;
+  });
 
   if (isLoading) {
     return (
