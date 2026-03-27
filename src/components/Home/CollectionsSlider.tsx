@@ -7,11 +7,31 @@ import { tmdbImageSrc } from "../../shared/utils";
 import { Link } from "react-router-dom";
 
 const COLLECTION_IDS = [
-  86311, // Avengers
-  1241,  // Harry Potter
-  263,   // The Dark Knight
-  10,    // Star Wars
-  645,   // James Bond
+  86311,  // Avengers (MCU)
+  131292, // Iron Man
+  131295, // Thor
+  131296, // Captain America
+  1241,   // Harry Potter
+  263,    // The Dark Knight (Batman Nolan)
+  10,     // Star Wars
+  645,    // James Bond (007)
+  9485,   // Fast & Furious
+  330,    // Jurassic Park
+  556,    // Spider-Man (Raimi)
+  125574, // The Hobbit
+  119,    // Lord of the Rings
+  84,     // Indiana Jones
+  2344,   // The Matrix
+  295130, // Pirates of the Caribbean
+  87359,  // Mission Impossible
+  272,    // Batman (Tim Burton)
+  131635, // The Hunger Games
+  10194,  // Toy Story
+  8354,   // Ice Age
+  748,    // X-Men
+  8650,   // Transformers
+  404609, // John Wick
+  2980,   // Shrek
 ];
 
 const CollectionsSlider: FC = () => {

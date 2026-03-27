@@ -457,42 +457,57 @@ export const getTMDBByBrand = async (
   type: "movie" | "tv" = "movie",
   page: number = 1
 ): Promise<Item[]> => {
-  const brandMap: Record<string, { companies?: string; keywords?: string }> = {
-    disney: { companies: "2" },
-    pixar: { companies: "3" },
-    marvel: { companies: "420" },
-    starwars: { companies: "1" },
-    natgeo: { companies: "7521" },
-    dc: { companies: "12806|27711|9993" },
-    "007": { keywords: "33433|9882" }, // James Bond keyword + collection related
-    nickelodeon: { companies: "4340|11867" },
-    cartoonnetwork: { companies: "5610|24213" },
+  // Accurate TMDB company & keyword IDs per brand
+  const brandMap: Record<string, { companies?: string; keywords?: string; collection?: number; forceType?: "movie" | "tv" }> = {
+    disney:        { companies: "2|3|6125" },                                       // Walt Disney Pictures, Pixar, Disney TV
+    pixar:         { companies: "3" },                                               // Pixar Animation Studios
+    marvel:        { companies: "420|176762" },                                      // Marvel Studios, Marvel Animation
+    starwars:      { companies: "1", keywords: "161176|11531" },                    // Lucasfilm + Star Wars keywords
+    natgeo:        { companies: "7521|58|19614" },                                  // National Geographic
+    dc:            { companies: "12806|27711|9993|128064" },                        // DC Studios, DC Films, WB
+    "007":         { companies: "82", keywords: "12217|33433|9882" },               // EON Productions + James Bond keywords
+    nickelodeon:   { companies: "13|2348|11867|80241", forceType: "tv" },           // Viacom CBS/Nickelodeon companies
+    cartoonnetwork: { companies: "5610|24213|3529|16", forceType: "tv" },          // Cartoon Network + Turner + Adult Swim
   };
 
   const mapping = brandMap[brandId.toLowerCase()];
   if (!mapping) return [];
 
-  // Build params dynamically to avoid sending undefined values which can break TMDB API
-  const params: any = {
-    endpoint: `/discover/${type}`,
+  // Some brands only make sense as TV — override the requested type
+  const resolvedType = mapping.forceType ?? type;
+
+  // Build params dynamically — never send undefined to TMDB
+  const params: Record<string, any> = {
+    endpoint: `/discover/${resolvedType}`,
     sort_by: "popularity.desc",
     page,
     include_adult: false,
   };
 
   if (mapping.companies) params.with_companies = mapping.companies;
-  if (mapping.keywords) params.with_keywords = mapping.keywords;
+  if (mapping.keywords)  params.with_keywords  = mapping.keywords;
+
+  // For 007 — only movies (no point looking for CN movies)
+  if (brandId === "007") params["vote_count.gte"] = 50;
 
   try {
     const response = await axios.get("/tmdb", {
       params,
-      timeout: 10000,
+      timeout: 12000,
     });
 
-    return (response.data.results || []).map((item: any) => ({
+    const results = (response.data?.results || []).map((item: any) => ({
       ...item,
-      media_type: type,
+      media_type: resolvedType,
     }));
+
+    // De-duplicate by id
+    const seen = new Set<number>();
+    return results.filter((item: any) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
   } catch (error) {
     console.error(`Error fetching Brand ${brandId}:`, error);
     return [];

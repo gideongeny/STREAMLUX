@@ -2,13 +2,12 @@ import React, { FC, useState, useEffect, useRef, memo, useTransition } from "rea
 import { motion } from "framer-motion";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { Link } from "react-router-dom";
-import SearchBox from "../components/Common/SearchBox";
+
 import Sidebar from "../components/Common/Sidebar";
 import SEO from "../components/Common/SEO";
 import Footer from "../components/Footer/Footer";
 import MainHomeFilm from "../components/Home/MainHomeFilm";
-import RecommendGenres from "../components/Home/RecommendGenres";
-import TrendingNow from "../components/Home/TrendingNow";
+
 import DiverseNavigation from "../components/Common/DiverseNavigation";
 import DiverseContent from "../components/Home/DiverseContent";
 import CinematicMoments from "../components/Home/CinematicMoments";
@@ -391,17 +390,6 @@ const Home: FC = () => {
                   </div>
                 </>
               )}
-            </>
-          )}
-        </div>
-
-        {/* Right Sidebar */}
-        <div className="shrink-0 max-w-[310px] w-full hidden lg:block px-6 top-0 sticky">
-          <SearchBox />
-          {currentTab !== "sports" && (
-            <>
-              <RecommendGenres currentTab={currentTab} />
-              <TrendingNow />
             </>
           )}
         </div>
