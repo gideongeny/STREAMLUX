@@ -15,6 +15,18 @@ interface SectionSliderProps {
   seeMoreParams?: Record<string, string | number>;
 }
 
+const BRAND_LOGOS: Record<string, string> = {
+  disney: "/logos/Walt-Disney-Logo-1.png",
+  pixar: "/logos/Pixar-emblem.jpg",
+  marvel: "/logos/Marvel_Studios_logo.jpg",
+  starwars: "/logos/Star-wars-logo-new-tall.jpg",
+  natgeo: "/logos/Natgeologo.svg",
+  dc: "/logos/DC_Comics_2024.svg.png",
+  "007": "/logos/png-clipart-logo-brand-white-james-bond-miscellaneous-angle.png",
+  nickelodeon: "/logos/Nickelodeon_2023_logo.png",
+  cartoonnetwork: "/logos/Cartoon-Network-logo.jpg",
+};
+
 const SectionSlider: FC<SectionSliderProps> = ({
   films,
   title,
@@ -48,7 +60,17 @@ const SectionSlider: FC<SectionSliderProps> = ({
       {/* Title section */}
       {title && (
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+          <div className="flex items-center gap-3">
+            {BRAND_LOGOS[title.toLowerCase().replace(/\s/g, '')] ? (
+              <img 
+                src={BRAND_LOGOS[title.toLowerCase().replace(/\s/g, '')]} 
+                alt={title} 
+                className="h-8 md:h-10 object-contain brightness-110 drop-shadow-lg"
+              />
+            ) : (
+              <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+            )}
+          </div>
           {(films && films.length > (limitNumber || 6)) && (
             <button
               onClick={handleSeeMore}

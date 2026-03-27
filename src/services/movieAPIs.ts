@@ -461,26 +461,31 @@ export const getTMDBByBrand = async (
     disney: { companies: "2" },
     pixar: { companies: "3" },
     marvel: { companies: "420" },
-    starwars: { keywords: "204563" },
+    starwars: { companies: "1" },
     natgeo: { companies: "7521" },
     dc: { companies: "12806|27711|9993" },
-    "007": { keywords: "33433" },
-    nickelodeon: { companies: "4340" },
-    cartoonnetwork: { companies: "5610" },
+    "007": { keywords: "33433|9882" }, // James Bond keyword + collection related
+    nickelodeon: { companies: "4340|11867" },
+    cartoonnetwork: { companies: "5610|24213" },
   };
 
   const mapping = brandMap[brandId.toLowerCase()];
   if (!mapping) return [];
 
+  // Build params dynamically to avoid sending undefined values which can break TMDB API
+  const params: any = {
+    endpoint: `/discover/${type}`,
+    sort_by: "popularity.desc",
+    page,
+    include_adult: false,
+  };
+
+  if (mapping.companies) params.with_companies = mapping.companies;
+  if (mapping.keywords) params.with_keywords = mapping.keywords;
+
   try {
     const response = await axios.get("/tmdb", {
-      params: {
-        endpoint: `/discover/${type}`,
-        with_companies: mapping.companies,
-        with_keywords: mapping.keywords,
-        sort_by: "popularity.desc",
-        page,
-      },
+      params,
       timeout: 10000,
     });
 

@@ -1,8 +1,7 @@
-import { FC, useState, useEffect, memo, useTransition, useRef } from "react";
+import { FC, useState, useEffect, memo, useTransition } from "react";
 import React from "react";
 import { motion } from "framer-motion";
 import { GiHamburgerMenu } from "react-icons/gi";
-import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link } from "react-router-dom";
 import SearchBox from "../components/Common/SearchBox";
 import Sidebar from "../components/Common/Sidebar";
@@ -13,13 +12,12 @@ import RecommendGenres from "../components/Home/RecommendGenres";
 import TrendingNow from "../components/Home/TrendingNow";
 import DiverseNavigation from "../components/Common/DiverseNavigation";
 import DiverseContent from "../components/Home/DiverseContent";
-import CategoricalHero from "../components/Home/CategoricalHero";
+import CinematicMoments from "../components/Home/CinematicMoments";
 import SportsChannelsCarousel from "../components/Sports/SportsChannelsCarousel";
 import SportsHub from "../features/sports/SportsHub";
 import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
 import ContinueWatching from "../components/Home/ContinueWatching";
 import SmartRecommendations from "../components/Home/SmartRecommendations";
-import ErrorBoundary from "../components/Common/ErrorBoundary";
 import Top10Slider from "../components/Home/Top10Slider";
 import VerticalShorts from "../components/Home/VerticalShorts";
 import UpcomingCalendar from "../components/Home/UpcomingCalendar";
@@ -27,10 +25,8 @@ import NewReleases from "../components/Home/NewReleases";
 import HeroCarousel from "../components/Home/HeroCarousel";
 import ComingSoonSlider from "../components/Home/ComingSoonSlider";
 import GlobalWorldTV from "../components/Home/GlobalWorldTV";
-import SectionErrorBoundary from "../components/Common/SectionErrorBoundary";
 import SmartAdContainer from "../components/Common/SmartAdContainer";
 import AdBanner from "../components/Ads/AdBanner";
-import CinematicMoments from "../components/Home/CinematicMoments";
 import AmbientGlow from "../components/Common/AmbientGlow";
 import TopSearchBar from "../components/Common/TopSearchBar";
 import BrandHub from "../components/Home/BrandHub";
@@ -94,35 +90,19 @@ const Home: FC = () => {
     }
   }, [activeBrand]);
 
-  // Restore scroll position when user returns to Home
   useScrollPersistence("home");
 
-
-  ///////////////////////////////////////////////////////////////////////////////////
-  // WAY 1: MANUALLY SET UP LOCAL STORAGE
-
-  // const [currentTab, setCurrentTab] = useState(
-  //   localStorage.getItem("currentTab") || "tv"
-  // );
-  // useEffect(() => {
-  //   localStorage.setItem("currentTab", currentTab);
-  // }, [currentTab]);
-
-  ///////////////////////////////////////////////////////////////////////////////////
-  // WAY 2: USE useLocalStorage from @uidotdev/usehooks
-  // Wrap in try-catch to handle invalid JSON in localStorage
   const getInitialTab = () => {
     try {
+      if (typeof window === "undefined") return "tv";
       const stored = localStorage.getItem("currentTab");
       if (stored) {
-        // Try to parse as JSON first
         try {
           const parsed = JSON.parse(stored);
           if (parsed === "movie" || parsed === "tv" || parsed === "sports") {
             return parsed;
           }
         } catch {
-          // If not JSON, check if it's a plain string
           if (stored === "movie" || stored === "tv" || stored === "sports") {
             return stored;
           }
@@ -136,7 +116,6 @@ const Home: FC = () => {
 
   const [currentTab, setCurrentTab] = useState<"movie" | "tv" | "sports">(() => getInitialTab());
 
-  // Sync to localStorage when currentTab changes
   useEffect(() => {
     try {
       localStorage.setItem("currentTab", JSON.stringify(currentTab));
@@ -147,33 +126,30 @@ const Home: FC = () => {
 
   const { watchHistory, clearProgress } = useWatchProgress();
 
-  // Convert WatchProgress back to Item format for the recommendation engine
   const historyItems = watchHistory.map(w => ({
     id: w.mediaId,
     media_type: w.mediaType,
     title: w.title,
     name: w.title,
     poster_path: w.posterPath,
-    backdrop_path: w.posterPath, // Fallback
+    backdrop_path: w.posterPath,
     overview: "",
-    genre_ids: [], // TMDB API will find matching genres by comparing IDs internally
+    genre_ids: [],
     original_language: "en",
     popularity: 0,
     vote_count: 0,
     vote_average: 0
   } as any));
 
-  // Elite Aspect: Context-Aware Mood & Greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return { text: "Good Morning, Enjoy your favorites!", mood: "🌅 Morning Boost", color: "text-blue-400" };
-    if (hour < 18) return { text: "Good Afternoon, Catch up on trending!", mood: "☀️ Daily Hits", color: "text-yellow-400" };
-    if (hour < 22) return { text: "Good Evening, Prime Time viewing!", mood: "🎬 Prime Time", color: "text-red-400" };
-    return { text: "Late Night, Ready for a deep dive?", mood: "🌙 Night Cinephile", color: "text-purple-400" };
+    if (hour < 12) return { text: "Good Morning", mood: "🌅 Morning Boost" };
+    if (hour < 18) return { text: "Good Afternoon", mood: "☀️ Daily Hits" };
+    if (hour < 22) return { text: "Good Evening", mood: "🎬 Prime Time" };
+    return { text: "Late Night", mood: "🌙 Night Cinephile" };
   };
 
   const welcome = getGreeting();
-
   const [isPending, startTransition] = useTransition();
 
   const handleTabChange = (tab: "movie" | "tv" | "sports") => {
@@ -182,10 +158,8 @@ const Home: FC = () => {
     });
   };
 
-  // Swipe gesture navigation (mobile)
   const TABS: Array<"tv" | "movie" | "sports"> = ["tv", "movie", "sports"];
-  const swipeTouchStart = { x: 0, y: 0, time: 0 };
-  const swipeStartRef = React.useRef(swipeTouchStart);
+  const swipeStartRef = useRef({ x: 0, y: 0, time: 0 });
 
   const handleSwipeTouchStart = (e: React.TouchEvent) => {
     swipeStartRef.current = {
@@ -199,20 +173,17 @@ const Home: FC = () => {
     const dx = e.changedTouches[0].clientX - swipeStartRef.current.x;
     const dy = e.changedTouches[0].clientY - swipeStartRef.current.y;
     const dt = Date.now() - swipeStartRef.current.time;
-    // Only a fast, mostly-horizontal swipe of >60px
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 400) {
       const idx = TABS.indexOf(currentTab);
       if (dx < 0) {
-        // Swipe LEFT → next tab
         handleTabChange(TABS[(idx + 1) % TABS.length]);
       } else {
-        // Swipe RIGHT → previous tab
         handleTabChange(TABS[(idx - 1 + TABS.length) % TABS.length]);
       }
     }
   };
 
-   const {
+  const {
     data: dataMovie,
     isLoading: isLoadingMovie,
     isError: isErrorMovie,
@@ -228,63 +199,11 @@ const Home: FC = () => {
     detailQuery: detailQueryTV,
   } = useHomeData("tv", currentTab === "tv" ? historyItems : [], currentTab === "tv");
 
-  if (isErrorMovie) return (
+  if (isErrorMovie || isErrorTV) return (
     <div className="flex items-center justify-center min-h-screen bg-dark text-white">
       <div className="text-center p-8">
-        <h2 className="text-2xl font-bold mb-4">Error Loading Movies</h2>
-        <p className="text-gray-400">{(errorMovie as Error).message}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-6 py-2 bg-primary rounded-lg hover:bg-primary/80"
-        >
-          Reload Page
-        </button>
-      </div>
-    </div>
-  );
-
-  if (detailQueryMovie.isError)
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-dark text-white">
-        <div className="text-center p-8">
-          <h2 className="text-2xl font-bold mb-4">Error Loading Movie Details</h2>
-          <p className="text-gray-400">{detailQueryMovie.error.message}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-6 py-2 bg-primary rounded-lg hover:bg-primary/80"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    );
-
-  if (isErrorTV) return (
-    <div className="flex items-center justify-center min-h-screen bg-dark text-white">
-      <div className="text-center p-8">
-        <h2 className="text-2xl font-bold mb-4">Error Loading TV Shows</h2>
-        <p className="text-gray-400">{(errorTV as Error).message}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-6 py-2 bg-primary rounded-lg hover:bg-primary/80"
-        >
-          Reload Page
-        </button>
-      </div>
-    </div>
-  );
-
-  if (detailQueryTV.isError) return (
-    <div className="flex items-center justify-center min-h-screen bg-dark text-white">
-      <div className="text-center p-8">
-        <h2 className="text-2xl font-bold mb-4">Error Loading TV Details</h2>
-        <p className="text-gray-400">{detailQueryTV.error.message}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-6 py-2 bg-primary rounded-lg hover:bg-primary/80"
-        >
-          Reload Page
-        </button>
+        <h2 className="text-2xl font-bold mb-4">Error Loading Content</h2>
+        <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-primary rounded-lg">Reload</button>
       </div>
     </div>
   );
@@ -293,24 +212,20 @@ const Home: FC = () => {
     <>
       <SEO
         title={currentTab === "movie" ? "Movies" : currentTab === "tv" ? "TV Shows" : "Live Sports"}
-        description={`Explore the best ${currentTab === "movie" ? "movies" : currentTab === "tv" ? "tv shows" : "live sports events"} on StreamLux. World-class streaming experience.`}
+        description="Explore premium content on StreamLux."
       />
       <AmbientGlow imageUrl={activeGlowImage} activeBrand={activeBrand} />
 
-      <div className={`flex md:hidden flex-col fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${isScrolled ? "tw-glass bg-dark/60 shadow-lg backdrop-blur-xl" : "bg-dark"
-        }`}>
+      <div className={`flex md:hidden flex-col fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${isScrolled ? "tw-glass bg-dark/60 shadow-lg backdrop-blur-xl" : "bg-dark"}`}>
         <div className="flex justify-between items-center px-5 py-4">
           <Link to="/" className="flex gap-2 items-center shrink-0">
             <Logo className="w-10 h-10" />
           </Link>
-          {/* MovieBox-style search bar on mobile top bar */}
           <TopSearchBar className="flex-1 mx-3" />
           <button onClick={() => setIsSidebarActive((prev) => !prev)} className="shrink-0 text-white">
             <GiHamburgerMenu size={25} />
           </button>
         </div>
-
-        {/* Mobile-only tab header (now integrated into sticky header) */}
         <div className="px-5 pb-2">
           <div className="inline-flex gap-8 border-b border-gray-darken/30 w-full">
             <FilmTypeButton buttonType="tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
@@ -320,21 +235,12 @@ const Home: FC = () => {
         </div>
       </div>
 
-      {/* Mobile Header Spacer */}
       <div className="h-[120px] md:hidden"></div>
 
-      <div
-        className="flex items-start relative max-w-full overflow-x-hidden"
-        onTouchStart={handleSwipeTouchStart}
-        onTouchEnd={handleSwipeTouchEnd}
-      >
-        <Sidebar
-          onCloseSidebar={() => setIsSidebarActive(false)}
-          isSidebarActive={isSidebarActive}
-        />
+      <div className="flex items-start relative max-w-full overflow-x-hidden" onTouchStart={handleSwipeTouchStart} onTouchEnd={handleSwipeTouchEnd}>
+        <Sidebar onCloseSidebar={() => setIsSidebarActive(false)} isSidebarActive={isSidebarActive} />
 
-        {/* 🌟 FIXED DESKTOP HEADER (STATIONARY LIKE MOVIEBOX) */}
-        <div className="hidden md:flex fixed top-0 left-[260px] right-0 h-20 items-center justify-between px-8 bg-dark/80 backdrop-blur-xl border-b border-gray-darken z-[80] transition-all duration-500">
+        <div className="hidden md:flex fixed top-0 left-[260px] right-0 h-20 items-center justify-between px-8 bg-dark/80 backdrop-blur-xl border-b border-gray-darken z-[80]">
            <div className="flex items-center gap-10">
               <div className="flex gap-10 pb-4">
                  <FilmTypeButton buttonType="tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
@@ -350,28 +256,21 @@ const Home: FC = () => {
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-tight">{welcome.mood}</p>
                     <p className="text-sm font-bold text-white tracking-tight">{currentUser?.displayName || "Guest"}</p>
                  </div>
-                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary/20">
+                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-blue-600 flex items-center justify-center text-white font-bold text-lg">
                     {(currentUser?.displayName?.[0] || "G").toUpperCase()}
                  </div>
               </div>
            </div>
         </div>
 
-        <div
-          className="flex-grow md:pt-28 pt-0 pb-7 md:px-[2vw] px-[4vw] min-h-screen bg-dark relative z-0 max-w-full overflow-x-hidden md:ml-[260px]"
-        >
+        <div className="flex-grow md:pt-28 pt-0 pb-7 md:px-[2vw] px-[4vw] min-h-screen bg-dark relative z-0 max-w-full overflow-x-hidden md:ml-[260px]">
           {activeBrand && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="py-10 flex flex-col items-center border-b border-white/5 mb-8"
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="py-10 flex flex-col items-center border-b border-white/5 mb-8">
               <img 
                 src={BRAND_LOGOS[activeBrand] || `/logos/${activeBrand}.svg`} 
                 alt={activeBrand} 
                 className="h-16 md:h-24 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                 onError={(e) => {
-                  // Fallback to text if SVG not found
                   e.currentTarget.style.display = 'none';
                   const parent = e.currentTarget.parentElement;
                   if (parent) {
@@ -382,8 +281,6 @@ const Home: FC = () => {
                   }
                 }}
               />
-
-              {/* Brand Specific Sections */}
               <div className="w-full mt-12 space-y-12">
                 <LazySection title={`${activeBrand.charAt(0).toUpperCase() + activeBrand.slice(1)} Movies`} placeholderHeight={200}>
                   <SectionSlider films={brandContent.movies} isLoading={isBrandLoading} />
@@ -397,147 +294,79 @@ const Home: FC = () => {
 
           {currentTab !== "sports" && !activeBrand && <CinematicMoments />}
 
-          {/* Brand Discovery Hub */}
-          {!activeBrand && currentTab !== "sports" && <BrandHub />}
-
-          {/* Main Banner Slider for Movies/TV */}
           {currentTab === "movie" && (
-            isLoadingMovie && !dataMovie ? (
-              <HomeSkeleton />
-            ) : (
+            isLoadingMovie && !dataMovie ? <HomeSkeleton /> : (
               <MainHomeFilm
                 data={dataMovie}
                 dataDetail={detailQueryMovie.data}
                 isLoadingBanner={detailQueryMovie.isLoading}
                 isLoadingSection={isLoadingMovie}
                 onActiveImageChange={setActiveGlowImage}
+                brandHub={!activeBrand && <BrandHub className="mb-10 px-0" />}
               />
             )
           )}
           {currentTab === "tv" && (
-            isLoadingTV && !dataTV ? (
-              <HomeSkeleton />
-            ) : (
+            isLoadingTV && !dataTV ? <HomeSkeleton /> : (
               <MainHomeFilm
                 data={dataTV}
                 dataDetail={detailQueryTV.data}
                 isLoadingBanner={detailQueryTV.isLoading}
                 isLoadingSection={isLoadingTV}
                 onActiveImageChange={setActiveGlowImage}
+                brandHub={!activeBrand && <BrandHub className="mb-10 px-0" />}
               />
             )
           )}
 
-          {/* Conditional Sections based on Tab */}
-          {currentTab === "sports" ? (
-            <div className="mt-6 flex flex-col">
-              <SportsChannelsCarousel />
-              <div className="mt-4">
-                <SportsHub />
+          {!activeBrand && (
+            currentTab === "sports" ? (
+              <div className="mt-6 flex flex-col">
+                <SportsChannelsCarousel />
+                <div className="mt-4">
+                  <SportsHub />
+                </div>
               </div>
-            </div>
-          ) : (
-            <>
-              {/* Top 10 Section - Movie/TV Only */}
-              <LazySection title="Top 10 Globally" placeholderHeight={300}>
-                <Top10Slider films={(currentTab === "movie" ? dataMovie?.Trending : dataTV?.Trending) || []} />
-              </LazySection>
-
-              {/* Sports Ticker */}
-              <LazySection title="Live Matches" placeholderHeight={100}>
-                <LiveSportsTicker />
-              </LazySection>
-
-              {/* Epic Collections Integration */}
-              {!activeBrand && <CollectionsSlider />}
-
-              {/* Continue Watching Shelf */}
-              <LazySection title="Pick Up Where You Left Off" placeholderHeight={250}>
-                <ContinueWatching
-                  watchHistory={watchHistory}
-                  onClearProgress={clearProgress}
-                />
-              </LazySection>
-
-              {/* AI-Powered Recommendations - FIXED: NO DUPLICATE CALLS */}
-              <LazySection title="Recommended For You" placeholderHeight={300}>
-                <SmartRecommendations />
-              </LazySection>
-
-              {/* Must-Watch Vertical Shorts */}
-              <LazySection title="Quick Clips" placeholderHeight={300}>
-                <VerticalShorts variant="horizontal" />
-              </LazySection>
-
-              {/* Upcoming Content Calendar */}
-              <LazySection title="Upcoming" placeholderHeight={400}>
-                <UpcomingCalendar contentType={currentTab as any} />
-              </LazySection>
-
-              {/* New Releases & Fast Discovery */}
-              <LazySection title="Just Released" placeholderHeight={300}>
-                <NewReleases />
-              </LazySection>
-
-              {/* Coming Soon — Future release dates only */}
-              <LazySection title="Coming Soon" placeholderHeight={300}>
-                <ComingSoonSlider />
-              </LazySection>
-
-              {/* MovieBox-Style Ad Banner - Promotes App Download */}
-              <AdBanner position="home" />
-
-              {/* Inline Ad - Non-intrusive (only shows after 10 seconds) */}
-              <SmartAdContainer position="inline" minViewTime={10000} />
-
-              {/* Premium Advertising Carousel */}
-              <LazySection title="Exclusives" placeholderHeight={200}>
-                <HeroCarousel />
-              </LazySection>
-
-              {/* World Cinema Ad placement */}
-              <div className="my-10">
-                <AdBanner position="home" />
-              </div>
-
-              {/* Global World TV — Content from 40+ Nations */}
-              <LazySection title="World Cinema" placeholderHeight={300}>
-                <GlobalWorldTV />
-              </LazySection>
-
-              {/* Discover World navigation */}
-              <DiverseNavigation />
-
-                {/* 🌟 NEW GENRE-SPECIFIC SLIDERS FOR VARIETY */}
-                <LazySection title={t("Sci-Fi & Cyberpunk Hits")} placeholderHeight={300}>
-                  <SectionSlider
-                    title={t("Sci-Fi & Cyberpunk Hits")}
-                    films={currentTab === "movie" 
-                      ? (dataMovie?.Trending || []).filter((f: Item) => f.genre_ids?.includes(878) || f.genre_ids?.includes(10765))
-                      : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(10765) || f.genre_ids?.includes(878))}
-                  />
+            ) : (
+              <>
+                <LazySection title="Top 10 Globally" placeholderHeight={300}>
+                  <Top10Slider films={(currentTab === "movie" ? dataMovie?.Trending : dataTV?.Trending) || []} />
                 </LazySection>
-                {(currentTab === "movie" ? dataMovie : dataTV) && Object.entries((currentTab === "movie" ? dataMovie : dataTV) || {})
-                  .filter((section) => section[0] !== "Trending" && section[0] !== "✨ Personalized for You")
-                  .map((section) => (
-                    <SectionSlider
-                      key={section[0]}
-                      title={t(section[0])}
-                      films={section[1] as Item[]}
-                      limitNumber={20}
-                    />
-                  ))}
-                <LazySection title={t("Anime & Animation")} placeholderHeight={300}>
-                  <SectionSlider
-                     title={t("Anime & Animation")}
-                     films={currentTab === "movie"
-                       ? (dataMovie?.Trending || []).filter((f: Item) => f.genre_ids?.includes(16) || f.genre_ids?.includes(3166))
-                       : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(16) || f.genre_ids?.includes(3166))}
-                  />
+                <LazySection title="Live Matches" placeholderHeight={100}>
+                  <LiveSportsTicker />
                 </LazySection>
-
+                <CollectionsSlider />
+                <LazySection title="Pick Up Where You Left Off" placeholderHeight={250}>
+                  <ContinueWatching watchHistory={watchHistory} onClearProgress={clearProgress} />
+                </LazySection>
+                <LazySection title="Recommended For You" placeholderHeight={300}>
+                  <SmartRecommendations />
+                </LazySection>
+                <LazySection title="Quick Clips" placeholderHeight={300}>
+                  <VerticalShorts variant="horizontal" />
+                </LazySection>
+                <LazySection title="Upcoming" placeholderHeight={400}>
+                  <UpcomingCalendar contentType={currentTab as any} />
+                </LazySection>
+                <LazySection title="Just Released" placeholderHeight={300}>
+                  <NewReleases />
+                </LazySection>
+                <LazySection title="Coming Soon" placeholderHeight={300}>
+                  <ComingSoonSlider />
+                </LazySection>
+                <div className="my-10">
+                  <AdBanner position="home" />
+                </div>
+                <LazySection title="World Cinema" placeholderHeight={300}>
+                  <GlobalWorldTV />
+                </LazySection>
+                <DiverseNavigation />
                 <DiverseContent currentTab={currentTab} />
-            </>
+                <div className="my-10">
+                  <AdBanner position="home" />
+                </div>
+              </>
+            )
           )}
 
           <div className="shrink-0 max-w-[310px] w-full hidden lg:block px-6 top-0 sticky ">
@@ -551,7 +380,6 @@ const Home: FC = () => {
           </div>
         </div>
       </div>
-
       <Footer />
     </>
   );
@@ -562,35 +390,17 @@ interface FilmTypeButtonProps {
   currentTab: string;
   buttonType: "movie" | "tv" | "sports";
 }
-const FilmTypeButton: FC<FilmTypeButtonProps> = memo(({
-  onSetCurrentTab,
-  currentTab,
-  buttonType,
-}) => {
+
+const FilmTypeButton: FC<FilmTypeButtonProps> = memo(({ onSetCurrentTab, currentTab, buttonType }) => {
   const { t } = useTranslation();
-  const getButtonText = () => {
-    if (buttonType === "movie") return t("Movies");
-    if (buttonType === "tv") return t("TV Shows");
-    return t("Sports");
-  };
-
   const isActive = currentTab === buttonType;
-
   return (
     <button
-      onClick={() => {
-        onSetCurrentTab(buttonType);
-      }}
-      className={`relative transition duration-300 hover:text-white tw-hit-target ${isActive ? "text-white font-medium" : "text-gray-400"
-        }`}
+      onClick={() => onSetCurrentTab(buttonType)}
+      className={`relative transition duration-300 hover:text-white ${isActive ? "text-white font-medium" : "text-gray-400"}`}
     >
-      {getButtonText()}
-      {isActive && (
-        <motion.span
-          layoutId="tab-underline"
-          className="absolute bottom-0 left-0 right-0 h-[3px] bg-white"
-        />
-      )}
+      {buttonType === "movie" ? t("Movies") : buttonType === "tv" ? t("TV Shows") : t("Sports")}
+      {isActive && <motion.span layoutId="tab-underline" className="absolute bottom-0 left-0 right-0 h-[3px] bg-white" />}
     </button>
   );
 });

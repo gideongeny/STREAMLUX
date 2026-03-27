@@ -11,6 +11,7 @@ interface MainHomeFilmsProps {
   isLoadingBanner: boolean;
   isLoadingSection: boolean;
   onActiveImageChange?: (imageUrl: string) => void;
+  brandHub?: React.ReactNode;
 }
 
 const MainHomeFilms: FC<MainHomeFilmsProps> = ({
@@ -59,6 +60,9 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
                 seeMoreParams = { sort_by: "release_date.desc" };
               }
 
+              const isKenyan = sectionName.includes("kenyan originals");
+              const isAsian = sectionName.includes("asian drama") || sectionName.includes("asian global tv");
+
               return (
                 <li key={index}>
                   <SectionSlider
@@ -66,6 +70,8 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
                     title={t(section[0])}
                     seeMoreParams={seeMoreParams}
                   />
+                  {/* Inject BrandHub after Kenyan Originals and before Asian Drama */}
+                  {isKenyan && brandHub}
                 </li>
               );
             })

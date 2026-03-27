@@ -37,6 +37,7 @@ const Library = lazy(() => import("./pages/Library"));
 const LocalPlayer = lazy(() => import("./pages/LocalPlayer"));
 const WatchlistPage = lazy(() => import("./pages/WatchlistPage"));
 const MatchesDetails = lazy(() => import("./pages/Sports/MatchesDetails"));
+const Collection = lazy(() => import("./pages/Collection"));
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
@@ -523,6 +524,7 @@ function App() {
                   <Route path="library" element={<Library />} />
                   <Route path="watch" element={<LocalPlayer />} />
                   <Route path="watchlist" element={<WatchlistPage />} />
+                  <Route path="collection/:id" element={<Collection />} />
                   <Route
                     path="bookmarked"
                     element={

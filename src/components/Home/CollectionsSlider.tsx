@@ -50,7 +50,7 @@ const CollectionsSlider: FC = () => {
       >
         {collections.map((col) => (
           <SwiperSlide key={col.id}>
-            <Link to={`/explore?collection=${col.id}`}>
+            <Link to={`/collection/${col.id}`}>
               <motion.div
                 whileHover={{ y: -10 }}
                 className="relative aspect-[16/9] rounded-2xl overflow-hidden group border border-white/5 shadow-2xl"
