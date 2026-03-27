@@ -6,11 +6,22 @@ const API_BASE = '/api'; // Assuming the gateway is proxied via vite or relative
 export const sportsService = {
   getLiveMatches: async (): Promise<SportsDataResponse> => {
     try {
+      // Primary Source
       const response = await axios.get(`${API_BASE}/sports/live`);
+      
+      // Secondary Aggregator - If primary fails or returns empty, try the global World Stadium endpoint
+      if (!response.data?.success || !response.data.data?.length) {
+          console.warn('[SportsAPI] Primary live source empty. Fetching from World Stadium aggregator...');
+          const worldResponse = await axios.get(`${API_BASE}/sports/aggregator/live`).catch(() => null);
+          if (worldResponse?.data?.success) return worldResponse.data;
+      }
+      
       return response.data;
     } catch (error) {
       console.error('Error fetching live matches:', error);
-      return { success: false, data: [] };
+      // Last resort fallback to the aggregator
+      const fallback = await axios.get(`${API_BASE}/sports/aggregator/live`).catch(() => null);
+      return fallback?.data || { success: false, data: [] };
     }
   },
 
@@ -18,6 +29,12 @@ export const sportsService = {
     try {
       const response = await axios.get(`${API_BASE}/sports/upcoming`);
       
+      // Aggregation Fallback for upcoming fixtures
+      if (!response.data?.success || !response.data.data?.length) {
+          const worldResponse = await axios.get(`${API_BASE}/sports/aggregator/upcoming`).catch(() => null);
+          if (worldResponse?.data?.success) return worldResponse.data;
+      }
+
       // Strict frontend filtering to remove any stale "upcoming" matches stuck in ESPN cache
       const STALE_THRESHOLD = Date.now() - (4 * 60 * 60 * 1000); // 4 hours ago
       
@@ -26,7 +43,6 @@ export const sportsService = {
           if (!match.kickoffTimeFormatted) return true;
           
           const timeValue = new Date(match.kickoffTimeFormatted).getTime();
-          // If the date string is something like "TBD" or "Live Now", parsing fails (isNaN) - keep it
           if (isNaN(timeValue)) return true;
           
           return timeValue > STALE_THRESHOLD;
@@ -36,7 +52,8 @@ export const sportsService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching upcoming matches:', error);
-      return { success: false, data: [] };
+      const fallback = await axios.get(`${API_BASE}/sports/aggregator/upcoming`).catch(() => null);
+      return fallback?.data || { success: false, data: [] };
     }
   }
 };

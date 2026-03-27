@@ -5,52 +5,24 @@ export interface SportsChannel {
 }
 
 export const ALL_SPORTS_CHANNELS: SportsChannel[] = [
-  { name: 'ESPN', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=ESPN&code=us&user=cdnlivetv&plan=free' },
-  { name: 'ESPN 2', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=ESPN%202&code=us&user=cdnlivetv&plan=free' },
-  { name: 'ESPN 3', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=ESPN%203&code=us&user=cdnlivetv&plan=free' },
-  { name: 'TNT', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=TNT&code=us&user=cdnlivetv&plan=free' },
-  { name: 'ABC', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=ABC&code=us&user=cdnlivetv&plan=free' },
-  { name: 'Fox Sports 1', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=FS1&code=us&user=cdnlivetv&plan=free' },
-  { name: 'Fox Sports 2', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=FS2&code=us&user=cdnlivetv&plan=free' },
-  { name: 'FOX Sports MX', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=FOX%20Sports&code=mx&user=cdnlivetv&plan=free' },
-  { name: 'CBS Sports', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=CBS%20Sports%20Network&code=us&user=cdnlivetv&plan=free' },
-  { name: 'NBA TV', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=NBA%20TV&code=us&user=cdnlivetv&plan=free' },
-  { name: 'NFL Network', type: 'hls', url: 'https://pb-we3ltka9xobj6.akamaized.net/master.m3u8' },
-  { name: 'MLB Network', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=MLB%20Network&code=us&user=cdnlivetv&plan=free' },
-  { name: 'NHL Network', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=NHL%20Network&code=us&user=cdnlivetv&plan=free' },
-  { name: 'Sky Sports Premier League', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Premier%20League&code=gb&user=cdnlivetv&plan=free' },
-  { name: 'Sky Sports Main Event', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Main%20Event&code=gb&user=cdnlivetv&plan=free' },
-  { name: 'Sky Sports Football', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Football&code=gb&user=cdnlivetv&plan=free' },
-  { name: 'Sky Sports F1', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20F1&code=gb&user=cdnlivetv&plan=free' },
-  { name: 'Sky Sports Golf', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Golf&code=gb&user=cdnlivetv&plan=free' },
-  { name: 'Sky Sports Cricket', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Cricket&code=gb&user=cdnlivetv&plan=free' },
-  { name: 'Sky Sports Tennis', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Sky%20Sports%20Tennis&code=gb&user=cdnlivetv&plan=free' },
-  { name: 'TNT Sports 1 (UK)', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=TNT%20Sports%201&code=gb&user=cdnlivetv&plan=free' },
-  { name: 'TNT Sports 2 (UK)', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=TNT%20Sports%202&code=gb&user=cdnlivetv&plan=free' },
-  { name: 'TNT Sports AR', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=TNT%20Sports&code=ar&user=cdnlivetv&plan=free' },
-  { name: 'beIN SPORTS', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=beIN%20SPORTS&code=us&user=cdnlivetv&plan=free' },
-  { name: 'beIN SPORTS 2', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=beIN%20SPORTS%202&code=us&user=cdnlivetv&plan=free' },
-  { name: 'beIN SPORTS 1 (SA)', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=beIN%20SPORTS%201&code=sa&user=cdnlivetv&plan=free' },
-  { name: 'beIN SPORTS MENA 1', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=beIN%20SPORTS%20MENA%201&code=us&user=cdnlivetv&plan=free' },
-  { name: 'DAZN 1 (DE)', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=DAZN%201&code=de&user=cdnlivetv&plan=free' },
-  { name: 'DAZN 1 (ES)', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=DAZN%201&code=es&user=cdnlivetv&plan=free' },
-  { name: 'DAZN 1 (IT)', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=DAZN%201&code=it&user=cdnlivetv&plan=free' },
-  { name: 'DAZN 1 (GB)', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=DAZN%201&code=gb&user=cdnlivetv&plan=free' },
-  { name: 'LaLiga TV', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=LaLiga%20TV&code=gb&user=cdnlivetv&plan=free' },
-  { name: 'Stan Sport 2', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Stan%20Sport%202&code=au&user=cdnlivetv&plan=free' },
-  { name: 'Ziggo Sport 1', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Ziggo%20Sport%201&code=nl&user=cdnlivetv&plan=free' },
-  { name: 'USA Network', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=USA%20Network&code=us&user=cdnlivetv&plan=free' },
-  { name: 'Peacock Event 1', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=Peacock%20Event%201&code=us&user=cdnlivetv&plan=free' },
-  { name: 'GOLF TV', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=GOLF%20TV&code=us&user=cdnlivetv&plan=free' },
-  { name: 'WWE Network', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=WWE&code=us&user=cdnlivetv&plan=free' },
-  { name: 'RugbyPass TV', type: 'hls', url: 'https://dt1kh32hg3tft.cloudfront.net/v1/world_rugby_rugbypasstv_1/samsungheadend_us/latest/main/hls/playlist.m3u8' },
-  { name: 'PGA Tour', type: 'hls', url: 'https://pb-783hpus5r91wv.akamaized.net/playlist.m3u8' },
-  { name: 'Bellator MMA', type: 'hls', url: 'https://jmp2.uk/plu-5ebc8688f3697d00072f7cf8.m3u8' },
-  { name: '123HD - ESPN', type: 'iframe', url: 'https://cdnb.123hdtv.com/server/espn.php?' },
-  { name: '123HD - ESPN 2', type: 'iframe', url: 'https://cdnb.123hdtv.com/server/espn2.php?' },
-  { name: '123HD - TNT', type: 'iframe', url: 'https://cdnb.123hdtv.com/server/tnt.php?' },
-  { name: '123HD - NBA TV', type: 'iframe', url: 'https://cdnb.123hdtv.com/server/nba.php?' },
-  { name: '123HD - FS1', type: 'iframe', url: 'https://cdnb.123hdtv.com/server/fs1.php?' },
+  { name: 'ESPN', type: 'iframe', url: 'https://dlhd.so/embed/stream-41.php' },
+  { name: 'ESPN 2', type: 'iframe', url: 'https://dlhd.so/embed/stream-42.php' },
+  { name: 'TNT (US)', type: 'iframe', url: 'https://dlhd.so/embed/stream-46.php' },
+  { name: 'Fox Sports 1', type: 'iframe', url: 'https://dlhd.so/embed/stream-43.php' },
+  { name: 'Fox Sports 2', type: 'iframe', url: 'https://dlhd.so/embed/stream-44.php' },
+  { name: 'NBA TV', type: 'iframe', url: 'https://dlhd.so/embed/stream-47.php' },
+  { name: 'NFL Network', type: 'iframe', url: 'https://dlhd.so/embed/stream-49.php' },
+  { name: 'MLB Network', type: 'iframe', url: 'https://dlhd.so/embed/stream-51.php' },
+  { name: 'Sky Sports Premier League', type: 'iframe', url: 'https://dlhd.so/embed/stream-1.php' },
+  { name: 'Sky Sports Main Event', type: 'iframe', url: 'https://dlhd.so/embed/stream-2.php' },
+  { name: 'Sky Sports Football', type: 'iframe', url: 'https://dlhd.so/embed/stream-3.php' },
+  { name: 'Sky Sports F1', type: 'iframe', url: 'https://dlhd.so/embed/stream-5.php' },
+  { name: 'TNT Sports 1 (UK)', type: 'iframe', url: 'https://dlhd.so/embed/stream-7.php' },
+  { name: 'TNT Sports 2 (UK)', type: 'iframe', url: 'https://dlhd.so/embed/stream-8.php' },
+  { name: 'beIN SPORTS (US)', type: 'iframe', url: 'https://dlhd.so/embed/stream-54.php' },
+  { name: 'beIN SPORTS 1 (MENA)', type: 'iframe', url: 'https://dlhd.so/embed/stream-11.php' },
+  { name: 'DAZN 1 (UK)', type: 'iframe', url: 'https://dlhd.so/embed/stream-16.php' },
+  { name: 'LaLiga TV', type: 'iframe', url: 'https://dlhd.so/embed/stream-18.php' },
 ];
 
 export const getFallbackChannel = (leagueId: string): SportsChannel => {
@@ -136,46 +108,45 @@ export const getFallbackChannel = (leagueId: string): SportsChannel => {
 };
 
 /**
- * Creates a clean slug for a match (e.g., 'manchester-united-vs-liverpool')
+ * Returns match-specific streaming sources (RiveStream-style 'World Class' Servers)
+ * Now maps matches to the highest probability 24/7 channels based on league/sport
  */
-export const generateMatchSlug = (home: string, away: string): string => {
-  const clean = (s: string) => 
-    s?.toLowerCase()
-     .replace(/[^a-z0-9\s]/g, '')
-     .replace(/\s+/g, '-') || 'team';
+export const getDynamicMatchSources = (match: { homeTeam: string; awayTeam: string; leagueName?: string; sport?: string }): SportsChannel[] => {
+  const league = match.leagueName?.toLowerCase() || '';
+  const sport = match.sport?.toLowerCase() || '';
   
-  if (!away || away.trim() === '') return clean(home);
-  return `${clean(home)}-vs-${clean(away)}`;
-};
+  const sources: SportsChannel[] = [];
 
-/**
- * Returns match-specific streaming sources (RiveStream-style)
- */
-export const getDynamicMatchSources = (match: { homeTeam: string; awayTeam: string; id: string; sport?: string }): SportsChannel[] => {
-  const slug = generateMatchSlug(match.homeTeam, match.awayTeam);
-  const encodedTitle = encodeURIComponent(`${match.homeTeam} vs ${match.awayTeam}`);
-  const matchId = match.id;
-  
-  return [
-    { 
-      name: 'Server 1 (Auto Elite)', 
-      type: 'iframe', 
-      url: `https://vidsrc.me/embed/sports/${slug}` 
-    },
-    { 
-        name: 'Server 2 (Method VIP)', 
-        type: 'iframe', 
-        url: `https://vidsrc.xyz/embed/sports/${slug}` 
-    },
-    { 
-        name: 'Server 3 (Rive Stream)', 
-        type: 'iframe', 
-        url: `https://rivestream.org/embed/sports?title=${encodedTitle}` 
-    },
-    { 
-        name: 'Server 4 (Global)', 
-        type: 'iframe', 
-        url: `https://embed.smashystream.com/playjs_sports.php?id=${matchId}` 
-    }
+  // Match Intelligence: Map common leagues to their primary broadcasting networks
+  if (league.includes('premier league') || league.includes('epl')) {
+    sources.push({ name: 'Server 1 (Sky Sports)', type: 'iframe', url: 'https://dlhd.so/embed/stream-1.php' });
+    sources.push({ name: 'Server 2 (Premier League)', type: 'iframe', url: 'https://dlhd.so/embed/stream-3.php' });
+  } else if (league.includes('champions league') || league.includes('ucl') || league.includes('europa')) {
+    sources.push({ name: 'Server 1 (TNT Sports)', type: 'iframe', url: 'https://dlhd.so/embed/stream-7.php' });
+    sources.push({ name: 'Server 2 (beIN 1)', type: 'iframe', url: 'https://dlhd.so/embed/stream-11.php' });
+  } else if (league.includes('nba') || sport.includes('basketball')) {
+    sources.push({ name: 'Server 1 (NBA TV)', type: 'iframe', url: 'https://dlhd.so/embed/stream-47.php' });
+    sources.push({ name: 'Server 2 (ESPN)', type: 'iframe', url: 'https://dlhd.so/embed/stream-41.php' });
+  } else if (league.includes('nfl') || sport.includes('american football')) {
+    sources.push({ name: 'Server 1 (NFL Net)', type: 'iframe', url: 'https://dlhd.so/embed/stream-49.php' });
+  } else if (sport.includes('ufc') || sport.includes('mma') || sport.includes('boxing')) {
+    sources.push({ name: 'Server 1 (ESPN)', type: 'iframe', url: 'https://dlhd.so/embed/stream-41.php' });
+    sources.push({ name: 'Server 2 (BT Sport)', type: 'iframe', url: 'https://dlhd.so/embed/stream-7.php' });
+  } else if (league.includes('laliga') || league.includes('spain')) {
+    sources.push({ name: 'Server 1 (LaLiga TV)', type: 'iframe', url: 'https://dlhd.so/embed/stream-18.php' });
+  }
+
+  // Universal Fallbacks - The "Best World Streams" that usually cover any global fixture
+  const worldClass: SportsChannel[] = [
+    { name: 'Server 3 (World Sports)', type: 'iframe', url: 'https://dlhd.so/embed/stream-41.php' }, // ESPN
+    { name: 'Server 4 (Global Elite)', type: 'iframe', url: 'https://dlhd.so/embed/stream-1.php' },  // Sky
+    { name: 'Server 5 (International)', type: 'iframe', url: 'https://dlhd.so/embed/stream-54.php' } // beIN
   ];
+
+  // Merge unique sources
+  worldClass.forEach(w => {
+    if (!sources.some(s => s.url === w.url)) sources.push(w);
+  });
+
+  return sources;
 };
