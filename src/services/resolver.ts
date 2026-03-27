@@ -278,27 +278,35 @@ export class ResolverService {
         const tmdbId = id.toString();
 
         sources.push(
+            // T0 - Ultimate Primary (VidKing)
+            {
+                name: "VidKing",
+                url: mediaType === "movie"
+                    ? `https://vidking.net/embed/movie/${tmdbId}`
+                    : `https://vidking.net/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "4K/1080p", speed: "fast", status: "active", type: "embed", priority: 0
+            },
             // T1 - Premier (No/Low Ads, High Success)
             {
                 name: "VidSrc.me",
                 url: mediaType === "movie"
                     ? `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`
                     : `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${season || 1}&episode=${episode || 1}`,
-                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 0
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 1
             },
             {
                 name: "AutoEmbed",
                 url: mediaType === "movie"
                     ? `https://autoembed.cc/movie/tmdb/${tmdbId}`
                     : `https://autoembed.cc/tv/tmdb/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "4K/1080p", speed: "fast", status: "active", type: "embed", priority: 1
+                quality: "4K/1080p", speed: "fast", status: "active", type: "embed", priority: 2
             },
             {
                 name: "VidLink",
                 url: mediaType === "movie"
                     ? `https://vidlink.pro/embed/movie/${tmdbId}`
                     : `https://vidlink.pro/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "1080p+", speed: "fast", status: "active", type: "embed", priority: 2
+                quality: "1080p+", speed: "fast", status: "active", type: "embed", priority: 3
             },
             {
                 name: "SmashyStream",

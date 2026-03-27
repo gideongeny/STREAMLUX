@@ -611,8 +611,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     }, []);
 
     const getAutoplayUrl = (url: string) => {
-        const isAutoplayEnabled = getSetting('autoplay_enabled', true);
-        if (!isAutoplayEnabled) return url;
+        // Elite Experience: Always enable autoplay for embedded sources
         if (url.includes('?')) return `${url}&autoplay=1`;
         return `${url}?autoplay=1`;
     };
