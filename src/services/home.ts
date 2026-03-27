@@ -310,11 +310,16 @@ export const getMovieBannerInfo = async (
   );
 
   // we have translations.length = genres.length, so let's merge these 2 arrays together
-  return genres.map((genre, index) => ({
-    genre,
-    translation: translations[index],
-    trailer: videoRes[index]?.data?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key || (movies[index].isYouTube ? movies[index].youtubeId : undefined),
-  })) as BannerInfo[];
+  return genres.map((genre, index) => {
+    const movie = movies?.[index];
+    if (!movie) return null;
+
+    return {
+        genre,
+        translation: translations?.[index] || [],
+        trailer: videoRes?.[index]?.data?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key || (movie.isYouTube ? movie.youtubeId : undefined),
+    };
+  }).filter(Boolean) as BannerInfo[];
 
   // yeah I admit that it's hard to understand my code :)
 };

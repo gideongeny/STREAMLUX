@@ -10,12 +10,17 @@ interface MatchCardProps {
 const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
   const navigate = useNavigate();
 
+  const isActuallyCompetition = match.isCompetition || 
+    match.sport?.toLowerCase() === 'racing' || 
+    match.leagueName?.toLowerCase().includes('grand prix') ||
+    match.leagueName?.toLowerCase().includes('prix') ||
+    match.homeTeam.toLowerCase().includes('grand prix') ||
+    match.homeTeam.toLowerCase().includes('prix');
+
   const handleClick = () => {
     // Navigate to the player page
-    // Using dummy leagueId if not available to match existing route pattern
     const leagueId = match.leagueId || 'general';
     const matchId = match.id;
-    console.log(`Navigating to match ${matchId} with link: ${match.link}`);
     navigate(`/sports/${leagueId}/${matchId}/watch`, { state: { streamUrl: match.link } });
   };
 
@@ -55,7 +60,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
 
         {/* Teams & Logos */}
         <div className="flex items-center justify-between gap-4 mb-4">
-          <div className={`flex flex-col items-center gap-3 flex-1 ${match.isCompetition ? 'w-full' : ''}`}>
+          <div className={`flex flex-col items-center gap-3 flex-1 ${isActuallyCompetition ? 'w-full' : ''}`}>
             <div className="w-16 h-16 rounded-full bg-white/5 p-2 flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-500">
               <img 
                 src={match.homeTeamLogo || '/placeholder.svg'} 
@@ -64,10 +69,10 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
                 onError={(e) => (e.currentTarget.src = '/placeholder.svg')}
               />
             </div>
-            <span className={`text-sm font-bold text-white text-center line-clamp-1 ${match.isCompetition ? 'text-lg' : ''}`}>{match.homeTeam}</span>
+            <span className={`text-sm font-bold text-white text-center line-clamp-1 ${isActuallyCompetition ? 'text-lg' : ''}`}>{match.homeTeam}</span>
           </div>
 
-          {!match.isCompetition && (
+          {!isActuallyCompetition && (
             <>
                 <div className="flex flex-col items-center gap-1">
                     <span className="text-xl font-black text-white/20 italic tracking-tighter">VS</span>
@@ -92,7 +97,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
             </>
           )}
           
-          {match.isCompetition && match.awayTeam && (
+          {isActuallyCompetition && match.awayTeam && (
               <div className="flex flex-col items-center justify-center flex-1">
                   <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">Location</span>
                   <span className="text-xs font-bold text-gray-400 text-center line-clamp-2">{match.awayTeam}</span>

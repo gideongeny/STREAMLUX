@@ -153,7 +153,11 @@ const LiveSportsTicker: FC = () => {
 
               {/* Score or VS */}
               <div className="flex items-center gap-2">
-                {fixture.status === "live" && fixture.homeScore !== undefined && fixture.awayScore !== undefined ? (
+                {fixture.isCompetition ? (
+                  <span className="text-primary text-[10px] font-black uppercase tracking-widest border border-primary/30 px-2 py-0.5 rounded bg-primary/10">
+                    Competition
+                  </span>
+                ) : fixture.status === "live" && fixture.homeScore !== undefined && fixture.awayScore !== undefined ? (
                   <>
                     <span className="text-white font-bold text-lg">
                       {fixture.homeScore}

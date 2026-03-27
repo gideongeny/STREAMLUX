@@ -128,14 +128,14 @@ export const gateway = functions
                     // 1. Aggressive Sport Detection
                     let sport = m.sport || "Sports";
                     const isSoccer = allText.includes('soccer') || allText.includes('football') || allText.includes('premier league') || allText.includes('laliga') || allText.includes('serie a') || allText.includes('bundesliga');
-                    const isRacing = allText.includes('racing') || allText.includes('f1') || allText.includes('formula 1') || allText.includes('motogp') || allText.includes('nascar') || allText.includes('grand prix') || allText.includes('prix');
-                    const isMMA = allText.includes('mma') || allText.includes('ufc') || allText.includes('bellator') || allText.includes('fighting') || allText.includes('knockout');
-                    const isBasketball = allText.includes('basketball') || allText.includes('nba') || allText.includes('euroleague');
+                    const isRacing = allText.includes('racing') || allText.includes('f1') || allText.includes('formula 1') || allText.includes('motogp') || allText.includes('nascar') || allText.includes('grand prix') || allText.includes('prix') || allText.includes('paddock') || allText.includes('circuit') || allText.includes('grand-prix') || allText.includes('qualifying') || allText.includes('practice');
+                    const isMMA = allText.includes('mma') || allText.includes('ufc') || allText.includes('bellator') || allText.includes('fighting') || allText.includes('knockout') || allText.includes('pFL');
+                    const isBasketball = allText.includes('basketball') || allText.includes('nba') || allText.includes('euroleague') || allText.includes('wnba');
 
                     if (isSoccer) sport = "Soccer";
                     if (isBasketball) sport = "Basketball";
                     if (isMMA) sport = "MMA";
-                    if (isRacing) sport = "Racing"; // Racing takes priority for things like "Grand Prix"
+                    if (isRacing) sport = "Racing";
 
                     // 2. Competition Detection (Universal)
                     const isCompetition = 
@@ -145,16 +145,20 @@ export const gateway = functions
                         allText.includes('golf') || 
                         allText.includes('tour de france') ||
                         allText.includes('open championship') ||
-                        (m.homeTeam && !m.awayTeam);
+                        allText.includes('masters') ||
+                        allText.includes('wimbledon') ||
+                        (m.homeTeam && !m.awayTeam) ||
+                        (m.homeTeam && m.homeTeam.toLowerCase().includes('grand prix')) ||
+                        (m.homeTeam && m.homeTeam.toLowerCase().includes('prix'));
 
                     // 3. Clean Labels & ID Normalization
-                    const isF1 = allText.includes('f1') || allText.includes('formula 1');
-                    const isMotoGP = allText.includes('motogp');
+                    const isF1 = allText.includes('f1') || allText.includes('formula 1') || league.includes('formula 1') || league.includes('f1');
+                    const isMotoGP = allText.includes('motogp') || league.includes('motogp');
                     
                     return {
                         ...m,
                         sport: sport,
-                        isCompetition: isCompetition,
+                        isCompetition: !!isCompetition,
                         leagueId: isF1 ? 'f1' : (isMotoGP ? 'motogp' : (m.leagueId || 'general')),
                     };
                 };

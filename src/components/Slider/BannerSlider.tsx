@@ -35,10 +35,12 @@ const BannerSlider: FC<BannerSliderProps> = ({
     if (!films || films.length === 0) return;
     
     // Preload next 2 slides for instant switching
-    const nextIndices = [(activeIndex + 1) % films.length, (activeIndex + 2) % films.length];
+    const nextIndices = films.length > 0 ? [(activeIndex + 1) % films.length, (activeIndex + 2) % films.length] : [];
     nextIndices.forEach(idx => {
-      const img = new Image();
-      img.src = resizeImage(films[idx].backdrop_path, "w1280");
+      if (films[idx]?.backdrop_path) {
+        const img = new Image();
+        img.src = resizeImage(films[idx].backdrop_path, "w1280");
+      }
     });
   }, [activeIndex, films]);
 

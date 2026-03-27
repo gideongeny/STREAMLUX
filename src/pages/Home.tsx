@@ -442,7 +442,16 @@ const Home: FC = () => {
                       : (dataTV?.Trending || []).filter((f: Item) => f.genre_ids?.includes(10765) || f.genre_ids?.includes(878))}
                   />
                 </LazySection>
-
+                {(currentTab === "movie" ? dataMovie : dataTV) && Object.entries((currentTab === "movie" ? dataMovie : dataTV) || {})
+                  .filter((section) => section[0] !== "Trending" && section[0] !== "✨ Personalized for You")
+                  .map((section) => (
+                    <SectionSlider
+                      key={section[0]}
+                      title={t(section[0])}
+                      films={section[1] as Item[]}
+                      limitNumber={20}
+                    />
+                  ))}
                 <LazySection title={t("Anime & Animation")} placeholderHeight={300}>
                   <SectionSlider
                      title={t("Anime & Animation")}
