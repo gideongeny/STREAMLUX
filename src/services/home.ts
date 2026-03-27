@@ -556,12 +556,14 @@ export const getHomeTVs = async (history?: Item[]): Promise<HomeFilms> => {
 };
 
 export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
+  if (!tvs || tvs.length === 0) return [];
+
   const detailRes = await Promise.all(
-    tvs.map((tv) => axios.get(`/tv/${tv.id}`).catch(() => null))
+    tvs.map((tv) => tv?.id ? axios.get(`/tv/${tv.id}`).catch(() => null) : Promise.resolve(null))
   );
 
   const translationRes = await Promise.all(
-    tvs.map((tv) => axios.get(`/tv/${tv.id}/translations`).catch(() => null))
+    tvs.map((tv) => tv?.id ? axios.get(`/tv/${tv.id}/translations`).catch(() => null) : Promise.resolve(null))
   );
 
   const translations = translationRes.map((item: any) =>
@@ -585,14 +587,19 @@ export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
   );
 
   const videoRes = await Promise.all(
-    tvs.map((tv) => axios.get(`/tv/${tv.id}/videos`).catch(() => null))
+    tvs.map((tv) => tv?.id ? axios.get(`/tv/${tv.id}/videos`).catch(() => null) : Promise.resolve(null))
   );
 
-  return genres.map((genre, index) => ({
-    genre,
-    translation: translations[index],
-    trailer: videoRes[index]?.data?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key || (tvs[index].isYouTube ? tvs[index].youtubeId : undefined),
-  })) as BannerInfo[];
+  return genres.map((genre, index) => {
+    const tv = tvs?.[index];
+    if (!tv) return null;
+
+    return {
+        genre,
+        translation: translations?.[index] || [],
+        trailer: videoRes?.[index]?.data?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key || (tv.isYouTube ? tv.youtubeId : undefined),
+    };
+  }).filter(Boolean) as BannerInfo[];
 };
 
 // GENERAL

@@ -18,8 +18,8 @@ const CinematicMoments: FC = () => {
         const fetchTrending = async () => {
             try {
                 const res = await axios.get("/trending/all/day");
-                const results = (res.data.results as Item[]).filter(i =>
-                    i.poster_path || i.backdrop_path || i.profile_path
+                const results = (Array.isArray(res.data?.results) ? res.data.results : []).filter((i: any) =>
+                    i && (i.poster_path || i.backdrop_path || i.profile_path)
                 );
                 setTrending(results.slice(0, 10));
             } catch (err) {
@@ -33,7 +33,7 @@ const CinematicMoments: FC = () => {
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
-        if (activeStory) {
+        if (activeStory && trending.length > 0) {
             setProgress(0);
             interval = setInterval(() => {
                 setProgress((prev) => {
@@ -51,10 +51,12 @@ const CinematicMoments: FC = () => {
 
     const handleOpenStory = async (index: number) => {
         const item = trending[index];
+        if (!item) return;
+        
         setCurrentIndex(index);
         try {
             const res = await axios.get(`/${item.media_type}/${item.id}/videos`);
-            const trailer = res.data.results.find((v: any) => v.type === "Trailer" && v.site === "YouTube");
+            const trailer = res.data?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube");
             setActiveStory({ ...item, videoId: trailer?.key || "dQw4w9WgXcQ" });
         } catch (err) {
             setActiveStory({ ...item, videoId: "dQw4w9WgXcQ" });
