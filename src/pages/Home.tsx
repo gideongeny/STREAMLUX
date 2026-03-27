@@ -1,5 +1,4 @@
-import { FC, useState, useEffect, memo, useTransition } from "react";
-import React from "react";
+import React, { FC, useState, useEffect, memo, useTransition, useRef } from "react";
 import { motion } from "framer-motion";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { Link } from "react-router-dom";
@@ -189,7 +188,7 @@ const Home: FC = () => {
     isError: isErrorMovie,
     error: errorMovie,
     detailQuery: detailQueryMovie,
-  } = useHomeData("movie", currentTab === "movie" ? historyItems : [], currentTab === "movie");
+  } = useHomeData("movie", currentTab === "movie" ? watchHistory.map((w: any) => ({ id: w.mediaId } as any)) : [], currentTab === "movie");
   
   const {
     data: dataTV,
@@ -197,7 +196,7 @@ const Home: FC = () => {
     isError: isErrorTV,
     error: errorTV,
     detailQuery: detailQueryTV,
-  } = useHomeData("tv", currentTab === "tv" ? historyItems : [], currentTab === "tv");
+  } = useHomeData("tv", currentTab === "tv" ? watchHistory.map((w: any) => ({ id: w.mediaId } as any)) : [], currentTab === "tv");
 
   if (isErrorMovie || isErrorTV) return (
     <div className="flex items-center justify-center min-h-screen bg-dark text-white">
