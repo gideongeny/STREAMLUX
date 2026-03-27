@@ -284,6 +284,7 @@ export const getMovieBannerInfo = async (
   const translations: string[][] = translationRes.map((item: any) =>
     item?.data?.translations
       ?.filter((translation: any) =>
+        translation?.iso_639_1 &&
         ["en", "sw", "fr", "es", "pt", "de", "it", "ru", "ja", "ko", "zh", "ar", "hi"].includes(translation.iso_639_1)
       )
       .reduce((acc: any, element: any) => {
@@ -294,7 +295,8 @@ export const getMovieBannerInfo = async (
         }
         return [...acc, element];
       }, [] as any)
-      .map((translation: any) => translation.data.title) || []
+      .map((translation: any) => translation?.data?.title || translation?.data?.name || '')
+      .filter(Boolean) || []
   );
 
   // translations will look like: [["Doctor Strange", "Daktari Strange", "Doctor Strange", "Dr. Strange"],["Spider Man Far From Home", "Spider Man Mbali na Nyumbani", "Spider-Man Lejos de Casa"],...]
@@ -569,6 +571,7 @@ export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
   const translations = translationRes.map((item: any) =>
     item?.data?.translations
       ?.filter((translation: any) =>
+        translation?.iso_639_1 &&
         ["en", "sw", "fr", "es", "pt", "de", "it", "ru", "ja", "ko", "zh", "ar", "hi"].includes(translation.iso_639_1)
       )
       .reduce((acc: any, element: any) => {
@@ -579,7 +582,8 @@ export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
         }
         return [...acc, element];
       }, [] as any)
-      .map((translation: any) => translation.data.name) || []
+      .map((translation: any) => translation?.data?.name || translation?.data?.title || '')
+      .filter(Boolean) || []
   );
 
   const genres = detailRes.map((item: any) =>
