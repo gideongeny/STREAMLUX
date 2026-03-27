@@ -134,3 +134,48 @@ export const getFallbackChannel = (leagueId: string): SportsChannel => {
   // Default fallback
   return { name: 'ESPN', type: 'iframe', url: 'https://cdn-live.tv/api/v1/channels/player/?name=ESPN&code=us&user=cdnlivetv&plan=free' };
 };
+
+/**
+ * Creates a clean slug for a match (e.g., 'manchester-united-vs-liverpool')
+ */
+export const generateMatchSlug = (home: string, away: string): string => {
+  const clean = (s: string) => 
+    s?.toLowerCase()
+     .replace(/[^a-z0-9\s]/g, '')
+     .replace(/\s+/g, '-') || 'team';
+  
+  if (!away || away.trim() === '') return clean(home);
+  return `${clean(home)}-vs-${clean(away)}`;
+};
+
+/**
+ * Returns match-specific streaming sources (RiveStream-style)
+ */
+export const getDynamicMatchSources = (match: { homeTeam: string; awayTeam: string; id: string; sport?: string }): SportsChannel[] => {
+  const slug = generateMatchSlug(match.homeTeam, match.awayTeam);
+  const encodedTitle = encodeURIComponent(`${match.homeTeam} vs ${match.awayTeam}`);
+  const matchId = match.id;
+  
+  return [
+    { 
+      name: 'Server 1 (Auto Elite)', 
+      type: 'iframe', 
+      url: `https://vidsrc.me/embed/sports/${slug}` 
+    },
+    { 
+        name: 'Server 2 (Method VIP)', 
+        type: 'iframe', 
+        url: `https://vidsrc.xyz/embed/sports/${slug}` 
+    },
+    { 
+        name: 'Server 3 (Rive Stream)', 
+        type: 'iframe', 
+        url: `https://rivestream.org/embed/sports?title=${encodedTitle}` 
+    },
+    { 
+        name: 'Server 4 (Global)', 
+        type: 'iframe', 
+        url: `https://embed.smashystream.com/playjs_sports.php?id=${matchId}` 
+    }
+  ];
+};

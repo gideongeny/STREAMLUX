@@ -5,7 +5,7 @@ import Hls from 'hls.js';
 import { sportsService } from './api';
 import { SportMatch } from './types';
 import SportsSidebar from './SportsSidebar';
-import { getFallbackChannel, SportsChannel, ALL_SPORTS_CHANNELS } from '../../utils/sportsChannelMap';
+import { getFallbackChannel, SportsChannel, ALL_SPORTS_CHANNELS, getDynamicMatchSources } from '../../utils/sportsChannelMap';
 
 const SportsWatchPage: React.FC = () => {
     const { matchId } = useParams();
@@ -44,13 +44,19 @@ const SportsWatchPage: React.FC = () => {
         fetchSidebarData();
     }, [matchId]);
 
-    // Handle Source Resolution
+    // NEW: Handle Source Resolution with RiveStream-style Matching
     useEffect(() => {
         let sources: SportsChannel[] = [];
         let primaryLink = location.state?.streamUrl;
         
         let headerName = 'Live Event';
         let channelId = '';
+
+        // Prioritize dynamic servers first (RiveStream Experience)
+        if (currentMatch) {
+            const dynamicSources = getDynamicMatchSources(currentMatch);
+            sources.push(...dynamicSources);
+        }
 
         if (matchId && matchId.startsWith('channel-')) {
              channelId = matchId.replace('channel-', '');
@@ -66,11 +72,19 @@ const SportsWatchPage: React.FC = () => {
         }
 
         if (primaryLink) {
-            sources.push({ 
-                name: channelId ? headerName : 'Direct Stream', 
-                type: primaryLink.includes('.m3u8') ? 'hls' : 'iframe', 
-                url: primaryLink 
-            });
+             const existingPrimary = sources.findIndex(s => s.url === primaryLink);
+             if (existingPrimary !== -1) {
+                  // If it's already there (rare), move it to very top
+                  const [item] = sources.splice(existingPrimary, 1);
+                  sources.unshift(item);
+             } else {
+                  // Direct link from API is usually the "Source 1" or "Original"
+                  sources.unshift({ 
+                    name: channelId ? headerName : 'Direct Multi-Link', 
+                    type: primaryLink.includes('.m3u8') ? 'hls' : 'iframe', 
+                    url: primaryLink 
+                  });
+             }
         }
 
         // Add Fallback Channel based on sport/league
@@ -87,11 +101,11 @@ const SportsWatchPage: React.FC = () => {
              sources.push(universalFallback);
         }
 
-        // Add all remaining premium networks for user multiplexing structurally!
+        // Keep catalogue manageable - only add unique channels from the main list
         const fullCatalogue = [...sources];
         ALL_SPORTS_CHANNELS.forEach(channel => {
             if (!fullCatalogue.some(s => s.url === channel.url)) {
-                fullCatalogue.push({ ...channel }); // shallow clone to guarantee fresh ref
+                fullCatalogue.push({ ...channel });
             }
         });
 
