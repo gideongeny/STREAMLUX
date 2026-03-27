@@ -10,11 +10,7 @@ const BRANDS = [
     id: "disney",
     name: "Walt Disney",
     logo: "/logos/Walt-Disney-Logo-1.png",
-    // Disney official media / YouTube direct sources
-    videoSrc: [
-      "https://cdn.jwplayer.com/previews/JFkSHgXW",
-      "/trailer/trailer.mp4",
-    ],
+    video: "/videos/disney.mp4",
     glowColor: "#1a73e8",
     bg: "#001a4d",
   },
@@ -22,7 +18,7 @@ const BRANDS = [
     id: "pixar",
     name: "Pixar",
     logo: "/logos/Pixar-emblem.jpg",
-    videoSrc: ["/trailer/trailer.mp4"],
+    video: "/videos/pixar.mp4",
     glowColor: "#a1c4fd",
     bg: "#000d2e",
   },
@@ -30,7 +26,7 @@ const BRANDS = [
     id: "marvel",
     name: "Marvel",
     logo: "/logos/Marvel_Studios_logo.jpg",
-    videoSrc: ["/trailer/trailer.mp4"],
+    video: "/videos/marvel.mp4",
     glowColor: "#ed1d24",
     bg: "#1a0002",
   },
@@ -38,7 +34,7 @@ const BRANDS = [
     id: "starwars",
     name: "Star Wars",
     logo: "/logos/Star-wars-logo-new-tall.jpg",
-    videoSrc: ["/trailer/trailer.mp4"],
+    video: "/videos/starwars.mp4",
     glowColor: "#ffe81f",
     bg: "#0a0a00",
   },
@@ -46,7 +42,7 @@ const BRANDS = [
     id: "natgeo",
     name: "Nat Geo",
     logo: "/logos/Natgeologo.svg",
-    videoSrc: ["/trailer/trailer.mp4"],
+    video: "/videos/natgeo.mp4",
     glowColor: "#ffcc00",
     bg: "#1a1100",
   },
@@ -54,7 +50,7 @@ const BRANDS = [
     id: "dc",
     name: "DC",
     logo: "/logos/DC_Comics_2024.svg.png",
-    videoSrc: ["/trailer/trailer.mp4"],
+    video: "/videos/dc.mp4",
     glowColor: "#004de5",
     bg: "#000820",
   },
@@ -62,7 +58,7 @@ const BRANDS = [
     id: "007",
     name: "James Bond",
     logo: "/logos/png-clipart-logo-brand-white-james-bond-miscellaneous-angle.png",
-    videoSrc: ["/trailer/trailer.mp4"],
+    video: "/videos/007.mp4",
     glowColor: "#c9a84c",
     bg: "#0d0a00",
   },
@@ -70,7 +66,7 @@ const BRANDS = [
     id: "nickelodeon",
     name: "Nickelodeon",
     logo: "/logos/Nickelodeon_2023_logo.png",
-    videoSrc: ["/trailer/trailer.mp4"],
+    video: "/videos/nickelodeon.mp4",
     glowColor: "#ff7000",
     bg: "#1a0800",
   },
@@ -78,7 +74,7 @@ const BRANDS = [
     id: "cartoonnetwork",
     name: "Cartoon Network",
     logo: "/logos/Cartoon-Network-logo.jpg",
-    videoSrc: ["/trailer/trailer.mp4"],
+    video: "/videos/cartoonnetwork.mp4",
     glowColor: "#00b4d8",
     bg: "#001020",
   },
@@ -133,9 +129,7 @@ const BrandCard: FC<BrandCardProps> = ({ brand, onClick }) => {
         preload="none"
         className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-400 z-[1]"
       >
-        {brand.videoSrc.map((src, i) => (
-          <source key={i} src={src} type={src.endsWith(".mp4") ? "video/mp4" : "video/mp4"} />
-        ))}
+          <source src={brand.video} type="video/mp4" />
       </video>
 
       {/* Dark overlay fades on hover */}

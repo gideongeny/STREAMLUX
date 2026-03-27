@@ -450,7 +450,12 @@ export const getTMDBCollection = async (collectionId: number): Promise<any> => {
   }
 };
 /**
- * Fetches content by Brand using TMDB discover with company + keyword strategies
+ * Fetches content by Brand using the correct TMDB parameters per brand.
+ *
+ * Key TMDB distinctions:
+ *  - with_companies → production companies (for studios making films)
+ *  - with_networks  → TV broadcast/cable networks (for channels like Nickelodeon, CN)
+ *  - collection     → specific TMDB film collections (e.g. James Bond = 645)
  */
 export const getTMDBByBrand = async (
   brandId: string,
@@ -458,66 +463,88 @@ export const getTMDBByBrand = async (
   page: number = 1
 ): Promise<Item[]> => {
 
-  // Strategy 1: company IDs (fastest)
-  // Strategy 2: keyword IDs (most accurate for networks)
-  const brandMap: Record<string, {
+  const id = brandId.toLowerCase();
+
+  // ── 007 SPECIAL CASE: fetch the official James Bond collection directly ──────
+  if (id === "007") {
+    try {
+      // Collection 645 = "James Bond Collection" on TMDB — 100% accurate
+      const col = await axios.get("/tmdb", {
+        params: { endpoint: "/collection/645", language: "en-US" },
+        timeout: 12000,
+      });
+      const parts: Item[] = ((col.data?.parts || []) as any[]).map((p: any) => ({
+        ...p,
+        media_type: "movie",
+      }));
+      // Sort by release date descending (newest Bond first)
+      parts.sort((a: any, b: any) =>
+        (b.release_date || "").localeCompare(a.release_date || "")
+      );
+      return parts;
+    } catch {
+      return [];
+    }
+  }
+
+  // ── TV NETWORK BRANDS (Nickelodeon, Cartoon Network, Disney Channel) ─────────
+  // TMDB uses `with_networks` for cable/broadcast channels — NOT `with_companies`
+  const networkBrands: Record<string, string> = {
+    nickelodeon:    "13",   // Nickelodeon (TMDB network 13)
+    cartoonnetwork: "56",   // Cartoon Network (TMDB network 56)
+  };
+
+  if (networkBrands[id]) {
+    try {
+      const res = await axios.get("/tmdb", {
+        params: {
+          endpoint: "/discover/tv",
+          with_networks: networkBrands[id],
+          sort_by: "popularity.desc",
+          page,
+          include_adult: false,
+          "vote_count.gte": 5,
+        },
+        timeout: 12000,
+      });
+      return ((res.data?.results || []) as any[]).map((item: any) => ({
+        ...item,
+        media_type: "tv",
+      }));
+    } catch {
+      return [];
+    }
+  }
+
+  // ── STUDIO/COMPANY BRANDS (Disney, Pixar, Marvel, DC, Star Wars, NatGeo) ────
+  const companyBrands: Record<string, {
     companies?: string;
     keywords?: string;
     forceType?: "movie" | "tv";
     minVotes?: number;
   }> = {
-    disney:   { companies: "2|3|6125|11250",  minVotes: 20 },
-    pixar:    { companies: "3",                minVotes: 20 },
-    marvel:   { companies: "420|176762",       minVotes: 50 },
-    starwars: { companies: "1",  keywords: "161176|11531", minVotes: 20 },
-    natgeo:   { companies: "7521|58|19614",    minVotes: 10 },
-    dc:       { companies: "12806|27711|9993|128064|174",  minVotes: 30 },
-
-    // 007: EON Productions (82) made ALL the Bond films. Keywords 12217 = "james bond"
-    "007":    { companies: "82", keywords: "12217", forceType: "movie", minVotes: 100 },
-
-    // Nickelodeon: keyword 4285 = "nickelodeon", company 13 = Nickelodeon
-    nickelodeon: {
-      companies: "13|2348",
-      keywords:  "4285",
-      forceType: "tv",
-      minVotes:  5,
-    },
-
-    // Cartoon Network: keyword 4011 = "cartoon network", company 5610 = Cartoon Network
-    cartoonnetwork: {
-      companies: "5610|24213",
-      keywords:  "4011",
-      forceType: "tv",
-      minVotes:  5,
-    },
+    disney:   { companies: "2|3|6125",         minVotes: 30 },
+    pixar:    { companies: "3",                 minVotes: 20 },
+    marvel:   { companies: "420|176762",        minVotes: 50 },
+    starwars: { companies: "1",  keywords: "11531", minVotes: 10 },
+    natgeo:   { companies: "7521|58",           minVotes: 5  },
+    dc:       { companies: "12806|27711|9993",  minVotes: 30 },
   };
 
-  const mapping = brandMap[brandId.toLowerCase()];
+  const mapping = companyBrands[id];
   if (!mapping) return [];
 
   const resolvedType = mapping.forceType ?? type;
 
-  const buildParams = (strategy: { companies?: string; keywords?: string }) => {
-    const p: Record<string, any> = {
-      endpoint: `/discover/${resolvedType}`,
-      sort_by:  "popularity.desc",
-      page,
-      include_adult: false,
-    };
-    if (strategy.companies)     p.with_companies = strategy.companies;
-    if (strategy.keywords)      p.with_keywords  = strategy.keywords;
-    if (mapping.minVotes)       p["vote_count.gte"] = mapping.minVotes;
-    return p;
+  const baseParams: Record<string, any> = {
+    endpoint: `/discover/${resolvedType}`,
+    sort_by:  "popularity.desc",
+    page,
+    include_adult: false,
   };
-
-  const fetchResults = async (params: Record<string, any>): Promise<Item[]> => {
-    const res = await axios.get("/tmdb", { params, timeout: 12000 });
-    return (res.data?.results || []).map((item: any) => ({
-      ...item,
-      media_type: resolvedType,
-    }));
-  };
+  if (mapping.companies) baseParams.with_companies = mapping.companies;
+  if (mapping.keywords)  baseParams.with_keywords  = mapping.keywords;
+  if (mapping.minVotes)  baseParams["vote_count.gte"] = mapping.minVotes;
 
   const dedup = (arr: Item[]): Item[] => {
     const seen = new Set<string>();
@@ -532,19 +559,24 @@ export const getTMDBByBrand = async (
   try {
     let results: Item[] = [];
 
-    // Try company search first
     if (mapping.companies) {
-      try {
-        results = await fetchResults(buildParams({ companies: mapping.companies }));
-      } catch { /* fall through */ }
+      const r = await axios.get("/tmdb", { params: baseParams, timeout: 12000 });
+      results = ((r.data?.results || []) as any[]).map((item: any) => ({
+        ...item,
+        media_type: resolvedType,
+      }));
     }
 
-    // If company gave nothing or brand relies on keywords, also do keyword search
     if (mapping.keywords) {
-      try {
-        const kwResults = await fetchResults(buildParams({ keywords: mapping.keywords }));
-        results = dedup([...results, ...kwResults]);
-      } catch { /* fall through */ }
+      const kwParams = { ...baseParams };
+      delete kwParams.with_companies;
+      kwParams.with_keywords = mapping.keywords;
+      const r = await axios.get("/tmdb", { params: kwParams, timeout: 12000 });
+      const kw: Item[] = ((r.data?.results || []) as any[]).map((item: any) => ({
+        ...item,
+        media_type: resolvedType,
+      }));
+      results = dedup([...results, ...kw]);
     }
 
     return dedup(results);

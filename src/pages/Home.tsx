@@ -108,10 +108,21 @@ const Home: FC = () => {
       return;
     }
     setIsBrandLoading(true);
-    Promise.all([
-      getTMDBByBrand(activeBrand, "movie").catch(() => [] as Item[]),
-      getTMDBByBrand(activeBrand, "tv").catch(() => [] as Item[]),
-    ]).then(([movies, tv]) => {
+
+    const tvOnlyBrands = ["nickelodeon", "cartoonnetwork"];
+    const movieOnlyBrands = ["007"];
+    const isTvOnly = tvOnlyBrands.includes(activeBrand);
+    const isMovieOnly = movieOnlyBrands.includes(activeBrand);
+
+    const movieFetch = isMovieOnly || !isTvOnly
+      ? getTMDBByBrand(activeBrand, "movie").catch(() => [] as Item[])
+      : Promise.resolve([] as Item[]);
+
+    const tvFetch = isTvOnly || !isMovieOnly
+      ? getTMDBByBrand(activeBrand, "tv").catch(() => [] as Item[])
+      : Promise.resolve([] as Item[]);
+
+    Promise.all([movieFetch, tvFetch]).then(([movies, tv]) => {
       setBrandMovies(movies || []);
       setBrandTV(tv || []);
     }).finally(() => setIsBrandLoading(false));
@@ -280,16 +291,39 @@ const Home: FC = () => {
                 }}
               />
               <div className="w-full mt-12 space-y-12">
-                <SectionSlider
-                  title={`${activeBrand.charAt(0).toUpperCase() + activeBrand.slice(1)} Movies`}
-                  films={brandMovies}
-                  isLoading={isBrandLoading}
-                />
-                <SectionSlider
-                  title={`${activeBrand.charAt(0).toUpperCase() + activeBrand.slice(1)} Series`}
-                  films={brandTV}
-                  isLoading={isBrandLoading}
-                />
+                {/* TV-only brands (Nickelodeon, Cartoon Network) */}
+                {(activeBrand === "nickelodeon" || activeBrand === "cartoonnetwork") ? (
+                  <SectionSlider
+                    title={`${activeBrand === "cartoonnetwork" ? "Cartoon Network" : "Nickelodeon"} Shows`}
+                    films={brandTV.length > 0 ? brandTV : brandMovies}
+                    isLoading={isBrandLoading}
+                  />
+                ) : activeBrand === "007" ? (
+                  // 007: only movies from the Bond collection
+                  <SectionSlider
+                    title="James Bond Films"
+                    films={brandMovies}
+                    isLoading={isBrandLoading}
+                  />
+                ) : (
+                  // All other brands — show both movies and TV if available
+                  <>
+                    {(brandMovies.length > 0 || isBrandLoading) && (
+                      <SectionSlider
+                        title={`${activeBrand.charAt(0).toUpperCase() + activeBrand.slice(1)} Movies`}
+                        films={brandMovies}
+                        isLoading={isBrandLoading}
+                      />
+                    )}
+                    {(brandTV.length > 0 || isBrandLoading) && (
+                      <SectionSlider
+                        title={`${activeBrand.charAt(0).toUpperCase() + activeBrand.slice(1)} Series`}
+                        films={brandTV}
+                        isLoading={isBrandLoading}
+                      />
+                    )}
+                  </>
+                )}
               </div>
             </motion.div>
           )}
