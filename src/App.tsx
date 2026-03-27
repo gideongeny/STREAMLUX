@@ -120,15 +120,28 @@ function App() {
 
     // Initialize AdMob and show first banner if native - DEFERRED to avoid blocking paint
     const initAds = async () => {
-      // ONLY initialize ads if NOT premium
-      if (!isPremium) {
-        await initializeAdMob();
-        if (Capacitor.isNativePlatform()) {
-          await showBannerAd();
-          await pushNotificationService.initialize();
-        } else {
-          await webNotificationService.initialize();
+      try {
+        // ONLY initialize ads if NOT premium
+        if (!isPremium) {
+          console.log('[App] Initializing Ads...');
+          await initializeAdMob();
+          
+          if (Capacitor.isNativePlatform()) {
+            await showBannerAd();
+            
+            // CRITICAL: Skip push notification registration on Android if google-services.json is missing
+            // to prevent the "Default FirebaseApp is not initialized" FATAL crash.
+            if (Capacitor.getPlatform() === 'android') {
+                console.warn('[App] Skipping Push Notification registration on Android to prevent startup crash. Add google-services.json to enable.');
+            } else {
+                await pushNotificationService.initialize();
+            }
+          } else {
+            await webNotificationService.initialize();
+          }
         }
+      } catch (error) {
+        console.error('[App] Failed to initialize native services:', error);
       }
     };
     

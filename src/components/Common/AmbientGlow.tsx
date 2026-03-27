@@ -5,13 +5,33 @@ import { motion, AnimatePresence } from "framer-motion";
 interface AmbientGlowProps {
     imageUrl?: string;
     fallbackColor?: string;
+    activeBrand?: string | null;
 }
 
-const AmbientGlow: FC<AmbientGlowProps> = ({ imageUrl, fallbackColor = "#ff6b35" }) => {
+const BRAND_COLORS: Record<string, string> = {
+  disney: "#1a73e8",
+  marvel: "#ed1d24",
+  pixar: "#a1c4fd",
+  starwars: "#ffe81f",
+  natgeo: "#ffcc00",
+  dc: "#004de5",
+  "007": "#ffffff",
+  nickelodeon: "#ff7000",
+  cartoonnetwork: "#ffffff",
+};
+
+const AmbientGlow: FC<AmbientGlowProps> = ({ imageUrl, fallbackColor = "#ff6b35", activeBrand }) => {
     const [currentGlow, setCurrentGlow] = useState<string | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
+        if (activeBrand && BRAND_COLORS[activeBrand]) {
+            const color = BRAND_COLORS[activeBrand];
+            setCurrentGlow(`radial-gradient(circle at 50% 30%, ${color}33 0%, transparent 70%)`);
+            setIsLoaded(true);
+            return;
+        }
+
         if (!imageUrl) {
             setCurrentGlow(`radial-gradient(circle at 50% 30%, ${fallbackColor}22 0%, transparent 70%)`);
             setIsLoaded(true);

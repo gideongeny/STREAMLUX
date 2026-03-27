@@ -65,8 +65,11 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "" }) => {
   };
 
   const selectSuggestion = (s: Item) => {
-    const title = s.title || s.name || "";
-    navigate(`/${s.media_type}/${s.id}`);
+    if (s.media_type === "brand") {
+      navigate(`/?brand=${s.id}`);
+    } else {
+      navigate(`/${s.media_type}/${s.id}`);
+    }
     setInput("");
     setSuggestions([]);
     setIsFocused(false);
@@ -171,12 +174,16 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "" }) => {
                       {s.title || s.name}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 uppercase font-black tracking-tighter text-gray-400">
-                        {s.media_type === "movie" ? "Movie" : "TV Show"}
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-black tracking-tighter ${
+                        s.media_type === "brand" ? "bg-primary/20 text-primary" : "bg-white/10 text-gray-400"
+                      }`}>
+                        {s.media_type === "brand" ? "Brand" : s.media_type === "movie" ? "Movie" : "TV Show"}
                       </span>
-                      <span className="text-[10px] text-gray-500 font-medium">
-                        {(s.release_date || s.first_air_date || "").split("-")[0]}
-                      </span>
+                      {s.media_type !== "brand" && (
+                        <span className="text-[10px] text-gray-500 font-medium">
+                          {(s.release_date || s.first_air_date || "").split("-")[0]}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <BiSearch size={16} className="text-gray-600 group-hover:text-primary transition-colors shrink-0 md:block hidden" />

@@ -5,10 +5,12 @@
 
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
 import { LocalNotifications, ActionPerformed as LocalActionPerformed } from '@capacitor/local-notifications';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { db, auth as firebaseAuth } from '../shared/firebase';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { safeStorage } from '../utils/safeStorage';
+
+const FirebaseStatus = registerPlugin<{ isFirebaseAvailable: () => Promise<{ available: boolean }> }>('FirebaseStatus');
 
 export type NotificationType =
     | 'new_episode'
@@ -43,18 +45,23 @@ class PushNotificationService {
         if (this.isInitialized) return;
 
         try {
-            // CRITICAL: Check if Firebase is initialized before proceeding.
-            // Without google-services.json, FirebaseApp is not initialized and
-            // calling PushNotifications.register() will throw IllegalStateException.
-            try {
-                const { getApps } = await import('firebase/app');
-                if (getApps().length === 0) {
-                    console.warn('PushNotifications: Firebase is not initialized. Skipping registration. Add google-services.json to enable push notifications.');
+            // CRITICAL: On Android, PushNotifications requires *native* FirebaseApp initialization.
+            // If `android/app/google-services.json` isn't present, FirebaseInitProvider won't
+            // create the default app, and `PushNotifications.register()` will hard-crash.
+            if (Capacitor.getPlatform() === 'android') {
+                try {
+                    const status = await FirebaseStatus.isFirebaseAvailable();
+                    if (!status?.available) {
+                        console.warn(
+                            'PushNotifications: Native Firebase is not initialized. Skipping registration. ' +
+                            'Add android/app/google-services.json (and rebuild) to enable push notifications.'
+                        );
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('PushNotifications: Could not verify native Firebase status. Skipping registration.', e);
                     return;
                 }
-            } catch (firebaseCheckError) {
-                console.warn('PushNotifications: Could not verify Firebase initialization, skipping registration.', firebaseCheckError);
-                return;
             }
 
             // Request permission
@@ -62,7 +69,14 @@ class PushNotificationService {
 
             if (permStatus.receive === 'granted') {
                 // Register with FCM
-                await PushNotifications.register();
+                try {
+                    console.log('PushNotifications: Attempting to register...');
+                    await PushNotifications.register();
+                    console.log('PushNotifications: Register call sent to native bridge');
+                } catch (registerError) {
+                    console.error('PushNotifications: Native registration failed. This is likely due to missing google-services.json.', registerError);
+                    return;
+                }
 
                 // Listen for registration
                 await PushNotifications.addListener('registration', (token: Token) => {

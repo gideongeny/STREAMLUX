@@ -10,7 +10,7 @@ export interface Item {
   vote_average: number;
 
   // Additional props
-  media_type: "movie" | "tv" | "person" | "sports" | "youtube" | "sports_video";
+  media_type: "movie" | "tv" | "person" | "sports" | "youtube" | "sports_video" | "brand";
   isYouTube?: boolean;
   youtubeId?: string;
   isLive?: boolean;

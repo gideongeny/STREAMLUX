@@ -26,57 +26,62 @@ const RightbarFilms: FunctionComponent<RightbarFilmsProps> = ({
 
   return (
     <div className={className}>
-      <p className="mb-6 text-xl font-medium flex justify-between items-center">
-        <span className="text-white">{name}</span>
+      <p className="mb-6 text-xl font-medium flex justify-between items-center text-white">
+        <span>{name}</span>
         <BsThreeDotsVertical size={20} />
       </p>
-      <ul className="flex flex-col gap-5">
-        {isLoading
-          ? new Array(limitNumber).fill("").map((_, index) => (
-              <li key={index} className="flex gap-5 items-center h-[156px]">
-                <Skeleton className="shrink-0 max-w-[100px] w-full h-full rounded-md" />
-                <Skeleton className="flex-grow h-[85%] rounded-md" />
-              </li>
-            ))
-          : (films as Item[]).slice(0, limitNumber).map((item) => (
-              <li key={item.id}>
-                <Link
-                  to={
-                    item.media_type === "movie"
-                      ? `/movie/${item.id}`
-                      : `/tv/${item.id}`
-                  }
-                  className="hover:brightness-75 transiton duration-300 flex gap-5 items-center"
-                >
-                  <div className="shrink-0 max-w-[100px] w-full">
-                    <LazyLoadImage
-                      src={resizeImage(item.poster_path, "w154")}
-                      className="w-full h-full object-cover rounded-md"
-                      alt="poster"
-                      effect="blur"
-                    />
-                  </div>
-                  <div className="flex-grow">
-                    <p className="text-white mb-3 text-lg">
-                      {item.title || item.name}
-                    </p>
-                    <p className="mb-8">
-                      {item.release_date || item.first_air_date}
-                    </p>
-                    <div className="inline-flex gap-2 items-center px-3 py-[2px] rounded-full text-primary border border-primary text-sm">
+
+      <div className="flex flex-col gap-5">
+        {isLoading ? (
+          [...Array(3)].map((_, index) => (
+            <div key={index} className="flex gap-4 items-center h-20 animate-pulse">
+              <div className="shrink-0 w-24 h-16 bg-white/5 rounded-md" />
+              <div className="flex-grow flex flex-col gap-2">
+                <div className="h-4 w-3/4 bg-white/10 rounded" />
+                <div className="h-3 w-1/2 bg-white/5 rounded" />
+              </div>
+            </div>
+          ))
+        ) : (
+          (films || []).slice(0, limitNumber).map((item) => (
+            <Link
+              to={`/${item.media_type || "movie"}/${item.id}`}
+              key={item.id}
+              className="flex gap-4 group items-center"
+            >
+              <div className="shrink-0 w-24 h-16 rounded-md overflow-hidden bg-dark-lighten shadow-lg">
+                <LazyLoadImage
+                  src={resizeImage(item.backdrop_path || item.poster_path || "", "w154")}
+                  alt=""
+                  className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                />
+              </div>
+              <div className="flex flex-col justify-center gap-1 overflow-hidden">
+                <p className="text-white text-sm font-bold truncate group-hover:text-primary transition duration-300">
+                  {item.title || item.name}
+                </p>
+                <div className="flex items-center gap-2">
+                  {item.vote_average != null && item.vote_average > 0 && (
+                    <div className="flex items-center gap-1 text-primary text-[10px] font-black">
+                      <AiFillStar size={10} />
                       <span>{item.vote_average.toFixed(1)}</span>
-                      <AiFillStar size={15} />
                     </div>
-                  </div>
-                </Link>
-              </li>
-            ))}
-      </ul>
+                  )}
+                  <span className="text-gray-500 text-[10px] font-bold uppercase tracking-tighter">
+                    {item.media_type || "Movie"}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
+
       <button
         onClick={() => navigate("/explore")}
-        className="bg-dark-lighten py-2 w-full rounded-full mt-7 hover:brightness-75 transition duration-300 "
+        className="w-full py-3 bg-white/5 hover:bg-primary/20 text-white font-bold rounded-xl mt-6 transition duration-300 border border-white/5 hover:border-primary/30"
       >
-        See more
+        View All Content
       </button>
     </div>
   );

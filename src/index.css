@@ -257,6 +257,52 @@ input:-webkit-autofill:active {
   -webkit-backdrop-filter: blur(24px); /* Specifically for Safari */
 }
 
+/* BRAND GLOWS */
+.glow-disney {
+  box-shadow: 0 0 20px rgba(0, 114, 210, 0.3);
+  background: linear-gradient(135deg, rgba(0, 114, 210, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+.glow-disney:hover {
+  box-shadow: 0 0 40px rgba(0, 114, 210, 0.6);
+  border-color: rgba(0, 114, 210, 0.8);
+}
+
+.glow-pixar {
+  box-shadow: 0 0 20px rgba(0, 173, 238, 0.3);
+  background: linear-gradient(135deg, rgba(0, 173, 238, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+.glow-pixar:hover {
+  box-shadow: 0 0 40px rgba(0, 173, 238, 0.6);
+  border-color: rgba(0, 173, 238, 0.8);
+}
+
+.glow-marvel {
+  box-shadow: 0 0 20px rgba(237, 29, 36, 0.3);
+  background: linear-gradient(135deg, rgba(237, 29, 36, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+.glow-marvel:hover {
+  box-shadow: 0 0 40px rgba(237, 29, 36, 0.6);
+  border-color: rgba(237, 29, 36, 0.8);
+}
+
+.glow-starwars {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+.glow-starwars:hover {
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.glow-natgeo {
+  box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+.glow-natgeo:hover {
+  box-shadow: 0 0 40px rgba(255, 204, 0, 0.6);
+  border-color: rgba(255, 204, 0, 0.8);
+}
+
 /* Fix for Safari -webkit-line-clamp bug */
 .tw-line-clamp-fix {
   display: -webkit-box;

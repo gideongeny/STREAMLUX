@@ -97,7 +97,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
                   {activeIndex === index && dataDetail?.[index]?.trailer && (
                     <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 0 }}>
                       <iframe
-                        src={`https://www.youtube-nocookie.com/embed/${dataDetail[index].trailer}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${dataDetail[index].trailer}&rel=0&showinfo=0&iv_load_policy=3&modestbranding=1&playsinline=1`}
+                        src={`https://www.youtube-nocookie.com/embed/${dataDetail?.[index]?.trailer}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${dataDetail?.[index]?.trailer}&rel=0&showinfo=0&iv_load_policy=3&modestbranding=1&playsinline=1`}
                         className="absolute top-1/2 left-1/2 w-[120%] h-[120%] -translate-x-1/2 -translate-y-1/2 scale-125"
                         allow="autoplay; encrypted-media; picture-in-picture"
                         allowFullScreen={false}
@@ -120,10 +120,12 @@ const BannerSlider: FC<BannerSliderProps> = ({
                     style={{ zIndex: 3 }}
                   >
                     {/* Rating badge */}
+                    {film.vote_average != null && film.vote_average > 0 && (
                     <div className="hidden md:flex absolute top-[5%] right-[3%] bg-primary px-3 py-1 rounded-full text-white items-center gap-1" style={{ zIndex: 4 }}>
-                      <span>{film.vote_average.toFixed(1)}</span>
+                      <span>{(film.vote_average || 0).toFixed(1)}</span>
                       <AiFillStar size={15} />
                     </div>
+                    )}
 
                     {/* Play button */}
                     <div className="tw-absolute-center w-16 h-16 rounded-full bg-gradient-to-br from-primary to-[#c353b4] tw-flex-center z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-700">

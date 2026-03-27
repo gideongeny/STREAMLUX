@@ -423,7 +423,7 @@ export const getHomeTVs = async (history?: Item[]): Promise<HomeFilms> => {
 
   const data = tmdbResponses.reduce((final, current, index) => {
     const key = Object.entries(endpoints)[index][0];
-    const tmdbItems = current.data.results.map((item: Item) => ({
+    const tmdbItems = (current?.data?.results || []).map((item: Item) => ({
       ...item,
       media_type: "tv" as const,
     }));
@@ -601,7 +601,7 @@ export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
     return {
         genre,
         translation: translations?.[index] || [],
-        trailer: videoRes?.[index]?.data?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key || (tv.isYouTube ? tv.youtubeId : undefined),
+        trailer: videoRes?.[index]?.data?.results?.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key || (tv?.isYouTube ? tv.youtubeId : undefined),
     };
   }).filter(Boolean) as BannerInfo[];
 };

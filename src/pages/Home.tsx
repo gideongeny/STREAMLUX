@@ -33,6 +33,9 @@ import AdBanner from "../components/Ads/AdBanner";
 import CinematicMoments from "../components/Home/CinematicMoments";
 import AmbientGlow from "../components/Common/AmbientGlow";
 import TopSearchBar from "../components/Common/TopSearchBar";
+import BrandHub from "../components/Home/BrandHub";
+import CollectionsSlider from "../components/Home/CollectionsSlider";
+import { getTMDBByBrand } from "../services/movieAPIs";
 import { useHomeData } from "../hooks/useHomeData";
 import { useWatchProgress } from "../hooks/useWatchProgress";
 import { useAppSelector } from "../store/hooks";
@@ -43,6 +46,18 @@ import LazySection from "../components/Common/LazySection";
 import HomeSkeleton from "../components/Home/HomeSkeleton";
 import Logo from "../components/Common/Logo";
 import { Item } from "../shared/types";
+
+const BRAND_LOGOS: Record<string, string> = {
+  disney: "/logos/Walt-Disney-Logo-1.png",
+  pixar: "/logos/Pixar-emblem.jpg",
+  marvel: "/logos/Marvel_Studios_logo.jpg",
+  starwars: "/logos/Star-wars-logo-new-tall.jpg",
+  natgeo: "/logos/Natgeologo.svg",
+  dc: "/logos/DC_Comics_2024.svg.png",
+  "007": "/logos/png-clipart-logo-brand-white-james-bond-miscellaneous-angle.png",
+  nickelodeon: "/logos/Nickelodeon_2023_logo.png",
+  cartoonnetwork: "/logos/Cartoon-Network-logo.jpg",
+};
 
 const Home: FC = () => {
   const { t } = useTranslation();
@@ -59,6 +74,25 @@ const Home: FC = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const activeBrand = searchParams.get("brand");
+
+  const [brandContent, setBrandContent] = useState<{ movies: Item[]; tv: Item[] }>({ movies: [], tv: [] });
+  const [isBrandLoading, setIsBrandLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeBrand) {
+      setIsBrandLoading(true);
+      Promise.all([
+        getTMDBByBrand(activeBrand, "movie"),
+        getTMDBByBrand(activeBrand, "tv")
+      ]).then(([movies, tv]) => {
+        setBrandContent({ movies, tv });
+        setIsBrandLoading(false);
+      }).catch(() => setIsBrandLoading(false));
+    }
+  }, [activeBrand]);
 
   // Restore scroll position when user returns to Home
   useScrollPersistence("home");
@@ -261,7 +295,7 @@ const Home: FC = () => {
         title={currentTab === "movie" ? "Movies" : currentTab === "tv" ? "TV Shows" : "Live Sports"}
         description={`Explore the best ${currentTab === "movie" ? "movies" : currentTab === "tv" ? "tv shows" : "live sports events"} on StreamLux. World-class streaming experience.`}
       />
-      <AmbientGlow imageUrl={activeGlowImage} />
+      <AmbientGlow imageUrl={activeGlowImage} activeBrand={activeBrand} />
 
       <div className={`flex md:hidden flex-col fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${isScrolled ? "tw-glass bg-dark/60 shadow-lg backdrop-blur-xl" : "bg-dark"
         }`}>
@@ -326,7 +360,45 @@ const Home: FC = () => {
         <div
           className="flex-grow md:pt-28 pt-0 pb-7 md:px-[2vw] px-[4vw] min-h-screen bg-dark relative z-0 max-w-full overflow-x-hidden md:ml-[260px]"
         >
-          {currentTab !== "sports" && <CinematicMoments />}
+          {activeBrand && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="py-10 flex flex-col items-center border-b border-white/5 mb-8"
+            >
+              <img 
+                src={BRAND_LOGOS[activeBrand] || `/logos/${activeBrand}.svg`} 
+                alt={activeBrand} 
+                className="h-16 md:h-24 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                onError={(e) => {
+                  // Fallback to text if SVG not found
+                  e.currentTarget.style.display = 'none';
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    const text = document.createElement('h1');
+                    text.className = "text-5xl font-black uppercase tracking-tighter text-white";
+                    text.innerText = activeBrand;
+                    parent.appendChild(text);
+                  }
+                }}
+              />
+
+              {/* Brand Specific Sections */}
+              <div className="w-full mt-12 space-y-12">
+                <LazySection title={`${activeBrand.charAt(0).toUpperCase() + activeBrand.slice(1)} Movies`} placeholderHeight={200}>
+                  <SectionSlider films={brandContent.movies} isLoading={isBrandLoading} />
+                </LazySection>
+                <LazySection title={`${activeBrand.charAt(0).toUpperCase() + activeBrand.slice(1)} Series`} placeholderHeight={200}>
+                  <SectionSlider films={brandContent.tv} isLoading={isBrandLoading} />
+                </LazySection>
+              </div>
+            </motion.div>
+          )}
+
+          {currentTab !== "sports" && !activeBrand && <CinematicMoments />}
+
+          {/* Brand Discovery Hub */}
+          {!activeBrand && currentTab !== "sports" && <BrandHub />}
 
           {/* Main Banner Slider for Movies/TV */}
           {currentTab === "movie" && (
@@ -375,6 +447,9 @@ const Home: FC = () => {
               <LazySection title="Live Matches" placeholderHeight={100}>
                 <LiveSportsTicker />
               </LazySection>
+
+              {/* Epic Collections Integration */}
+              {!activeBrand && <CollectionsSlider />}
 
               {/* Continue Watching Shelf */}
               <LazySection title="Pick Up Where You Left Off" placeholderHeight={250}>

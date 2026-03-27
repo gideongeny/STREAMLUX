@@ -1,5 +1,6 @@
 import { FC, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { AiFillStar, AiOutlineClose, AiOutlineGlobal } from "react-icons/ai";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { LazyLoadImage, LazyLoadComponent } from "react-lazy-load-image-component";
@@ -150,16 +151,20 @@ const GlobalWorldTV: FC = () => {
                               {(item as any).provider || 'SCRAPED'}
                             </span>
                           )}
+                          {/* Rating Badge */}
+                          {item.vote_average != null && item.vote_average > 0 && (
+                              <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10">
+                                  <AiFillStar className="text-primary text-xs" />
+                                  <span className="text-white text-[10px] font-black tracking-tighter">
+                                      {(item.vote_average || 0).toFixed(1)}
+                                  </span>
+                              </div>
+                          )}
                           <span className="text-white text-xs font-medium line-clamp-2">
                             {item.title || item.name}
                           </span>
                         </div>
                       </div>
-                      {item.vote_average ? (
-                        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-yellow-400 text-xs font-bold px-1.5 py-0.5 rounded-md">
-                          ★ {item.vote_average.toFixed(1)}
-                        </div>
-                      ) : null}
                     </div>
                     <p className="text-gray-300 text-xs mt-1.5 truncate">{item.title || item.name}</p>
                   </motion.div>

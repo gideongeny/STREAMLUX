@@ -430,3 +430,66 @@ export const getPersonalizedRecommendations = async (
   }
 };
 
+
+/**
+ * Fetches specific Collection details (e.g., Avengers, Star Wars)
+ */
+export const getTMDBCollection = async (collectionId: number): Promise<any> => {
+  try {
+    const response = await axios.get("/tmdb", {
+      params: {
+        endpoint: `/collection/${collectionId}`,
+        language: "en-US",
+      },
+      timeout: 10000,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching Collection ${collectionId}:`, error);
+    return null;
+  }
+};
+/**
+ * Fetches content by Brand (Company or Keyword)
+ */
+export const getTMDBByBrand = async (
+  brandId: string,
+  type: "movie" | "tv" = "movie",
+  page: number = 1
+): Promise<Item[]> => {
+  const brandMap: Record<string, { companies?: string; keywords?: string }> = {
+    disney: { companies: "2" },
+    pixar: { companies: "3" },
+    marvel: { companies: "420" },
+    starwars: { keywords: "204563" },
+    natgeo: { companies: "7521" },
+    dc: { companies: "12806|27711|9993" },
+    "007": { keywords: "33433" },
+    nickelodeon: { companies: "4340" },
+    cartoonnetwork: { companies: "5610" },
+  };
+
+  const mapping = brandMap[brandId.toLowerCase()];
+  if (!mapping) return [];
+
+  try {
+    const response = await axios.get("/tmdb", {
+      params: {
+        endpoint: `/discover/${type}`,
+        with_companies: mapping.companies,
+        with_keywords: mapping.keywords,
+        sort_by: "popularity.desc",
+        page,
+      },
+      timeout: 10000,
+    });
+
+    return (response.data.results || []).map((item: any) => ({
+      ...item,
+      media_type: type,
+    }));
+  } catch (error) {
+    console.error(`Error fetching Brand ${brandId}:`, error);
+    return [];
+  }
+};
