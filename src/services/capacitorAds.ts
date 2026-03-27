@@ -16,7 +16,9 @@ import { Capacitor } from '@capacitor/core';
 // ── Ad Unit IDs ────────────────────────────────────────────────
 const AD_UNITS = {
     banner: 'ca-app-pub-1281448884303417/6844354025',
+    bannerAlt: 'ca-app-pub-1281448884303417/2591576419',
     interstitial: 'ca-app-pub-1281448884303417/7742502728',
+    interstitialAlt: 'ca-app-pub-1281448884303417/4423967607',
     rewarded: 'ca-app-pub-1281448884303417/6905766493',
     appOpen: 'ca-app-pub-1281448884303417/9531929832',
     native: 'ca-app-pub-1281448884303417/2886630430',
