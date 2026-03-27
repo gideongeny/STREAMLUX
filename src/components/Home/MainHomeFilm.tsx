@@ -1,4 +1,4 @@
-import { FC } from "react";
+import React, { FC } from "react";
 import { BannerInfo, HomeFilms } from "../../shared/types";
 import Skeleton from "../Common/Skeleton";
 import BannerSlider from "../Slider/BannerSlider";
@@ -20,6 +20,7 @@ const MainHomeFilms: FC<MainHomeFilmsProps> = ({
   isLoadingBanner,
   isLoadingSection,
   onActiveImageChange,
+  brandHub,
 }) => {
   const { t } = useTranslation();
   return (

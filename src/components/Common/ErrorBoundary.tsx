@@ -34,19 +34,12 @@ class ErrorBoundary extends Component<Props, State> {
       errorMessage.includes('Non-Error promise rejection') ||
       errorMessage.includes('client is offline') ||
       errorMessage.includes('NetworkError') ||
-      errorMessage.includes('Failed to fetch') ||
       errorMessage.includes('script error') ||
       errorMessage.includes('YouTube') ||
       errorMessage.includes('youtube') ||
       errorMessage.includes('quota') ||
-      errorMessage.includes('403') ||
       errorMessage.includes('AbortError') ||
-      errorMessage.includes('Load failed') ||
-      errorMessage.includes('ChunkLoadError') ||
-      errorMessage.includes('Loading chunk') ||
-      errorMessage.includes('Cannot read properties of undefined') ||
-      errorMessage.includes('sports') ||
-      errorMessage.includes('Cannot destructure property');
+      errorMessage.includes('sports');
 
     if (isNonCritical) {
       this.setState({ hasError: false, error: null });
@@ -93,11 +86,19 @@ class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">System Anomaly</h2>
-            <p className="text-white/60 mb-8 leading-relaxed text-sm">
+            <p className="text-white/60 mb-4 leading-relaxed text-sm">
               {this.state.error?.message?.includes('chunk')
                 ? "The application was updated. A reload is required to sync systems."
                 : "An unexpected error occurred. Our auto-recovery system can attempt to stabilize your session."}
             </p>
+            {/* DEBUG: Show real error - remove after fixing */}
+            {this.state.error && (
+              <pre className="text-left text-red-400 text-[9px] bg-black/40 rounded-xl p-3 mb-4 overflow-auto max-h-40 font-mono">
+                {this.state.error.message}
+                {'\n---\n'}
+                {this.state.error.stack?.slice(0, 600)}
+              </pre>
+            )}
 
             <button
               onClick={this.handleRecovery}
