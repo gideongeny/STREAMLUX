@@ -58,7 +58,7 @@ const SportsWatchPage: React.FC = () => {
         let headerName = 'Live Event';
         let channelId = '';
 
-        // Prioritize intelligent StreamEast mirrors first (No user input required)
+        // 1. Prioritize intelligent StreamEast mirrors first (No user input required)
         if (currentMatch) {
             const streamEastMirrors = getStreamEastSources(currentMatch);
             sources.push(...streamEastMirrors);
@@ -67,6 +67,7 @@ const SportsWatchPage: React.FC = () => {
             sources.push(...dynamicSources);
         }
 
+        // 2. Resolve primary link context
         if (matchId && matchId.startsWith('channel-')) {
              channelId = matchId.replace('channel-', '');
              const targetChannel = ALL_SPORTS_CHANNELS.find(c => c.name.toLowerCase().includes(channelId.toLowerCase()) || c.url.toLowerCase().includes(channelId.toLowerCase()));
@@ -80,21 +81,27 @@ const SportsWatchPage: React.FC = () => {
             primaryLink = decodeURIComponent(matchId);
         }
 
+        // 3. Add primary link (only unshift if it's NOT a generic fallback)
         if (primaryLink) {
+             const isGeneric = primaryLink.includes('espn.com') || primaryLink.includes('plus.espn') || primaryLink.includes('generic');
              const existingPrimary = sources.findIndex(s => s.url === primaryLink);
+             
              if (existingPrimary !== -1) {
                   const [item] = sources.splice(existingPrimary, 1);
-                  sources.unshift(item);
+                  if (isGeneric) sources.push(item);
+                  else sources.unshift(item);
              } else {
-                  sources.unshift({ 
-                    name: channelId ? headerName : 'Direct Multi-Link', 
+                  const item = { 
+                    name: channelId ? headerName : (isGeneric ? 'Network Fallback' : 'Direct Multi-Link'), 
                     type: primaryLink.includes('.m3u8') ? 'hls' : 'iframe', 
                     url: primaryLink 
-                  });
+                  };
+                  if (isGeneric) sources.push(item);
+                  else sources.unshift(item);
              }
         }
 
-        // Add Fallback Channel based on sport/league
+        // 4. Add Fallback Channel based on sport/league
         const leagueContext = currentMatch?.leagueId || currentMatch?.leagueName || (channelId ? headerName : 'network');
         const fallback = getFallbackChannel(leagueContext);
         
@@ -102,13 +109,13 @@ const SportsWatchPage: React.FC = () => {
              sources.push(fallback);
         }
         
-        // Add ESPN as universal fallback if not already there
+        // 5. Add ESPN as universal fallback if not already there
         const universalFallback = getFallbackChannel('espn null'); // returns espn default
         if (universalFallback.url !== fallback.url && !sources.some(s => s.url === universalFallback.url)) {
              sources.push(universalFallback);
         }
 
-        // Keep catalogue manageable - only add unique channels from the main list
+        // 6. Keep catalogue manageable - only add unique channels from the main list
         const fullCatalogue = [...sources];
         ALL_SPORTS_CHANNELS.forEach(channel => {
             if (!fullCatalogue.some(s => s.url === channel.url)) {
@@ -118,9 +125,13 @@ const SportsWatchPage: React.FC = () => {
 
         setAvailableSources(fullCatalogue);
         
+        // 7. AUTO-SELECT PRIORITY: Always try to default to StreamEast Alpha if available
         if (fullCatalogue.length > 0) {
+            const streamEastIdx = fullCatalogue.findIndex(s => s.name.toLowerCase().includes('streameast alpha'));
+            const initialSource = streamEastIdx !== -1 ? fullCatalogue[streamEastIdx] : fullCatalogue[0];
+            
             if (!activeSource || !fullCatalogue.some(s => s.url === activeSource.url)) {
-                setActiveSource(fullCatalogue[0]);
+                setActiveSource(initialSource);
             }
         }
     }, [currentMatch, location.state, matchId]);
