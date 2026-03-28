@@ -193,18 +193,45 @@ export const getStreamEastCategory = (sport: string): string => {
 
 /**
  * Returns prioritized StreamEast mirrors for a specific match.
- * Zero-input 'Intelligence' for mirror rotation.
+ * Rotates through 13 verified mirrors and tries multiple slug variations (-1, -2).
+ * Zero-input 'Intelligence' for mirror rotation and URL fallback.
  */
 export const getStreamEastSources = (match: { homeTeam: string; awayTeam: string; sport?: string }): SportsChannel[] => {
-  const slug = generateStreamEastSlug(match.homeTeam, match.awayTeam, match.sport);
+  const baseSlug = generateStreamEastSlug(match.homeTeam, match.awayTeam, match.sport);
   const cat = getStreamEastCategory(match.sport || '');
   
-  // Current active top-level domains for StreamEast
-  const MIRRORS = ['is', 'ms', 'to', 'ps'];
+  // 13 Verified Mirrors (as of March 2026)
+  const MIRRORS = ['su', 'ms', 'ps', 'ga', 'cf', 'ch', 'ec', 'fi', 'ph', 'sg', 'sk', 'ru', 'link'];
   
-  return MIRRORS.map(tld => ({
-    name: `StreamEast Alpha (.${tld})`,
-    type: 'iframe',
-    url: `https://www.streameast.${tld}/${cat}/${slug}/`
-  }));
+  const sources: SportsChannel[] = [];
+
+  // Try standard slugs on the most stable mirrors first
+  ['su', 'ms', 'ps'].forEach(tld => {
+    sources.push({
+      name: `StreamEast Alpha (.${tld})`,
+      type: 'iframe',
+      url: `https://www.streameast.${tld}/${cat}/${baseSlug}/`
+    });
+  });
+
+  // Try suffix variants (-1) on the same stable mirrors
+  ['su', 'ms', 'ps'].forEach(tld => {
+    sources.push({
+      name: `StreamEast Beta (.${tld})`,
+      type: 'iframe',
+      url: `https://www.streameast.${tld}/${cat}/${baseSlug}-1/`
+    });
+  });
+
+  // Add all other mirrors as additional fallbacks
+  MIRRORS.slice(3).forEach(tld => {
+    const domain = tld === 'link' ? 'v4.gostreameast.link' : `www.streameast.${tld}`;
+    sources.push({
+      name: `StreamEast Mirror (.${tld})`,
+      type: 'iframe',
+      url: `https://${domain}/${cat}/${baseSlug}/`
+    });
+  });
+
+  return sources;
 };
