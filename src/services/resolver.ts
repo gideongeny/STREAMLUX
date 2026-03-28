@@ -278,21 +278,21 @@ export class ResolverService {
         const tmdbId = id.toString();
 
         sources.push(
-            // T0 - Ultimate Primary (VidKing)
-            {
-                name: "VidKing",
-                url: mediaType === "movie"
-                    ? `https://vidking.net/embed/movie/${tmdbId}`
-                    : `https://vidking.net/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
-                quality: "4K/1080p", speed: "fast", status: "active", type: "embed", priority: 0
-            },
-            // T1 - Premier (No/Low Ads, High Success)
+            // T1 - VidSrc.me (Absolute Priority #1)
             {
                 name: "VidSrc.me",
                 url: mediaType === "movie"
                     ? `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`
                     : `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${season || 1}&episode=${episode || 1}`,
-                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 1
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 0
+            },
+            // T2 - Ultimate Primary (VidKing)
+            {
+                name: "VidKing",
+                url: mediaType === "movie"
+                    ? `https://vidking.net/embed/movie/${tmdbId}`
+                    : `https://vidking.net/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
+                quality: "4K/1080p", speed: "fast", status: "active", type: "embed", priority: 1
             },
             {
                 name: "AutoEmbed",
@@ -313,7 +313,7 @@ export class ResolverService {
                 url: mediaType === "movie"
                     ? `https://embed.smashystream.com/playerjsMovie.php?tmdb=${tmdbId}`
                     : `https://embed.smashystream.com/playerjs.php?tmdb=${tmdbId}&season=${season || 1}&episode=${episode || 1}`,
-                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 3
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 4
             },
             {
                 name: "MovieAPI",

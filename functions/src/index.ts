@@ -17,11 +17,15 @@ const TMDB_API_KEY = (process.env.TMDB_API_KEY || "").trim();
 const TMDB_BEARER_TOKEN = (process.env.TMDB_BEARER_TOKEN || "").trim();
 const YT_KEYS_PARAM = (process.env.YT_KEYS || "").trim(); // Comma-separated
 const SPORTMONKS_KEY = (process.env.SPORTMONKS_KEY || "").trim();
-const APISPORTS_KEY = (process.env.APISPORTS_KEY || "").trim();
+const APISPORTS_KEY = (process.env.APISPORTS_KEY || "e993ed7d8bcb48b798f7e469af594673").trim();
 const SCOREBAT_TOKEN = (process.env.SCOREBAT_TOKEN || "").trim();
 const OMDB_API_KEY = (process.env.OMDB_API_KEY || "").trim();
-const WATCHMODE_API_KEY = (process.env.WATCHMODE_API_KEY || "").trim();
+const WATCHMODE_API_KEY = (process.env.WATCHMODE_API_KEY || "hYQoz7vtpJ0hp4vysj5KuZlmSN1PcxWwEklLGquM").trim();
 const RAPIDAPI_KEY = (process.env.RAPIDAPI_KEY || "").trim();
+const FANART_API_KEY = (process.env.FANART_API_KEY || "c96f72ba3607fcac11343afbee5e8f97").trim();
+const TRAKT_CLIENT_ID = (process.env.TRAKT_CLIENT_ID || "3d7c694f8d3e6a841ef0048d59bcf0bb384931").trim();
+const TRAKT_CLIENT_SECRET = (process.env.TRAKT_CLIENT_SECRET || "917f877e6c85220194d0eb85a05c16e9750b835775d4d26ae1a854433bc7fc0e").trim();
+const TASTEDIVE_API_KEY = (process.env.TASTEDIVE_API_KEY || "1070702-Streamlu-F18F9A64").trim();
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const YT_BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -53,7 +57,11 @@ export const gateway = functions
             "SCOREBAT_TOKEN",
             "OMDB_API_KEY",
             "WATCHMODE_API_KEY",
-            "RAPIDAPI_KEY"
+            "RAPIDAPI_KEY",
+            "FANART_API_KEY",
+            "TRAKT_CLIENT_ID",
+            "TRAKT_CLIENT_SECRET",
+            "TASTEDIVE_API_KEY"
         ]
     })
     .https.onRequest(async (req, res) => {
@@ -486,6 +494,51 @@ export const gateway = functions
                     params: { ...params, apiKey: WATCHMODE_API_KEY },
                     timeout: 10000
                 });
+                res.status(200).json(response.data);
+                return;
+            }
+
+            // --- FANART PROXY ---
+            if (rawPath === 'fanart' || rawPath.startsWith('fanart/')) {
+                if (!FANART_API_KEY) {
+                    res.status(500).json({ error: 'FANART_API_KEY not configured' });
+                    return;
+                }
+                const subPath = rawPath.replace(/^fanart\/?/, '');
+                const target = `https://webservice.fanart.tv/v3/${subPath}`;
+                const params = { ...(req.query || {}), api_key: FANART_API_KEY };
+                const response = await axios.get(target, { params, timeout: 10000 });
+                res.status(200).json(response.data);
+                return;
+            }
+
+            // --- TRAKT PROXY ---
+            if (rawPath === 'trakt' || rawPath.startsWith('trakt/')) {
+                if (!TRAKT_CLIENT_ID) {
+                    res.status(500).json({ error: 'TRAKT_CLIENT_ID not configured' });
+                    return;
+                }
+                const subPath = rawPath.replace(/^trakt\/?/, '');
+                const target = `https://api.trakt.tv/${subPath}`;
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'trakt-api-version': '2',
+                    'trakt-api-key': TRAKT_CLIENT_ID
+                };
+                const response = await axios.get(target, { headers, params: req.query, timeout: 10000 });
+                res.status(200).json(response.data);
+                return;
+            }
+
+            // --- TASTEDIVE PROXY ---
+            if (rawPath === 'tastedive' || rawPath.startsWith('tastedive/')) {
+                if (!TASTEDIVE_API_KEY) {
+                    res.status(500).json({ error: 'TASTEDIVE_API_KEY not configured' });
+                    return;
+                }
+                const target = `https://tastedive.com/api/similar`;
+                const params = { ...(req.query || {}), k: TASTEDIVE_API_KEY };
+                const response = await axios.get(target, { params, timeout: 10000 });
                 res.status(200).json(response.data);
                 return;
             }

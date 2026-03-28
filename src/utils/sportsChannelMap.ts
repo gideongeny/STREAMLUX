@@ -206,6 +206,13 @@ export const getStreamEastSources = (match: { homeTeam: string; awayTeam: string
   
   const sources: SportsChannel[] = [];
 
+  // --- Add Global Safe Fallback (ESPN) ---
+  sources.push({
+    name: 'Safe Channel (ESPN)',
+    type: 'iframe',
+    url: 'https://dlhd.so/embed/stream-41.php', // High-stability ESPN source
+  });
+
   // Try standard slugs on the most stable mirrors first
   ['ph', 'ch', 'ms'].forEach(tld => {
     sources.push({
@@ -238,4 +245,16 @@ export const getStreamEastSources = (match: { homeTeam: string; awayTeam: string
   });
 
   return sources;
+};
+
+/**
+ * Returns a high-reliability 'Safe Channel' (ESPN) for any sport
+ * Used as a catch-all fallback when all other mirrors/servers fail.
+ */
+export const getSafeChannel = (): SportsChannel => {
+  return {
+    name: 'Safe Channel (ESPN)',
+    type: 'iframe',
+    url: 'https://dlhd.so/embed/stream-41.php'
+  };
 };
