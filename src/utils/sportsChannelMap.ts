@@ -2,6 +2,7 @@ export interface SportsChannel {
   name: string;
   type: 'iframe' | 'hls';
   url: string;
+  isExternal?: boolean; // If true, this mirror restricts iframes/embedding
 }
 
 export const ALL_SPORTS_CHANNELS: SportsChannel[] = [
@@ -206,20 +207,22 @@ export const getStreamEastSources = (match: { homeTeam: string; awayTeam: string
   const sources: SportsChannel[] = [];
 
   // Try standard slugs on the most stable mirrors first
-  ['su', 'ms', 'ps'].forEach(tld => {
+  ['ph', 'ch', 'ms'].forEach(tld => {
     sources.push({
-      name: `StreamEast Alpha (.${tld})`,
+      name: `Mirror Alpha (.${tld})`,
       type: 'iframe',
-      url: `https://www.streameast.${tld}/${cat}/${baseSlug}/`
+      url: `https://www.streameast.${tld}/${cat}/${baseSlug}/`,
+      isExternal: true
     });
   });
 
-  // Try suffix variants (-1) on the same stable mirrors
-  ['su', 'ms', 'ps'].forEach(tld => {
+  // Try suffix variants (-1)
+  ['ph', 'ch', 'ms'].forEach(tld => {
     sources.push({
-      name: `StreamEast Beta (.${tld})`,
+      name: `Mirror Beta (.${tld})`,
       type: 'iframe',
-      url: `https://www.streameast.${tld}/${cat}/${baseSlug}-1/`
+      url: `https://www.streameast.${tld}/${cat}/${baseSlug}-1/`,
+      isExternal: true
     });
   });
 
@@ -227,9 +230,10 @@ export const getStreamEastSources = (match: { homeTeam: string; awayTeam: string
   MIRRORS.slice(3).forEach(tld => {
     const domain = tld === 'link' ? 'v4.gostreameast.link' : `www.streameast.${tld}`;
     sources.push({
-      name: `StreamEast Mirror (.${tld})`,
+      name: `Mirror Delta (.${tld})`,
       type: 'iframe',
-      url: `https://${domain}/${cat}/${baseSlug}/`
+      url: `https://${domain}/${cat}/${baseSlug}/`,
+      isExternal: true
     });
   });
 

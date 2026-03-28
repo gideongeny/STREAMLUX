@@ -243,22 +243,53 @@ const SportsWatchPage: React.FC = () => {
                 {/* Main Player Area */}
                 <div className={`flex-grow h-full relative bg-black transition-all duration-500`}>
                     {activeSource ? (
-                        activeSource.type === 'iframe' ? (
-                            <iframe
-                                key={activeSource.url}
-                                src={activeSource.url}
-                                className="w-full h-full border-0 absolute inset-0 z-0 bg-black"
-                                allowFullScreen
-                                allow="autoplay; encrypted-media; picture-in-picture"
-                            />
-                        ) : (
-                            <video 
-                                ref={videoRef}
-                                className="w-full h-full object-contain absolute inset-0 z-0 bg-black"
-                                controls
-                                autoPlay
-                            />
-                        )
+                        <>
+                            {activeSource.type === 'iframe' ? (
+                                <iframe
+                                    key={activeSource.url}
+                                    src={activeSource.url}
+                                    className="w-full h-full border-0 absolute inset-0 z-0 bg-black"
+                                    allowFullScreen
+                                    allow="autoplay; encrypted-media; picture-in-picture"
+                                />
+                            ) : (
+                                <video 
+                                    ref={videoRef}
+                                    className="w-full h-full object-contain absolute inset-0 z-0 bg-black"
+                                    controls
+                                    autoPlay
+                                />
+                            )}
+
+                            {/* External Mirror Overlay (for blocked iframes) */}
+                            {activeSource.isExternal && (
+                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#050505]/80 backdrop-blur-md p-8 text-center">
+                                    <div className="w-20 h-20 mb-8 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                                        <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </div>
+                                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-4">Mirror Protected</h2>
+                                    <p className="text-gray-400 max-w-md text-sm leading-relaxed mb-8">
+                                        This elite mirror requires direct viewing to ensure maximum quality and stability. Use the official link below to watch the live match.
+                                    </p>
+                                    <a 
+                                        href={activeSource.url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="px-8 py-4 bg-primary text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] flex items-center gap-3"
+                                    >
+                                        Open High-Stability Mirror
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                        </svg>
+                                    </a>
+                                    <p className="mt-8 text-[10px] text-gray-600 font-bold uppercase tracking-widest">
+                                        Or switch to "Server 1" in the header menu
+                                    </p>
+                                </div>
+                            )}
+                        </>
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full text-center p-10 bg-black">
                              <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-6" />
