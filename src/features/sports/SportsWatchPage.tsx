@@ -58,12 +58,15 @@ const SportsWatchPage: React.FC = () => {
         let headerName = 'Live Event';
         let channelId = '';
 
+        // CONTEXT RESOLUTION: Try to get match data from API (currentMatch) OR navigation state (location.state.matchData)
+        const matchContext = currentMatch || location.state?.matchData;
+
         // 1. Prioritize intelligent StreamEast mirrors first (No user input required)
-        if (currentMatch) {
-            const streamEastMirrors = getStreamEastSources(currentMatch);
+        if (matchContext) {
+            const streamEastMirrors = getStreamEastSources(matchContext);
             sources.push(...streamEastMirrors);
             
-            const dynamicSources = getDynamicMatchSources(currentMatch);
+            const dynamicSources = getDynamicMatchSources(matchContext);
             sources.push(...dynamicSources);
         }
 
@@ -75,8 +78,8 @@ const SportsWatchPage: React.FC = () => {
                   primaryLink = targetChannel.url;
                   headerName = targetChannel.name;
              }
-        } else if (!primaryLink && currentMatch?.link && !currentMatch.link.includes('espn.com')) {
-            primaryLink = currentMatch.link;
+        } else if (!primaryLink && matchContext?.link && !matchContext.link.includes('espn.com')) {
+            primaryLink = matchContext.link;
         } else if (matchId && matchId.startsWith('http')) {
             primaryLink = decodeURIComponent(matchId);
         }
@@ -102,7 +105,7 @@ const SportsWatchPage: React.FC = () => {
         }
 
         // 4. Add Fallback Channel based on sport/league
-        const leagueContext = currentMatch?.leagueId || currentMatch?.leagueName || (channelId ? headerName : 'network');
+        const leagueContext = matchContext?.leagueId || matchContext?.leagueName || (channelId ? headerName : 'network');
         const fallback = getFallbackChannel(leagueContext);
         
         if (!sources.some(s => s.url === fallback.url)) {

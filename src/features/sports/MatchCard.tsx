@@ -18,10 +18,15 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
     match.homeTeam.toLowerCase().includes('prix');
 
   const handleClick = () => {
-    // Navigate to the player page
+    // Navigate to the player page with full match context for mirror generation
     const leagueId = match.leagueId || 'general';
     const matchId = match.id;
-    navigate(`/sports/${leagueId}/${matchId}/watch`, { state: { streamUrl: match.link } });
+    navigate(`/sports/${leagueId}/${matchId}/watch`, { 
+      state: { 
+        streamUrl: match.link,
+        matchData: match // Pass full object to ensure mirrors generate even if API lookup fails
+      } 
+    });
   };
 
   return (
