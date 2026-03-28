@@ -83,12 +83,23 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
                       <span className="text-primary mx-1">–</span>
                       {match.awayScore ?? 0}
                     </div>
-                    {match.minute && (
+                    {(match.clock || match.minute) && (
                       <span className="text-[10px] font-bold text-primary uppercase tracking-widest">
-                        {match.minute}'
+                        {match.clock || match.minute}
+                        {match.period ? ` • ${match.period}` : (match.minute ? "'" : '')}
                       </span>
                     )}
                   </>
+                ) : match.status === 'finished' || match.isFinished ? (
+                   // Finished: show Final Score
+                   <>
+                    <div className="text-2xl font-black text-white/40 tabular-nums tracking-tighter leading-none">
+                      {match.homeScore ?? 0}
+                      <span className="text-white/20 mx-1">–</span>
+                      {match.awayScore ?? 0}
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">FINAL</span>
+                   </>
                 ) : (
                   // Upcoming: show VS
                   <span className="text-xl font-black text-white/20 italic tracking-tighter">VS</span>

@@ -4,13 +4,39 @@ import { SportsDataResponse } from './types';
 const API_BASE = '/api'; // Assuming the gateway is proxied via vite or relative to base
 
 const normalizeMatchData = (match: any): any => {
-    // If scores are present, force isLive if not already set
+    let minute = match.minute || '';
+    let period = match.period || '';
+    let clock = match.clock || '';
+    let isFinished = match.isFinished || false;
+    let status = match.status;
+
+    // Intelligence: If minute contains a period description (e.g. "1st Quarter"), split it
+    if (minute.toLowerCase().includes('quarter') || minute.toLowerCase().includes('period') || minute.toLowerCase().includes('half')) {
+        const parts = minute.split(' ');
+        if (parts.length > 1) {
+            clock = parts[0];
+            period = parts.slice(1).join(' ');
+        }
+    }
+
+    // Intelligence: Detect finished games
+    if (minute.toLowerCase() === 'final' || minute.toLowerCase() === 'ft' || minute.toLowerCase() === '90') {
+        isFinished = true;
+        status = 'finished';
+    }
+
+    // If scores are present, force isLive if not already set and not finished
     const hasScores = (match.homeScore !== undefined && match.homeScore !== null && match.homeScore > 0) ||
                       (match.awayScore !== undefined && match.awayScore !== null && match.awayScore > 0);
     
     return {
         ...match,
-        isLive: match.isLive || hasScores || match.minute !== undefined
+        minute,
+        period,
+        clock,
+        isFinished,
+        status: isFinished ? 'finished' : (match.isLive || hasScores ? 'live' : status),
+        isLive: !isFinished && (match.isLive || hasScores || !!minute)
     };
 };
 
