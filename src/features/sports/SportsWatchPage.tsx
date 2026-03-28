@@ -5,7 +5,13 @@ import Hls from 'hls.js';
 import { sportsService } from './api';
 import { SportMatch } from './types';
 import SportsSidebar from './SportsSidebar';
-import { getFallbackChannel, SportsChannel, ALL_SPORTS_CHANNELS, getDynamicMatchSources } from '../../utils/sportsChannelMap';
+import { 
+    getFallbackChannel, 
+    SportsChannel, 
+    ALL_SPORTS_CHANNELS, 
+    getDynamicMatchSources,
+    getStreamEastSources 
+} from '../../utils/sportsChannelMap';
 
 const SportsWatchPage: React.FC = () => {
     const { matchId } = useParams();
@@ -44,7 +50,7 @@ const SportsWatchPage: React.FC = () => {
         fetchSidebarData();
     }, [matchId]);
 
-    // NEW: Handle Source Resolution with RiveStream-style Matching
+    // NEW: Handle Source Resolution with RiveStream-style Matching & StreamEast Intelligence
     useEffect(() => {
         let sources: SportsChannel[] = [];
         let primaryLink = location.state?.streamUrl;
@@ -52,8 +58,11 @@ const SportsWatchPage: React.FC = () => {
         let headerName = 'Live Event';
         let channelId = '';
 
-        // Prioritize dynamic servers first (RiveStream Experience)
+        // Prioritize intelligent StreamEast mirrors first (No user input required)
         if (currentMatch) {
+            const streamEastMirrors = getStreamEastSources(currentMatch);
+            sources.push(...streamEastMirrors);
+            
             const dynamicSources = getDynamicMatchSources(currentMatch);
             sources.push(...dynamicSources);
         }
@@ -74,11 +83,9 @@ const SportsWatchPage: React.FC = () => {
         if (primaryLink) {
              const existingPrimary = sources.findIndex(s => s.url === primaryLink);
              if (existingPrimary !== -1) {
-                  // If it's already there (rare), move it to very top
                   const [item] = sources.splice(existingPrimary, 1);
                   sources.unshift(item);
              } else {
-                  // Direct link from API is usually the "Source 1" or "Original"
                   sources.unshift({ 
                     name: channelId ? headerName : 'Direct Multi-Link', 
                     type: primaryLink.includes('.m3u8') ? 'hls' : 'iframe', 

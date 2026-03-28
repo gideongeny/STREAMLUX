@@ -150,3 +150,61 @@ export const getDynamicMatchSources = (match: { homeTeam: string; awayTeam: stri
 
   return sources;
 };
+
+/**
+ * Intelligent StreamEast Slug Generator
+ * Handles specific sports categories and naming patterns found on StreamEast mirrors.
+ */
+export const generateStreamEastSlug = (home: string, away: string, sport?: string): string => {
+  const clean = (s: string) => 
+    s?.toLowerCase()
+     .replace(/[^a-z0-9\s]/g, '')
+     .replace(/\s+/g, '-') || 'team';
+  
+  const homeSlug = clean(home);
+  const awaySlug = clean(away);
+  const sportLower = sport?.toLowerCase() || '';
+
+  // Specialized patterns for certain sports
+  if (sportLower.includes('basketball') || sportLower.includes('nba')) {
+    return `${homeSlug}-vs-${awaySlug}-1`; // NBA often ends in -1
+  }
+
+  if (sportLower.includes('f1') || sportLower.includes('racing')) {
+    return `${homeSlug}-grand-prix`;
+  }
+
+  return `${homeSlug}-vs-${awaySlug}`;
+};
+
+/**
+ * Maps internal sport names to StreamEast categories
+ */
+export const getStreamEastCategory = (sport: string): string => {
+  const s = sport?.toLowerCase() || 'soccer';
+  if (s.includes('football')) return 'soccer';
+  if (s.includes('basketball')) return 'nba';
+  if (s.includes('racing')) return 'f1';
+  if (s.includes('baseball')) return 'mlb';
+  if (s.includes('hockey')) return 'nhl';
+  if (s.includes('fighting') || s.includes('ufc') || s.includes('mma')) return 'ufc';
+  return s;
+};
+
+/**
+ * Returns prioritized StreamEast mirrors for a specific match.
+ * Zero-input 'Intelligence' for mirror rotation.
+ */
+export const getStreamEastSources = (match: { homeTeam: string; awayTeam: string; sport?: string }): SportsChannel[] => {
+  const slug = generateStreamEastSlug(match.homeTeam, match.awayTeam, match.sport);
+  const cat = getStreamEastCategory(match.sport || '');
+  
+  // Current active top-level domains for StreamEast
+  const MIRRORS = ['is', 'ms', 'to', 'ps'];
+  
+  return MIRRORS.map(tld => ({
+    name: `StreamEast Alpha (.${tld})`,
+    type: 'iframe',
+    url: `https://www.streameast.${tld}/${cat}/${slug}/`
+  }));
+};
