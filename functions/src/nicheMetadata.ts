@@ -1,78 +1,62 @@
 import axios from 'axios';
 
 /**
- * Internet Archive Metadata Fetcher
- * Optimized for finding 1980s indie/obscure films.
+ * Jikan API (MyAnimeList) Integration
  */
-export const fetchInternetArchiveMetadata = async (query: string) => {
+export const fetchJikanMetadata = async (query: string) => {
     try {
-        const response = await axios.get('https://archive.org/advancedsearch.php', {
-            params: {
-                q: `${query} AND mediatype:movies`,
-                output: 'json',
-                fl: 'identifier,title,description,year,mediatype',
-                rows: 10
-            },
-            timeout: 10000
+        const response = await axios.get(`https://api.jikan.moe/v4/anime`, {
+            params: { q: query, limit: 1 },
+            timeout: 5000
         });
-
-        const docs = response.data?.response?.docs || [];
-        return docs.map((doc: any) => ({
-            id: `ia-${doc.identifier}`,
-            title: doc.title,
-            name: doc.title,
-            overview: doc.description || "Rare title from the Internet Archive.",
-            release_date: doc.year ? `${doc.year}-01-01` : "Unknown",
-            poster_path: `https://archive.org/services/img/${doc.identifier}`,
-            backdrop_path: `https://archive.org/services/img/${doc.identifier}`,
-            media_type: "movie",
-            source: "internet_archive"
-        }));
-    } catch (error) {
-        console.error("Internet Archive Fetch Error:", error);
-        return [];
+        return response.data?.data?.[0] || null;
+    } catch (e) {
+        console.error('Jikan API error:', e);
+        return null;
     }
 };
 
 /**
- * Jikan API (MyAnimeList) Fetcher
- * For niche/classic anime titles.
+ * Internet Archive Metadata Integration
  */
-export const fetchJikanMetadata = async (query: string) => {
+export const fetchInternetArchiveMetadata = async (query: string) => {
     try {
-        const response = await axios.get('https://api.jikan.moe/v4/anime', {
-            params: { q: query, limit: 10 },
-            timeout: 10000
+        const response = await axios.get(`https://archive.org/advancedsearch.php`, {
+            params: {
+                q: `title:(${query}) AND mediatype:(movies)`,
+                output: 'json',
+                rows: 1
+            },
+            timeout: 5000
         });
-
-        const data = response.data?.data || [];
-        return data.map((item: any) => ({
-            id: `mal-${item.mal_id}`,
-            title: item.title,
-            name: item.title,
-            overview: item.synopsis,
-            release_date: item.aired?.from ? item.aired.from.split('T')[0] : "Unknown",
-            poster_path: item.images?.jpg?.image_url,
-            backdrop_path: item.images?.jpg?.large_image_url,
-            media_type: "tv",
-            source: "jikan"
-        }));
-    } catch (error) {
-        console.error("Jikan Fetch Error:", error);
-        return [];
+        const doc = response.data?.response?.docs?.[0];
+        if (doc) {
+            return {
+                title: doc.title,
+                id: doc.identifier,
+                year: doc.date,
+                description: doc.description || doc.subject
+            };
+        }
+        return null;
+    } catch (e) {
+        console.error('Internet Archive error:', e);
+        return null;
     }
 };
 
 /**
  * Comprehensive Waterfall Search
+ * Rotates through niche sources if TMDB fails
  */
 export const comprehensiveWaterfallSearch = async (query: string) => {
-    // 1. We assume TMDB already failed if this is called
-    // 2. Try Internet Archive
-    const iaResults = await fetchInternetArchiveMetadata(query);
-    if (iaResults.length > 0) return iaResults;
+    // 1. Try Jikan (Anime)
+    const anime = await fetchJikanMetadata(query);
+    if (anime) return { source: 'jikan', data: anime };
 
-    // 3. Try Jikan
-    const jikanResults = await fetchJikanMetadata(query);
-    return jikanResults;
+    // 2. Try Internet Archive (Indie/Public Domain)
+    const archive = await fetchInternetArchiveMetadata(query);
+    if (archive) return { source: 'archive', data: archive };
+
+    return null;
 };
