@@ -11,11 +11,56 @@ import { scrapeAllSports } from './scrapers/footballScraper';
 import { scrapeStreamSports } from './scrapers/streamSportsScraper';
 import { searchFzMovies, searchNetNaija, search123Movies } from './scrapers/movieScrapers'; 
 import { resolveStream } from './resolver';
-import {
-    fetchInternetArchiveMetadata,
-    fetchJikanMetadata,
-    comprehensiveWaterfallSearch
-} from './nicheMetadata';
+/**
+ * Niche Metadata & Waterfall Search Utilities
+ */
+const fetchJikanMetadata = async (query: string) => {
+    try {
+        const response = await axios.get(`https://api.jikan.moe/v4/anime`, {
+            params: { q: query, limit: 1 },
+            timeout: 5000
+        });
+        return response.data?.data?.[0] || null;
+    } catch (e) {
+        console.error('Jikan API error:', e);
+        return null;
+    }
+};
+
+const fetchInternetArchiveMetadata = async (query: string) => {
+    try {
+        const response = await axios.get(`https://archive.org/advancedsearch.php`, {
+            params: {
+                q: `title:(${query}) AND mediatype:(movies)`,
+                output: 'json',
+                rows: 1
+            },
+            timeout: 5000
+        });
+        const doc = response.data?.response?.docs?.[0];
+        if (doc) {
+            return {
+                title: doc.title,
+                id: doc.identifier,
+                year: doc.date,
+                description: doc.description || doc.subject
+            };
+        }
+        return null;
+    } catch (e) {
+        console.error('Internet Archive error:', e);
+        return null;
+    }
+};
+
+const comprehensiveWaterfallSearch = async (query: string) => {
+    const anime = await fetchJikanMetadata(query);
+    if (anime) return { source: 'jikan', data: anime };
+    const archive = await fetchInternetArchiveMetadata(query);
+    if (archive) return { source: 'archive', data: archive };
+    return null;
+};
+
 
 // Access Secure Parameters via process.env (loaded from .env)
 const TMDB_API_KEY = (process.env.TMDB_API_KEY || "").trim();
