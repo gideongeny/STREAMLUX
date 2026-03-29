@@ -137,3 +137,79 @@ export async function resolveStream(providerUrl: string): Promise<ResolvedMedia>
         throw new Error(`Failed to resolve media URL: ${error.message}`);
     }
 }
+
+/**
+ * Sanitize a discovered link by 'test-playing' it for 5 seconds.
+ * Detects if the link triggers redirects or popups.
+ */
+export async function sanitizeLink(url: string): Promise<{ isClean: boolean; reason?: string }> {
+    let browser: playwright.Browser | null = null;
+    try {
+        browser = await playwright.chromium.launch({
+            args: chromium.args,
+            executablePath: await chromium.executablePath,
+            headless: chromium.headless,
+        });
+        const context = await browser.newContext();
+        const page = await context.newPage();
+
+        let popupDetected = false;
+        page.on('popup', () => { popupDetected = true; });
+
+        let redirectCount = 0;
+        page.on('framenavigated', () => { redirectCount++; });
+
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        
+        // Wait 5 seconds to observe behavior
+        await page.waitForTimeout(5000);
+
+        if (popupDetected) return { isClean: false, reason: 'unwanted_popup' };
+        if (redirectCount > 2) return { isClean: false, reason: 'excessive_redirects' };
+
+        return { isClean: true };
+    } catch (e: any) {
+        return { isClean: false, reason: e.message };
+    } finally {
+        if (browser) await browser.close();
+    }
+}
+
+/**
+ * High-Priority Source Discovery for Clean/Ad-Light 2026 sources.
+ */
+export const getCleanStreamSources = (tmdbId: string, mediaType: 'movie' | 'tv', season?: number, episode?: number) => {
+    const sources = [];
+
+    // VidSrc.me (Requested as #1 Source)
+    sources.push({
+        name: 'VidSrc.me',
+        url: mediaType === 'movie' 
+            ? `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`
+            : `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&s=${season}&e=${episode}`
+    });
+
+    // VidLink.pro (Cleanest for 2026)
+    sources.push({
+        name: 'VidLink (Clean)',
+        url: mediaType === 'movie' 
+            ? `https://vidlink.pro/movie/${tmdbId}`
+            : `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}`
+    });
+
+    // Embed.su
+    sources.push({
+        name: 'Embed.su',
+        url: `https://embed.su/embed/${mediaType}/${tmdbId}${mediaType === 'tv' ? `/${season}/${episode}` : ''}`
+    });
+
+    // SuperEmbed
+    sources.push({
+        name: 'SuperEmbed',
+        url: `https://superembed.stream/api/video?tmdb=${tmdbId}${mediaType === 'tv' ? `&s=${season}&e=${episode}` : ''}`
+    });
+
+    return sources;
+};
+
+

@@ -2407,3 +2407,59 @@ export const getTrendingWorldwide = async (): Promise<Item[]> => {
     return [];
   }
 };
+
+/** 🎥 Indie & Rare — Diverse content from IA/Niche Sources */
+export const getIndieAndRareContent = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/api/proxy/search/niche`, {
+      params: { q: "indie rare underground obscure" }
+    });
+    return (response.data || []).map((item: any) => ({
+      ...item,
+      id: item.id || String(Math.random()),
+      vote_average: item.vote_average || 0,
+      vote_count: item.vote_count || 0,
+      popularity: item.popularity || 0
+    }));
+  } catch (error) {
+    console.error("Error fetching Indie & Rare content:", error);
+    return [];
+  }
+};
+
+/** 🎌 Classic Anime — Obscure titles from Jikan/MAL fallback */
+export const getNicheAnimeContent = async (): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/api/proxy/search/niche`, {
+      params: { q: "classic anime 1980s 1990s retro" }
+    });
+    return (response.data || []).map((item: any) => ({
+      ...item,
+      id: item.id || String(Math.random()),
+    }));
+  } catch (error) {
+    console.error("Error fetching Niche Anime:", error);
+    return [];
+  }
+};
+
+/** 🎭 Specific Genre Content — Generic fetcher for new sliders */
+export const getGenreContent = async (genreId: number, type: "movie" | "tv"): Promise<Item[]> => {
+  try {
+    const response = await axios.get(`/discover/${type}`, {
+      params: { 
+        with_genres: genreId, 
+        sort_by: "popularity.desc",
+        page: 1 
+      }
+    });
+    return (response.data.results || []).map((item: any) => ({
+      ...item,
+      media_type: type
+    }));
+  } catch (error) {
+    console.error(`Error fetching genre ${genreId}:`, error);
+    return [];
+  }
+};
+

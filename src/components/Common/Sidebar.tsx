@@ -7,7 +7,9 @@ import { BsBookmarkHeart } from "react-icons/bs";
 import { HiOutlineLogin, HiOutlineLogout } from "react-icons/hi";
 import { MdOutlineExplore, MdSportsSoccer, MdFolderSpecial } from "react-icons/md";
 import { FaDownload } from "react-icons/fa";
+import { FiTv, FiMusic } from "react-icons/fi";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
@@ -188,6 +190,26 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           </Link>
 
           <Link
+            to="/tv"
+            className={`flex gap-6 items-center tw-hit-target ${location.pathname.startsWith("/tv") &&
+              "!text-primary border-r-4 border-primary font-medium"
+              } hover:text-white transition duration-300`}
+          >
+            <FiTv size={25} />
+            <p className="font-bold tracking-tight">{t('Live TV')}</p>
+          </Link>
+
+          <Link
+            to="/music"
+            className={`flex gap-6 items-center tw-hit-target ${location.pathname === "/music" &&
+              "!text-primary border-r-4 border-primary font-medium"
+              } hover:text-white transition duration-300`}
+          >
+            <FiMusic size={25} />
+            <p className="font-bold tracking-tight">{t('Music Hub')}</p>
+          </Link>
+
+          <Link
             to="/explore"
             className={`flex gap-6 items-center  ${location.pathname === "/explore" &&
               "!text-primary border-r-4 border-primary font-medium"
@@ -196,6 +218,7 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
             <MdOutlineExplore size={25} />
             <p className="font-bold tracking-tight">{t('Explore')}</p>
           </Link>
+
 
           <Link
             to="/search"

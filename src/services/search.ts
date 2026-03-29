@@ -74,7 +74,7 @@ export const getSearchResult: (
   const cached = safeStorage.get(cacheKey);
   if (cached) return JSON.parse(cached);
 
-  const [tmdbData, fzResults, ytResults] = await Promise.all([
+  const [tmdbData, fzResults, ytResults, nicheResponse] = await Promise.all([
     axios.get(`/search/${typeSearch}`, {
       params: {
         query,
@@ -90,8 +90,12 @@ export const getSearchResult: (
     searchYouTube(
       query,
       typeSearch as "multi" | "movie" | "tv"
-    )
+    ),
+    // Waterfall Fallback: Search Niche Sources (IA / MAL)
+    axios.get(`/api/proxy/search/niche`, { params: { q: query } }).catch(() => ({ data: [] }))
   ]);
+
+  const nicheResults: Item[] = nicheResponse.data || [];
 
   const tmdbResults = tmdbData.data.results
     .map((item: Item) => ({
@@ -99,10 +103,10 @@ export const getSearchResult: (
       ...(typeSearch !== "multi" && { media_type: typeSearch }),
     }));
 
-  // Merge with FZMovies and YouTube results, deduplicate by ID
-  const combined = [...tmdbResults, ...ytResults, ...fzResults];
+  // Merge with FZMovies, YouTube, and Niche results, deduplicate by ID
+  const combined: Item[] = [...tmdbResults, ...ytResults, ...fzResults, ...nicheResults];
   const seen = new Set<string | number>();
-  const results = combined.filter((item) => {
+  const filteredResults = combined.filter((item: Item) => {
     if (seen.has(item.id)) return false;
     seen.add(item.id);
     return true;
@@ -110,9 +114,10 @@ export const getSearchResult: (
 
   const finalData = {
     ...tmdbData.data,
-    results,
-    total_results: results.length,
+    results: filteredResults,
+    total_results: filteredResults.length,
   };
+
 
   safeStorage.set(cacheKey, JSON.stringify(finalData));
   return finalData;

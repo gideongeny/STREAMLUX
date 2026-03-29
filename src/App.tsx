@@ -38,6 +38,10 @@ const LocalPlayer = lazy(() => import("./pages/LocalPlayer"));
 const WatchlistPage = lazy(() => import("./pages/WatchlistPage"));
 const MatchesDetails = lazy(() => import("./pages/Sports/MatchesDetails"));
 const Collection = lazy(() => import("./pages/Collection"));
+const MusicHub = lazy(() => import("./features/music/MusicHub"));
+const LiveTVHub = lazy(() => import("./features/livetv/LiveTVHub"));
+const TVWatchPage = lazy(() => import("./features/livetv/TVWatchPage"));
+
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { setCurrentUser } from "./store/slice/authSlice";
@@ -64,6 +68,8 @@ import AtmosphericBackground from "./components/Common/AtmosphericBackground";
 import MobileBottomNav from "./components/Navigation/MobileBottomNav";
 import GeniusAI from "./components/Common/GeniusAI";
 import OnboardingOverlay from "./components/Common/OnboardingOverlay";
+import GlobalAudioPlayer from "./features/music/GlobalAudioPlayer";
+
 
 const GlobalLoader = () => (
   <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f172a', color: '#fff' }}>
@@ -525,6 +531,9 @@ function App() {
                   <Route path="watch" element={<LocalPlayer />} />
                   <Route path="watchlist" element={<WatchlistPage />} />
                   <Route path="collection/:id" element={<Collection />} />
+                  <Route path="music" element={<MusicHub />} />
+                  <Route path="tv" element={<LiveTVHub />} />
+                  <Route path="tv/:channelId" element={<TVWatchPage />} />
                   <Route
                     path="bookmarked"
                     element={
@@ -561,7 +570,9 @@ function App() {
           <MobileBottomNav />
           <GeniusAI />
           <OnboardingOverlay />
+          <GlobalAudioPlayer />
         </div>
+
       </DownloadManagerProvider>
     </div>
   );

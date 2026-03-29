@@ -263,32 +263,55 @@ const SportsWatchPage: React.FC = () => {
 
                             {/* External Mirror Overlay (for blocked iframes) */}
                             {activeSource.isExternal && (
-                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#050505]/80 backdrop-blur-md p-8 text-center">
-                                    <div className="w-20 h-20 mb-8 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                                        <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
+                                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#050505]/90 backdrop-blur-2xl p-8 text-center">
+                                    <div className="relative mb-10">
+                                        <div className="absolute inset-0 bg-primary/20 blur-[50px] animate-pulse rounded-full" />
+                                        <div className="relative w-24 h-24 rounded-[2rem] bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center text-primary shadow-2xl">
+                                            <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                            </svg>
+                                        </div>
                                     </div>
-                                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-4">Mirror Protected</h2>
-                                    <p className="text-gray-400 max-w-md text-sm leading-relaxed mb-8">
-                                        This elite mirror requires direct viewing to ensure maximum quality and stability. Use the official link below to watch the live match.
+                                    
+                                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4 italic">
+                                        Mirror <span className="text-primary italic">Protected</span>
+                                    </h2>
+                                    
+                                    <p className="text-gray-400 max-w-lg text-sm leading-relaxed mb-10 font-medium">
+                                        To maintain maximum stability and 4K stream quality, this elite mirror requires direct viewing. 
+                                        Don't worry—StreamLux is keeping your place while you watch.
                                     </p>
-                                    <a 
-                                        href={activeSource.url} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="px-8 py-4 bg-primary text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] flex items-center gap-3"
-                                    >
-                                        Open High-Stability Mirror
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                        </svg>
-                                    </a>
-                                    <p className="mt-8 text-[10px] text-gray-600 font-bold uppercase tracking-widest">
-                                        Or switch to "Server 1" in the header menu
-                                    </p>
+                                    
+                                    <div className="flex flex-col gap-4 w-full max-w-sm">
+                                        <a 
+                                            href={activeSource.url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="group relative px-10 py-5 bg-primary text-black font-black uppercase text-xs tracking-[0.25em] rounded-2xl transition-all shadow-[0_0_50px_rgba(239,68,68,0.3)] hover:shadow-[0_0_70px_rgba(239,68,68,0.5)] hover:scale-[1.02] flex items-center justify-center gap-4 overflow-hidden"
+                                        >
+                                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                                            <span className="relative">Open Premium Mirror</span>
+                                            <svg className="w-4 h-4 relative group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                            </svg>
+                                        </a>
+
+                                        <button 
+                                            onClick={() => setShowSourceSelector(true)}
+                                            className="px-10 py-5 bg-white/5 border border-white/10 text-white font-bold uppercase text-[10px] tracking-[0.2em] rounded-2xl hover:bg-white/10 transition-all"
+                                        >
+                                            Switch to Internal Server
+                                        </button>
+                                    </div>
+
+                                    <div className="mt-12 flex items-center gap-4 text-[9px] text-gray-600 font-black uppercase tracking-[0.3em] opacity-50">
+                                        <div className="h-px w-8 bg-gray-800" />
+                                        Encrypted Stream Protection Active
+                                        <div className="h-px w-8 bg-gray-800" />
+                                    </div>
                                 </div>
                             )}
+
                         </>
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full text-center p-10 bg-black">

@@ -22,6 +22,7 @@ import LiveBuzz from './LiveBuzz';
 import SubtitleSelector from './SubtitleSelector';
 import { useSearchParams } from 'react-router-dom';
 import { downloadService } from '../../services/download';
+import Hls from 'hls.js';
 
 export interface VideoSource {
     name: string;
@@ -145,6 +146,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     const indicatorTimerRef = useRef<NodeJS.Timeout | null>(null);
     const lastTapTime = useRef<number>(0);
     const swipeStart = useRef<{ x: number, y: number } | null>(null);
+    const hlsRef = useRef<Hls | null>(null);
 
     // Sync with external selectedSourceIndex prop
     useEffect(() => {
@@ -344,10 +346,57 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
             }
         }
 
+        // Handle HLS.js initialization for direct .m3u8 links
+        if (direct && currentSource.url.includes('.m3u8') && videoRef.current) {
+            const video = videoRef.current;
+            
+            if (hlsRef.current) {
+                hlsRef.current.destroy();
+                hlsRef.current = null;
+            }
+
+            if (Hls.isSupported()) {
+                const hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 60 * 1.5,
+                });
+                hlsRef.current = hls;
+                hls.loadSource(currentSource.url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    if (autoplayBlocked) return;
+                    video.play().catch(() => setAutoplayBlocked(true));
+                });
+                hls.on(Hls.Events.ERROR, (_, data) => {
+                    if (data.fatal) {
+                        switch (data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                handleVideoError();
+                                break;
+                        }
+                    }
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Native HLS support (Safari)
+                video.src = currentSource.url;
+            }
+        }
+
         return () => {
             if (adTimerRef.current) clearTimeout(adTimerRef.current);
+            if (hlsRef.current) {
+                hlsRef.current.destroy();
+                hlsRef.current = null;
+            }
         };
-    }, [currentIndex, currentSource?.url, title, startAt]);
+    }, [currentIndex, currentSource?.url, title, startAt, autoplayBlocked]);
 
     useEffect(() => {
         if (normalizedSources.length > 0) {

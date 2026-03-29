@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { SportMatch } from './types';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,38 @@ interface MatchCardProps {
 
 const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
   const navigate = useNavigate();
+  const [countdown, setCountdown] = useState<string>("");
+
+  useEffect(() => {
+    if (match.isLive || !match.kickoffTimeFormatted) return;
+
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const kickoff = new Date(match.kickoffTimeFormatted).getTime();
+      const diff = kickoff - now;
+
+      if (diff <= 0) {
+        setCountdown("KICKING OFF");
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      if (days > 0) {
+        setCountdown(`${days} ${days === 1 ? 'Day' : 'Days'}`);
+      } else {
+        const hStr = hours ? `${hours}:` : '';
+        const mStr = minutes < 10 && hours ? `0${minutes}:` : `${minutes}:`;
+        const sStr = seconds < 10 ? `0${seconds}` : `${seconds}`;
+        setCountdown(`${hStr}${mStr}${sStr}`);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [match.kickoffTimeFormatted, match.isLive]);
 
   const isActuallyCompetition = match.isCompetition || 
     match.sport?.toLowerCase() === 'racing' || 
@@ -18,13 +50,12 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
     match.homeTeam.toLowerCase().includes('prix');
 
   const handleClick = () => {
-    // Navigate to the player page with full match context for mirror generation
     const leagueId = match.leagueId || 'general';
     const matchId = match.id;
     navigate(`/sports/${leagueId}/${matchId}/watch`, { 
       state: { 
         streamUrl: match.link,
-        matchData: match // Pass full object to ensure mirrors generate even if API lookup fails
+        matchData: match 
       } 
     });
   };
@@ -36,12 +67,10 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
       onClick={handleClick}
       className="relative group cursor-pointer overflow-hidden rounded-[2rem] border border-white/5 bg-[#0F0F0F]/60 backdrop-blur-xl transition-all duration-300 hover:border-primary/30 shadow-2xl"
     >
-      {/* Background Glows */}
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 blur-[60px] group-hover:bg-primary/20 transition-colors" />
       <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-500/10 blur-[60px]" />
 
       <div className="p-6 h-full flex flex-col justify-between">
-        {/* Header: Sport & Status */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] uppercase font-bold tracking-widest text-[#888]">
@@ -57,13 +86,17 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
               <span className="text-[10px] font-black text-red-500 tracking-tighter uppercase">LIVE</span>
             </div>
           ) : (
-            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-              {match.kickoffTimeFormatted}
+            <div className="flex flex-col items-end">
+                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none mb-1">
+                    {match.kickoffTimeFormatted ? new Date(match.kickoffTimeFormatted).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : 'Upcoming'}
+                </div>
+                <div className="text-[14px] font-black text-white tabular-nums tracking-tighter leading-none">
+                    {countdown}
+                </div>
             </div>
           )}
         </div>
 
-        {/* Teams & Logos */}
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className={`flex flex-col items-center gap-3 flex-1 ${isActuallyCompetition ? 'w-full' : ''}`}>
             <div className="w-16 h-16 rounded-full bg-white/5 p-2 flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-500">
@@ -81,7 +114,6 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
             <>
               <div className="flex flex-col items-center gap-1 min-w-[60px]">
                 {match.isLive ? (
-                  // Live: show score prominently
                   <>
                     <div className="text-2xl font-black text-white tabular-nums tracking-tighter leading-none">
                       {match.homeScore ?? 0}
@@ -96,7 +128,6 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
                     )}
                   </>
                 ) : match.status === 'finished' || match.isFinished ? (
-                   // Finished: show Final Score
                    <>
                     <div className="text-2xl font-black text-white/40 tabular-nums tracking-tighter leading-none">
                       {match.homeScore ?? 0}
@@ -106,7 +137,6 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">FINAL</span>
                    </>
                 ) : (
-                  // Upcoming: show VS
                   <span className="text-xl font-black text-white/20 italic tracking-tighter">VS</span>
                 )}
               </div>
@@ -133,7 +163,6 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
           )}
         </div>
 
-        {/* Footer info */}
         <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
             <span className="text-[10px] text-gray-500 font-medium uppercase truncate max-w-[120px]">
                 {match.venue || 'Arena'}
@@ -148,3 +177,4 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
 };
 
 export default MatchCard;
+

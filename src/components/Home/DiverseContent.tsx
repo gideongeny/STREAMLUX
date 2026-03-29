@@ -54,7 +54,10 @@ import {
   getCrimeTV,
   getDocumentaryTV,
   getMysteryTV,
-  getFamilyTV
+  getFamilyTV,
+  getIndieAndRareContent,
+  getNicheAnimeContent,
+  getGenreContent
 } from '../../services/home';
 import LazySection from '../Common/LazySection';
 
@@ -82,6 +85,13 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
           {/* PRIORITY 3: Animation & Family */}
           <LazySection fetcher={getAnimationMovies} title="Animation" />
           <LazySection fetcher={getFamilyMovies} title="Family" />
+
+          {/* NEW: Niche & Indie Sections */}
+          <LazySection fetcher={getIndieAndRareContent} title="Indie & Rare Discoveries" isLarge />
+          <LazySection fetcher={getNicheAnimeContent} title="Classic Anime Gems" />
+          <LazySection fetcher={() => getGenreContent(10749, 'movie')} title="Arthouse & Cult" />
+          <LazySection fetcher={() => getGenreContent(80, 'movie')} title="Grindhouse Cinema" />
+
 
           {/* PRIORITY 4: World Cinema - Major Markets */}
           <LazySection fetcher={getKoreanContent} title="K-Drama & Korean Mvoies" />

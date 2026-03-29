@@ -526,9 +526,10 @@ export const getTMDBByBrand = async (
     disney:   { companies: "2|3|6125",         minVotes: 30 },
     pixar:    { companies: "3",                 minVotes: 20 },
     marvel:   { companies: "420|176762",        minVotes: 50 },
-    starwars: { companies: "1",  keywords: "11531", minVotes: 10 },
+    starwars: { keywords: "11531", minVotes: 0 },
     natgeo:   { companies: "7521|58",           minVotes: 5  },
     dc:       { companies: "12806|27711|9993",  minVotes: 30 },
+
   };
 
   const mapping = companyBrands[id];

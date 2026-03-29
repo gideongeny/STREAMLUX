@@ -2,7 +2,9 @@ import { FC } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { MdExplore, MdFolderSpecial, MdSportsSoccer, MdHomeFilled } from 'react-icons/md';
 import { BiSearch } from 'react-icons/bi';
+import { FiTv, FiMusic } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
+
 import Logo from '../Common/Logo';
 import { motion } from "framer-motion";
 
@@ -11,25 +13,20 @@ const MobileBottomNav: FC = () => {
   const location = useLocation();
 
   const NAV_ITEMS = [
-    { icon: <MdHomeFilled size={26} />, label: t("Home"), path: "/" },
-    { icon: <MdExplore size={26} />, label: t("Explore"), path: "/explore" },
+    { icon: <MdHomeFilled size={24} />, label: t("Home"), path: "/" },
+    { icon: <MdSportsSoccer size={24} />, label: t("Sports"), path: "/sports" },
     {
       icon: (
-        <Link
-          to="/"
-          className={`flex flex-col items-center justify-center -mt-8 mx-2 tw-hit-target w-16 h-16 rounded-full p-2 border-4 transition-all duration-300 transform outline-none border-dark shadow-2xl ${location.pathname === '/' || location.pathname === '/sports' || location.pathname === '/explore' || location.pathname === '/search' ? 'border-primary/50 bg-dark-lighten scale-105 shadow-primary/30' : 'border-gray-darken bg-dark shadow-[0_0_15px_rgba(0,0,0,0.5)]'}`}
-        >
-          <Logo className="w-10 h-10 filter drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
-          <div className={`absolute -bottom-2 w-1.5 h-1.5 rounded-full bg-primary transition-opacity duration-300 ${location.pathname === '/' ? 'opacity-100' : 'opacity-0'}`}></div>
-        </Link>
+        <Logo className="w-10 h-10 filter drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
       ),
       label: "",
-      path: "/", // This path is used for the central logo, but the Link inside the icon handles navigation
+      path: "/",
       special: true
     },
-    { icon: <MdSportsSoccer size={26} />, label: t("Sports"), path: "/sports" },
-    { icon: <BiSearch size={26} />, label: t("Search"), path: "/search" },
+    { icon: <FiTv size={24} />, label: t("Live TV"), path: "/tv" },
+    { icon: <FiMusic size={24} />, label: t("Music"), path: "/music" },
   ];
+
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-[120] pb-safe">

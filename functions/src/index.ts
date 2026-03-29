@@ -11,6 +11,11 @@ import { scrapeAllSports } from './scrapers/footballScraper';
 import { scrapeStreamSports } from './scrapers/streamSportsScraper';
 import { searchFzMovies, searchNetNaija, search123Movies } from './scrapers/movieScrapers'; 
 import { resolveStream } from './resolver';
+import {
+    fetchInternetArchiveMetadata,
+    fetchJikanMetadata,
+    comprehensiveWaterfallSearch
+} from './nicheMetadata';
 
 // Access Secure Parameters via process.env (loaded from .env)
 const TMDB_API_KEY = (process.env.TMDB_API_KEY || "").trim();
@@ -23,9 +28,11 @@ const OMDB_API_KEY = (process.env.OMDB_API_KEY || "").trim();
 const WATCHMODE_API_KEY = (process.env.WATCHMODE_API_KEY || "hYQoz7vtpJ0hp4vysj5KuZlmSN1PcxWwEklLGquM").trim();
 const RAPIDAPI_KEY = (process.env.RAPIDAPI_KEY || "").trim();
 const FANART_API_KEY = (process.env.FANART_API_KEY || "c96f72ba3607fcac11343afbee5e8f97").trim();
-const TRAKT_CLIENT_ID = (process.env.TRAKT_CLIENT_ID || "3d7c694f8d3e6a841ef0048d59bcf0bb384931").trim();
+const TRAKT_CLIENT_ID = (process.env.TRAKT_CLIENT_ID || "3d7c694f8d3e6a841ef0048d59bcf0bb384931Ht6TLmpMc3xhN5euPZo5ecC4RJtfJrJu8").trim();
 const TRAKT_CLIENT_SECRET = (process.env.TRAKT_CLIENT_SECRET || "917f877e6c85220194d0eb85a05c16e9750b835775d4d26ae1a854433bc7fc0e").trim();
 const TASTEDIVE_API_KEY = (process.env.TASTEDIVE_API_KEY || "1070702-Streamlu-F18F9A64").trim();
+const APISPORTS_KEY = (process.env.APISPORTS_KEY || "e993ed7d8bcb48b798f7e469af594673").trim();
+
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const YT_BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -457,9 +464,12 @@ export const gateway = functions
                 });
 
                 res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+                // Final Score Intelligence: If all providers return 0-0 but match is 'Live', it's usually a state issue.
+                // We'll mark them as 'LIVE' but keep current score.
                 res.status(200).json({ success: true, data: unique });
                 return;
             }
+
 
             // --- OMDB PROXY (server-side key) ---
             if (rawPath === 'omdb' || rawPath.startsWith('omdb/')) {
@@ -540,6 +550,44 @@ export const gateway = functions
                 const params = { ...(req.query || {}), k: TASTEDIVE_API_KEY };
                 const response = await axios.get(target, { params, timeout: 10000 });
                 res.status(200).json(response.data);
+                return;
+            }
+
+            // --- MUSIC PROXY (YouTube Data API - Category 10) ---
+            if (rawPath === 'music/search' || rawPath === 'music/trending') {
+                const keys = getYTKeys();
+                let lastError = null;
+
+                for (const key of keys) {
+                    if (deadKeys.has(key)) continue;
+                    try {
+                        const isTrending = rawPath === 'music/trending';
+                        const params = {
+                            part: 'snippet',
+                            key: key,
+                            maxResults: 20,
+                            videoCategoryId: '10', // Music Category
+                            type: 'video',
+                            ...(req.query || {})
+                        };
+
+                        let target = `${YT_BASE_URL}/search`;
+                        if (isTrending) {
+                            target = `${YT_BASE_URL}/videos`;
+                            (params as any).chart = 'mostPopular';
+                            delete (params as any).type;
+                            delete (params as any).q;
+                        }
+
+                        const response = await axios.get(target, { params, timeout: 8000 });
+                        res.status(200).json(response.data);
+                        return;
+                    } catch (e: any) {
+                        lastError = e;
+                        if (e.response?.status === 403) deadKeys.add(key);
+                    }
+                }
+                res.status(500).json({ error: 'Music API unavailable', detail: lastError?.message });
                 return;
             }
 
@@ -785,6 +833,18 @@ export const gateway = functions
                     gateway: 'consolidated-v2-sports',
                     timestamp: Date.now() 
                 });
+                return;
+            }
+
+            // --- NICHE METADATA SEARCH ---
+            if (rawPath === 'search/niche' || rawPath.startsWith('search/niche/')) {
+                const q = req.query?.q as string;
+                if (!q) {
+                    res.status(400).json({ error: 'Query parameter q is required' });
+                    return;
+                }
+                const results = await comprehensiveWaterfallSearch(q);
+                res.status(200).json(results);
                 return;
             }
 
