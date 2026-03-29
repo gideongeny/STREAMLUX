@@ -30,8 +30,9 @@ const LiveTVHub: React.FC = () => {
   const categories = ['All', ...Array.from(new Set(ALL_TV_CHANNELS.map(c => c.category)))];
 
   const handleChannelClick = (channel: TVChannel) => {
-    navigate(`/tv/${channel.id}`, { state: { channel } });
+    navigate(`/live-tv/${channel.id}`, { state: { channel } });
   };
+
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-24 pb-20 px-4 md:px-10">

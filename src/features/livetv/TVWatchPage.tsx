@@ -20,8 +20,9 @@ const TVWatchPage: React.FC = () => {
     if (found) {
       setCurrentChannel(found);
     } else {
-      navigate('/tv'); // Fallback if channel not found
+      navigate('/live-tv'); // Fallback if channel not found
     }
+
   }, [channelId, location.state]);
 
   useEffect(() => {
@@ -57,9 +58,10 @@ const TVWatchPage: React.FC = () => {
       <div className="h-20 bg-[#050505]/90 backdrop-blur-2xl border-b border-white/5 flex items-center justify-between px-6 z-50">
         <div className="flex items-center gap-6">
           <button 
-            onClick={() => navigate('/tv')} 
+            onClick={() => navigate('/live-tv')} 
             className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-gray-400 hover:text-white"
           >
+
             <FiChevronLeft className="w-6 h-6" />
           </button>
           
@@ -137,8 +139,9 @@ const TVWatchPage: React.FC = () => {
                                 key={channel.id}
                                 onClick={() => {
                                     setCurrentChannel(channel);
-                                    navigate(`/tv/${channel.id}`, { state: { channel }, replace: true });
+                                    navigate(`/live-tv/${channel.id}`, { state: { channel }, replace: true });
                                 }}
+
                                 className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-white/5 transition-all mb-2 group text-left border border-transparent hover:border-white/5"
                             >
                                 <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:border-primary/30 transition-all font-black text-xs text-gray-500 group-hover:text-primary">

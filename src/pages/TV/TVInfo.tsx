@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate } from "react-router-dom";
 import FilmDetail from "../../components/FilmDetail/FilmDetail";
 import SEO from "../../components/Common/SEO";
 import { getTVFullDetail } from "../../services/tv";
@@ -9,10 +9,17 @@ import { useTranslation } from "react-i18next";
 import { MdTv, MdSearch, MdHome } from "react-icons/md";
 import { motion } from "framer-motion";
 import AdBanner from "../../components/Ads/AdBanner";
+import { ALL_TV_CHANNELS } from "../../utils/tvChannelMap";
 
 const TVInfo: FC = () => {
   const { id } = useParams();
   const { i18n } = useTranslation();
+
+  // Smart Redirect: If this ID is a Live TV Channel, redirect to the Live TV Watch Page
+  const isLiveTV = ALL_TV_CHANNELS.some(c => c.id === id);
+  if (isLiveTV) {
+    return <Navigate to={`/live-tv/${id}`} replace />;
+  }
 
   const { data, isError, isLoading } = useQuery<FilmInfo, Error>(
     ["tvDetail", id, i18n.language],
