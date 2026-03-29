@@ -190,14 +190,15 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           </Link>
 
           <Link
-            to="/tv"
-            className={`flex gap-6 items-center tw-hit-target ${location.pathname.startsWith("/tv") &&
+            to="/live-tv"
+            className={`flex gap-6 items-center tw-hit-target ${location.pathname.startsWith("/live-tv") &&
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300`}
           >
             <FiTv size={25} />
             <p className="font-bold tracking-tight">{t('Live TV')}</p>
           </Link>
+
 
           <Link
             to="/music"

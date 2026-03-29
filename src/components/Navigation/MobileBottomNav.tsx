@@ -23,9 +23,10 @@ const MobileBottomNav: FC = () => {
       path: "/",
       special: true
     },
-    { icon: <FiTv size={24} />, label: t("Live TV"), path: "/tv" },
+    { icon: <FiTv size={24} />, label: t("Live TV"), path: "/live-tv" },
     { icon: <FiMusic size={24} />, label: t("Music"), path: "/music" },
   ];
+
 
 
   return (

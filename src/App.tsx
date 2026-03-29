@@ -532,8 +532,8 @@ function App() {
                   <Route path="watchlist" element={<WatchlistPage />} />
                   <Route path="collection/:id" element={<Collection />} />
                   <Route path="music" element={<MusicHub />} />
-                  <Route path="tv" element={<LiveTVHub />} />
-                  <Route path="tv/:channelId" element={<TVWatchPage />} />
+                  <Route path="live-tv" element={<LiveTVHub />} />
+                  <Route path="live-tv/:channelId" element={<TVWatchPage />} />
                   <Route
                     path="bookmarked"
                     element={
