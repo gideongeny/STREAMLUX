@@ -31,7 +31,7 @@ const FANART_API_KEY = (process.env.FANART_API_KEY || "c96f72ba3607fcac11343afbe
 const TRAKT_CLIENT_ID = (process.env.TRAKT_CLIENT_ID || "3d7c694f8d3e6a841ef0048d59bcf0bb384931Ht6TLmpMc3xhN5euPZo5ecC4RJtfJrJu8").trim();
 const TRAKT_CLIENT_SECRET = (process.env.TRAKT_CLIENT_SECRET || "917f877e6c85220194d0eb85a05c16e9750b835775d4d26ae1a854433bc7fc0e").trim();
 const TASTEDIVE_API_KEY = (process.env.TASTEDIVE_API_KEY || "1070702-Streamlu-F18F9A64").trim();
-const APISPORTS_KEY = (process.env.APISPORTS_KEY || "e993ed7d8bcb48b798f7e469af594673").trim();
+
 
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
