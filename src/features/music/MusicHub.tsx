@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { musicService, MusicTrack } from '../../services/music';
 import { setTrack, setQueue } from '../../store/slice/musicSlice';
-import { FiMusic, FiSearch, FiPlay, FiVolume2, FiTrendingUp, FiDisc, FiHome } from 'react-icons/fi';
-
+import { FiMusic, FiSearch, FiPlay, FiVolume2, FiTrendingUp, FiDisc, FiHome, FiChevronLeft, FiChevronRight, FiStar } from 'react-icons/fi';
 import { RootState } from '../../store/store';
-
 import { useNavigate } from 'react-router-dom';
 
 const MusicHub: React.FC = () => {
@@ -18,6 +16,9 @@ const MusicHub: React.FC = () => {
   const [searchResults, setSearchResults] = useState<MusicTrack[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+
+  const trendingRef = useRef<HTMLDivElement>(null);
+  const artistRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadTrending();
@@ -44,13 +45,31 @@ const MusicHub: React.FC = () => {
     dispatch(setQueue(list));
   };
 
+  const scroll = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right') => {
+    if (ref.current) {
+        const { scrollLeft, clientWidth } = ref.current;
+        const scrollTo = direction === 'left' ? scrollLeft - clientWidth : scrollLeft + clientWidth;
+        ref.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+    }
+  };
+
+  const dummyArtists = [
+    { name: 'The Weeknd', img: 'https://i.scdn.co/image/ab6761610000e5eb214f3cf42d80139982447f27' },
+    { name: 'Drake', img: 'https://i.scdn.co/image/ab6761610000e5eb4293361a48ff35da63f3ef71' },
+    { name: 'Taylor Swift', img: 'https://i.scdn.co/image/ab6761610000e5eb859eee69632eb34d47da1063' },
+    { name: 'Bad Bunny', img: 'https://i.scdn.co/image/ab6761610000e5eb989ed05e1f05740163caabc2' },
+    { name: 'Future', img: 'https://i.scdn.co/image/ab6761610000e5eb735f9914f697472856f6ba7c' },
+    { name: 'Post Malone', img: 'https://i.scdn.co/image/ab6761610000e5eb60443909187399580b5ef970' },
+    { name: 'Travis Scott', img: 'https://i.scdn.co/image/ab6761610000e5eb1d2b865611099688463e264f' },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-24 pb-32 px-4 md:px-10">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#050505] text-white pt-24 pb-48 px-4 md:px-10 overflow-hidden">
+      <div className="max-w-[1600px] mx-auto">
         
         {/* Cinematic Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-          <div className="flex-grow">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-12 mb-20">
+          <div className="relative">
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -58,79 +77,143 @@ const MusicHub: React.FC = () => {
             >
               <button 
                 onClick={() => navigate('/')}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white hover:bg-white/10 transition-all group"
               >
-                <FiHome className="w-4 h-4" />
+                <FiHome className="w-4 h-4 group-hover:scale-120 transition-transform" />
                 Back to Dashboard
               </button>
             </motion.div>
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 text-primary font-black uppercase tracking-[0.3em] text-[10px] mb-4"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-4 text-primary font-black uppercase tracking-[0.4em] text-[10px] mb-6"
             >
-              <FiVolume2 className="animate-bounce" />
-              StreamLux Audio Experience
+              <div className="flex gap-1">
+                <span className="w-1 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                <span className="w-1 h-5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                <span className="w-1 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+              </div>
+              High Fidelity Audio
             </motion.div>
             <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-6xl md:text-8xl font-black tracking-tighter italic uppercase leading-none"
+              transition={{ delay: 0.2 }}
+              className="text-7xl md:text-9xl font-black tracking-tighter italic uppercase leading-[0.85] select-none"
             >
-              Music <span className="text-white/10">Hub</span>
+              MUSIC <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500 opacity-80">UNIVERSE</span>
             </motion.h1>
           </div>
 
-
-          <motion.form 
-            onSubmit={handleSearch}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="relative w-full md:w-[450px]"
+          <motion.div
+             initial={{ opacity: 0, scale: 0.9 }}
+             animate={{ opacity: 1, scale: 1 }}
+             transition={{ delay: 0.3 }}
+             className="relative lg:w-[500px]"
           >
-            <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
-            <input 
-              type="text"
-              placeholder="Search Artists, Tracks, or Albums..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-16 bg-white/5 border border-white/10 rounded-full pl-16 pr-6 text-sm font-bold focus:outline-none focus:border-primary/50 transition-all placeholder:text-gray-600 shadow-2xl"
-            />
-          </motion.form>
+            <form onSubmit={handleSearch} className="relative group">
+                <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <FiSearch className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-500 w-6 h-6 group-focus-within:text-primary transition-colors z-10" />
+                <input 
+                    type="text"
+                    placeholder="Search 100M+ Songs, Artists..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-20 bg-white/5 border border-white/10 rounded-[2rem] pl-20 pr-8 text-lg font-bold focus:outline-none focus:border-primary/50 transition-all placeholder:text-gray-700 backdrop-blur-3xl relative z-10"
+                />
+            </form>
+          </motion.div>
         </div>
 
-        {/* Content Section */}
+        {/* Dynamic Content */}
         <AnimatePresence mode="wait">
           {searchQuery && searchResults.length > 0 ? (
-            <motion.div 
+            <motion.section 
                 key="search"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -40 }}
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8"
             >
               {searchResults.map((track, idx) => (
                 <TrackCard key={track.id} track={track} onPlay={() => playMusic(track, searchResults)} idx={idx} currentId={currentTrack?.id} isPlaying={isPlaying} />
               ))}
-            </motion.div>
+            </motion.section>
           ) : (
-            <div key="trending">
-              <div className="flex items-center gap-4 mb-8">
-                  <FiTrendingUp className="text-primary w-6 h-6" />
-                  <h2 className="text-2xl font-black uppercase tracking-tighter italic">World Trending</h2>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
-                {isLoading ? (
-                  Array(10).fill(0).map((_, i) => <TrackCardSkeleton key={i} />)
-                ) : (
-                  trending.map((track, idx) => (
-                    <TrackCard key={track.id} track={track} onPlay={() => playMusic(track, trending)} idx={idx} currentId={currentTrack?.id} isPlaying={isPlaying} />
-                  ))
-                )}
-              </div>
-            </div>
+            <motion.div 
+               key="dashboard"
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               className="space-y-24"
+            >
+              {/* Trending Carousel */}
+              <section>
+                <div className="flex items-center justify-between mb-10 px-2">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                            <FiTrendingUp className="text-primary w-6 h-6" />
+                        </div>
+                        <h2 className="text-3xl font-black uppercase tracking-tighter italic">Global Trending</h2>
+                    </div>
+                    <div className="flex gap-2">
+                        <button onClick={() => scroll(trendingRef, 'left')} className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
+                            <FiChevronLeft size={24} />
+                        </button>
+                        <button onClick={() => scroll(trendingRef, 'right')} className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
+                            <FiChevronRight size={24} />
+                        </button>
+                    </div>
+                </div>
+                
+                <div 
+                    ref={trendingRef}
+                    className="flex gap-8 overflow-x-auto no-scrollbar pb-10 sm:px-2 scroll-smooth"
+                >
+                    {isLoading ? (
+                        Array(8).fill(0).map((_, i) => <TrackCardSkeleton key={i} />)
+                    ) : (
+                        trending.map((track, idx) => (
+                            <div key={track.id} className="min-w-[220px] md:min-w-[280px]">
+                                <TrackCard track={track} onPlay={() => playMusic(track, trending)} idx={idx} currentId={currentTrack?.id} isPlaying={isPlaying} />
+                            </div>
+                        ))
+                    )}
+                </div>
+              </section>
+
+              {/* Artists Section */}
+              <section>
+                <div className="flex items-center justify-between mb-10 px-2">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+                            <FiStar className="text-blue-500 w-6 h-6" />
+                        </div>
+                        <h2 className="text-3xl font-black uppercase tracking-tighter italic">Top Artists</h2>
+                    </div>
+                </div>
+                
+                <div className="flex gap-12 overflow-x-auto no-scrollbar pb-10 px-2">
+                    {dummyArtists.map((artist, idx) => (
+                        <motion.div 
+                            key={artist.name}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: idx * 0.1 }}
+                            whileHover={{ y: -10 }}
+                            className="flex flex-col items-center gap-4 group cursor-pointer"
+                        >
+                            <div className="w-32 h-32 md:w-44 md:h-44 rounded-full overflow-hidden border-4 border-transparent group-hover:border-primary transition-all shadow-2xl">
+                                <img src={artist.img} alt={artist.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            </div>
+                            <span className="text-sm font-black uppercase tracking-tighter group-hover:text-primary transition-colors italic">{artist.name}</span>
+                        </motion.div>
+                    ))}
+                </div>
+              </section>
+
+            </motion.div>
           )}
         </AnimatePresence>
 
@@ -144,52 +227,58 @@ const TrackCard: React.FC<{ track: MusicTrack; onPlay: () => void; idx: number; 
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.05 }}
-            whileHover={{ y: -10 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: (idx % 5) * 0.1 }}
             className="group relative"
         >
             <div 
                 onClick={onPlay}
-                className="aspect-square rounded-[2rem] overflow-hidden relative cursor-pointer shadow-2xl border border-white/5 hover:border-primary/40 transition-all"
+                className="aspect-square rounded-[2.5rem] overflow-hidden relative cursor-pointer shadow-[0_20px_40px_rgba(0,0,0,0.4)] border border-white/5 hover:border-primary/40 transition-all duration-500 bg-white/5"
             >
-                <img src={track.thumbnail} alt={track.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className={`absolute inset-0 bg-black/40 group-hover:bg-primary/20 transition-all flex items-center justify-center ${isCurrent && isPlaying ? 'bg-primary/30' : ''}`}>
-                    <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0 shadow-2xl">
+                <img src={track.thumbnail} alt={track.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" />
+                <div className={`absolute inset-0 bg-black/40 group-hover:bg-primary/20 transition-all duration-500 flex items-center justify-center ${isCurrent && isPlaying ? 'bg-primary/30' : ''}`}>
+                    <div className={`w-16 h-16 rounded-full bg-white/10 backdrop-blur-2xl border border-white/20 flex items-center justify-center shadow-2xl transition-all duration-500 transform ${isCurrent && isPlaying ? 'scale-110 opacity-100' : 'translate-y-6 opacity-0 group-hover:translate-y-0 group-hover:opacity-100'}`}>
                         {isCurrent && isPlaying ? (
                              <div className="flex gap-1 items-end h-6">
-                                <motion.span animate={{ height: [8, 24, 8] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-1 bg-white rounded-full" />
-                                <motion.span animate={{ height: [24, 8, 24] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-1 bg-white rounded-full" />
-                                <motion.span animate={{ height: [12, 20, 12] }} transition={{ repeat: Infinity, duration: 0.4 }} className="w-1 bg-white rounded-full" />
+                                <motion.span animate={{ height: [8, 24, 8] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-1.5 bg-white rounded-full" />
+                                <motion.span animate={{ height: [24, 8, 24] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-1.5 bg-white rounded-full" />
+                                <motion.span animate={{ height: [12, 20, 12] }} transition={{ repeat: Infinity, duration: 0.4 }} className="w-1.5 bg-white rounded-full" />
                              </div>
                         ) : (
-                            <FiPlay className="w-6 h-6 text-white fill-white ml-1" />
+                            <FiPlay className="w-7 h-7 text-white fill-white ml-1.5" />
                         )}
                     </div>
                 </div>
             </div>
 
-            <div className="mt-5 px-2">
-                <h3 className="text-sm font-black uppercase tracking-tighter line-clamp-1 group-hover:text-primary transition-colors">
+            <div className="mt-6 px-3">
+                <h3 className="text-base font-black uppercase tracking-tighter line-clamp-1 group-hover:text-primary transition-colors italic">
                     {track.title}
                 </h3>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">
-                    {track.artist}
-                </p>
+                <div className="flex items-center justify-between mt-2">
+                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest line-clamp-1 flex-1">
+                        {track.artist}
+                    </p>
+                    {track.source === 'saavn' && (
+                        <span className="text-[8px] bg-white/5 px-2 py-0.5 rounded border border-white/10 text-gray-400 font-black tracking-[2px]">HQ</span>
+                    )}
+                </div>
             </div>
         </motion.div>
     );
 };
 
 const TrackCardSkeleton = () => (
-    <div className="animate-pulse">
-        <div className="aspect-square bg-white/5 rounded-[2rem]" />
-        <div className="mt-5 flex flex-col gap-2 px-2">
-            <div className="h-4 bg-white/5 rounded-full w-3/4" />
+    <div className="animate-pulse w-full">
+        <div className="aspect-square bg-white/5 rounded-[2.5rem]" />
+        <div className="mt-6 flex flex-col gap-3 px-3">
+            <div className="h-5 bg-white/5 rounded-full w-3/4" />
             <div className="h-3 bg-white/5 rounded-full w-1/2" />
         </div>
     </div>
 );
 
 export default MusicHub;
+

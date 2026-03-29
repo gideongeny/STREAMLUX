@@ -599,15 +599,38 @@ export const gateway = functions
                 return;
             }
 
-            // --- MUSIC PROXY (YouTube Data API - Category 10) ---
-            if (rawPath === 'music/search' || rawPath === 'music/trending') {
+            // --- MUSIC PROXY (Saavn + YouTube) ---
+            if (rawPath === 'music/search' || rawPath === 'music/trending' || rawPath.startsWith('music/saavn')) {
+                const q = req.query.q as string;
+                
+                // Prioritize Saavn for high-quality audio
+                if (rawPath.startsWith('music/saavn') || rawPath === 'music/search' || rawPath === 'music/trending') {
+                    try {
+                        let saavnUrl = "";
+                        if (rawPath.includes('trending') || (rawPath === 'music/trending')) {
+                            saavnUrl = `https://saavn.me/modules?language=english,hindi`;
+                        } else {
+                            saavnUrl = `https://saavn.me/search/all?query=${encodeURIComponent(q || 'top hits')}`;
+                        }
+
+                        const saavnRes = await axios.get(saavnUrl, { timeout: 8000 });
+                        if (saavnRes.data) {
+                            res.status(200).json(saavnRes.data);
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn('Saavn API failed, falling back to YouTube:', e);
+                    }
+                }
+
+                // Fallback to YouTube Data API
                 const keys = getYTKeys();
                 let lastError = null;
 
                 for (const key of keys) {
                     if (deadKeys.has(key)) continue;
                     try {
-                        const isTrending = rawPath === 'music/trending';
+                        const isTrending = rawPath.includes('trending');
                         const params = {
                             part: 'snippet',
                             key: key,
@@ -636,6 +659,7 @@ export const gateway = functions
                 res.status(500).json({ error: 'Music API unavailable', detail: lastError?.message });
                 return;
             }
+
 
             // --- RAPIDAPI PROXY (server-side key) ---
             if (rawPath === 'rapidapi/streaming-availability' || rawPath.startsWith('rapidapi/streaming-availability/')) {

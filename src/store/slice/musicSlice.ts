@@ -5,6 +5,9 @@ export interface Track {
   title: string;
   artist: string;
   thumbnail: string;
+  album?: string;
+  streamUrl?: string; // Direct audio stream from Saavn
+  source?: 'saavn' | 'youtube';
 }
 
 interface MusicState {
