@@ -237,7 +237,10 @@ const Home: FC = () => {
             <FilmTypeButton buttonType="tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
             <FilmTypeButton buttonType="movie" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
             <FilmTypeButton buttonType="sports" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
+            <Link to="/live-tv" className="text-gray-400 hover:text-white transition duration-300 text-[13px] font-bold uppercase tracking-wider relative top-[2px]">Live TV</Link>
+            <Link to="/music" className="text-gray-400 hover:text-white transition duration-300 text-[13px] font-bold uppercase tracking-wider relative top-[2px]">Music</Link>
           </div>
+
         </div>
       </div>
 
@@ -253,7 +256,10 @@ const Home: FC = () => {
               <FilmTypeButton buttonType="tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
               <FilmTypeButton buttonType="movie" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
               <FilmTypeButton buttonType="sports" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
+              <Link to="/live-tv" className="text-gray-400 hover:text-white transition duration-300 text-[13px] font-bold uppercase tracking-wider relative top-[2px]">Live TV</Link>
+              <Link to="/music" className="text-gray-400 hover:text-white transition duration-300 text-[13px] font-bold uppercase tracking-wider relative top-[2px]">Music</Link>
             </div>
+
           </div>
           <div className="flex items-center gap-6">
             <TopSearchBar className="w-[300px] lg:block hidden" />

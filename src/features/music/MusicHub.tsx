@@ -3,10 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { musicService, MusicTrack } from '../../services/music';
 import { setTrack, setQueue } from '../../store/slice/musicSlice';
-import { FiMusic, FiSearch, FiPlay, FiVolume2, FiTrendingUp, FiDisc } from 'react-icons/fi';
+import { FiMusic, FiSearch, FiPlay, FiVolume2, FiTrendingUp, FiDisc, FiHome } from 'react-icons/fi';
+
 import { RootState } from '../../store/store';
 
+import { useNavigate } from 'react-router-dom';
+
 const MusicHub: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currentTrack, isPlaying } = useSelector((state: RootState) => state.music);
   
@@ -48,6 +52,19 @@ const MusicHub: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
           <div className="flex-grow">
             <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="mb-6"
+            >
+              <button 
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <FiHome className="w-4 h-4" />
+                Back to Dashboard
+              </button>
+            </motion.div>
+            <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="flex items-center gap-3 text-primary font-black uppercase tracking-[0.3em] text-[10px] mb-4"
@@ -64,6 +81,7 @@ const MusicHub: React.FC = () => {
               Music <span className="text-white/10">Hub</span>
             </motion.h1>
           </div>
+
 
           <motion.form 
             onSubmit={handleSearch}

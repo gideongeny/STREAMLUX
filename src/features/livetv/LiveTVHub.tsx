@@ -48,6 +48,19 @@ const LiveTVHub: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
               Live Broadcasting
             </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="mb-6"
+            >
+              <button 
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <FiTv className="w-4 h-4" />
+                Back to Dashboard
+              </button>
+            </motion.div>
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -56,6 +69,7 @@ const LiveTVHub: React.FC = () => {
             >
               Live <span className="text-white/20">Streams</span>
             </motion.h1>
+
           </div>
 
           <motion.div 
