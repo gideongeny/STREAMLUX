@@ -2,8 +2,8 @@
 <resources>
     <string name="app_name">streamlux</string>
     <string name="title_activity_main">streamlux</string>
-    <string name="package_name">com.streamlux.app</string>
-    <string name="custom_url_scheme">com.streamlux.app</string>
+    <string name="package_name">com.gideongeny.streamlux</string>
+    <string name="custom_url_scheme">com.gideongeny.streamlux</string>
     <string name="server_client_id">242283846154-t9ji7cvhfbobegog438kgdvedf2nq5ra.apps.googleusercontent.com</string>
     <string name="admob_app_id">ca-app-pub-1281448884303417~9595144052</string>
 </resources>

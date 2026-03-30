@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.streamlux.app"
+    namespace "com.gideongeny.streamlux"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.streamlux.app"
+        applicationId "com.gideongeny.streamlux"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
