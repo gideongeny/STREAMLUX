@@ -48,7 +48,7 @@ const Download: FC = () => {
           // Fallback if no APK is specifically found in assets
           setLatestRelease({
             version: data.tag_name || "Latest",
-            downloadUrl: `https://github.com/gideongeny/STREAMLUX/releases/download/${data.tag_name}/app-release.apk`
+            downloadUrl: `https://github.com.streamlux.app/releases/download/${data.tag_name}/app-release.apk`
           });
         }
       } catch (error) {
@@ -56,7 +56,7 @@ const Download: FC = () => {
         // Fallback to a generic "latest" link
         setLatestRelease({
           version: "v3.1.0",
-          downloadUrl: "https://github.com/gideongeny/STREAMLUX/releases/latest/download/app-release.apk"
+          downloadUrl: "https://github.com.streamlux.app/releases/latest/download/app-release.apk"
         });
       } finally {
         setLoading(false);
@@ -67,7 +67,7 @@ const Download: FC = () => {
   }, []);
 
   const handleDownload = () => {
-    const url = latestRelease?.downloadUrl || "https://github.com/gideongeny/STREAMLUX/releases/latest/download/app-release.apk";
+    const url = latestRelease?.downloadUrl || "https://github.com.streamlux.app/releases/latest/download/app-release.apk";
     window.location.href = url;
   };
 

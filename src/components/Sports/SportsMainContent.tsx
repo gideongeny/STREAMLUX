@@ -251,7 +251,7 @@ const SportsMainContent: FC = () => {
                             <div className="relative z-10">
                                 <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-2">Streaming <span className="opacity-60 italic">Elite</span></h3>
                                 <p className="text-xs text-white/70 font-bold mb-6">Install the StreamLux APK for zero-buffer 4K sports experience.</p>
-                                <a href="https://github.com/gideongeny/STREAMLUX/releases/latest/download/app-release-unsigned.apk" className="inline-block px-6 py-3 rounded-full bg-white text-black text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">Get APK</a>
+                                <a href="https://github.com.streamlux.app/releases/latest/download/app-release-unsigned.apk" className="inline-block px-6 py-3 rounded-full bg-white text-black text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">Get APK</a>
                             </div>
                             <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
                         </div>

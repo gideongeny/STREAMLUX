@@ -15,7 +15,7 @@
 
 🌐 **Live Demo:** [streamlux-67a84.web.app](https://streamlux-67a84.web.app)
 ⚙️ **Backend API:** [streamlux.onrender.com](https://streamlux.onrender.com)
-📱 **Android App:** [Download Latest APK](https://github.com/gideongeny/STREAMLUX/releases/latest/download/app-release-unsigned.apk)
+📱 **Android App:** [Download Latest APK](https://github.com.streamlux.app/releases/latest/download/app-release-unsigned.apk)
 
 ---
 
@@ -80,7 +80,7 @@ StreamLux is now a native powerhouse, offering a fluid and immersive mobile expe
 
 1. **Clone & Install:**
    ```bash
-   git clone https://github.com/gideongeny/STREAMLUX.git
+   git clone https://github.com.streamlux.app.git
    cd STREAMLUX
    npm install
    ```

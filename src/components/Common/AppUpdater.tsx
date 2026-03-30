@@ -79,7 +79,7 @@ const AppUpdater: React.FC = () => {
             </div>
 
             <a 
-              href={updateAvailable.assets[0]?.browser_download_url || "https://github.com/gideongeny/STREAMLUX/releases/latest"}
+              href={updateAvailable.assets[0]?.browser_download_url || "https://github.com.streamlux.app/releases/latest"}
               className="w-full bg-gradient-to-r from-primary to-orange-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all active:scale-95"
               onClick={() => {
                 setShowModal(false);

@@ -15,7 +15,7 @@ Use this section to tell people about which versions of your project are current
 
 If you discover a security vulnerability within StreamLux, please do not open a public issue. Instead, please report it through one of the following methods:
 
-1. **GitHub Security Advisory**: You can privately report a vulnerability via the [Security tab](https://github.com/gideongeny/STREAMLUX/security/advisories/new) on GitHub.
+1. **GitHub Security Advisory**: You can privately report a vulnerability via the [Security tab](https://github.com.streamlux.app/security/advisories/new) on GitHub.
 2. **Email**: You can contact us directly at [gideongeng@gmail.com](mailto:gideongeng@gmail.com).
 
 ### What to expect
