@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.gideongeny.streamlux',
+  appId: 'com.streamlux.app',
   appName: 'StreamLux',
   webDir: 'dist',
   // Allow Firebase auth redirects — without this the WebView blocks firebaseapp.com

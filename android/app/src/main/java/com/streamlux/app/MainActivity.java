@@ -1,4 +1,4 @@
-package com.gideongeny.streamlux;
+package com.streamlux.app;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;

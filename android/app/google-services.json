@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:242283846154:android:1598c6d306a52c26c49df3",
         "android_client_info": {
-          "package_name": "com.gideongeny.streamlux"
+          "package_name": "com.streamlux.app"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "242283846154-dmjtqjn4vdv4tcrc5f59upd7mhqk31cu.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.gideongeny.streamlux",
+            "package_name": "com.streamlux.app",
             "certificate_hash": "3ee91726e52e47b39cf761db8564011f4220bdcc"
           }
         },

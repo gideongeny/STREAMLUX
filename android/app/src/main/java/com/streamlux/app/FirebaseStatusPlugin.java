@@ -1,4 +1,4 @@
-package com.gideongeny.streamlux;
+package com.streamlux.app;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
