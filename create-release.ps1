@@ -5,15 +5,21 @@ param(
 
 $OWNER = "gideongeny"
 $REPO  = "STREAMLUX"
-$TAG   = "v1.4.2" # Using v1.4.2 for the finalized fix
-$TITLE = "StreamLux v1.4.2 (Final Auth Fix)"
+$TAG   = "v1.4.4" # Firebase Init & Identity Fix
+$TITLE = "StreamLux v1.4.4 (Stability & Init Fix)"
 $NOTES = @"
-## StreamLux v1.4.2 - Final Stability Update
+## StreamLux v1.4.4 - Stabilization Release 🚀
 
-### Google Sign-In & Launch Fix 🛠️
-- Properly relocated the Android source code package from `com.gideongeny` to `com.streamlux.app`.
-- This resolves the "MainActivity class does not exist" launch crash **and** ensures the Google Sign-In is authorized correctly via Firebase.
-- Native Google Auth SDK is now fully functional with the verified SHA-1 certification.
+This release hardens the application against the "FirebaseApp not initialized" and "Missing AdMob ID" crashes observed in recent logs.
+
+### Key Fixes
+- **Explicit Firebase Initialization**: Added native boilerplate to `MainActivity.java` to ensure Firebase is ready before any plugins are registered.
+- **Identity Migration Enforcement**: v1.4.4 is the definitive version for the `com.streamlux.app` transition.
+- **AdMob Validation**: Verified the `APPLICATION_ID` presence in the Android Manifest.
+
+### ⚠️ IMPORTANT INSTALLATION NOTE
+You **MUST** uninstall any previous version of StreamLux (especially if it was named `com.gideongeny.streamlux`) before installing this APK. The change in package identity requires a clean install.
+"@
 
 ### Features
 - **Music Universe**: 20 lazy-loaded genre categories.
@@ -62,7 +68,7 @@ $apkPath = "android\app\build\outputs\apk\debug\app-arm64-v8a-debug.apk"
 Write-Host "Uploading APK..." -ForegroundColor Cyan
 $apkBytes = [System.IO.File]::ReadAllBytes((Resolve-Path $apkPath))
 Invoke-RestMethod `
-    -Uri "${uploadUrl}?name=StreamLux-v1.4.2-arm64.apk&label=StreamLux-v1.4.2-arm64.apk" `
+    -Uri "${uploadUrl}?name=StreamLux-v1.4.3-arm64.apk&label=StreamLux-v1.4.3-arm64.apk" `
     -Method Post `
     -Headers $headers `
     -Body $apkBytes `
@@ -74,7 +80,7 @@ $aabPath = "android\app\build\outputs\bundle\release\app-release.aab"
 Write-Host "Uploading AAB..." -ForegroundColor Cyan
 $aabBytes = [System.IO.File]::ReadAllBytes((Resolve-Path $aabPath))
 Invoke-RestMethod `
-    -Uri "${uploadUrl}?name=StreamLux-v1.4.2-release.aab&label=StreamLux-v1.4.2-release.aab" `
+    -Uri "${uploadUrl}?name=StreamLux-v1.4.3-release.aab&label=StreamLux-v1.4.3-release.aab" `
     -Method Post `
     -Headers $headers `
     -Body $aabBytes `
@@ -82,5 +88,5 @@ Invoke-RestMethod `
 Write-Host "AAB uploaded!" -ForegroundColor Green
 
 Write-Host ""
-Write-Host "Successfully deployed Final Release v1.4.2!" -ForegroundColor Yellow
+Write-Host "Successfully deployed Final Release v1.4.3!" -ForegroundColor Yellow
 Write-Host $release.html_url -ForegroundColor Yellow
