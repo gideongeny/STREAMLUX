@@ -73,8 +73,8 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
 
       {currentTab === 'movie' && (
         <>
-          <LazySection fetcher={getActionMovies} title="Action & Adventure" forceLoad />
-          <LazySection fetcher={getComedyMovies} title="Comedy Hits" forceLoad />
+          <LazySection fetcher={getActionMovies} title="Action & Adventure" />
+          <LazySection fetcher={getComedyMovies} title="Comedy Hits" />
 
           {/* PRIORITY 2: Popular Genres (Lazy Load) */}
           <LazySection fetcher={getHorrorMovies} title="Horror & Thriller" />
@@ -131,7 +131,7 @@ const DiverseContent: React.FC<DiverseContentProps> = ({ currentTab }) => {
       {currentTab === 'tv' && (
         <>
           <LazySection fetcher={getTrendingNow} title="Trending Series" isLarge forceLoad />
-          <LazySection fetcher={getActionAdventureTV} title="Action & Adventure" forceLoad />
+          <LazySection fetcher={getActionAdventureTV} title="Action & Adventure" />
 
           <LazySection fetcher={getComedyTV} title="Comedy Series" />
           <LazySection fetcher={getDramaTV} title="Must-Watch Dramas" />

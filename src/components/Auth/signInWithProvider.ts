@@ -1,4 +1,4 @@
-import { FacebookAuthProvider, GoogleAuthProvider, signInWithPopup, signInWithCredential } from "firebase/auth";
+import { FacebookAuthProvider, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signInWithCredential } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { Capacitor } from "@capacitor/core";
 import { toast } from "react-toastify";
@@ -19,31 +19,28 @@ export const signInWithProvider = async (provider: any, type: string) => {
 
     if (isNative && type === 'google') {
       // ✅ TRUE NATIVE Google Sign-In on Android/iOS
-      // Uses the native Google Sign-In SDK (no WebView, no redirects, no sessionStorage issues)
+      // With the app package properly set to `com.streamlux.app` and matching the 
+      // verified SHA-1 fingerprint inside google-services.json, this native 
+      // call will successfully generate the Google Token without WebView blocking or crashing.
       toast.info('Opening Google Sign-In...');
 
-      // Dynamically import to avoid errors on web
       const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
 
-      // Initialize GoogleAuth (required before first use)
       await GoogleAuth.initialize({
         clientId: '242283846154-t9ji7cvhfbobegog438kgdvedf2nq5ra.apps.googleusercontent.com',
         scopes: ['profile', 'email'],
         grantOfflineAccess: true,
       });
 
-      // Show native Google account picker
       const googleUser = await GoogleAuth.signIn();
-
-      // Build a Firebase credential using the Google ID token
       const idToken = googleUser.authentication.idToken;
-      if (!idToken) {
-        throw new Error('No ID token returned from Google Sign-In');
-      }
+      
+      if (!idToken) throw new Error('No ID token returned from Google Sign-In');
 
       const credential = GoogleAuthProvider.credential(idToken);
       const result = await signInWithCredential(auth, credential);
       user = result.user;
+      return;
     } else {
       // ✅ Web: Use signInWithPopup (works fine in browsers)
       toast.info(`Opening ${type} login popup...`);

@@ -1,7 +1,5 @@
-import axios from 'axios';
+import axios from '../../shared/axios'; // Use shared instance — handles native vs web base URL
 import { SportsDataResponse } from './types';
-
-const API_BASE = '/api'; // Assuming the gateway is proxied via vite or relative to base
 
 const normalizeMatchData = (match: any): any => {
     let minute = match.minute || '';
@@ -43,64 +41,65 @@ const normalizeMatchData = (match: any): any => {
 export const sportsService = {
   getLiveMatches: async (): Promise<SportsDataResponse> => {
     try {
-      // Primary Source
-      const response = await axios.get(`${API_BASE}/sports/live`);
-      
-      // Secondary Aggregator - If primary fails or returns empty, try the global World Stadium endpoint
-      let data = response.data?.data || [];
-      
-      if (!response.data?.success || !data.length) {
-          console.warn('[SportsAPI] Primary live source empty. Fetching from World Stadium aggregator...');
-          const worldResponse = await axios.get(`${API_BASE}/sports/aggregator/live`).catch(() => null);
-          if (worldResponse?.data?.success) data = worldResponse.data.data;
+      // The shared axios instance already unwraps {success, data} envelope
+      // so response.data IS the array directly — NOT response.data.data
+      const response = await axios.get('/sports/live');
+      let data = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+
+      if (!data.length) {
+        console.warn('[SportsAPI] Primary live source empty. Trying aggregator...');
+        const worldResponse = await axios.get('/sports/aggregator/live').catch(() => null);
+        const wd = worldResponse?.data;
+        data = Array.isArray(wd) ? wd : (wd?.data || []);
       }
-      
+
       return {
-          success: true,
-          data: (data || []).map((m: any) => ({ ...normalizeMatchData(m), isLive: true }))
+        success: true,
+        data: (data).map((m: any) => ({ ...normalizeMatchData(m), isLive: true }))
       };
     } catch (error) {
       console.error('Error fetching live matches:', error);
-      // Last resort fallback to the aggregator
-      const fallback = await axios.get(`${API_BASE}/sports/aggregator/live`).catch(() => null);
-      const fallbackData = fallback?.data?.data || [];
+      const fallback = await axios.get('/sports/aggregator/live').catch(() => null);
+      const fd = fallback?.data;
+      const fallbackData = Array.isArray(fd) ? fd : (fd?.data || []);
       return {
-          success: true,
-          data: fallbackData.map((m: any) => ({ ...normalizeMatchData(m), isLive: true }))
+        success: true,
+        data: fallbackData.map((m: any) => ({ ...normalizeMatchData(m), isLive: true }))
       };
     }
   },
 
   getUpcomingMatches: async (): Promise<SportsDataResponse> => {
     try {
-      const response = await axios.get(`${API_BASE}/sports/upcoming`);
-      
-      // Aggregation Fallback for upcoming fixtures
-      let data = response.data?.data || [];
-      
-      if (!response.data?.success || !data.length) {
-          const worldResponse = await axios.get(`${API_BASE}/sports/aggregator/upcoming`).catch(() => null);
-          if (worldResponse?.data?.success) data = worldResponse.data.data;
+      const response = await axios.get('/sports/upcoming');
+      // Shared axios already unwraps {success, data} — so response.data IS the array
+      let data = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+
+      if (!data.length) {
+        const worldResponse = await axios.get('/sports/aggregator/upcoming').catch(() => null);
+        const wd = worldResponse?.data;
+        data = Array.isArray(wd) ? wd : (wd?.data || []);
       }
 
-      // Strict frontend filtering to remove any stale "upcoming" matches stuck in ESPN cache
-      const STALE_THRESHOLD = Date.now() - (4 * 60 * 60 * 1000); // 4 hours ago
-      
-      const filteredData = (data || []).filter((match: any) => {
-          if (!match.kickoffTimeFormatted) return true;
-          
-          const timeValue = new Date(match.kickoffTimeFormatted).getTime();
-          if (isNaN(timeValue)) return true;
-          
-          return timeValue > STALE_THRESHOLD;
+      // Filter out matches that kicked off more than 4 hours ago (stale cache)
+      const STALE_THRESHOLD = Date.now() - (4 * 60 * 60 * 1000);
+      const filteredData = data.filter((match: any) => {
+        if (!match.kickoffTimeFormatted) return true;
+        const timeValue = new Date(match.kickoffTimeFormatted).getTime();
+        if (isNaN(timeValue)) return true;
+        return timeValue > STALE_THRESHOLD;
       }).map(normalizeMatchData);
-      
+
       return { success: true, data: filteredData };
     } catch (error) {
       console.error('Error fetching upcoming matches:', error);
-      const fallback = await axios.get(`${API_BASE}/sports/aggregator/upcoming`).catch(() => null);
-      const fallbackData = (fallback?.data?.data || []).map(normalizeMatchData);
+      const fallback = await axios.get('/sports/aggregator/upcoming').catch(() => null);
+      const fd = fallback?.data;
+      const fallbackData = (Array.isArray(fd) ? fd : (fd?.data || [])).map(normalizeMatchData);
       return { success: true, data: fallbackData };
     }
   }
 };
+
+
+

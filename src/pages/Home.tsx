@@ -148,19 +148,20 @@ const Home: FC = () => {
     vote_average: 0,
   }));
 
+  // Always fetch both tabs eagerly — Keep-Alive: data is ready instantly when switching
   const {
     data: dataMovie,
     isLoading: isLoadingMovie,
     isError: isErrorMovie,
     detailQuery: detailQueryMovie,
-  } = useHomeData("movie", currentTab === "movie" ? historyItems : [], currentTab === "movie");
+  } = useHomeData("movie", historyItems, true);
 
   const {
     data: dataTV,
     isLoading: isLoadingTV,
     isError: isErrorTV,
     detailQuery: detailQueryTV,
-  } = useHomeData("tv", currentTab === "tv" ? historyItems : [], currentTab === "tv");
+  } = useHomeData("tv", historyItems, true);
 
   const TABS: Array<"tv" | "movie" | "sports"> = ["tv", "movie", "sports"];
 
@@ -334,14 +335,17 @@ const Home: FC = () => {
             </motion.div>
           )}
 
-          {/* Non-brand content */}
+          {/* Non-brand content — Keep-Alive: all tabs mount once, CSS hides/shows them */}
           {!activeBrand && (
             <>
-              {currentTab !== "sports" && <CinematicMoments />}
+              {/* CinematicMoments: only relevant for movie/tv — hide for sports */}
+              <div style={{ display: currentTab !== 'sports' ? 'block' : 'none' }}>
+                <CinematicMoments />
+              </div>
 
-              {/* Movies Tab */}
-              {currentTab === "movie" && (
-                isLoadingMovie && !dataMovie
+              {/* ── MOVIES TAB (always mounted, toggled via CSS) ── */}
+              <div style={{ display: currentTab === 'movie' ? 'block' : 'none' }}>
+                {isLoadingMovie && !dataMovie
                   ? <HomeSkeleton />
                   : <MainHomeFilm
                       data={dataMovie}
@@ -351,11 +355,12 @@ const Home: FC = () => {
                       onActiveImageChange={setActiveGlowImage}
                       brandHub={<BrandHub className="mb-10 px-0" />}
                     />
-              )}
+                }
+              </div>
 
-              {/* TV Tab */}
-              {currentTab === "tv" && (
-                isLoadingTV && !dataTV
+              {/* ── TV TAB (always mounted, toggled via CSS) ── */}
+              <div style={{ display: currentTab === 'tv' ? 'block' : 'none' }}>
+                {isLoadingTV && !dataTV
                   ? <HomeSkeleton />
                   : <MainHomeFilm
                       data={dataTV}
@@ -365,71 +370,68 @@ const Home: FC = () => {
                       onActiveImageChange={setActiveGlowImage}
                       brandHub={<BrandHub className="mb-10 px-0" />}
                     />
-              )}
+                }
+              </div>
 
-              {/* Sports Tab */}
-              {currentTab === "sports" && (
-                <div className="mt-6 flex flex-col">
-                  <SportsChannelsCarousel />
-                  <div className="mt-4">
-                    <SportsHub />
-                  </div>
+              {/* ── SPORTS TAB (always mounted, toggled via CSS) ── */}
+              <div style={{ display: currentTab === 'sports' ? 'block' : 'none' }} className="mt-6 flex flex-col">
+                <SportsChannelsCarousel />
+                <div className="mt-4">
+                  <SportsHub />
                 </div>
-              )}
+              </div>
 
-              {/* Shared non-sports sections */}
-              {currentTab !== "sports" && (
-                <>
-                  <LazySection title="Top 10 Globally" placeholderHeight={300}>
-                    <Top10Slider films={(currentTab === "movie" ? dataMovie?.Trending : dataTV?.Trending) || []} />
-                  </LazySection>
+              {/* ── SHARED NON-SPORTS SECTIONS (always mounted, toggled via CSS) ── */}
+              <div style={{ display: currentTab !== 'sports' ? 'block' : 'none' }}>
+                <LazySection title="Top 10 Globally" placeholderHeight={300}>
+                  <Top10Slider films={(currentTab === 'movie' ? dataMovie?.Trending : dataTV?.Trending) || []} />
+                </LazySection>
 
-                  <LazySection title="Live Matches" placeholderHeight={100}>
-                    <LiveSportsTicker />
-                  </LazySection>
+                <LazySection title="Live Matches" placeholderHeight={100}>
+                  <LiveSportsTicker />
+                </LazySection>
 
-                  <CollectionsSlider />
+                <CollectionsSlider />
 
-                  <LazySection title="Pick Up Where You Left Off" placeholderHeight={250}>
-                    <ContinueWatching watchHistory={watchHistory || []} onClearProgress={clearProgress} />
-                  </LazySection>
+                <LazySection title="Pick Up Where You Left Off" placeholderHeight={250}>
+                  <ContinueWatching watchHistory={watchHistory || []} onClearProgress={clearProgress} />
+                </LazySection>
 
-                  <LazySection title="Recommended For You" placeholderHeight={300}>
-                    <SmartRecommendations />
-                  </LazySection>
+                <LazySection title="Recommended For You" placeholderHeight={300}>
+                  <SmartRecommendations />
+                </LazySection>
 
-                  <LazySection title="Quick Clips" placeholderHeight={300}>
-                    <VerticalShorts variant="horizontal" />
-                  </LazySection>
+                <LazySection title="Quick Clips" placeholderHeight={300}>
+                  <VerticalShorts variant="horizontal" />
+                </LazySection>
 
-                  <LazySection title="Upcoming" placeholderHeight={400}>
-                    <UpcomingCalendar contentType={currentTab as any} />
-                  </LazySection>
+                <LazySection title="Upcoming" placeholderHeight={400}>
+                  <UpcomingCalendar contentType={currentTab as any} />
+                </LazySection>
 
-                  <LazySection title="Just Released" placeholderHeight={300}>
-                    <NewReleases />
-                  </LazySection>
+                <LazySection title="Just Released" placeholderHeight={300}>
+                  <NewReleases />
+                </LazySection>
 
-                  <LazySection title="Coming Soon" placeholderHeight={300}>
-                    <ComingSoonSlider />
-                  </LazySection>
+                <LazySection title="Coming Soon" placeholderHeight={300}>
+                  <ComingSoonSlider />
+                </LazySection>
 
-                  <div className="my-10">
-                    <AdBanner position="home" />
-                  </div>
+                <div className="my-10">
+                  <AdBanner position="home" />
+                </div>
 
-                  <LazySection title="World Cinema" placeholderHeight={300}>
-                    <GlobalWorldTV />
-                  </LazySection>
+                <LazySection title="World Cinema" placeholderHeight={300}>
+                  <GlobalWorldTV />
+                </LazySection>
 
-                  <DiverseNavigation />
-                  <DiverseContent currentTab={currentTab} />
+                <DiverseNavigation />
+                <DiverseContent currentTab={currentTab} />
 
-                  <div className="my-10">
-                    <AdBanner position="home" />
-                  </div>
-                </>
-              )}
+                <div className="my-10">
+                  <AdBanner position="home" />
+                </div>
+              </div>
             </>
           )}
         </div>

@@ -37,8 +37,9 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 5, // 5 minutes cache
-      cacheTime: 1000 * 60 * 30, // 30 minutes garbage collection
+      refetchOnMount: false,       // KEY: don't re-fetch when navigating back to a page
+      staleTime: 1000 * 60 * 15,  // 15 min — data stays "fresh", no background refetch
+      cacheTime: 1000 * 60 * 90,  // 90 min — keep in memory much longer (saves API quota)
     },
   },
 });

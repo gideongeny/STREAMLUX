@@ -1,8 +1,12 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { apiCache } from "./apiCache";
+import { Capacitor } from "@capacitor/core";
+
+const isNative = Capacitor.isNativePlatform();
+const FIREBASE_GATEWAY = "https://us-central1-streamlux-67a84.cloudfunctions.net/gateway/api";
 
 const instance = axios.create({
-  baseURL: "/api",
+  baseURL: isNative ? FIREBASE_GATEWAY : "/api",
 });
 
 // For efficiency, we use a global variable for language to avoid leaking interceptors

@@ -198,294 +198,33 @@ export const getSkySportsScores = async (): Promise<SportsFixtureConfig[]> => {
   return [];
 };
 
-// Get live fixtures from multiple public sources
+// Get live fixtures directly mapped exclusively from the unified backend
 export const getLiveFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
-  const fixtures: SportsFixtureConfig[] = [];
-
-  // Parallel fetch from all news sources
-  const newsResults = await Promise.allSettled([
-    getESPNScores(),
-    getBBCNewsScores(),
-    getSkySportsScores(),
-  ]);
-
-  newsResults.forEach(res => {
-    if (res.status === 'fulfilled') fixtures.push(...res.value);
-  });
-
-  if (fixtures.length > 5) return fixtures;
-
-  // Try TheSportsDB first (most reliable, no key needed)
   try {
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0].replaceAll('-', '/');
-
-    const response = await axios.post(`${getApiBase()}/external`, {
-      provider: "thesportsdb",
-      endpoint: "/eventsday.php",
-      params: { d: dateStr }
-    });
-
-    // Handle both raw format { events } and wrapped format { success, data: { events } }
-    const eventsData = response.data?.events || response.data?.data?.events;
-    if (eventsData && Array.isArray(eventsData)) {
-      const liveEvents = eventsData.filter((e: any) =>
-        e.strStatus === "Live" || e.strStatus === "HT" || e.strStatus === "1H" || e.strStatus === "2H" ||
-        e.strStatus === "Half Time" || e.strStatus === "Second Half"
-      );
-
-      // Process up to 30 live events
-      const eventsToProcess = liveEvents.slice(0, 30);
-
-      for (const event of eventsToProcess) {
-        try {
-          const [homeLogo, awayLogo] = await Promise.all([
-            getTeamLogo(event.strHomeTeam || ""),
-            getTeamLogo(event.strAwayTeam || ""),
-          ]);
-
-          fixtures.push({
-            id: `live-${event.idEvent || Math.random()}`,
-            leagueId: getLeagueIdFromName(event.strLeague || ""),
-            homeTeam: event.strHomeTeam || "TBD",
-            awayTeam: event.strAwayTeam || "TBD",
-            homeTeamLogo: homeLogo || undefined,
-            awayTeamLogo: awayLogo || undefined,
-            status: "live",
-            kickoffTimeFormatted: "Live Now",
-            venue: event.strVenue || "TBD",
-            homeScore: event.intHomeScore ? Number.parseInt(String(event.intHomeScore)) : undefined,
-            awayScore: event.intAwayScore ? Number.parseInt(String(event.intAwayScore)) : undefined,
-            minute: event.strTime || event.strStatus || "Live",
-            isLive: true,
-            matchId: event.idEvent?.toString(), // Store match ID for sportslive.run link
-          });
-        } catch (e) {
-          continue;
-        }
-      }
-
-      if (fixtures.length > 0) {
-        console.log(`TheSportsDB returned ${fixtures.length} live fixtures`);
-        return fixtures;
-      }
+    console.log("Fetching live sports from backend aggregator...");
+    const response = await axios.get(`${getApiBase()}/sports/live`, { timeout: 15000 });
+    if (response.data?.success && Array.isArray(response.data.data)) {
+      console.log(`Backend returned ${response.data.data.length} live sports securely.`);
+      return response.data.data;
     }
   } catch (error) {
-    console.log("TheSportsDB error:", error);
+    console.error("Failed to fetch backend live sports aggregator:", error);
   }
-
-  // Try Sofascore as fallback
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const response = await axios.get(`${SOFASCORE_BASE}/sport/football/scheduled-events/${today}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      },
-      timeout: 8000,
-    });
-
-    if (response.data?.events && Array.isArray(response.data.events)) {
-      const liveEvents = response.data.events.filter((e: any) =>
-        e.status?.type === "inprogress" || e.status?.type === "live"
-      );
-
-      for (const event of liveEvents.slice(0, 20)) {
-        try {
-          fixtures.push({
-            id: `live-${event.id || Math.random()}`,
-            leagueId: getLeagueIdFromName(event.tournament?.name || ""),
-            homeTeam: event.homeTeam?.name || "TBD",
-            awayTeam: event.awayTeam?.name || "TBD",
-            homeTeamLogo: event.homeTeam?.logoUrl || undefined,
-            awayTeamLogo: event.awayTeam?.logoUrl || undefined,
-            status: "live",
-            kickoffTimeFormatted: "Live Now",
-            venue: event.venue?.name || "TBD",
-            homeScore: event.homeScore?.current || undefined,
-            awayScore: event.awayScore?.current || undefined,
-            minute: event.status?.description || "Live",
-            isLive: true,
-            matchId: event.id?.toString(),
-          });
-        } catch (e) {
-          continue;
-        }
-      }
-
-      if (fixtures.length > 0) {
-        console.log(`Sofascore returned ${fixtures.length} live fixtures`);
-        return fixtures;
-      }
-    }
-  } catch (error) {
-    console.log("Sofascore error:", error);
-  }
-
-  return fixtures;
+  return [];
 };
 
-// Get upcoming fixtures from multiple public sources
+// Get upcoming fixtures directly mapped from the unified backend
 export const getUpcomingFixturesAPI = async (): Promise<SportsFixtureConfig[]> => {
-  const allFixtures: SportsFixtureConfig[] = [];
-
-  // Try ESPN first for upcoming matches (it provides better metadata)
   try {
-    const dates: string[] = [];
-    for (let i = 0; i <= 3; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      dates.push(date.toISOString().split('T')[0]);
-    }
-
-    const espnResults = await Promise.allSettled(
-      dates.map(date => getESPNScores(date))
-    );
-
-    espnResults.forEach(res => {
-      if (res.status === 'fulfilled') {
-        allFixtures.push(...res.value);
-      }
-    });
-  } catch (error) {
-    console.warn("ESPN upcoming error:", error);
-  }
-
-  // Try TheSportsDB as fallback
-  try {
-    const dates: string[] = [];
-    for (let i = 0; i <= 7; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      dates.push(date.toISOString().split('T')[0].replaceAll('-', '/'));
-    }
-
-    for (const dateStr of dates.slice(0, 3)) {
-      try {
-        const response = await axios.get(`${SPORTSDB_BASE}/eventsday.php`, {
-          params: { d: dateStr },
-          timeout: 8000,
-        });
-
-        // Handle both raw format { events } and wrapped format { success, data: { events } }
-        const eventsData = response.data?.events || response.data?.data?.events;
-        if (eventsData && Array.isArray(eventsData)) {
-          const upcomingEvents = eventsData.filter((e: any) =>
-            e.strStatus !== "Live" &&
-            e.strStatus !== "HT" &&
-            e.strStatus !== "1H" &&
-            e.strStatus !== "2H" &&
-            e.strStatus !== "FT" &&
-            e.strStatus !== "Finished"
-          );
-
-          for (const event of upcomingEvents.slice(0, 15)) {
-            try {
-              const [homeLogo, awayLogo] = await Promise.all([
-                getTeamLogo(event.strHomeTeam || ""),
-                getTeamLogo(event.strAwayTeam || ""),
-              ]);
-
-              const eventDate = new Date((event.dateEvent || dateStr.replaceAll('/', '-')) + " " + (event.strTime || "12:00"));
-              const isoString = eventDate.toISOString();
-
-              allFixtures.push({
-                id: `upcoming-${event.idEvent || Math.random()}`,
-                leagueId: getLeagueIdFromName(event.strLeague || ""),
-                homeTeam: event.strHomeTeam || "TBD",
-                awayTeam: event.strAwayTeam || "TBD",
-                homeTeamLogo: homeLogo || undefined,
-                awayTeamLogo: awayLogo || undefined,
-                status: "upcoming",
-                kickoffTimeFormatted: isoString, // Store ISO string for countdown
-                venue: event.strVenue || "TBD",
-                round: event.strRound || undefined,
-                matchId: event.idEvent?.toString(),
-              });
-            } catch (e) {
-              continue;
-            }
-          }
-        }
-      } catch (e) {
-        continue;
-      }
-    }
-
-    // Remove duplicates
-    const unique = allFixtures.filter((fixture, index, self) =>
-      index === self.findIndex((f) => f.id === fixture.id)
-    );
-
-    if (unique.length > 0) {
-      console.log(`TheSportsDB returned ${unique.length} upcoming fixtures`);
-      return unique.slice(0, 50);
+    console.log("Fetching upcoming sports from backend aggregator...");
+    const response = await axios.get(`${getApiBase()}/sports/upcoming`, { timeout: 20000 });
+    if (response.data?.success && Array.isArray(response.data.data)) {
+      console.log(`Backend returned ${response.data.data.length} upcoming sports securely.`);
+      return response.data.data;
     }
   } catch (error) {
-    console.log("TheSportsDB upcoming fixtures error:", error);
+    console.error("Failed to fetch backend upcoming sports aggregator:", error);
   }
-
-  // Try Sofascore as fallback
-  try {
-    const dates: string[] = [];
-    for (let i = 0; i <= 3; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      dates.push(date.toISOString().split('T')[0]);
-    }
-
-    for (const dateStr of dates) {
-      try {
-        const response = await axios.get(`${SOFASCORE_BASE}/sport/football/scheduled-events/${dateStr}`, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          },
-          timeout: 8000,
-        });
-
-        if (response.data?.events && Array.isArray(response.data.events)) {
-          const upcomingEvents = response.data.events.filter((e: any) =>
-            e.status?.type !== "finished" && e.status?.type !== "inprogress"
-          );
-
-          for (const event of upcomingEvents.slice(0, 10)) {
-            try {
-              const eventDate = new Date(event.startTimestamp * 1000);
-              const isoString = eventDate.toISOString();
-
-              allFixtures.push({
-                id: `upcoming-${event.id || Math.random()}`,
-                leagueId: getLeagueIdFromName(event.tournament?.name || ""),
-                homeTeam: event.homeTeam?.name || "TBD",
-                awayTeam: event.awayTeam?.name || "TBD",
-                homeTeamLogo: event.homeTeam?.logoUrl || undefined,
-                awayTeamLogo: event.awayTeam?.logoUrl || undefined,
-                status: "upcoming",
-                kickoffTimeFormatted: isoString,
-                venue: event.venue?.name || "TBD",
-                matchId: event.id?.toString(),
-              });
-            } catch (e) {
-              continue;
-            }
-          }
-        }
-      } catch (e) {
-        continue;
-      }
-    }
-
-    const unique = allFixtures.filter((fixture, index, self) =>
-      index === self.findIndex((f) => f.id === fixture.id)
-    );
-
-    if (unique.length > 0) {
-      console.log(`Sofascore returned ${unique.length} upcoming fixtures`);
-      return unique.slice(0, 50);
-    }
-  } catch (error) {
-    console.log("Sofascore upcoming fixtures error:", error);
-  }
-
   return [];
 };
 

@@ -1,5 +1,6 @@
 import { DetailMovie, DetailTV, Episode } from "../shared/types";
 import { EMBED_ALTERNATIVES } from "../shared/constants";
+import { Capacitor } from "@capacitor/core";
 
 /**
  * Base origin for opening backend-powered pages in a new tab.
@@ -10,7 +11,12 @@ import { EMBED_ALTERNATIVES } from "../shared/constants";
  * You can override with `VITE_APP_ORIGIN` (useful for Capacitor builds).
  */
 export function getBackendBase(): string {
-  const configured = import.meta.env.VITE_APP_ORIGIN?.trim();
+  if (Capacitor.isNativePlatform()) {
+    return "https://us-central1-streamlux-67a84.cloudfunctions.net/gateway";
+  }
+
+  // @ts-ignore: Vite env var injected at build step
+  const configured = import.meta.env?.VITE_APP_ORIGIN?.trim();
   if (configured) return configured.replace(/\/+$/, "");
 
   if (typeof window !== "undefined") return window.location.origin;

@@ -1,11 +1,70 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
+import { useInView } from 'react-intersection-observer';
 import { musicService, MusicTrack } from '../../services/music';
 import { setTrack, setQueue } from '../../store/slice/musicSlice';
-import { FiMusic, FiSearch, FiPlay, FiVolume2, FiTrendingUp, FiDisc, FiHome, FiChevronLeft, FiChevronRight, FiStar } from 'react-icons/fi';
+import { FiSearch, FiPlay, FiTrendingUp, FiHome, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { RootState } from '../../store/store';
 import { useNavigate } from 'react-router-dom';
+
+const GENRES = [
+  "Hip Hop Classics", "Global Pop", "R&B Hits", "Afrobeats", "Latin Reggaeton",
+  "Electronic Dance", "K-Pop Top Hits", "Alternative Rock", "Chill Lo-Fi", "Country Anthems",
+  "Acoustic Covers", "Classic Rock", "Jazz Vibes", "Classical Focus", "Bollywood Top 50",
+  "Workout Motivation", "Indie Rock", "90s Nostalgia", "Reggae Classics", "Heavy Metal"
+];
+
+const GenreRow: React.FC<{ genre: string; isPlaying: boolean; currentId?: string; onPlay: (track: MusicTrack, list: MusicTrack[]) => void }> = ({ genre, isPlaying, currentId, onPlay }) => {
+  const [tracks, setTracks] = useState<MusicTrack[]>([]);
+  const { ref, inView } = useInView({ triggerOnce: true, rootMargin: "400px 0px" });
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (inView) {
+      // Add 'Playlist' keyword to ensure optimal results from the youtube search fallback gateway
+      musicService.search(`${genre} Hits playlist 2024`).then(res => setTracks(res.slice(0, 15)));
+    }
+  }, [inView, genre]);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollTo = direction === 'left' ? scrollLeft - clientWidth : scrollLeft + clientWidth;
+      scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <section ref={ref} className="mb-16">
+      <div className="flex items-center justify-between mb-8 px-2">
+        <h2 className="text-3xl font-black uppercase tracking-tighter italic text-gray-200">{genre}</h2>
+        <div className="flex gap-2">
+          <button onClick={() => scroll('left')} className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
+            <FiChevronLeft size={20} />
+          </button>
+          <button onClick={() => scroll('right')} className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
+            <FiChevronRight size={20} />
+          </button>
+        </div>
+      </div>
+      
+      {tracks.length === 0 ? (
+        <div className="flex gap-6 overflow-hidden pb-8 px-2">
+           {Array(5).fill(0).map((_, i) => <TrackCardSkeleton key={i} />)}
+        </div>
+      ) : (
+        <div ref={scrollRef} className="flex gap-6 overflow-x-auto no-scrollbar pb-8 sm:px-2 scroll-smooth">
+          {tracks.map((track, idx) => (
+            <div key={track.id} className="min-w-[180px] md:min-w-[240px]">
+              <TrackCard track={track} onPlay={() => onPlay(track, tracks)} idx={idx} currentId={currentId} isPlaying={isPlaying} />
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+};
 
 const MusicHub: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +77,6 @@ const MusicHub: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const trendingRef = useRef<HTMLDivElement>(null);
-  const artistRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadTrending();
@@ -45,23 +103,13 @@ const MusicHub: React.FC = () => {
     dispatch(setQueue(list));
   };
 
-  const scroll = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right') => {
-    if (ref.current) {
-        const { scrollLeft, clientWidth } = ref.current;
+  const scrollTrending = (direction: 'left' | 'right') => {
+    if (trendingRef.current) {
+        const { scrollLeft, clientWidth } = trendingRef.current;
         const scrollTo = direction === 'left' ? scrollLeft - clientWidth : scrollLeft + clientWidth;
-        ref.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+        trendingRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
     }
   };
-
-  const dummyArtists = [
-    { name: 'The Weeknd', img: 'https://i.scdn.co/image/ab6761610000e5eb214f3cf42d80139982447f27' },
-    { name: 'Drake', img: 'https://i.scdn.co/image/ab6761610000e5eb4293361a48ff35da63f3ef71' },
-    { name: 'Taylor Swift', img: 'https://i.scdn.co/image/ab6761610000e5eb859eee69632eb34d47da1063' },
-    { name: 'Bad Bunny', img: 'https://i.scdn.co/image/ab6761610000e5eb989ed05e1f05740163caabc2' },
-    { name: 'Future', img: 'https://i.scdn.co/image/ab6761610000e5eb735f9914f697472856f6ba7c' },
-    { name: 'Post Malone', img: 'https://i.scdn.co/image/ab6761610000e5eb60443909187399580b5ef970' },
-    { name: 'Travis Scott', img: 'https://i.scdn.co/image/ab6761610000e5eb1d2b865611099688463e264f' },
-  ];
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-24 pb-48 px-4 md:px-10 overflow-hidden">
@@ -146,22 +194,22 @@ const MusicHub: React.FC = () => {
                key="dashboard"
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
-               className="space-y-24"
+               className="space-y-16"
             >
               {/* Trending Carousel */}
-              <section>
+              <section className="mb-8">
                 <div className="flex items-center justify-between mb-10 px-2">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
                             <FiTrendingUp className="text-primary w-6 h-6" />
                         </div>
-                        <h2 className="text-3xl font-black uppercase tracking-tighter italic">Global Trending</h2>
+                        <h2 className="text-4xl font-black uppercase tracking-tighter italic">Global Trending</h2>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={() => scroll(trendingRef, 'left')} className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
+                        <button onClick={() => scrollTrending('left')} className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
                             <FiChevronLeft size={24} />
                         </button>
-                        <button onClick={() => scroll(trendingRef, 'right')} className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
+                        <button onClick={() => scrollTrending('right')} className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
                             <FiChevronRight size={24} />
                         </button>
                     </div>
@@ -183,35 +231,10 @@ const MusicHub: React.FC = () => {
                 </div>
               </section>
 
-              {/* Artists Section */}
-              <section>
-                <div className="flex items-center justify-between mb-10 px-2">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center">
-                            <FiStar className="text-blue-500 w-6 h-6" />
-                        </div>
-                        <h2 className="text-3xl font-black uppercase tracking-tighter italic">Top Artists</h2>
-                    </div>
-                </div>
-                
-                <div className="flex gap-12 overflow-x-auto no-scrollbar pb-10 px-2">
-                    {dummyArtists.map((artist, idx) => (
-                        <motion.div 
-                            key={artist.name}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: idx * 0.1 }}
-                            whileHover={{ y: -10 }}
-                            className="flex flex-col items-center gap-4 group cursor-pointer"
-                        >
-                            <div className="w-32 h-32 md:w-44 md:h-44 rounded-full overflow-hidden border-4 border-transparent group-hover:border-primary transition-all shadow-2xl">
-                                <img src={artist.img} alt={artist.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                            </div>
-                            <span className="text-sm font-black uppercase tracking-tighter group-hover:text-primary transition-colors italic">{artist.name}</span>
-                        </motion.div>
-                    ))}
-                </div>
-              </section>
+              {/* Lazy-Loaded Genre Carousels */}
+              {GENRES.map(genre => (
+                  <GenreRow key={genre} genre={genre} isPlaying={isPlaying} currentId={currentTrack?.id} onPlay={playMusic} />
+              ))}
 
             </motion.div>
           )}
@@ -271,7 +294,7 @@ const TrackCard: React.FC<{ track: MusicTrack; onPlay: () => void; idx: number; 
 };
 
 const TrackCardSkeleton = () => (
-    <div className="animate-pulse w-full">
+    <div className="min-w-[180px] md:min-w-[240px] animate-pulse w-full">
         <div className="aspect-square bg-white/5 rounded-[2.5rem]" />
         <div className="mt-6 flex flex-col gap-3 px-3">
             <div className="h-5 bg-white/5 rounded-full w-3/4" />

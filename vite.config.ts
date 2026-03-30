@@ -6,7 +6,8 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,           // CRITICAL: was true — was including full debug maps in APK (~20MB wasted)
+    chunkSizeWarningLimit: 2000,
   },
   server: {
     port: 3000,
@@ -19,3 +20,5 @@ export default defineConfig({
     },
   },
 });
+
+
