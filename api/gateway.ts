@@ -59,7 +59,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             delete params.endpoint;
             delete params.match;
 
-            const response = await axios.get(`${TMDB_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
+            const targetUrl = `${TMDB_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+            
+            const response = await axios.get(targetUrl, {
                 params: { ...params, api_key: TMDB_API_KEY },
                 headers: { 
                     'Accept': 'application/json',
@@ -89,10 +91,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.status(200).json({ status: 'active', message: 'StreamLux Vercel Gateway' });
 
     } catch (error: any) {
-        console.error('Gateway Error:', error.message);
-        res.status(error.response?.status || 500).json({ 
+        const status = error.response?.status || 500;
+        const details = error.response?.data?.status_message || error.message;
+        const target = error.config?.url || 'unknown';
+        
+        console.error(`Gateway Error (${status}):`, details);
+        
+        res.status(status).json({ 
             error: 'Gateway Failure', 
-            details: error.message 
+            details,
+            target: target.split('?')[0] // Hide full query for safety
         });
     }
 }
