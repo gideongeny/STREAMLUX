@@ -18,6 +18,7 @@ module.exports = async (req, res) => {
     const TMDB_BEARER_TOKEN = process.env.TMDB_BEARER_TOKEN || "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkZWNjNTIwZDg0NjllYWVhMDIwMmY1NWQ0MWExM2EwYyIsIm5iZiI6MTc1NDgyNjU1Mi4zMTcsInN1YiI6IjY4OTg4NzM4NzczZjAxYzIzNDVkMGRlYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.UIMvffG-q5sYc04gTT0efdW_k4Iu4fnOedNfs4cYIu8";
     const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
     const YT_BASE_URL = 'https://www.googleapis.com/youtube/v3';
+    const SAAVN_BASE_URL = 'https://saavn.me'; // Robust Saavn API Proxy
 
     const query = req.query || {};
     const match = query.match || "";
@@ -77,19 +78,82 @@ module.exports = async (req, res) => {
             return res.status(tmdbResponse.status).json(data);
         }
 
-        if (rawPath.includes('youtube')) {
-            const endpoint = String(query.endpoint || "/videos");
+        // --- MUSIC PROXY ---
+        if (rawPath.startsWith('music') || rawPath.includes('saavn')) {
+            const q = query.q || query.query || 'top hits';
+            let saavnUrl = "";
+            
+            if (rawPath.includes('trending')) {
+                saavnUrl = `${SAAVN_BASE_URL}/modules?language=english,hindi`;
+            } else {
+                saavnUrl = `${SAAVN_BASE_URL}/search/all?query=${encodeURIComponent(String(q))}`;
+            }
+
+            const saavnResponse = await fetch(saavnUrl);
+            const data = await saavnResponse.json();
+            return res.status(saavnResponse.status).json(data);
+        }
+
+        // --- YOUTUBE PROXY ---
+        if (rawPath.includes('youtube') || rawPath.includes('yt')) {
+            const endpoint = String(query.endpoint || "/search");
             const key = String(process.env.YT_KEYS || "").split(',')[0].trim();
             
-            const finalParams = new URLSearchParams();
-            Object.keys(query).forEach(k => { if(k !== 'endpoint' && k !== 'match') finalParams.append(k, String(query[k])); });
-            finalParams.set('key', key);
+            const ytParams = new URLSearchParams();
+            Object.keys(query).forEach(k => { 
+                if(k !== 'endpoint' && k !== 'match' && k !== 'proxy') ytParams.append(k, String(query[k])); 
+            });
+            
+            // Standard YouTube Defaults
+            if (!ytParams.has('part')) ytParams.set('part', 'snippet');
+            if (!ytParams.has('maxResults')) ytParams.set('maxResults', '25');
+            if (key) ytParams.set('key', key);
 
-            const ytUrl = `${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}?${finalParams.toString()}`;
+            const ytUrl = `${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}?${ytParams.toString()}`;
             
             const ytResponse = await fetch(ytUrl);
             const data = await ytResponse.json();
-            return res.status(ytResponse.status).json(data);
+            
+            // If API Key fails or is missing, return a safe fallback to prevent frontend crashes
+            if (data.error) {
+                return res.status(200).json({ items: [], results: [], error: data.error.message });
+            }
+            return res.status(200).json(data);
+        }
+
+        // --- SPORTS AGGREGATOR ---
+        if (rawPath.startsWith('sports')) {
+            const wantLive = rawPath.endsWith('/live');
+            const fixtures = [];
+            
+            // 1. ESPN Scoreboards (Free & High Quality)
+            const espnEndpoints = [
+                "/soccer/eng.1/scoreboard", "/soccer/uefa.champions/scoreboard",
+                "/soccer/esp.1/scoreboard", "/soccer/ger.1/scoreboard",
+                "/soccer/ita.1/scoreboard", "/soccer/fra.1/scoreboard",
+                "/basketball/nba/scoreboard", "/mma/ufc/scoreboard"
+            ];
+            
+            const todayStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+            const promises = espnEndpoints.map(ep => 
+                fetch(`https://site.api.espn.com/apis/site/v2/sports${ep}?dates=${todayStr}`)
+                .then(r => r.json())
+                .catch(() => ({ events: [] }))
+            );
+
+            const results = await Promise.all(promises);
+            results.forEach(res => {
+                if (res.events) fixtures.push(...res.events);
+            });
+
+            // 2. TheSportsDB Fallback
+            try {
+                const tsdbRes = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${new Date().toISOString().split('T')[0]}`);
+                const tsdbData = await tsdbRes.json();
+                if (tsdbData.events) fixtures.push(...tsdbData.events);
+            } catch (e) {}
+
+            return res.status(200).json({ success: true, data: fixtures });
         }
 
         // Default Success (Empty results fallback to prevent frontend crashes)

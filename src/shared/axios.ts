@@ -4,10 +4,10 @@ import { Capacitor } from "@capacitor/core";
 
 const isNative = Capacitor.isNativePlatform();
 // Update this URL after deploying to Vercel to support Native Android/iOS builds
-const API_GATEWAY = "https://streamlux-67a84.web.app/api"; 
+const API_GATEWAY = "https://streamlux.vercel.app/api"; 
 
 const instance = axios.create({
-  baseURL: isNative ? API_GATEWAY : "/api",
+  baseURL: API_GATEWAY,
 });
 
 // For efficiency, we use a global variable for language to avoid leaking interceptors

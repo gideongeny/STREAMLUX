@@ -36,10 +36,10 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,       // KEY: don't re-fetch when navigating back to a page
-      staleTime: 1000 * 60 * 15,  // 15 min — data stays "fresh", no background refetch
-      cacheTime: 1000 * 60 * 90,  // 90 min — keep in memory much longer (saves API quota)
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,        // Refresh when navigating back to a page
+      staleTime: 1000 * 10,       // 10 seconds — data stays "fresh" briefly
+      cacheTime: 1000 * 60 * 30,  // 30 min — keep in memory for cleanup
     },
   },
 });

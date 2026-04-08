@@ -671,29 +671,46 @@ export const gateway = functions
             }
 
             // --- TMDB PROXY ---
-            // Stricter matching: only if path strictly includes 'tmdb'
-            if (rawPath === 'tmdb' || rawPath.startsWith('proxy/tmdb') || rawPath.includes('tmdb')) {
-                // FALLBACK: Extract endpoint from the URL if not in body/query
-                // e.g. /api/proxy/tmdb/movie/123 -> /movie/123
-                let endpoint = req.body.endpoint || req.query.endpoint;
+            if (rawPath === 'tmdb' || rawPath.startsWith('proxy/tmdb') || rawPath.includes('tmdb') || req.query.endpoint) {
+                let endpoint = (req.body?.endpoint || req.query?.endpoint || "") as string;
                 
-                if (!endpoint && rawPath.includes('tmdb/')) {
-                    endpoint = '/' + rawPath.split('tmdb/')[1];
+                if (!endpoint) {
+                    if (rawPath.includes('tmdb/')) {
+                        endpoint = '/' + rawPath.split('tmdb/')[1];
+                    } else if (rawPath.startsWith('proxy/tmdb/')) {
+                        endpoint = '/' + rawPath.split('proxy/tmdb/')[1];
+                    } else if (rawPath !== 'tmdb' && rawPath !== 'proxy/tmdb') {
+                        endpoint = '/' + rawPath;
+                    }
+                }
+
+                // Auto-Search Intelligence: If query is present but no endpoint, route to search
+                if ((!endpoint || endpoint === "/") && req.query.query) {
+                    endpoint = "/search/multi";
                 }
                 
-                if (!endpoint) endpoint = "/movie/popular";
+                if (!endpoint || endpoint === "/") endpoint = "/movie/popular";
 
-            const params = { ...(req.body.params || {}), ...(req.query || {}) };
-            delete params.endpoint;
+                const params = { ...(req.body?.params || {}), ...(req.query || {}) };
+                delete params.endpoint;
 
-            const response = await axios.get(`${TMDB_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
-                params: { ...params, api_key: TMDB_API_KEY },
-                headers: { 
-                    'Accept': 'application/json',
-                    'Authorization': `Bearer ${TMDB_BEARER_TOKEN}`
+                try {
+                    const response = await axios.get(`${TMDB_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
+                        params: { ...params, api_key: TMDB_API_KEY },
+                        headers: { 
+                            'Accept': 'application/json',
+                            'Authorization': `Bearer ${TMDB_BEARER_TOKEN}`
+                        },
+                        timeout: 10000
+                    });
+                    res.status(200).json(response.data);
+                } catch (err: any) {
+                    res.status(err.response?.status || 500).json({ 
+                        results: [], 
+                        error: 'TMDB Gateway Failure', 
+                        message: err.message 
+                    });
                 }
-            });
-                res.status(200).json(response.data);
                 return;
             }
 
