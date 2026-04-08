@@ -5,28 +5,24 @@ param(
 
 $OWNER = "gideongeny"
 $REPO  = "STREAMLUX"
-$TAG   = "v1.4.4" # Firebase Init & Identity Fix
-$TITLE = "StreamLux v1.4.4 (Stability & Init Fix)"
+$TAG   = "v1.4.5" # Maintenance & UI Sync
+$TITLE = "StreamLux v1.4.5 (Maintenance Build)"
 $NOTES = @"
-## StreamLux v1.4.4 - Stabilization Release 🚀
+## StreamLux v1.4.5 - Maintenance Build 🚀
 
-This release hardens the application against the "FirebaseApp not initialized" and "Missing AdMob ID" crashes observed in recent logs.
+This release synchronizes the latest UI and logic changes into the native build and ensures all assets are up to date.
 
-### Key Fixes
-- **Explicit Firebase Initialization**: Added native boilerplate to `MainActivity.java` to ensure Firebase is ready before any plugins are registered.
-- **Identity Migration Enforcement**: v1.4.4 is the definitive version for the `com.streamlux.app` transition.
+### Changes
+- **UI Synchronization**: Updated layouts and components for Sports and Home.
+- **Native Stability**: Consistent with the v1.4.4 identity migration and Firebase initialization fixes.
 - **AdMob Validation**: Verified the `APPLICATION_ID` presence in the Android Manifest.
 
-### ⚠️ IMPORTANT INSTALLATION NOTE
-You **MUST** uninstall any previous version of StreamLux (especially if it was named `com.gideongeny.streamlux`) before installing this APK. The change in package identity requires a clean install.
-"@
-
 ### Features
-- **Music Universe**: 20 lazy-loaded genre categories.
-- **Optimized Size**: ~31.5MB APK and ~28.9MB AAB.
+- **Sports Watch Page**: Enhanced streaming interface.
+- **Cinematic Moments**: Improved home screen experience.
 
-### Deployment
-- Firebase Hosting (Web): https://streamlux-67a84.web.app
+### ⚠️ IMPORTANT INSTALLATION NOTE
+If you are coming from a version older than v1.4.4, you **MUST** uninstall the app first due to the package identity change (`com.streamlux.app`).
 "@
 
 $headers = @{
@@ -68,7 +64,7 @@ $apkPath = "android\app\build\outputs\apk\debug\app-arm64-v8a-debug.apk"
 Write-Host "Uploading APK..." -ForegroundColor Cyan
 $apkBytes = [System.IO.File]::ReadAllBytes((Resolve-Path $apkPath))
 Invoke-RestMethod `
-    -Uri "${uploadUrl}?name=StreamLux-v1.4.3-arm64.apk&label=StreamLux-v1.4.3-arm64.apk" `
+    -Uri "${uploadUrl}?name=StreamLux-v1.4.4-arm64.apk&label=StreamLux-v1.4.4-arm64.apk" `
     -Method Post `
     -Headers $headers `
     -Body $apkBytes `
@@ -80,7 +76,7 @@ $aabPath = "android\app\build\outputs\bundle\release\app-release.aab"
 Write-Host "Uploading AAB..." -ForegroundColor Cyan
 $aabBytes = [System.IO.File]::ReadAllBytes((Resolve-Path $aabPath))
 Invoke-RestMethod `
-    -Uri "${uploadUrl}?name=StreamLux-v1.4.3-release.aab&label=StreamLux-v1.4.3-release.aab" `
+    -Uri "${uploadUrl}?name=StreamLux-v1.4.4-release.aab&label=StreamLux-v1.4.4-release.aab" `
     -Method Post `
     -Headers $headers `
     -Body $aabBytes `
@@ -88,5 +84,5 @@ Invoke-RestMethod `
 Write-Host "AAB uploaded!" -ForegroundColor Green
 
 Write-Host ""
-Write-Host "Successfully deployed Final Release v1.4.3!" -ForegroundColor Yellow
+Write-Host "Successfully deployed Final Release v1.4.4!" -ForegroundColor Yellow
 Write-Host $release.html_url -ForegroundColor Yellow

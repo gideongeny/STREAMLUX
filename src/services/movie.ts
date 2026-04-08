@@ -15,10 +15,10 @@ export const getMovieFullDetail = async (id: number | string): Promise<FilmInfo>
 
   const response = await Promise.all([
     axios.get(`/movie/${id}`),
-    axios.get(`/movie/${id}/credits`),
-    axios.get(`/movie/${id}/reviews`),
-    axios.get(`/movie/${id}/similar`),
-    axios.get(`/movie/${id}/videos`),
+    axios.get(`/movie/${id}/credits`).catch(() => ({ data: { cast: [] } })),
+    axios.get(`/movie/${id}/reviews`).catch(() => ({ data: { results: [] } })),
+    axios.get(`/movie/${id}/similar`).catch(() => ({ data: { results: [] } })),
+    axios.get(`/movie/${id}/videos`).catch(() => ({ data: { results: [] } })),
   ]);
 
   const movieInfo = response.reduce((final, current, index) => {
