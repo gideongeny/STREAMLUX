@@ -29,14 +29,17 @@ module.exports = async (req, res) => {
 
     try {
         if (isTmdbPath || query.endpoint) {
-            let endpoint = String(query.endpoint || "");
-            
             if (!endpoint) {
                 if (rawPath.includes('tmdb/')) {
                     endpoint = '/' + rawPath.split('tmdb/')[1];
                 } else if (isTmdbPath) {
                     endpoint = '/' + rawPath;
                 }
+            }
+
+            // Auto-Search Intelligence: If query is present but no endpoint, route to search
+            if ((!endpoint || endpoint === "/") && query.query) {
+                endpoint = "/search/multi";
             }
             
             if (!endpoint || endpoint === "/") endpoint = "/movie/popular";

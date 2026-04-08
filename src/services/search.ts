@@ -29,7 +29,7 @@ export const getSearchSuggestions = async (query: string): Promise<Item[]> => {
       },
     });
 
-    const apiResults = response.data.results
+    const apiResults = (response.data.results || [])
       .filter((item: any) => item.media_type !== "person");
 
     // Enhance with Brand Shortcuts using Fuse.js fuzzy matching
@@ -50,7 +50,7 @@ export const getSearchSuggestions = async (query: string): Promise<Item[]> => {
 
 export const getSearchKeyword = async (query: string): Promise<string[]> => {
   const suggestions = await getSearchSuggestions(query);
-  return suggestions.map(s => s.title || s.name || "");
+  return (suggestions || []).map(s => s.title || s.name || "");
 };
 
 
@@ -97,7 +97,7 @@ export const getSearchResult: (
 
   const nicheResults: Item[] = nicheResponse.data || [];
 
-  const tmdbResults = tmdbData.data.results
+  const tmdbResults = (tmdbData.data.results || [])
     .map((item: Item) => ({
       ...item,
       ...(typeSearch !== "multi" && { media_type: typeSearch }),
