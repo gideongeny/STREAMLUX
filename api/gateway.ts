@@ -82,11 +82,12 @@ module.exports = async (req, res) => {
         if (rawPath.startsWith('music') || rawPath.includes('saavn')) {
             const q = query.q || query.query || 'top hits';
             let saavnUrl = "";
+            const SAAVN_DEV_URL = 'https://saavn.dev/api';
             
             if (rawPath.includes('trending')) {
-                saavnUrl = `${SAAVN_BASE_URL}/modules?language=english,hindi`;
+                saavnUrl = `${SAAVN_DEV_URL}/modules?language=english,hindi`;
             } else {
-                saavnUrl = `${SAAVN_BASE_URL}/search/all?query=${encodeURIComponent(String(q))}`;
+                saavnUrl = `${SAAVN_DEV_URL}/search/songs?query=${encodeURIComponent(String(q))}&limit=30`;
             }
 
             const saavnResponse = await fetch(saavnUrl);
