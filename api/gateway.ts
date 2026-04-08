@@ -78,48 +78,88 @@ module.exports = async (req, res) => {
             return res.status(tmdbResponse.status).json(data);
         }
 
-        // --- MUSIC PROXY ---
+        // --- MUSIC PROXY (SAAVN + YOUTUBE FALLBACK) ---
         if (rawPath.startsWith('music') || rawPath.includes('saavn')) {
             const q = query.q || query.query || 'top hits';
-            let saavnUrl = "";
             const SAAVN_DEV_URL = 'https://saavn.dev/api';
             
-            if (rawPath.includes('trending')) {
-                saavnUrl = `${SAAVN_DEV_URL}/modules?language=english,hindi`;
-            } else {
-                saavnUrl = `${SAAVN_DEV_URL}/search/songs?query=${encodeURIComponent(String(q))}&limit=30`;
+            try {
+                let saavnUrl = "";
+                if (rawPath.includes('trending')) {
+                    saavnUrl = `${SAAVN_DEV_URL}/modules?language=english,hindi`;
+                } else {
+                    saavnUrl = `${SAAVN_DEV_URL}/search/songs?query=${encodeURIComponent(String(q))}&limit=30`;
+                }
+
+                const saavnResponse = await fetch(saavnUrl);
+                const data = await saavnResponse.json();
+                if (data && !data.error) return res.status(200).json(data);
+            } catch (e) {
+                console.warn('[Music] Saavn failed, falling back to YouTube Music...');
             }
 
-            const saavnResponse = await fetch(saavnUrl);
-            const data = await saavnResponse.json();
-            return res.status(saavnResponse.status).json(data);
+            // Fallback to YouTube Music Search using the dedicated Music Key
+            const musicKey = "AIzaSyCU6TH5NPF-ZyX-hWjTQTaSGH0lTy9pops";
+            const ytMusicUrl = `${YT_BASE_URL}/search?part=snippet&q=${encodeURIComponent(String(q))}&type=video&videoCategoryId=10&maxResults=30&key=${musicKey}`;
+            const ytResponse = await fetch(ytMusicUrl);
+            const ytData = await ytResponse.json();
+            return res.status(200).json(ytData);
         }
 
-        // --- YOUTUBE PROXY ---
+        // --- YOUTUBE PROXY WITH SMART QUOTA ROTATION ---
         if (rawPath.includes('youtube') || rawPath.includes('yt')) {
             const endpoint = String(query.endpoint || "/search");
-            const key = String(process.env.YT_KEYS || "").split(',')[0].trim();
+            const context = String(query.context || "general");
             
+            // User-provided Keys with dedicated purposes
+            const keys = {
+                movie: "AIzaSyDhbC7IZNOqpMki1Yni5JnSiXQQfnp5Sxw",
+                tv: "AIzaSyD6W4_T3YkWJKy9Mtj2u188g8HayHMuPq8",
+                music: "AIzaSyCU6TH5NPF-ZyX-hWjTQTaSGH0lTy9pops",
+                general: "AIzaSyAlENC10uKVhrDGqgzUeOiNysiUFoDof9o"
+            };
+
+            // Order keys: Primary for context first, then follow with others for rotation
+            const keyPool = [keys[context] || keys.general];
+            Object.values(keys).forEach(k => { if(!keyPool.includes(k)) keyPool.push(k); });
+
             const ytParams = new URLSearchParams();
             Object.keys(query).forEach(k => { 
-                if(k !== 'endpoint' && k !== 'match' && k !== 'proxy') ytParams.append(k, String(query[k])); 
+                if(!['endpoint', 'match', 'proxy', 'context'].includes(k)) ytParams.append(k, String(query[k])); 
             });
             
-            // Standard YouTube Defaults
             if (!ytParams.has('part')) ytParams.set('part', 'snippet');
             if (!ytParams.has('maxResults')) ytParams.set('maxResults', '25');
-            if (key) ytParams.set('key', key);
 
-            const ytUrl = `${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}?${ytParams.toString()}`;
-            
-            const ytResponse = await fetch(ytUrl);
-            const data = await ytResponse.json();
-            
-            // If API Key fails or is missing, return a safe fallback to prevent frontend crashes
-            if (data.error) {
-                return res.status(200).json({ items: [], results: [], error: data.error.message });
+            // --- SMART ROTATION LOOP ---
+            let lastError = null;
+            for (const key of keyPool) {
+                try {
+                    const ytUrl = `${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}?${ytParams.toString()}&key=${key}`;
+                    const ytResponse = await fetch(ytUrl);
+                    const data = await ytResponse.json();
+                    
+                    // Quota hit or invalid key check
+                    if (data.error) {
+                        const reason = data.error.errors?.[0]?.reason || "";
+                        if (reason === 'quotaExceeded' || reason === 'keyInvalid' || reason === 'dailyLimitExceeded') {
+                            console.warn(`[YouTube Rotation] Key failed (${reason}). Trying next...`);
+                            lastError = data.error.message;
+                            continue; // Try next key in the pool
+                        }
+                        return res.status(200).json({ items: [], error: data.error.message });
+                    }
+
+                    // Success! Add CDN caching (8 hours) to save massive quota for concurrent users
+                    res.setHeader('Cache-Control', 's-maxage=28800, stale-while-revalidate=3600');
+                    return res.status(200).json(data);
+                } catch (e) {
+                    lastError = e.message;
+                }
             }
-            return res.status(200).json(data);
+
+            // If all keys fail
+            return res.status(200).json({ items: [], error: "All YouTube API Keys exhausted or failing", lastError });
         }
 
         // --- SPORTS AGGREGATOR ---
