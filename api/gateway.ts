@@ -106,7 +106,7 @@ export default async function handler(req: any, res: any) {
             const ytParams: any = { ...query };
             delete ytParams.endpoint; delete ytParams.match; delete ytParams.proxy; delete ytParams.context;
             if (!ytParams.part) ytParams.part = 'snippet';
-            if (!ytParams.maxResults) ytParams.set('maxResults', '25');
+            if (!ytParams.maxResults) ytParams.maxResults = '25';
 
             for (const key of keyPool) {
                 try {
