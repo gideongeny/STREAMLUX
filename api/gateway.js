@@ -1,16 +1,19 @@
 /**
  * api/gateway.js
- * NUCLEAR RESTORATION - Pure Vanilla Node.js
+ * ULTIMATE REFINEMENT - Universal Normalizer & CORS Everywhere
  * Zero Dependencies | Native Fetch | Ultra-Stable
  */
 
 module.exports = async (req, res) => {
-    // 1. Bulletproof CORS
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+    // 1. Centralized CORS Enforcement
+    const setCors = (response) => {
+        response.setHeader('Access-Control-Allow-Credentials', 'true');
+        response.setHeader('Access-Control-Allow-Origin', '*');
+        response.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+        response.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+    };
 
+    setCors(res);
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
@@ -26,36 +29,23 @@ module.exports = async (req, res) => {
         general: "AIzaSyAlENC10uKVhrDGqgzUeOiNysiUFoDof9o"
     };
 
-    // 3. Path Identification
+    // 3. Universal Path Normalizer
     const query = req.query || {};
     const match = query.match || "";
-    let rawPath = (Array.isArray(match) ? match[0] : String(match)).replace(/^\/+/, '');
+    // Normalize path by stripping Vercel prefixes
+    let rawPath = (Array.isArray(match) ? match[0] : String(match))
+        .replace(/^\/?api\//, '')
+        .replace(/^\/?proxy\/tmdb\//, '')
+        .replace(/^\/?tmdb\//, '')
+        .replace(/^\/+/, '');
     
-    // Normalize path (handle legacy proxy/tmdb)
-    if (rawPath.startsWith('proxy/tmdb')) rawPath = rawPath.replace('proxy/tmdb', '').replace(/^\/+/, '');
+    // Fallback detection for direct calls
+    if (!rawPath && req.url) {
+        const urlP = req.url.split('?')[0];
+        rawPath = urlP.replace(/^\/api\//, '').replace(/^\/+/, '');
+    }
 
     try {
-        // --- TMDB ROUTE ---
-        const isTmdb = rawPath.includes('tmdb') || 
-                      ['movie', 'tv', 'trending', 'person', 'search', 'configuration', 'genre', 'discover'].some(p => rawPath.startsWith(p));
-
-        if (isTmdb || query.endpoint) {
-            let endpoint = String(query.endpoint || "");
-            if (!endpoint) endpoint = rawPath.includes('tmdb/') ? '/' + rawPath.split('tmdb/')[1] : '/' + rawPath;
-            if ((!endpoint || endpoint === "/") && query.query) endpoint = "/search/multi";
-            if (!endpoint || endpoint === "/") endpoint = "/movie/popular";
-
-            const finalParams = new URL(endpoint.startsWith('http') ? endpoint : `https://api.themoviedb.org/3${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`);
-            Object.keys(query).forEach(k => { if(k !== 'endpoint' && k !== 'match') finalParams.searchParams.append(k, String(query[k])); });
-            finalParams.searchParams.set('api_key', TMDB_API_KEY);
-
-            const tmdbRes = await fetch(finalParams.toString(), {
-                headers: { 'Authorization': `Bearer ${TMDB_BEARER}`, 'Accept': 'application/json' }
-            });
-            const data = await tmdbRes.json();
-            return res.status(200).json(data);
-        }
-
         // --- MUSIC ROUTE (Saavn + YT Fallback) ---
         if (rawPath.startsWith('music') || rawPath.includes('saavn')) {
             const q = query.q || query.query || 'top hits';
@@ -68,7 +58,7 @@ module.exports = async (req, res) => {
                 if (sData && !sData.error) return res.status(200).json(sData);
             } catch (e) {}
 
-            // YouTube Music Fallback with Key Rotation
+            // YouTube Music Fallback
             const musicRetryPool = [YT_KEYS.music, YT_KEYS.general, YT_KEYS.movie];
             for (const key of musicRetryPool) {
                 try {
@@ -130,9 +120,30 @@ module.exports = async (req, res) => {
             return res.status(200).json({ success: true, data: fixtures });
         }
 
-        return res.status(200).json({ results: [], status: 'Nuclear Gateway Active', path: rawPath });
+        // --- TMDB ROUTE (Default Handler) ---
+        let endpoint = String(query.endpoint || "");
+        if (!endpoint) endpoint = '/' + rawPath;
+        if ((!endpoint || endpoint === "/") && query.query) endpoint = "/search/multi";
+        if (!endpoint || endpoint === "/") endpoint = "/movie/popular";
+
+        const tmdbFull = `https://api.themoviedb.org/3${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+        const finalU = new URL(tmdbFull);
+        Object.keys(query).forEach(k => { if(k !== 'endpoint' && k !== 'match') finalU.searchParams.append(k, String(query[k])); });
+        finalU.searchParams.set('api_key', TMDB_API_KEY);
+
+        const tmdbRes = await fetch(finalU.toString(), {
+            headers: { 'Authorization': `Bearer ${TMDB_BEARER}`, 'Accept': 'application/json' }
+        });
+        const data = await tmdbRes.json();
+        return res.status(200).json(data);
 
     } catch (err) {
-        return res.status(500).json({ error: 'Gateway Internal Failure', message: err.message });
+        setCors(res);
+        return res.status(200).json({ 
+            error: true, 
+            message: 'Gateway Recovery Mode Active', 
+            details: err.message,
+            path: rawPath
+        });
     }
 }
