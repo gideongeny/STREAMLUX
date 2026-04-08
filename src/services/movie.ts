@@ -70,12 +70,12 @@ export const getWatchMovie = async (
 
   const res = await Promise.all([
     axios.get(`/movie/${id}`),
-    axios.get(`/movie/${id}/recommendations`),
+    axios.get(`/movie/${id}/recommendations`).catch(() => ({ data: { results: [] } })),
   ]);
 
   return {
     detail: res[0].data,
-    recommendations: res[1].data.results.filter(
+    recommendations: (res[1].data.results || []).filter(
       (item: Item) => item.poster_path
     ),
   };
