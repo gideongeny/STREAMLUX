@@ -47,25 +47,34 @@ module.exports = async (req, res) => {
 
     try {
         // --- MUSIC ROUTE (Saavn + YT Fallback) ---
-        if (rawPath.startsWith('music') || rawPath.includes('saavn')) {
-            const q = query.q || query.query || 'top hits';
+        if (rawPath.startsWith('music') || rawPath.includes('saavn') || rawPath.includes('trending')) {
+            const q = query.q || query.query || 'Global Top Hits 2024';
             try {
-                const saavnUrl = rawPath.includes('trending') 
-                    ? `https://saavn.dev/api/modules?language=english,hindi` 
-                    : `https://saavn.dev/api/search/songs?query=${encodeURIComponent(String(q))}&limit=30`;
-                const sRes = await fetch(saavnUrl);
-                const sData = await sRes.json();
-                if (sData && !sData.error) return res.status(200).json(sData);
+                // Try Saavn Modules (Trending) and Search
+                const endpoints = [
+                    `https://saavn.dev/api/modules?language=english,hindi`,
+                    `https://saavn.dev/api/search/songs?query=${encodeURIComponent(String(q))}&limit=40`
+                ];
+                
+                for (const sUrl of endpoints) {
+                    try {
+                        const sRes = await fetch(sUrl);
+                        const sData = await sRes.json();
+                        // saavn.dev usually wraps results in a 'data' property
+                        const hasData = sData && (sData.data || sData.trending || sData.results || Array.isArray(sData));
+                        if (hasData) return res.status(200).json(sData);
+                    } catch (e) {}
+                }
             } catch (e) {}
 
-            // YouTube Music Fallback
-            const musicRetryPool = [YT_KEYS.music, YT_KEYS.general, YT_KEYS.movie];
+            // YouTube Music Fallback (More aggressive search)
+            const musicRetryPool = [YT_KEYS.music, YT_KEYS.general];
             for (const key of musicRetryPool) {
                 try {
-                    const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(String(q))}&type=video&videoCategoryId=10&maxResults=30&key=${key}`;
+                    const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent('Official Music Video ' + String(q))}&type=video&videoCategoryId=10&maxResults=40&key=${key}`;
                     const ytRes = await fetch(ytUrl);
                     const ytData = await ytRes.json();
-                    if (ytData && !ytData.error) return res.status(200).json(ytData);
+                    if (ytData && ytData.items && ytData.items.length > 0) return res.status(200).json(ytData);
                 } catch (e) {}
             }
             return res.status(200).json({ items: [], results: [] });
