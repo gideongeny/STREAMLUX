@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
             if (!endpoint) {
                 if (rawPath.includes('tmdb/')) {
                     endpoint = '/' + rawPath.split('tmdb/')[1];
-                } else if (isTmdbPath) {
+                } else if (isTmdbPath && rawPath !== 'tmdb') {
                     endpoint = '/' + rawPath;
                 }
             }
