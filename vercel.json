@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "https://streamlux-67a84.web.app/api/:match*"
+      "destination": "/api/gateway?match=:match*"
     },
     {
       "source": "/(.*)",

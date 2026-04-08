@@ -100,22 +100,7 @@ const MAX_REQUESTS_PER_WINDOW = 100; // 100 requests per minute
 export const gateway = functions
     .runWith({ 
         memory: '1GB', 
-        timeoutSeconds: 120,
-        secrets: [
-            "TMDB_API_KEY",
-            "TMDB_BEARER_TOKEN",
-            "YT_KEYS",
-            "SPORTMONKS_KEY",
-            "APISPORTS_KEY",
-            "SCOREBAT_TOKEN",
-            "OMDB_API_KEY",
-            "WATCHMODE_API_KEY",
-            "RAPIDAPI_KEY",
-            "FANART_API_KEY",
-            "TRAKT_CLIENT_ID",
-            "TRAKT_CLIENT_SECRET",
-            "TASTEDIVE_API_KEY"
-        ]
+        timeoutSeconds: 120
     })
     .https.onRequest(async (req, res) => {
         // --- RATE LIMITING ---
