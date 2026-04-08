@@ -125,8 +125,25 @@ module.exports = async (req, res) => {
         if (rawPath.startsWith('sports')) {
             const wantLive = rawPath.endsWith('/live');
             const fixtures = [];
+
+            // Helper: Normalizer
+            const normalize = (m) => ({
+                id: String(m.id || Math.random()),
+                sport: String(m.sport || "Sports"),
+                leagueName: String(m.leagueName || "Live Sports"),
+                homeTeam: String(m.homeTeam || "Team A"),
+                awayTeam: String(m.awayTeam || "Team B"),
+                homeTeamLogo: m.homeTeamLogo || "",
+                awayTeamLogo: m.awayTeamLogo || "",
+                status: m.status || (wantLive ? "live" : "upcoming"),
+                isLive: !!m.isLive,
+                homeScore: Number(m.homeScore || 0),
+                awayScore: Number(m.awayScore || 0),
+                minute: String(m.minute || ""),
+                kickoffTimeFormatted: m.kickoffTimeFormatted || ""
+            });
             
-            // 1. ESPN Scoreboards (Free & High Quality)
+            // 1. ESPN Scoreboards
             const espnEndpoints = [
                 "/soccer/eng.1/scoreboard", "/soccer/uefa.champions/scoreboard",
                 "/soccer/esp.1/scoreboard", "/soccer/ger.1/scoreboard",
@@ -142,15 +159,49 @@ module.exports = async (req, res) => {
             );
 
             const results = await Promise.all(promises);
-            results.forEach(res => {
-                if (res.events) fixtures.push(...res.events);
+            results.forEach((res, idx) => {
+                if (Array.isArray(res.events)) {
+                    res.events.forEach(e => {
+                        const comp = e.competitions?.[0];
+                        const home = comp?.competitors?.find(c => c.homeAway === 'home');
+                        const away = comp?.competitors?.find(c => c.homeAway === 'away');
+                        fixtures.push(normalize({
+                            id: `espn-${e.id}`,
+                            sport: espnEndpoints[idx].split('/')[1],
+                            leagueName: e.league?.name || "ESPN",
+                            homeTeam: home?.team?.displayName,
+                            awayTeam: away?.team?.displayName,
+                            homeTeamLogo: home?.team?.logo,
+                            awayTeamLogo: away?.team?.logo,
+                            isLive: e.status?.type?.name?.includes('LIVE'),
+                            homeScore: home?.score,
+                            awayScore: away?.score,
+                            minute: e.status?.displayClock,
+                            kickoffTimeFormatted: e.date
+                        }));
+                    });
+                }
             });
 
-            // 2. TheSportsDB Fallback
+            // 2. TheSportsDB
             try {
                 const tsdbRes = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${new Date().toISOString().split('T')[0]}`);
                 const tsdbData = await tsdbRes.json();
-                if (tsdbData.events) fixtures.push(...tsdbData.events);
+                if (Array.isArray(tsdbData.events)) {
+                    tsdbData.events.forEach(e => {
+                        fixtures.push(normalize({
+                            id: `tsdb-${e.idEvent}`,
+                            sport: e.strSport,
+                            leagueName: e.strLeague,
+                            homeTeam: e.strHomeTeam,
+                            awayTeam: e.strAwayTeam,
+                            isLive: String(e.strStatus).toLowerCase().includes('live'),
+                            homeScore: e.intHomeScore,
+                            awayScore: e.intAwayScore,
+                            kickoffTimeFormatted: e.dateEvent
+                        }));
+                    });
+                }
             } catch (e) {}
 
             return res.status(200).json({ success: true, data: fixtures });
