@@ -32,14 +32,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const reqPath = req.query.match ? (Array.isArray(req.query.match) ? req.query.match[0] : req.query.match) : "";
     const rawPath = reqPath.replace(/^\/+/, '');
+    
+    const isTmdbPath = rawPath.includes('tmdb') || 
+                      rawPath.startsWith('movie') || 
+                      rawPath.startsWith('tv') || 
+                      rawPath.startsWith('trending') || 
+                      rawPath.startsWith('person') || 
+                      rawPath.startsWith('search');
 
     try {
         // --- TMDB PROXY ---
-        if (rawPath.includes('tmdb') || req.query.endpoint) {
+        if (isTmdbPath || req.query.endpoint) {
             let endpoint = req.query.endpoint as string || req.body?.endpoint;
             
-            if (!endpoint && rawPath.includes('tmdb/')) {
-                endpoint = '/' + rawPath.split('tmdb/')[1];
+            if (!endpoint) {
+                if (rawPath.includes('tmdb/')) {
+                    endpoint = '/' + rawPath.split('tmdb/')[1];
+                } else if (isTmdbPath) {
+                    endpoint = '/' + rawPath;
+                }
             }
             
             if (!endpoint) endpoint = "/movie/popular";
