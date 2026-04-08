@@ -1,11 +1,12 @@
 /**
  * api/gateway.ts
- * Unified Production Gateway (Ultra-Stable)
+ * Unified Production Gateway (Axios-Powered)
  * Handles TMDB, YouTube (Multi-Key), Music (Dual-Fallback), and Sports.
  */
+import axios from 'axios';
 
 export default async function handler(req: any, res: any) {
-    // 1. CORS Headers
+    // 1. Robust CORS & Preflight
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -32,7 +33,6 @@ export default async function handler(req: any, res: any) {
     // 3. Extract Path
     const query = req.query || {};
     const match = query.match || "";
-    // If vercel rewrite is used, match will be the path after /api/
     let rawPath = (Array.isArray(match) ? match[0] : String(match)).replace(/^\/+/, '');
     
     if (rawPath.startsWith('proxy/tmdb')) rawPath = rawPath.replace('proxy/tmdb', '').replace(/^\/+/, '');
@@ -48,19 +48,21 @@ export default async function handler(req: any, res: any) {
             if ((!endpoint || endpoint === "/") && query.query) endpoint = "/search/multi";
             if (!endpoint || endpoint === "/") endpoint = "/movie/popular";
 
-            const finalParams = new URLSearchParams();
-            Object.keys(query).forEach(k => { if(k !== 'endpoint' && k !== 'match') finalParams.append(k, String(query[k])); });
-            finalParams.set('api_key', TMDB_API_KEY);
-
-            const tmdbUrl = `${TMDB_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}?${finalParams.toString()}`;
-            const tmdbRes = await fetch(tmdbUrl, {
-                headers: { 'Authorization': `Bearer ${TMDB_BEARER_TOKEN}`, 'Accept': 'application/json' }
+            const tmdbRes = await axios.get(`${TMDB_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
+                params: {
+                    ...query,
+                    api_key: TMDB_API_KEY
+                },
+                headers: {
+                    'Authorization': `Bearer ${TMDB_BEARER_TOKEN}`,
+                    'Accept': 'application/json'
+                },
+                validateStatus: () => true // Prevent axios from throwing on 404/401
             });
-            const data = await tmdbRes.json();
-            return res.status(tmdbRes.status).json(data);
+            return res.status(tmdbRes.status).json(tmdbRes.data);
         }
 
-        // --- MUSIC HANDLER (Dual Fallback) ---
+        // --- MUSIC HANDLER (Saavn + YouTube Fallback) ---
         if (rawPath.startsWith('music') || rawPath.includes('saavn')) {
             const q = query.q || query.query || 'top hits';
             const SAAVN_DEV_URL = 'https://saavn.dev/api';
@@ -69,43 +71,50 @@ export default async function handler(req: any, res: any) {
                 const saavnUrl = rawPath.includes('trending') 
                     ? `${SAAVN_DEV_URL}/modules?language=english,hindi` 
                     : `${SAAVN_DEV_URL}/search/songs?query=${encodeURIComponent(String(q))}&limit=30`;
-                const sRes = await fetch(saavnUrl);
-                const sData = await sRes.json();
-                if (sData && !sData.error) return res.status(200).json(sData);
+                const sRes = await axios.get(saavnUrl, { timeout: 5000 });
+                if (sRes.data && !sRes.data.error) return res.status(200).json(sRes.data);
             } catch (e) {}
 
-            // Fallback to Working YouTube Key
+            // YouTube Music Fallback with Key Rotation
             const musicRetryPool = [YT_KEYS.music, YT_KEYS.general, YT_KEYS.movie];
             for (const key of musicRetryPool) {
                 try {
-                    const ytUrl = `${YT_BASE_URL}/search?part=snippet&q=${encodeURIComponent(String(q))}&type=video&videoCategoryId=10&maxResults=30&key=${key}`;
-                    const ytRes = await fetch(ytUrl);
-                    const ytData = await ytRes.json();
-                    if (ytData && !ytData.error) return res.status(200).json(ytData);
+                    const ytRes = await axios.get(`${YT_BASE_URL}/search`, {
+                        params: {
+                            part: 'snippet',
+                            q: String(q),
+                            type: 'video',
+                            videoCategoryId: '10',
+                            maxResults: 30,
+                            key: key
+                        },
+                        timeout: 5000
+                    });
+                    if (ytRes.data && !ytRes.data.error) return res.status(200).json(ytRes.data);
                 } catch (e) {}
             }
             return res.status(200).json({ items: [], results: [] });
         }
 
-        // --- YOUTUBE HANDLER (Rotation) ---
+        // --- YOUTUBE HANDLER (Smart Rotation) ---
         if (rawPath.includes('youtube') || rawPath.includes('yt')) {
             const endpoint = String(query.endpoint || "/search");
             const context = String(query.context || "general");
             const keyPool = [YT_KEYS[context] || YT_KEYS.general];
             Object.values(YT_KEYS).forEach(k => { if(!keyPool.includes(k)) keyPool.push(k); });
 
-            const ytParams = new URLSearchParams();
-            Object.keys(query).forEach(k => { 
-                if(!['endpoint', 'match', 'proxy', 'context'].includes(k)) ytParams.append(k, String(query[k])); 
-            });
-            if (!ytParams.has('part')) ytParams.set('part', 'snippet');
-            if (!ytParams.has('maxResults')) ytParams.set('maxResults', '25');
+            const ytParams: any = { ...query };
+            delete ytParams.endpoint; delete ytParams.match; delete ytParams.proxy; delete ytParams.context;
+            if (!ytParams.part) ytParams.part = 'snippet';
+            if (!ytParams.maxResults) ytParams.set('maxResults', '25');
 
             for (const key of keyPool) {
                 try {
-                    const ytUrl = `${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}?${ytParams.toString()}&key=${key}`;
-                    const ytRes = await fetch(ytUrl);
-                    const data = await ytRes.json();
+                    const ytRes = await axios.get(`${YT_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`, {
+                        params: { ...ytParams, key: key },
+                        timeout: 8000
+                    });
+                    const data = ytRes.data;
                     if (data.error) {
                         const reason = data.error.errors?.[0]?.reason || "";
                         if (['quotaExceeded', 'keyInvalid', 'dailyLimitExceeded', 'forbidden'].includes(reason)) continue;
@@ -122,7 +131,7 @@ export default async function handler(req: any, res: any) {
         if (rawPath.startsWith('sports')) {
             const todayStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
             const espnEndpoints = ["/soccer/eng.1/scoreboard", "/soccer/uefa.champions/scoreboard", "/basketball/nba/scoreboard"];
-            const p = espnEndpoints.map(ep => fetch(`https://site.api.espn.com/apis/site/v2/sports${ep}?dates=${todayStr}`).then(r => r.json()).catch(() => ({events:[]})));
+            const p = espnEndpoints.map(ep => axios.get(`https://site.api.espn.com/apis/site/v2/sports${ep}?dates=${todayStr}`).then(r => r.data).catch(() => ({events:[]})));
             const results = await Promise.all(p);
             const fixtures: any[] = [];
             results.forEach((r, i) => r.events?.forEach((e: any) => {
@@ -138,7 +147,13 @@ export default async function handler(req: any, res: any) {
         }
 
         return res.status(200).json({ results: [], status: 'gateway active', path: rawPath });
+
     } catch (err: any) {
-        return res.status(500).json({ error: 'Gateway Critical Failure', message: err.message });
+        console.error('[Gateway Error]:', err.message);
+        return res.status(500).json({ 
+            error: 'Gateway Resolution Failure', 
+            details: err.message,
+            code: err.code || 'UNKNOWN'
+        });
     }
 }
