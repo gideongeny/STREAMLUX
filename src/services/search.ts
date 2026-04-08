@@ -104,7 +104,13 @@ export const getSearchResult: (
     }));
 
   // Merge with FZMovies, YouTube, and Niche results, deduplicate by ID
-  const combined: Item[] = [...tmdbResults, ...ytResults, ...fzResults, ...nicheResults];
+  const combined: Item[] = [
+    ...(Array.isArray(tmdbResults) ? tmdbResults : []),
+    ...(Array.isArray(ytResults) ? ytResults : []),
+    ...(Array.isArray(fzResults) ? fzResults : []),
+    ...(Array.isArray(nicheResults) ? nicheResults : [])
+  ];
+  
   const seen = new Set<string | number>();
   const filteredResults = combined.filter((item: Item) => {
     if (seen.has(item.id)) return false;

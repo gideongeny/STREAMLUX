@@ -1,5 +1,5 @@
 /**
- * Vercel Gateway: Zero-Dependency Version
+ * Vercel Gateway: Zero-Dependency Version (Ultra-Stable)
  * Uses native Node.js fetch (Node 18+) to eliminate bundling crashes.
  */
 module.exports = async (req, res) => {
@@ -21,7 +21,14 @@ module.exports = async (req, res) => {
 
     const query = req.query || {};
     const match = query.match || "";
-    const rawPath = (Array.isArray(match) ? match[0] : String(match)).replace(/^\/+/, '');
+    let rawPath = (Array.isArray(match) ? match[0] : String(match)).replace(/^\/+/, '');
+
+    // Handle legacy proxy prefix (e.g. /api/proxy/tmdb/movie/123 -> /movie/123)
+    if (rawPath.startsWith('proxy/tmdb')) {
+        rawPath = rawPath.replace('proxy/tmdb', '').replace(/^\/+/, '');
+    } else if (rawPath.startsWith('proxy/search')) {
+        rawPath = 'search/' + rawPath.replace('proxy/search', '').replace(/^\/+/, '');
+    }
 
     // 3. Logic: Detect TMDB/YouTube
     const isTmdbPath = rawPath.includes('tmdb') || 
@@ -29,6 +36,8 @@ module.exports = async (req, res) => {
 
     try {
         if (isTmdbPath || query.endpoint) {
+            let endpoint = String(query.endpoint || "");
+            
             if (!endpoint) {
                 if (rawPath.includes('tmdb/')) {
                     endpoint = '/' + rawPath.split('tmdb/')[1];
@@ -36,12 +45,12 @@ module.exports = async (req, res) => {
                     endpoint = '/' + rawPath;
                 }
             }
-
+            
             // Auto-Search Intelligence: If query is present but no endpoint, route to search
             if ((!endpoint || endpoint === "/") && query.query) {
                 endpoint = "/search/multi";
             }
-            
+
             if (!endpoint || endpoint === "/") endpoint = "/movie/popular";
 
             // Build clean search params
@@ -83,8 +92,10 @@ module.exports = async (req, res) => {
             return res.status(ytResponse.status).json(data);
         }
 
-        // Default Status
+        // Default Success (Empty results fallback to prevent frontend crashes)
         return res.status(200).json({ 
+            results: [],
+            data: [],
             status: 'active', 
             mode: 'zero-dependency',
             path: rawPath
@@ -93,9 +104,9 @@ module.exports = async (req, res) => {
     } catch (err) {
         console.error('[Zero-Dep Error]:', err.message);
         return res.status(500).json({ 
+            results: [],
             error: 'Gateway Failure', 
-            message: err.message,
-            stack: err.stack?.slice(0, 100)
+            message: err.message
         });
     }
 };
