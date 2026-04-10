@@ -51,10 +51,10 @@ module.exports = async (req, res) => {
         if (rawPath.startsWith('music') || rawPath.includes('saavn')) {
             const q = query.q || query.query || 'Global Top Hits 2024';
             try {
-                // Try Saavn Modules (Trending) and Search via Sumit Instance
+                // Try Saavn Modules (Trending) and Search via Sumit Instance (Corrected paths)
                 const endpoints = [
-                    `https://saavn.sumit.co/api/modules?language=english,hindi`,
-                    `https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(String(q))}&limit=40`
+                    `https://saavn.sumit.co/modules?language=english,hindi`,
+                    `https://saavn.sumit.co/search/songs?query=${encodeURIComponent(String(q))}&limit=40`
                 ];
                 
                 for (const sUrl of endpoints) {
