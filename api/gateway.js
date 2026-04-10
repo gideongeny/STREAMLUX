@@ -52,9 +52,10 @@ module.exports = async (req, res) => {
             const q = query.q || query.query || 'Global Top Hits 2024';
             let lastError = null;
             try {
-                // Try Saavn Modules (Trending) and Search via Sumit Instance (Corrected with /api/)
+                // Try Saavn Modules (Trending), Search, and Charts via Sumit Instance
                 const endpoints = [
                     `https://saavn.sumit.co/api/modules?language=english,hindi`,
+                    `https://saavn.sumit.co/api/search/songs?query=trending%202024&limit=40`,
                     `https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(String(q))}&limit=40`
                 ];
                 
@@ -62,10 +63,12 @@ module.exports = async (req, res) => {
                     try {
                         const sRes = await fetch(sUrl);
                         const sData = await sRes.json();
-                        // saavn.sumit.co wraps results in a 'data' property
+                        // sumit api usually has top level data or trending
                         const items = (sData.data?.trending?.songs || sData.data?.songs || sData.data?.results || sData.data || sData.results || sData);
-                        if (Array.isArray(items) && items.length > 0) return res.status(200).json(sData);
-                        if (items && typeof items === 'object' && Object.keys(items).length > 2) return res.status(200).json(sData);
+                        if (Array.isArray(items) && items.length > 0) {
+                            // Ensure data is wrapped in 'data' for the frontend's extractor
+                            return res.status(200).json(sData.data ? sData : { status: 'SUCCESS', data: sData });
+                        }
                     } catch (e) { lastError = e.message; }
                 }
             } catch (e) { lastError = e.message; }
@@ -74,22 +77,14 @@ module.exports = async (req, res) => {
             const musicRetryPool = [YT_KEYS.music, YT_KEYS.general];
             for (const key of musicRetryPool) {
                 try {
-                    // Try with music category first
                     const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent('Official Music Video ' + String(q))}&type=video&maxResults=40&key=${key}`;
                     const ytRes = await fetch(ytUrl);
                     const ytData = await ytRes.json();
                     if (ytData && ytData.items && ytData.items.length > 0) return res.status(200).json(ytData);
-                    if (ytData.error) lastError = `YT Error: ${ytData.error.message}`;
-
-                    // Fallback to general search without category if music-specific fails
-                    const ytUrlGeneral = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(String(q) + ' songs')}&type=video&maxResults=40&key=${key}`;
-                    const ytResGen = await fetch(ytUrlGeneral);
-                    const ytDataGen = await ytResGen.json();
-                    if (ytDataGen && ytDataGen.items && ytDataGen.items.length > 0) return res.status(200).json(ytDataGen);
-                    if (ytDataGen.error) lastError = `YT Error: ${ytDataGen.error.message}`;
+                    if (ytData.error) lastError = `YouTube API: ${ytData.error.message} (${ytData.error.errors?.[0]?.reason})`;
                 } catch (e) { lastError = e.message; }
             }
-            return res.status(200).json({ items: [], results: [], error: lastError || "All sources empty" });
+            return res.status(200).json({ items: [], results: [], error: lastError || "All data sources exhausted" });
         }
 
         // --- YOUTUBE ROUTE (Rotation) ---
