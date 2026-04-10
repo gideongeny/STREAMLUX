@@ -51,18 +51,18 @@ module.exports = async (req, res) => {
         if (rawPath.startsWith('music') || rawPath.includes('saavn')) {
             const q = query.q || query.query || 'Global Top Hits 2024';
             try {
-                // Try Saavn Modules (Trending) and Search
+                // Try Saavn Modules (Trending) and Search via Sumit Instance
                 const endpoints = [
-                    `https://saavn.dev/api/modules?language=english,hindi`,
-                    `https://saavn.dev/api/search/songs?query=${encodeURIComponent(String(q))}&limit=40`
+                    `https://saavn.sumit.co/api/modules?language=english,hindi`,
+                    `https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(String(q))}&limit=40`
                 ];
                 
                 for (const sUrl of endpoints) {
                     try {
                         const sRes = await fetch(sUrl);
                         const sData = await sRes.json();
-                        // saavn.dev usually wraps results in a 'data' property
-                        const items = (sData.data?.trending?.songs || sData.data?.songs || sData.data || sData.results || sData);
+                        // saavn.sumit.co wraps results in a 'data' property
+                        const items = (sData.data?.trending?.songs || sData.data?.songs || sData.data?.results || sData.data || sData.results || sData);
                         if (Array.isArray(items) && items.length > 0) return res.status(200).json(sData);
                         if (items && typeof items === 'object' && Object.keys(items).length > 2) return res.status(200).json(sData);
                     } catch (e) {}
