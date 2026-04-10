@@ -23,9 +23,9 @@ module.exports = async (req, res) => {
     const TMDB_BEARER = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkZWNjNTIwZDg0NjllYWVhMDIwMmY1NWQ0MWExM2EwYyIsIm5iZiI6MTc1NDgyNjU1Mi4zMTcsInN1YiI6IjY4OTg4NzM4NzczZjAxYzIzNDVkMGRlYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.UIMvffG-q5sYc04gTT0efdW_k4Iu4fnOedNfs4cYIu8";
     
     const YT_KEYS = {
-        movie: "AIzaSyDhbC7IZNOqpMki1Yni5JnSiXQQfnp5Sxw",
-        tv: "AIzaSyD6W4_T3YkWJKy9Mtj2u188g8HayHMuPq8",
-        music: "AIzaSyCU6TH5NPF-ZyX-hWjTQTaSGH0lTy9pops",
+        movie: "AIzaSyBXl3lLvGxMOtqtYn75f_X68mc8P-O81qQ",
+        tv: "AIzaSyC4Mz02lYxZSdaA5N-l363GlIJiblhC3sM",
+        music: "AIzaSyB8lDctBCl-3JPNgJSau3TvulbevDyvNyQ",
         general: "AIzaSyAlENC10uKVhrDGqgzUeOiNysiUFoDof9o"
     };
 
