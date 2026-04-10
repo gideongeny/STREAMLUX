@@ -77,7 +77,8 @@ module.exports = async (req, res) => {
             const musicRetryPool = [YT_KEYS.music, YT_KEYS.general];
             for (const key of musicRetryPool) {
                 try {
-                    const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent('Official Music Video ' + String(q))}&type=video&maxResults=40&key=${key}`;
+                    // Category 10 = Music | videoEmbeddable = true ensures playback
+                    const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent('Official Music Video ' + String(q))}&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=40&key=${key}`;
                     const ytRes = await fetch(ytUrl);
                     const ytData = await ytRes.json();
                     if (ytData && ytData.items && ytData.items.length > 0) return res.status(200).json(ytData);

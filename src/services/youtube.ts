@@ -39,11 +39,13 @@ export async function fetchYouTubeVideos(
     query: string,
     pageToken?: string,
     videoDuration?: 'any' | 'long' | 'medium' | 'short',
-    context?: string
+    context?: string,
+    videoCategoryId?: string,
+    videoEmbeddable?: 'true' | 'false'
 ): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string }> {
     try {
         // Only cache the first page of broad searches
-        if (!pageToken && !videoDuration) {
+        if (!pageToken && !videoDuration && !videoCategoryId) {
             const cachedParams = await getCachedYouTubeResults(query);
             if (cachedParams) {
                 console.log(`[YouTube Cache Hit]: ${query}`);
@@ -60,6 +62,8 @@ export async function fetchYouTubeVideos(
         
         if (pageToken) params["pageToken"] = pageToken;
         if (videoDuration) params["videoDuration"] = videoDuration;
+        if (videoCategoryId) params["videoCategoryId"] = videoCategoryId;
+        if (videoEmbeddable) params["videoEmbeddable"] = videoEmbeddable;
 
         const raw = await executeYouTubeProxy("/search", params, context);
         
