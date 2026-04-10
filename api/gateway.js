@@ -47,7 +47,8 @@ module.exports = async (req, res) => {
 
     try {
         // --- MUSIC ROUTE (Saavn + YT Fallback) ---
-        if (rawPath.startsWith('music') || rawPath.includes('saavn') || rawPath.includes('trending')) {
+        // We only trigger if the path is specifically for music to avoid colliding with TMDB trending
+        if (rawPath.startsWith('music') || rawPath.includes('saavn')) {
             const q = query.q || query.query || 'Global Top Hits 2024';
             try {
                 // Try Saavn Modules (Trending) and Search
@@ -61,8 +62,9 @@ module.exports = async (req, res) => {
                         const sRes = await fetch(sUrl);
                         const sData = await sRes.json();
                         // saavn.dev usually wraps results in a 'data' property
-                        const hasData = sData && (sData.data || sData.trending || sData.results || Array.isArray(sData));
-                        if (hasData) return res.status(200).json(sData);
+                        const items = (sData.data?.trending?.songs || sData.data?.songs || sData.data || sData.results || sData);
+                        if (Array.isArray(items) && items.length > 0) return res.status(200).json(sData);
+                        if (items && typeof items === 'object' && Object.keys(items).length > 2) return res.status(200).json(sData);
                     } catch (e) {}
                 }
             } catch (e) {}
@@ -71,10 +73,17 @@ module.exports = async (req, res) => {
             const musicRetryPool = [YT_KEYS.music, YT_KEYS.general];
             for (const key of musicRetryPool) {
                 try {
+                    // Try with music category first
                     const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent('Official Music Video ' + String(q))}&type=video&videoCategoryId=10&maxResults=40&key=${key}`;
                     const ytRes = await fetch(ytUrl);
                     const ytData = await ytRes.json();
                     if (ytData && ytData.items && ytData.items.length > 0) return res.status(200).json(ytData);
+
+                    // Fallback to general search without category if music-specific fails
+                    const ytUrlGeneral = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(String(q) + ' songs')}&type=video&maxResults=40&key=${key}`;
+                    const ytResGen = await fetch(ytUrlGeneral);
+                    const ytDataGen = await ytResGen.json();
+                    if (ytDataGen && ytDataGen.items && ytDataGen.items.length > 0) return res.status(200).json(ytDataGen);
                 } catch (e) {}
             }
             return res.status(200).json({ items: [], results: [] });
