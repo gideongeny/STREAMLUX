@@ -53,7 +53,7 @@ const setCachedItems = (key: string, data: Item[]) => {
 
 // Fetch YouTube movies with strict enforcement
 export const getYouTubeMovies = async (): Promise<Item[]> => {
-    const cached = getCachedItems('movies_dynamic_v4');
+    const cached = getCachedItems('movies_dynamic_v5');
     if (cached) return cached;
 
     try {
@@ -87,7 +87,7 @@ export const getYouTubeMovies = async (): Promise<Item[]> => {
             .map((v, i) => convertYouTubeToItem(v, i));
 
         if (items.length > 0) {
-            setCachedItems('movies_dynamic_v4', items);
+            setCachedItems('movies_dynamic_v5', items);
             return items;
         }
         
@@ -111,14 +111,14 @@ const getVerifiedMovieFallbacks = (): Item[] => {
     return movies.map((v, i) => convertYouTubeToItem({
          ...v,
          description: 'A verified cinematic experience confirmed for playback on StreamLux.',
-         thumbnail: `https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg`,
+         thumbnail: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
          channelTitle: 'StreamLux Verified' 
     } as any, i));
 };
 
 // Fetch YouTube TV shows with strict enforcement
 export const getYouTubeTVShows = async (): Promise<Item[]> => {
-    const cached = getCachedItems('tv_dynamic_v4');
+    const cached = getCachedItems('tv_dynamic_v5');
     if (cached) return cached;
 
     try {
@@ -152,7 +152,7 @@ export const getYouTubeTVShows = async (): Promise<Item[]> => {
             .map((v, i) => convertYouTubeToItem(v, i));
 
         if (items.length > 0) {
-            setCachedItems('tv_dynamic_v4', items);
+            setCachedItems('tv_dynamic_v5', items);
             return items;
         }
         return getVerifiedTVFallbacks();
@@ -174,13 +174,13 @@ const getVerifiedTVFallbacks = (): Item[] => {
     return shows.map((v, i) => convertYouTubeToItem({
          ...v,
          description: 'An evergreen TV Show collection verified for playback on StreamLux.',
-         thumbnail: `https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg`,
+         thumbnail: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
          channelTitle: 'StreamLux TV'
     } as any, i));
 };
 
 export const getYouTubeByGenre = async (genreName: string, type: "movie" | "tv" = "movie"): Promise<Item[]> => {
-    const cacheKey = `genre_${genreName}_${type}_v4`;
+    const cacheKey = `genre_${genreName}_${type}_v5`;
     const cached = getCachedItems(cacheKey);
     if (cached) return cached;
 
@@ -223,7 +223,7 @@ export const getYouTubeByGenre = async (genreName: string, type: "movie" | "tv" 
     }
 };
 export const getYouTubeShorts = async (): Promise<Item[]> => {
-    const cached = getCachedItems('shorts_v4');
+    const cached = getCachedItems('shorts_v5');
     if (cached) return cached;
 
     try {
@@ -279,7 +279,10 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
         ];
 
         return evergreenShorts.map((v, i) => {
-            const item = convertYouTubeToItem(v, i);
+            const item = convertYouTubeToItem({
+                ...v,
+                thumbnail: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`
+            } as any, i);
             (item as any).isYouTubeShort = true;
             return item;
         });
@@ -291,7 +294,7 @@ export const getYouTubeShorts = async (): Promise<Item[]> => {
 
 // Search YouTube with strict embeddability enforcement
 export const searchYouTube = async (query: string, type: "multi" | "movie" | "tv" = "multi"): Promise<Item[]> => {
-    const cacheKey = `search_${query}_${type}_v4`;
+    const cacheKey = `search_${query}_${type}_v5`;
     const cached = getCachedItems(cacheKey);
     if (cached) return cached;
 
