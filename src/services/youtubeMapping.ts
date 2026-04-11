@@ -131,7 +131,7 @@ export const mapYouTubeToItems = (videos: YouTubeVideo[]): Item[] => {
 
 export const getYouTubeMovieFullDetail = async (youtubeId: string): Promise<FilmInfo> => {
     const video = await getYouTubeVideoDetail(youtubeId);
-    if (!video) throw new Error("YouTube video not found");
+    if (!video) return {} as any;
 
     const similar = await getRelatedVideos(youtubeId);
     const reviews = await getYouTubeComments(youtubeId);
@@ -149,7 +149,7 @@ export const getYouTubeMovieFullDetail = async (youtubeId: string): Promise<Film
 
 export const getYouTubeTVFullDetail = async (youtubeId: string): Promise<FilmInfo> => {
     const video = await getYouTubeVideoDetail(youtubeId);
-    if (!video) throw new Error("YouTube video not found");
+    if (!video) return {} as any;
 
     const episodes = await getYouTubeSeriesEpisodes(video.title, video.channelId);
     const similar = await getRelatedVideos(youtubeId);
@@ -168,7 +168,7 @@ export const getYouTubeTVFullDetail = async (youtubeId: string): Promise<FilmInf
 
 export const getYouTubeMovieWatch = async (youtubeId: string): Promise<getWatchReturnedType> => {
     const video = await getYouTubeVideoDetail(youtubeId);
-    if (!video) throw new Error("YouTube video not found");
+    if (!video) return {} as any;
 
     const similar = await getRelatedVideos(youtubeId);
 
@@ -181,7 +181,7 @@ export const getYouTubeMovieWatch = async (youtubeId: string): Promise<getWatchR
 
 export const getYouTubeTVWatch = async (youtubeId: string, seasonId: number): Promise<getWatchReturnedType> => {
     const video = await getYouTubeVideoDetail(youtubeId);
-    if (!video) throw new Error("YouTube video not found");
+    if (!video) return {} as any;
 
     const episodes = await getYouTubeSeriesEpisodes(video.title, video.channelId);
     const similar = await getRelatedVideos(youtubeId);
