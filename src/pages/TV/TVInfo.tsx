@@ -23,6 +23,12 @@ const TVInfo: FC = () => {
 
   const isYouTube = id?.length === 11 || id?.startsWith('yt-');
 
+  const { data, isError, isLoading } = useQuery<FilmInfo, Error>(
+    ["tvDetail", id, i18n.language],
+    () => getTVFullDetail(Number(id)),
+    { enabled: !isYouTube }
+  );
+
   if (isError && !isYouTube) {
     return (
       <div className="min-h-screen bg-dark flex items-center justify-center px-6">

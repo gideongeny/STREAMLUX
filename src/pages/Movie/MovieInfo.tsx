@@ -14,6 +14,12 @@ const MovieInfo: FC = () => {
   const { id } = useParams();
   const { i18n } = useTranslation();
   const isYouTube = id?.length === 11 || id?.startsWith('yt-');
+
+  const { data, isError, isLoading } = useQuery<FilmInfo, Error>(
+    ["movieDetail", id, i18n.language],
+    () => getMovieFullDetail(id as string),
+    { enabled: !isYouTube }
+  );
   
   if (isError && !isYouTube) {
     return (
