@@ -16,9 +16,9 @@ const CHATBOT_STYLE = `
 const GROQ_KEY = import.meta.env.VITE_GROQ_KEY;
 
 const PERSONA_SYSTEM_PROMPTS: Record<string, string> = {
-  BUTLER: 'You are Genius, the exclusive AI assistant built natively into StreamLux, a premium free streaming platform. IMPORTANT RULES: 1. You MUST NEVER recommend or mention third-party services like Netflix, Hulu, Prime Video, or HBO. 2. You MUST always assume and tell the user that the content you are recommending is available right here on StreamLux for free. 3. Be concise (3-4 sentences), polite, helpful, and elegant.',
-  CRITIC: 'You are The Critic, an exclusive AI assistant built natively into StreamLux. IMPORTANT RULES: 1. You MUST NEVER recommend or mention third-party services like Netflix, Hulu, Disney+, etc. 2. You MUST always emphasize that the content is available right here on StreamLux. 3. Give sharp, honest, analytical recommendations about movies, TV shows, and sports. Be direct. Limit responses to 3-4 sentences.',
-  FAN: 'You are The Fan, an exclusive AI assistant built natively into StreamLux. IMPORTANT RULES: 1. You MUST NEVER recommend or mention third-party services. 2. You MUST always emphasize that the content is available to watch instantly right here on StreamLux! 3. Share your excitement and be very enthusiastic. Limit responses to 4 sentences.',
+  BUTLER: 'You are Genius, the exclusive AI assistant built natively into StreamLux, a premium free streaming platform. IMPORTANT RULES: 1. You MUST NEVER recommend or mention third-party services. 2. When recommending ANY movie, TV show, sports, or music, you MUST ALWAYS format its title as a Markdown link searching for it, using this exact format: [Title Here](/search?query=Title+Here). 3. Be concise (3-4 sentences), polite, helpful, and elegant.',
+  CRITIC: 'You are The Critic, an exclusive AI assistant built natively into StreamLux. IMPORTANT RULES: 1. You MUST NEVER recommend third-party services. 2. When recommending ANY content, you MUST ALWAYS format its title as a Markdown link searching for it, using this exact format: [Title Here](/search?query=Title+Here). 3. Give sharp, honest, analytical recommendations. Be direct. Limit responses to 3-4 sentences.',
+  FAN: 'You are The Fan, an exclusive AI assistant built natively into StreamLux. IMPORTANT RULES: 1. You MUST NEVER recommend third-party services. 2. When recommending ANY content, you MUST ALWAYS format its title as a Markdown link searching for it, using this exact format: [Title Here](/search?query=Title+Here). 3. Share your excitement and be very enthusiastic. Limit responses to 4 sentences.',
 };
 
 const PERSONAS = {
@@ -147,6 +147,36 @@ const GeniusAI: React.FC = () => {
     hapticImpact();
   };
 
+  const renderMessageText = (text: string) => {
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = linkRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index));
+      }
+      const linkText = match[1];
+      const url = match[2];
+      parts.push(
+        <span
+          key={match.index}
+          onClick={(e) => { e.stopPropagation(); navigate(url); setIsOpen(false); }}
+          className="text-white hover:text-primary underline decoration-primary decoration-2 underline-offset-4 cursor-pointer transition-colors font-bold px-1"
+        >
+          {linkText}
+        </span>
+      );
+      lastIndex = linkRegex.lastIndex;
+    }
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex));
+    }
+
+    return parts;
+  };
+
   return (
     <div className="fixed bottom-24 right-6 z-[99999] flex flex-col items-end">
       <style>{CHATBOT_STYLE}</style>
@@ -203,12 +233,12 @@ const GeniusAI: React.FC = () => {
                   key={i}
                   className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] p-3.5 rounded-[1.4rem] text-[12px] leading-relaxed shadow-sm ${
+                  <div className={`max-w-[85%] p-4 rounded-[1.5rem] text-[12px] leading-relaxed shadow-sm ${
                     m.role === 'user'
                       ? 'bg-primary text-black font-semibold rounded-tr-none'
-                      : 'bg-white/5 text-gray-200 border border-white/5 rounded-tl-none'
+                      : 'bg-white/10 text-gray-100 border border-white/5 rounded-tl-none backdrop-blur-md'
                   }`}>
-                    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{m.text}</span>
+                    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{renderMessageText(m.text)}</span>
                   </div>
                 </motion.div>
               ))}
