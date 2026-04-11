@@ -23,6 +23,7 @@ const GeniusAI: React.FC = () => {
   const [persona, setPersona] = useState(PERSONAS.BUTLER);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<{role: 'user' | 'bot' | 'system', text: string}[]>([]);
+  const [history, setHistory] = useState<{role: string; content: string}[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -128,12 +129,26 @@ const GeniusAI: React.FC = () => {
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setIsTyping(true);
 
-    try {
-      const response = await axios.post(`${getBackendBase()}/geniusProxy`, {
-        prompt: userMessage
-      });
+    // Build conversation history for multi-turn context
+    const currentPersonaKey = Object.keys(PERSONAS).find(
+      k => PERSONAS[k as keyof typeof PERSONAS].name === persona.name
+    ) || 'BUTLER';
 
-      setMessages(prev => [...prev, { role: 'bot', text: response.data.answer }]);
+    const newHistory = [...history, { role: 'user', content: userMessage }];
+
+    try {
+      const response = await axios.post(
+        `${getBackendBase()}/api/proxy/genius`,
+        {
+          prompt: userMessage,
+          persona: currentPersonaKey,
+          history: newHistory.slice(-10),
+        }
+      );
+
+      const botReply = response.data.answer || "I didn't quite catch that. Could you rephrase?";
+      setMessages(prev => [...prev, { role: 'bot', text: botReply }]);
+      setHistory([...newHistory, { role: 'assistant', content: botReply }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'bot', text: "I'm sorry, I'm currently having trouble connecting to my brain. Please try again soon!" }]);
     } finally {
@@ -145,6 +160,7 @@ const GeniusAI: React.FC = () => {
     setPersona(PERSONAS[pKey]);
     localStorage.setItem("genius_persona", pKey);
     setMessages([{ role: 'bot', text: PERSONAS[pKey].tone }]);
+    setHistory([]); // Clear history on persona switch
     hapticImpact();
   };
 

@@ -21,6 +21,7 @@ module.exports = async (req, res) => {
     // 2. Constants & Keys
     const TMDB_API_KEY = "decc520d8469eaea0202f55d41a13a0c";
     const TMDB_BEARER = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkZWNjNTIwZDg0NjllYWVhMDIwMmY1NWQ0MWExM2EwYyIsIm5iZiI6MTc1NDgyNjU1Mi4zMTcsInN1YiI6IjY4OTg4NzM4NzczZjAxYzIzNDVkMGRlYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.UIMvffG-q5sYc04gTT0efdW_k4Iu4fnOedNfs4cYIu8";
+    const OPENROUTER_KEY = "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";
     
     const YT_KEYS = [
         "AIzaSyBXl3lLvGxMOtqtYn75f_X68mc8P-O81qQ", // Movie
@@ -173,6 +174,47 @@ module.exports = async (req, res) => {
                 });
             }));
             return res.status(200).json({ success: true, data: fixtures });
+        }
+
+        // --- GENIUS AI CHATBOT ROUTE (OpenRouter) ---
+        if (rawPath === 'genius' || rawPath.startsWith('genius') || rawPath.includes('geniusProxy')) {
+            const body = req.body || {};
+            const prompt = body.prompt || body.message || '';
+            const persona = body.persona || 'BUTLER';
+
+            const PERSONA_PROMPTS = {
+                BUTLER: 'You are Genius, the polite and knowledgeable AI assistant for StreamLux, a premium streaming platform. You help users find movies, TV shows, live sports, music and live TV channels. Always be concise, helpful and elegant.',
+                CRITIC: 'You are The Critic, a sharp analytical AI assistant for StreamLux. You give honest, precise recommendations and assessments about movies, TV shows, music, and live sports. Be direct and insightful.',
+                FAN: 'You are The Fan, an enthusiastic and knowledgeable AI assistant for StreamLux. You love movies, TV shows, sports, and music. Share your excitement when helping users discover great content!'
+            };
+
+            const systemPrompt = PERSONA_PROMPTS[persona] || PERSONA_PROMPTS.BUTLER;
+
+            const aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${OPENROUTER_KEY}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': 'https://streamlux-67a84.web.app',
+                    'X-Title': 'StreamLux Genius AI'
+                },
+                body: JSON.stringify({
+                    model: 'meta-llama/llama-4-maverick:free',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: prompt }
+                    ],
+                    max_tokens: 400,
+                    temperature: 0.8
+                })
+            });
+
+            const aiData = await aiRes.json();
+            const answer = aiData.choices?.[0]?.message?.content 
+                || aiData.error?.message 
+                || "I'm having a moment of silence. Please try again!";
+
+            return res.status(200).json({ answer });
         }
 
         // --- TMDB ROUTE (Default Handler) ---
