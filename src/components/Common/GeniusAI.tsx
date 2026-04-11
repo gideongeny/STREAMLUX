@@ -13,12 +13,12 @@ const CHATBOT_STYLE = `
   .genius-input::placeholder { color: rgba(156,163,175,0.6) !important; }
 `;
 
-const OPENROUTER_KEY = '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';
+const GROQ_KEY = import.meta.env.VITE_GROQ_KEY;
 
 const PERSONA_SYSTEM_PROMPTS: Record<string, string> = {
-  BUTLER: 'You are Genius, the polite and knowledgeable AI assistant for StreamLux, a premium streaming platform. You help users find movies, TV shows, live sports, music and live TV channels. Be concise, helpful and elegant. Limit responses to 3-4 sentences.',
-  CRITIC: 'You are The Critic, a sharp analytical AI assistant for StreamLux. You give honest, precise recommendations about movies, TV shows, music, and live sports. Be direct and insightful. Limit responses to 3-4 sentences.',
-  FAN: 'You are The Fan, an enthusiastic and knowledgeable AI assistant for StreamLux. You love movies, TV shows, sports, and music. Share your excitement! Limit responses to 3-4 sentences.',
+  BUTLER: 'You are Genius, the exclusive AI assistant built natively into StreamLux, a premium free streaming platform. IMPORTANT RULES: 1. You MUST NEVER recommend or mention third-party services like Netflix, Hulu, Prime Video, or HBO. 2. You MUST always assume and tell the user that the content you are recommending is available right here on StreamLux for free. 3. Be concise (3-4 sentences), polite, helpful, and elegant.',
+  CRITIC: 'You are The Critic, an exclusive AI assistant built natively into StreamLux. IMPORTANT RULES: 1. You MUST NEVER recommend or mention third-party services like Netflix, Hulu, Disney+, etc. 2. You MUST always emphasize that the content is available right here on StreamLux. 3. Give sharp, honest, analytical recommendations about movies, TV shows, and sports. Be direct. Limit responses to 3-4 sentences.',
+  FAN: 'You are The Fan, an exclusive AI assistant built natively into StreamLux. IMPORTANT RULES: 1. You MUST NEVER recommend or mention third-party services. 2. You MUST always emphasize that the content is available to watch instantly right here on StreamLux! 3. Share your excitement and be very enthusiastic. Limit responses to 4 sentences.',
 };
 
 const PERSONAS = {
@@ -110,17 +110,15 @@ const GeniusAI: React.FC = () => {
     ];
 
     try {
-      // Direct call to OpenRouter — supports CORS from browser
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      // Direct call to Groq (OpenAI compatible)
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENROUTER_KEY}`,
+          'Authorization': `Bearer ${GROQ_KEY}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://streamlux-67a84.web.app',
-          'X-Title': 'StreamLux Genius AI',
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-3.2-3b-instruct:free',
+          model: 'llama-3.3-70b-versatile',
           messages: chatMessages,
           max_tokens: 300,
           temperature: 0.8,
@@ -150,7 +148,7 @@ const GeniusAI: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-24 right-6 z-[1000] flex flex-col items-end">
+    <div className="fixed bottom-24 right-6 z-[99999] flex flex-col items-end">
       <style>{CHATBOT_STYLE}</style>
       <AnimatePresence>
         {isOpen && (
@@ -158,7 +156,7 @@ const GeniusAI: React.FC = () => {
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            className="w-[340px] h-[500px] bg-[#0A0A0A]/90 tw-glass rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden flex flex-col mb-4"
+            className="relative z-[99999] w-[340px] h-[500px] bg-[#0A0A0A]/95 tw-glass rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col mb-4"
           >
             {/* Header */}
             <div className="p-5 bg-gradient-to-r from-primary/20 to-transparent border-b border-white/5">
