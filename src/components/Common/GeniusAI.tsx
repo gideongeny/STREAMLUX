@@ -1,4 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
+// Inject scoped style for chatbot input placeholder visibility
+const CHATBOT_STYLE = `
+  .genius-input::placeholder { color: rgba(156,163,175,0.7) !important; }
+  .genius-input { color: #fff !important; caret-color: #fff !important; background: #1a1a1a !important; }
+`;
 import { motion, AnimatePresence } from 'framer-motion';
 import { RiRobot2Fill, RiCloseLine, RiSendPlane2Fill, RiMicFill, RiMicOffFill } from 'react-icons/ri';
 import { useTranslation } from 'react-i18next';
@@ -166,6 +171,7 @@ const GeniusAI: React.FC = () => {
 
   return (
     <div className="fixed bottom-24 right-6 z-[1000] flex flex-col items-end">
+      <style>{CHATBOT_STYLE}</style>
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -224,7 +230,7 @@ const GeniusAI: React.FC = () => {
                     ? 'bg-primary text-black font-semibold rounded-tr-none' 
                     : 'bg-white/5 text-gray-200 border border-white/5 rounded-tl-none'
                   }`}>
-                    {m.text}
+                    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{m.text}</span>
                   </div>
                 </motion.div>
               ))}
@@ -257,7 +263,7 @@ const GeniusAI: React.FC = () => {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                     placeholder={isListening ? "Listening..." : "Ask me anything..."}
-                    className="w-full bg-dark/60 border border-white/10 rounded-2xl py-3.5 pl-5 pr-12 text-xs text-white placeholder:text-gray-500 focus:outline-none focus:border-primary/50 transition"
+                    className="genius-input w-full border border-white/10 rounded-2xl py-3.5 pl-5 pr-12 text-xs focus:outline-none focus:border-primary/50 transition"
                   />
                   <button 
                     onClick={() => handleSend()}
