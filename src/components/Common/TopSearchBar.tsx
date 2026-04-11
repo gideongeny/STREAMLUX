@@ -14,9 +14,11 @@ import { themeService } from "../../services/theme";
 
 interface TopSearchBarProps {
   className?: string;
+  activeTab?: string;
+  onSearch?: (query: string) => void;
 }
 
-const TopSearchBar: FC<TopSearchBarProps> = ({ className = "" }) => {
+const TopSearchBar: FC<TopSearchBarProps> = ({ className = "", activeTab = "tv", onSearch }) => {
   const [input, setInput] = useState("");
   const debounced = useDebounce<string>(input);
   const [suggestions, setSuggestions] = useState<Item[]>([]);
@@ -26,7 +28,15 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "" }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { isMobile } = useCurrentViewportView();
   const dynamicPlaceholder = useTypedPlaceholder();
-  const typedPlaceholder = isMobile ? "Search..." : dynamicPlaceholder;
+  const getContextualPlaceholder = () => {
+    switch (activeTab) {
+      case 'sports': return "Search matches, teams, or leagues...";
+      case 'live-tv': return "Search live TV channels...";
+      case 'music': return "Search 100M+ songs or artists...";
+      default: return dynamicPlaceholder;
+    }
+  };
+  const typedPlaceholder = isMobile ? "Search..." : getContextualPlaceholder();
   const [surfaceMode, setSurfaceMode] = useState<"midnight" | "night">(() => {
     const saved = (safeStorage.get("surface_mode") as "midnight" | "night") || "midnight";
     return saved === "night" ? "night" : "midnight";
@@ -39,9 +49,14 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "" }) => {
   };
 
   useEffect(() => {
-    if (!debounced.trim()) { setSuggestions([]); return; }
-    getSearchSuggestions(debounced.trim()).then(setSuggestions).catch(() => setSuggestions([]));
-  }, [debounced]);
+    if (activeTab === 'movie' || activeTab === 'tv') {
+      if (!debounced.trim()) { setSuggestions([]); return; }
+      getSearchSuggestions(debounced.trim()).then(setSuggestions).catch(() => setSuggestions([]));
+    } else {
+      setSuggestions([]);
+      if (onSearch) onSearch(debounced);
+    }
+  }, [debounced, activeTab, onSearch]);
 
   // Close on outside click
   useEffect(() => {
@@ -58,6 +73,16 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "" }) => {
   const submitHandler = (e: FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
+    
+    // If we're in a hub tab, the search is handled by onSearch (debounced)
+    // But we still want to trigger it immediately on Enter
+    if (activeTab !== 'movie' && activeTab !== 'tv') {
+      if (onSearch) onSearch(input.trim());
+      inputRef.current?.blur();
+      setIsFocused(false);
+      return;
+    }
+
     navigate(`/search?query=${encodeURIComponent(input.trim())}`);
     setSuggestions([]);
     setIsFocused(false);

@@ -66,14 +66,18 @@ const GenreRow: React.FC<{ genre: string; isPlaying: boolean; currentId?: string
   );
 };
 
-const MusicHub: React.FC = () => {
+interface MusicHubProps {
+  isEmbed?: boolean;
+  searchQuery?: string;
+}
+
+const MusicHub: React.FC<MusicHubProps> = ({ isEmbed, searchQuery = "" }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currentTrack, isPlaying } = useSelector((state: RootState) => state.music);
   
   const [trending, setTrending] = useState<MusicTrack[]>([]);
   const [searchResults, setSearchResults] = useState<MusicTrack[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   const trendingRef = useRef<HTMLDivElement>(null);
@@ -89,14 +93,20 @@ const MusicHub: React.FC = () => {
     setIsLoading(false);
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    setIsLoading(true);
-    const results = await musicService.search(searchQuery);
-    setSearchResults(results);
-    setIsLoading(false);
-  };
+  // Handle contextual search from global State
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const triggerSearch = async () => {
+      setIsLoading(true);
+      const results = await musicService.search(searchQuery);
+      setSearchResults(results);
+      setIsLoading(false);
+    };
+    triggerSearch();
+  }, [searchQuery]);
 
   const playMusic = (track: MusicTrack, list: MusicTrack[]) => {
     dispatch(setTrack(track));
@@ -112,68 +122,81 @@ const MusicHub: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-24 pb-48 px-4 md:px-10 overflow-hidden">
+    <div className={`${isEmbed ? '' : 'min-h-screen pt-24'} bg-[#050505] text-white pb-48 px-4 md:px-10 overflow-hidden`}>
       <div className="max-w-[1600px] mx-auto">
         
-        {/* Cinematic Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-12 mb-20">
-          <div className="relative">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="mb-6"
-            >
-              <button 
-                onClick={() => navigate('/')}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white hover:bg-white/10 transition-all group"
+        {!isEmbed && (
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-12 mb-20">
+            <div className="relative">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="mb-6"
               >
-                <FiHome className="w-4 h-4 group-hover:scale-120 transition-transform" />
-                Back to Dashboard
-              </button>
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex items-center gap-4 text-primary font-black uppercase tracking-[0.4em] text-[10px] mb-6"
-            >
-              <div className="flex gap-1">
-                <span className="w-1 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
-                <span className="w-1 h-5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                <span className="w-1 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-              </div>
-              High Fidelity Audio
-            </motion.div>
-            <motion.h1 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-7xl md:text-9xl font-black tracking-tighter italic uppercase leading-[0.85] select-none"
-            >
-              MUSIC <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500 opacity-80">UNIVERSE</span>
-            </motion.h1>
-          </div>
+                <button 
+                  onClick={() => navigate('/')}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white hover:bg-white/10 transition-all group"
+                >
+                  <FiHome className="w-4 h-4 group-hover:scale-120 transition-transform" />
+                  Back to Dashboard
+                </button>
+              </motion.div>
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex items-center gap-4 text-primary font-black uppercase tracking-[0.4em] text-[10px] mb-6"
+              >
+                <div className="flex gap-1">
+                  <span className="w-1 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                  <span className="w-1 h-5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                  <span className="w-1 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                </div>
+                High Fidelity Audio
+              </motion.div>
+              <motion.h1 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-7xl md:text-9xl font-black tracking-tighter italic uppercase leading-[0.85] select-none"
+              >
+                MUSIC <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500 opacity-80">UNIVERSE</span>
+              </motion.h1>
+            </div>
 
-          <motion.div
-             initial={{ opacity: 0, scale: 0.9 }}
-             animate={{ opacity: 1, scale: 1 }}
-             transition={{ delay: 0.3 }}
-             className="relative lg:w-[500px]"
-          >
-            <form onSubmit={handleSearch} className="relative group">
-                <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <FiSearch className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-500 w-6 h-6 group-focus-within:text-primary transition-colors z-10" />
-                <input 
-                    type="text"
-                    placeholder="Search 100M+ Songs, Artists..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-20 bg-white/5 border border-white/10 rounded-[2rem] pl-20 pr-8 text-lg font-bold focus:outline-none focus:border-primary/50 transition-all placeholder:text-gray-700 backdrop-blur-3xl relative z-10"
-                />
-            </form>
-          </motion.div>
-        </div>
+            <motion.div
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               transition={{ delay: 0.3 }}
+               className="relative lg:w-[500px]"
+            >
+              <form onSubmit={handleSearch} className="relative group">
+                  <div className="absolute inset-0 bg-primary/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <FiSearch className="absolute left-7 top-1/2 -translate-y-1/2 text-gray-500 w-6 h-6 group-focus-within:text-primary transition-colors z-10" />
+                  <input 
+                      type="text"
+                      placeholder="Search 100M+ Songs, Artists..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full h-20 bg-white/5 border border-white/10 rounded-[2rem] pl-20 pr-8 text-lg font-bold focus:outline-none focus:border-primary/50 transition-all placeholder:text-gray-700 backdrop-blur-3xl relative z-10"
+                  />
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {isEmbed && (
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-16">
+             <div className="flex items-center gap-3 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
+                <div className="flex gap-0.5">
+                  <span className="w-0.5 h-2 bg-primary animate-bounce" style={{ animationDelay: '0s' }} />
+                  <span className="w-0.5 h-3 bg-primary animate-bounce" style={{ animationDelay: '0.1s' }} />
+                </div>
+                Music Explorer
+              </div>
+          </div>
+        )}
 
         {/* Dynamic Content */}
         <AnimatePresence mode="wait">

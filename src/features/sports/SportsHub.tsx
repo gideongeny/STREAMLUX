@@ -13,11 +13,14 @@ const SectionTitle: React.FC<{ title: string }> = ({ title }) => (
   </div>
 );
 
-const SportsHub: React.FC = () => {
+interface SportsHubProps {
+  searchQuery?: string;
+}
+
+const SportsHub: React.FC<SportsHubProps> = ({ searchQuery = "" }) => {
   const [liveMatches, setLiveMatches] = useState<SportMatch[]>([]);
   const [upcomingMatches, setUpcomingMatches] = useState<SportMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedSport, setSelectedSport] = useState('All');
 
   useEffect(() => {
@@ -80,24 +83,9 @@ const SportsHub: React.FC = () => {
 
   return (
     <div className="max-w-[1400px] mx-auto px-6 py-10">
-      {/* Search and Filters */}
+      {/* Filter and Categories */}
       <div className="flex flex-col md:flex-row gap-6 mb-12 items-center justify-between">
-        <div className="relative w-full md:w-[400px]">
-          <input
-            type="text"
-            placeholder="Search teams or leagues..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#1A1A1A]/60 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:border-primary/50 outline-none transition-all placeholder:text-gray-600"
-          />
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-600">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-        </div>
-
-        <div className="flex gap-2 overflow-x-auto pb-2 w-full md:w-auto no-scrollbar">
+        <div className="flex gap-2 overflow-x-auto pb-2 w-full no-scrollbar">
           {sports.map(sport => (
             <button
               key={sport}

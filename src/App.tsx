@@ -2,7 +2,7 @@ import { onAuthStateChanged, getRedirectResult, FacebookAuthProvider, getAdditio
 import { doc, onSnapshot, setDoc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -514,7 +514,7 @@ function App() {
                   <Route path="tv/:id" element={<TVInfo />} />
                   <Route path="movie/:id/watch" element={<MovieWatch />} />
                   <Route path="tv/:id/watch" element={<TVWatch />} />
-                  <Route path="sports" element={<SportsHome />} />
+                  <Route path="sports" element={<Navigate to="/?tab=sports" replace />} />
                   <Route path="sports/:leagueId/:matchId/watch" element={<SportsWatch />} />
                   <Route path="matches/details/:fixtureId" element={<MatchesDetails />} />
                   <Route path="explore" element={<Explore />} />
@@ -531,8 +531,8 @@ function App() {
                   <Route path="watch" element={<LocalPlayer />} />
                   <Route path="watchlist" element={<WatchlistPage />} />
                   <Route path="collection/:id" element={<Collection />} />
-                  <Route path="music" element={<MusicHub />} />
-                  <Route path="live-tv" element={<LiveTVHub />} />
+                  <Route path="music" element={<Navigate to="/?tab=music" replace />} />
+                  <Route path="live-tv" element={<Navigate to="/?tab=live-tv" replace />} />
                   <Route path="live-tv/:channelId" element={<TVWatchPage />} />
                   <Route
                     path="bookmarked"

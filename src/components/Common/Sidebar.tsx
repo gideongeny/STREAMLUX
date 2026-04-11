@@ -170,8 +170,8 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
         </div>
         <div className="mt-8 ml-4 flex flex-col gap-6">
           <Link
-            to="/"
-            className={`flex gap-6 items-center tw-hit-target ${location.pathname === "/" &&
+            to="/?tab=tv"
+            className={`flex gap-6 items-center tw-hit-target ${location.pathname === "/" && (new URLSearchParams(location.search).get("tab") === "tv" || !new URLSearchParams(location.search).get("tab")) &&
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300`}
           >
@@ -180,8 +180,8 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           </Link>
 
           <Link
-            to="/sports"
-            className={`flex gap-6 items-center tw-hit-target ${location.pathname === "/sports" &&
+            to="/?tab=sports"
+            className={`flex gap-6 items-center tw-hit-target ${new URLSearchParams(location.search).get("tab") === "sports" &&
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300`}
           >
@@ -190,8 +190,8 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
           </Link>
 
           <Link
-            to="/live-tv"
-            className={`flex gap-6 items-center tw-hit-target ${location.pathname.startsWith("/live-tv") &&
+            to="/?tab=live-tv"
+            className={`flex gap-6 items-center tw-hit-target ${new URLSearchParams(location.search).get("tab") === "live-tv" &&
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300`}
           >
@@ -201,8 +201,8 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarActive, onCloseSidebar }) => {
 
 
           <Link
-            to="/music"
-            className={`flex gap-6 items-center tw-hit-target ${location.pathname === "/music" &&
+            to="/?tab=music"
+            className={`flex gap-6 items-center tw-hit-target ${new URLSearchParams(location.search).get("tab") === "music" &&
               "!text-primary border-r-4 border-primary font-medium"
               } hover:text-white transition duration-300`}
           >

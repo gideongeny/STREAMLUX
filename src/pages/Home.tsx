@@ -14,6 +14,8 @@ import CinematicMoments from "../components/Home/CinematicMoments";
 import SportsChannelsCarousel from "../components/Sports/SportsChannelsCarousel";
 import SportsHub from "../features/sports/SportsHub";
 import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
+import LiveTVHub from "../features/livetv/LiveTVHub";
+import MusicHub from "../features/music/MusicHub";
 import ContinueWatching from "../components/Home/ContinueWatching";
 import SmartRecommendations from "../components/Home/SmartRecommendations";
 import Top10Slider from "../components/Home/Top10Slider";
@@ -51,12 +53,18 @@ const BRAND_LOGOS: Record<string, string> = {
   cartoonnetwork: "/logos/Cartoon-Network-logo.jpg",
 };
 
-const getInitialTab = (): "movie" | "tv" | "sports" => {
+const getInitialTab = (): "movie" | "tv" | "sports" | "live-tv" | "music" => {
   try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get("tab");
+    if (tabParam && ["movie", "tv", "sports", "live-tv", "music"].includes(tabParam)) {
+      return tabParam as any;
+    }
+
     const stored = typeof window !== "undefined" ? localStorage.getItem("currentTab") : null;
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (parsed === "movie" || parsed === "tv" || parsed === "sports") return parsed;
+      if (["movie", "tv", "sports", "live-tv", "music"].includes(parsed)) return parsed;
     }
   } catch {
     // ignore
@@ -71,15 +79,16 @@ const Home: FC = () => {
   const [isSidebarActive, setIsSidebarActive] = useState(false);
   const [activeGlowImage, setActiveGlowImage] = useState<string | undefined>(undefined);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [currentTab, setCurrentTab] = useState<"movie" | "tv" | "sports">(getInitialTab);
+  const [currentTab, setCurrentTab] = useState<"movie" | "tv" | "sports" | "live-tv" | "music">(getInitialTab);
   const [brandMovies, setBrandMovies] = useState<Item[]>([]);
   const [brandTV, setBrandTV] = useState<Item[]>([]);
   const [isBrandLoading, setIsBrandLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const swipeStartRef = useRef({ x: 0, y: 0, time: 0 });
 
-  // Read active brand from URL — safe
+  // Read active brand from URL \u2014 safe
   const activeBrand = (() => {
     try {
       return new URLSearchParams(window.location.search).get("brand");
@@ -99,6 +108,15 @@ const Home: FC = () => {
       localStorage.setItem("currentTab", JSON.stringify(currentTab));
     } catch { /* ignore */ }
   }, [currentTab]);
+
+  // Sync tab state with URL parameter (back/forward navigation support)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get("tab");
+    if (tabParam && tabParam !== currentTab && ["movie", "tv", "sports", "live-tv", "music"].includes(tabParam)) {
+      setCurrentTab(tabParam as any);
+    }
+  }, [window.location.search, currentTab]);
 
   // Fetch brand content when brand param changes
   useEffect(() => {
@@ -148,7 +166,7 @@ const Home: FC = () => {
     vote_average: 0,
   }));
 
-  // Always fetch both tabs eagerly — Keep-Alive: data is ready instantly when switching
+  // Always fetch both tabs eagerly \u2014 Keep-Alive: data is ready instantly when switching
   const {
     data: dataMovie,
     isLoading: isLoadingMovie,
@@ -163,10 +181,17 @@ const Home: FC = () => {
     detailQuery: detailQueryTV,
   } = useHomeData("tv", historyItems, true);
 
-  const TABS: Array<"tv" | "movie" | "sports"> = ["tv", "movie", "sports"];
+  const TABS: Array<"tv" | "movie" | "sports" | "live-tv" | "music"> = ["tv", "movie", "sports", "live-tv", "music"];
 
-  const handleTabChange = (tab: "movie" | "tv" | "sports") => {
-    startTransition(() => setCurrentTab(tab));
+  const handleTabChange = (tab: "movie" | "tv" | "sports" | "live-tv" | "music") => {
+    startTransition(() => {
+      setCurrentTab(tab);
+      setSearchQuery(""); // Clear search when switching tabs
+      // Update URL without reload to support deep linking/back button
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tab);
+      window.history.replaceState({}, "", url.toString());
+    });
   };
 
   const handleSwipeTouchStart = (e: React.TouchEvent) => {
@@ -228,18 +253,18 @@ const Home: FC = () => {
           <Link to="/" className="flex gap-2 items-center shrink-0">
             <Logo className="w-10 h-10" />
           </Link>
-          <TopSearchBar className="flex-1 mx-3" />
+          <TopSearchBar className="flex-1 mx-3" activeTab={currentTab} onSearch={setSearchQuery} />
           <button onClick={() => setIsSidebarActive((prev) => !prev)} className="shrink-0 text-white">
             <GiHamburgerMenu size={25} />
           </button>
         </div>
         <div className="px-5 pb-2">
-          <div className="inline-flex gap-8 border-b border-gray-darken/30 w-full">
+          <div className="inline-flex gap-8 border-b border-gray-darken/30 w-full overflow-x-auto no-scrollbar">
             <FilmTypeButton buttonType="tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
             <FilmTypeButton buttonType="movie" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
             <FilmTypeButton buttonType="sports" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
-            <Link to="/live-tv" className="text-gray-400 hover:text-white transition duration-300 text-[13px] font-bold uppercase tracking-wider relative top-[2px]">Live TV</Link>
-            <Link to="/music" className="text-gray-400 hover:text-white transition duration-300 text-[13px] font-bold uppercase tracking-wider relative top-[2px]">Music</Link>
+            <FilmTypeButton buttonType="live-tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
+            <FilmTypeButton buttonType="music" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
           </div>
 
         </div>
@@ -257,13 +282,13 @@ const Home: FC = () => {
               <FilmTypeButton buttonType="tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
               <FilmTypeButton buttonType="movie" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
               <FilmTypeButton buttonType="sports" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
-              <Link to="/live-tv" className="text-gray-400 hover:text-white transition duration-300 text-[13px] font-bold uppercase tracking-wider relative top-[2px]">Live TV</Link>
-              <Link to="/music" className="text-gray-400 hover:text-white transition duration-300 text-[13px] font-bold uppercase tracking-wider relative top-[2px]">Music</Link>
+              <FilmTypeButton buttonType="live-tv" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
+              <FilmTypeButton buttonType="music" currentTab={currentTab} onSetCurrentTab={handleTabChange} />
             </div>
 
           </div>
           <div className="flex items-center gap-6">
-            <TopSearchBar className="w-[300px] lg:block hidden" />
+            <TopSearchBar className="w-[300px] lg:block hidden" activeTab={currentTab} onSearch={setSearchQuery} />
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-tight">{welcome.mood}</p>
@@ -332,7 +357,7 @@ const Home: FC = () => {
                     isLoading={isBrandLoading}
                   />
                 ) : (
-                  // All other brands — show both movies and TV if available
+                  // All other brands \u2014 show both movies and TV if available
                   <>
                     {(brandMovies.length > 0 || isBrandLoading) && (
                       <SectionSlider
@@ -354,15 +379,15 @@ const Home: FC = () => {
             </motion.div>
           )}
 
-          {/* Non-brand content — Keep-Alive: all tabs mount once, CSS hides/shows them */}
+          {/* Non-brand content \u2014 Keep-Alive: all tabs mount once, CSS hides/shows them */}
           {!activeBrand && (
             <>
-              {/* CinematicMoments: only relevant for movie/tv — hide for sports */}
-              <div style={{ display: currentTab !== 'sports' ? 'block' : 'none' }}>
+              {/* CinematicMoments: only for movie/tv \u2014 hide for sports/live-tv/music */}
+              <div style={{ display: (currentTab === 'movie' || currentTab === 'tv') ? 'block' : 'none' }}>
                 <CinematicMoments />
               </div>
 
-              {/* ── MOVIES TAB (always mounted, toggled via CSS) ── */}
+              {/* \u2500\u2500 MOVIES TAB \u2500\u2500 */}
               <div style={{ display: currentTab === 'movie' ? 'block' : 'none' }}>
                 {isLoadingMovie && !dataMovie
                   ? <HomeSkeleton />
@@ -377,7 +402,7 @@ const Home: FC = () => {
                 }
               </div>
 
-              {/* ── TV TAB (always mounted, toggled via CSS) ── */}
+              {/* \u2500\u2500 TV TAB \u2500\u2500 */}
               <div style={{ display: currentTab === 'tv' ? 'block' : 'none' }}>
                 {isLoadingTV && !dataTV
                   ? <HomeSkeleton />
@@ -392,16 +417,26 @@ const Home: FC = () => {
                 }
               </div>
 
-              {/* ── SPORTS TAB (always mounted, toggled via CSS) ── */}
+              {/* \u2500\u2500 SPORTS TAB \u2500\u2500 */}
               <div style={{ display: currentTab === 'sports' ? 'block' : 'none' }} className="mt-6 flex flex-col">
                 <SportsChannelsCarousel />
                 <div className="mt-4">
-                  <SportsHub />
+                  <SportsHub searchQuery={searchQuery} />
                 </div>
               </div>
 
-              {/* ── SHARED NON-SPORTS SECTIONS (always mounted, toggled via CSS) ── */}
-              <div style={{ display: currentTab !== 'sports' ? 'block' : 'none' }}>
+              {/* \u2500\u2500 LIVE TV TAB \u2500\u2500 */}
+              <div style={{ display: currentTab === 'live-tv' ? 'block' : 'none' }} className="mt-6">
+                <LiveTVHub isEmbed searchQuery={searchQuery} />
+              </div>
+
+              {/* \u2500\u2500 MUSIC TAB \u2500\u2500 */}
+              <div style={{ display: currentTab === 'music' ? 'block' : 'none' }} className="mt-6">
+                <MusicHub isEmbed searchQuery={searchQuery} />
+              </div>
+
+              {/* \u2500\u2500 SHARED NON-SPORTS/LIVETV SECTIONS \u2500\u2500 */}
+              <div style={{ display: (currentTab === 'movie' || currentTab === 'tv') ? 'block' : 'none' }}>
                 <LazySection title="Top 10 Globally" placeholderHeight={300}>
                   <Top10Slider films={(currentTab === 'movie' ? dataMovie?.Trending : dataTV?.Trending) || []} />
                 </LazySection>
@@ -462,9 +497,9 @@ const Home: FC = () => {
 };
 
 interface FilmTypeButtonProps {
-  onSetCurrentTab: (currentTab: "movie" | "tv" | "sports") => void;
+  onSetCurrentTab: (currentTab: "movie" | "tv" | "sports" | "live-tv" | "music") => void;
   currentTab: string;
-  buttonType: "movie" | "tv" | "sports";
+  buttonType: "movie" | "tv" | "sports" | "live-tv" | "music";
 }
 
 const FilmTypeButton: FC<FilmTypeButtonProps> = memo(({ onSetCurrentTab, currentTab, buttonType }) => {
@@ -473,10 +508,15 @@ const FilmTypeButton: FC<FilmTypeButtonProps> = memo(({ onSetCurrentTab, current
   return (
     <button
       onClick={() => onSetCurrentTab(buttonType)}
-      className={`relative transition duration-300 hover:text-white ${isActive ? "text-white font-medium" : "text-gray-400"}`}
+      className={`relative transition duration-300 hover:text-white pb-1 whitespace-nowrap ${isActive ? "text-white font-black" : "text-gray-400"}`}
     >
-      {buttonType === "movie" ? t("Movies") : buttonType === "tv" ? t("TV Shows") : t("Sports")}
-      {isActive && <motion.span layoutId="tab-underline" className="absolute bottom-0 left-0 right-0 h-[3px] bg-white" />}
+      <span className="text-[12px] uppercase tracking-[0.15em]">
+        {buttonType === "movie" ? t("Movies") : 
+         buttonType === "tv" ? t("TV Shows") : 
+         buttonType === "sports" ? t("Sports") :
+         buttonType === "live-tv" ? t("Live TV") : t("Music")}
+      </span>
+      {isActive && <motion.span layoutId="tab-underline" className="absolute bottom-0 left-0 right-0 h-[3px] bg-primary rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)]" />}
     </button>
   );
 });
