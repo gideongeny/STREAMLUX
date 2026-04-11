@@ -13,7 +13,7 @@ const CHATBOT_STYLE = `
   .genius-input::placeholder { color: rgba(156,163,175,0.6) !important; }
 `;
 
-const OPENROUTER_KEY = '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';
+const OPENROUTER_KEY = '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';
 
 const PERSONA_SYSTEM_PROMPTS: Record<string, string> = {
   BUTLER: 'You are Genius, the polite and knowledgeable AI assistant for StreamLux, a premium streaming platform. You help users find movies, TV shows, live sports, music and live TV channels. Be concise, helpful and elegant. Limit responses to 3-4 sentences.',
@@ -120,7 +120,7 @@ const GeniusAI: React.FC = () => {
           'X-Title': 'StreamLux Genius AI',
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-4-maverick:free',
+          model: 'meta-llama/llama-3.2-3b-instruct:free',
           messages: chatMessages,
           max_tokens: 300,
           temperature: 0.8,
