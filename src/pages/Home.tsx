@@ -269,8 +269,27 @@ const Home: FC = () => {
                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-tight">{welcome.mood}</p>
                 <p className="text-sm font-bold text-white tracking-tight">{currentUser?.displayName || "Guest"}</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-blue-600 flex items-center justify-center text-white font-bold text-lg">
-                {(currentUser?.displayName?.[0] || "G").toUpperCase()}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-blue-600 flex items-center justify-center text-white font-bold text-lg overflow-hidden border border-white/10">
+                {currentUser?.photoURL ? (
+                  <img 
+                    src={currentUser.photoURL} 
+                    alt={currentUser.displayName || ""} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        const span = document.createElement('span');
+                        span.innerText = (currentUser?.displayName?.[0] || "G").toUpperCase();
+                        parent.appendChild(span);
+                      }
+                    }}
+                  />
+                ) : (
+                  <span>{(currentUser?.displayName?.[0] || "G").toUpperCase()}</span>
+                )}
               </div>
             </div>
           </div>
