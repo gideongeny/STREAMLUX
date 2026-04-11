@@ -14,32 +14,34 @@ export interface MusicTrack {
 
 // normalize saavn song from multiple API response shapes
 const mapSaavnSong = (item: any): MusicTrack => {
-  // 1. YouTube API Structure (Firebase Gateway fallback or default trending)
-  if (item.kind?.includes('youtube') || item.snippet) {
+  // 1. YouTube API Structure (Explicitly marked as 'youtube' or having YouTube snippet)
+  if (item.source === 'youtube' || item.kind?.includes('youtube') || item.snippet) {
+    const videoId = item.id?.videoId || item.id || String(Math.random());
     return {
-      id: typeof item.id === 'string' ? item.id : (item.id?.videoId || String(Math.random())),
-      title: item.snippet?.title || 'Unknown',
-      artist: item.snippet?.channelTitle || 'Unknown',
-      thumbnail: item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.default?.url || '',
+      id: typeof videoId === 'string' ? videoId : String(videoId),
+      title: item.snippet?.title || item.title || 'Unknown',
+      artist: item.snippet?.channelTitle || item.artist || 'Official Video',
+      thumbnail: item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.medium?.url || item.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
       streamUrl: undefined,
       source: 'youtube', 
     };
   }
 
-  // 2. Saavn API Structure (saavn.dev native fallback)
+  // 2. Saavn API Structure (Normalized JioSaavn metadata)
   return {
     id: item.id || String(Math.random()),
     title: item.name || item.title || 'Unknown',
     artist:
       (Array.isArray(item.artists?.primary)
         ? item.artists.primary.map((a: any) => a.name).join(', ')
-        : item.primaryArtists || item.artist || 'Unknown'),
+        : item.primaryArtists || item.artist || 'Independent Artist'),
     thumbnail:
       item.image?.[2]?.link ||
       item.image?.[2]?.url ||
       item.image?.[1]?.link ||
       item.image?.[1]?.url ||
       (typeof item.image === 'string' ? item.image : '') ||
+      item.thumbnail ||
       '',
     album: item.album?.name || (typeof item.album === 'string' ? item.album : undefined),
     duration: item.duration ? String(item.duration) : undefined,
@@ -48,6 +50,7 @@ const mapSaavnSong = (item: any): MusicTrack => {
       item.downloadUrl?.[4]?.url ||
       item.downloadUrl?.[3]?.link ||
       item.downloadUrl?.[3]?.url ||
+      item.url ||
       undefined,
     source: 'saavn',
   };

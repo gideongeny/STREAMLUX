@@ -46,46 +46,71 @@ module.exports = async (req, res) => {
     }
 
     try {
-        // --- MUSIC ROUTE (Saavn + YT Fallback) ---
-        // We only trigger if the path is specifically for music to avoid colliding with TMDB trending
+        // --- MUSIC ROUTE (Saavn + YT Parallel Hybrid) ---
         if (rawPath.startsWith('music') || rawPath.includes('saavn')) {
-            const q = query.q || query.query || 'Global Top Hits 2024';
-            let lastError = null;
-            try {
-                // Try Saavn Modules (Trending), Search, and Charts via Sumit Instance
-                const endpoints = [
-                    `https://saavn.sumit.co/api/modules?language=english,hindi`,
-                    `https://saavn.sumit.co/api/search/songs?query=trending%202024&limit=40`,
-                    `https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(String(q))}&limit=40`
-                ];
-                
-                for (const sUrl of endpoints) {
-                    try {
-                        const sRes = await fetch(sUrl);
-                        const sData = await sRes.json();
-                        // sumit api usually has top level data or trending
-                        const items = (sData.data?.trending?.songs || sData.data?.songs || sData.data?.results || sData.data || sData.results || sData);
-                        if (Array.isArray(items) && items.length > 0) {
-                            // Ensure data is wrapped in 'data' for the frontend's extractor
-                            return res.status(200).json(sData.data ? sData : { status: 'SUCCESS', data: sData });
-                        }
-                    } catch (e) { lastError = e.message; }
-                }
-            } catch (e) { lastError = e.message; }
+            const q = query.q || query.query || 'US Billboard Top Hits 2024';
+            
+            // Parallel Fetch: Try both Saavn and YouTube simultaneously
+            const results = await Promise.allSettled([
+                // 1. Saavn Trending / Search
+                fetch(`https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(String(q))}&limit=20`),
+                // 2. YouTube Music Official
+                fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent('Official Music Video ' + String(q))}&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=20&key=${YT_KEYS.music}`)
+            ]);
 
-            // YouTube Music Fallback (More aggressive search)
-            const musicRetryPool = [YT_KEYS.music, YT_KEYS.general];
-            for (const key of musicRetryPool) {
+            const finalItems = [];
+            let saavnData = null;
+
+            // Process Saavn
+            if (results[0].status === 'fulfilled') {
                 try {
-                    // Category 10 = Music | videoEmbeddable = true ensures playback
-                    const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent('Official Music Video ' + String(q))}&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=40&key=${key}`;
-                    const ytRes = await fetch(ytUrl);
-                    const ytData = await ytRes.json();
-                    if (ytData && ytData.items && ytData.items.length > 0) return res.status(200).json(ytData);
-                    if (ytData.error) lastError = `YouTube API: ${ytData.error.message} (${ytData.error.errors?.[0]?.reason})`;
-                } catch (e) { lastError = e.message; }
+                    const sRes = results[0].value;
+                    const sData = await sRes.json();
+                    saavnData = sData; // Keep for top-level metadata if needed
+                    const items = (sData.data?.results || sData.data || sData.results || sData);
+                    if (Array.isArray(items)) {
+                        items.forEach(item => {
+                            if (item.id) {
+                                item.source = 'saavn';
+                                finalItems.push(item);
+                            }
+                        });
+                    }
+                } catch(e) {}
             }
-            return res.status(200).json({ items: [], results: [], error: lastError || "All data sources exhausted" });
+
+            // Process YouTube
+            if (results[1].status === 'fulfilled') {
+                try {
+                    const yRes = results[1].value;
+                    const yData = await yRes.json();
+                    if (yData.items && Array.isArray(yData.items)) {
+                        yData.items.forEach(item => {
+                            item.source = 'youtube';
+                            finalItems.push(item);
+                        });
+                    }
+                } catch(e) {}
+            }
+
+            // Shuffle or Pattern Merge (YT, Saavn, YT, Saavn...) to ensure diversity
+            const merged = [];
+            const saavnList = finalItems.filter(i => i.source === 'saavn');
+            const ytList = finalItems.filter(i => i.source === 'youtube');
+            
+            const max = Math.max(saavnList.length, ytList.length);
+            for (let i = 0; i < max; i++) {
+                if (ytList[i]) merged.push(ytList[i]);
+                if (saavnList[i]) merged.push(saavnList[i]);
+            }
+
+            return res.status(200).json({ 
+                status: 'SUCCESS', 
+                data: merged, 
+                items: merged, // Legacy support
+                saavnCount: saavnList.length,
+                ytCount: ytList.length
+            });
         }
 
         // --- YOUTUBE ROUTE (Rotation) ---
