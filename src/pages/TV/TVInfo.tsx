@@ -21,12 +21,9 @@ const TVInfo: FC = () => {
     return <Navigate to={`/live-tv/${id}`} replace />;
   }
 
-  const { data, isError, isLoading } = useQuery<FilmInfo, Error>(
-    ["tvDetail", id, i18n.language],
-    () => getTVFullDetail(id as string)
-  );
+  const isYouTube = id?.length === 11 || id?.startsWith('yt-');
 
-  if (isError) {
+  if (isError && !isYouTube) {
     return (
       <div className="min-h-screen bg-dark flex items-center justify-center px-6">
         <motion.div

@@ -13,12 +13,9 @@ import AdBanner from "../../components/Ads/AdBanner";
 const MovieInfo: FC = () => {
   const { id } = useParams();
   const { i18n } = useTranslation();
-  const { data, isError, isLoading } = useQuery<FilmInfo, Error>(
-    ["movieDetail", id, i18n.language],
-    () => getMovieFullDetail(id as string)
-  );
-
-  if (isError) {
+  const isYouTube = id?.length === 11 || id?.startsWith('yt-');
+  
+  if (isError && !isYouTube) {
     return (
       <div className="min-h-screen bg-dark flex items-center justify-center px-6">
         <motion.div

@@ -22,11 +22,40 @@ module.exports = async (req, res) => {
     const TMDB_API_KEY = "decc520d8469eaea0202f55d41a13a0c";
     const TMDB_BEARER = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkZWNjNTIwZDg0NjllYWVhMDIwMmY1NWQ0MWExM2EwYyIsIm5iZiI6MTc1NDgyNjU1Mi4zMTcsInN1YiI6IjY4OTg4NzM4NzczZjAxYzIzNDVkMGRlYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.UIMvffG-q5sYc04gTT0efdW_k4Iu4fnOedNfs4cYIu8";
     
-    const YT_KEYS = {
-        movie: "AIzaSyBXl3lLvGxMOtqtYn75f_X68mc8P-O81qQ",
-        tv: "AIzaSyC4Mz02lYxZSdaA5N-l363GlIJiblhC3sM",
-        music: "AIzaSyB8lDctBCl-3JPNgJSau3TvulbevDyvNyQ",
-        general: "AIzaSyAlENC10uKVhrDGqgzUeOiNysiUFoDof9o"
+    const YT_KEYS = [
+        "AIzaSyBXl3lLvGxMOtqtYn75f_X68mc8P-O81qQ", // Movie
+        "AIzaSyC4Mz02lYxZSdaA5N-l363GlIJiblhC3sM", // TV
+        "AIzaSyB8lDctBCl-3JPNgJSau3TvulbevDyvNyQ", // Music
+        "AIzaSyAlENC10uKVhrDGqgzUeOiNysiUFoDof9o"  // General
+    ];
+
+    // --- GLOBAL YOUTUBE FETCHER WITH AUTO-ROTATION ---
+    const fetchYT = async (path, params = {}) => {
+        const baseUrl = `https://www.googleapis.com/youtube/v3${path.startsWith('/') ? path : '/' + path}`;
+        for (const key of YT_KEYS) {
+            try {
+                const url = new URL(baseUrl);
+                Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
+                url.searchParams.set('key', key);
+                if (!url.searchParams.has('part')) url.searchParams.set('part', 'snippet');
+
+                const res = await fetch(url.toString());
+                const data = await res.json();
+                
+                if (data.error) {
+                    const reason = data.error.errors?.[0]?.reason || "";
+                    if (['quotaExceeded', 'keyInvalid', 'dailyLimitExceeded', 'forbidden'].includes(reason)) {
+                        console.warn(`[Gateway] Key exhausted: ${key.slice(0,10)}... Reason: ${reason}. Retrying next...`);
+                        continue;
+                    }
+                    return { error: data.error.message, items: [] };
+                }
+                return data;
+            } catch (e) {
+                console.error("[Gateway] YT Fetch Error:", e.message);
+            }
+        }
+        return { error: "All API keys exhausted for today. StreamLux fallback active.", items: [] };
     };
 
     // 3. Universal Path Normalizer
@@ -54,8 +83,14 @@ module.exports = async (req, res) => {
             const results = await Promise.allSettled([
                 // 1. Saavn Trending / Search
                 fetch(`https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(String(q))}&limit=20`),
-                // 2. YouTube Music Official
-                fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent('Official Music Video ' + String(q))}&type=video&videoCategoryId=10&videoEmbeddable=true&maxResults=20&key=${YT_KEYS.music}`)
+                // 2. YouTube Music Official (Using Unified Failsafe)
+                fetchYT('/search', {
+                    q: `Official Music Video ${q}`,
+                    type: 'video',
+                    videoCategoryId: '10',
+                    videoEmbeddable: 'true',
+                    maxResults: '20'
+                })
             ]);
 
             const finalItems = [];
@@ -66,7 +101,7 @@ module.exports = async (req, res) => {
                 try {
                     const sRes = results[0].value;
                     const sData = await sRes.json();
-                    saavnData = sData; // Keep for top-level metadata if needed
+                    saavnData = sData; 
                     const items = (sData.data?.results || sData.data || sData.results || sData);
                     if (Array.isArray(items)) {
                         items.forEach(item => {
@@ -82,8 +117,7 @@ module.exports = async (req, res) => {
             // Process YouTube
             if (results[1].status === 'fulfilled') {
                 try {
-                    const yRes = results[1].value;
-                    const yData = await yRes.json();
+                    const yData = results[1].value;
                     if (yData.items && Array.isArray(yData.items)) {
                         yData.items.forEach(item => {
                             item.source = 'youtube';
@@ -93,11 +127,9 @@ module.exports = async (req, res) => {
                 } catch(e) {}
             }
 
-            // Shuffle or Pattern Merge (YT, Saavn, YT, Saavn...) to ensure diversity
             const merged = [];
             const saavnList = finalItems.filter(i => i.source === 'saavn');
             const ytList = finalItems.filter(i => i.source === 'youtube');
-            
             const max = Math.max(saavnList.length, ytList.length);
             for (let i = 0; i < max; i++) {
                 if (ytList[i]) merged.push(ytList[i]);
@@ -105,42 +137,23 @@ module.exports = async (req, res) => {
             }
 
             return res.status(200).json({ 
-                status: 'SUCCESS', 
-                data: merged, 
-                items: merged, // Legacy support
-                saavnCount: saavnList.length,
-                ytCount: ytList.length
+                status: 'SUCCESS', data: merged, items: merged, 
+                saavnCount: saavnList.length, ytCount: ytList.length 
             });
         }
 
-        // --- YOUTUBE ROUTE (Rotation) ---
+        // --- YOUTUBE ROUTE (Unified Logic) ---
         if (rawPath.includes('youtube') || rawPath.includes('yt')) {
             const endpoint = String(query.endpoint || "/search");
-            const context = String(query.context || "general");
-            const keyPool = [YT_KEYS[context] || YT_KEYS.general];
-            Object.values(YT_KEYS).forEach(k => { if(!keyPool.includes(k)) keyPool.push(k); });
+            const cleanQuery = { ...query };
+            delete cleanQuery.endpoint;
+            delete cleanQuery.match;
+            delete cleanQuery.proxy;
+            delete cleanQuery.context;
 
-            const ytBase = `https://www.googleapis.com/youtube/v3${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
-            
-            for (const key of keyPool) {
-                try {
-                    const finalU = new URL(ytBase);
-                    Object.keys(query).forEach(k => { if(!['endpoint', 'match', 'proxy', 'context'].includes(k)) finalU.searchParams.append(k, String(query[k])); });
-                    if (!finalU.searchParams.has('part')) finalU.searchParams.set('part', 'snippet');
-                    finalU.searchParams.set('key', key);
-
-                    const ytRes = await fetch(finalU.toString());
-                    const data = await ytRes.json();
-                    if (data.error) {
-                        const reason = data.error.errors?.[0]?.reason || "";
-                        if (['quotaExceeded', 'keyInvalid', 'dailyLimitExceeded', 'forbidden'].includes(reason)) continue;
-                        return res.status(200).json({ items: [], error: data.error.message });
-                    }
-                    res.setHeader('Cache-Control', 's-maxage=28800, stale-while-revalidate=3600');
-                    return res.status(200).json(data);
-                } catch (e) {}
-            }
-            return res.status(200).json({ items: [], error: "All keys exhausted" });
+            const data = await fetchYT(endpoint, cleanQuery);
+            res.setHeader('Cache-Control', 's-maxage=28800, stale-while-revalidate=3600');
+            return res.status(200).json(data);
         }
 
         // --- SPORTS ROUTE ---
