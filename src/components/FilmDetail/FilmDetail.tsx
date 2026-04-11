@@ -607,7 +607,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                           title="Video trailer"
                           width="100%"
                           height="100%"
-                          src={`https://www.youtube.com/embed/${video.key}?enablejsapi=1&amp;origin=https%3A%2F%2Fstreamlux.vercel.app&amp;widgetid=1`}
+                          src={`https://www.youtube-nocookie.com/embed/${video.key}?enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}&rel=0`}
                           id={`widget-${video.id}`}
                           className="absolute top-0 left-0 w-full h-full"
                         ></iframe>

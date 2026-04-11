@@ -660,9 +660,17 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     }, []);
 
     const getAutoplayUrl = (url: string) => {
-        // Elite Experience: Always enable autoplay for embedded sources
-        if (url.includes('?')) return `${url}&autoplay=1`;
-        return `${url}?autoplay=1`;
+        // Elite Experience: Always enable autoplay, origin-validation, and JS API for embedded sources
+        const origin = window.location.origin;
+        const separator = url.includes('?') ? '&' : '?';
+        let finalUrl = `${url}${separator}autoplay=1&enablejsapi=1&origin=${encodeURIComponent(origin)}&rel=0&iv_load_policy=3&widgetid=1`;
+        
+        // Ensure nocookie domain for privacy and better bypass of standard blocks
+        if (finalUrl.includes('youtube.com')) {
+            finalUrl = finalUrl.replace('youtube.com', 'youtube-nocookie.com');
+        }
+        
+        return finalUrl;
     };
 
     if (!currentSource) {
