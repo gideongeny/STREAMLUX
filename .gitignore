@@ -1,0 +1,47 @@
+node_modules/
+dist/
+.firebase/
+.vite/
+functions/lib/
+
+# Logs
+*.log
+*.txt
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+firebase-debug.log
+
+# Env files
+.env
+.env.*
+!.env.example
+functions/.env
+functions/.env.*
+!.functions/.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Accidental subprojects
+/StreamluxNative-main/
+/Movie-Steaming-app-master/
+/android/
+/android_backup/
+/android_build_log.txt
+
+# Raw Asset Folders (assuming they should be in src/assets)
+/Brand Universe card videos/
+/EXPLORE LEAGUES logos/
+/Live Tv channel icons/
+/sports channels logos/
+/Trailer/
+/Images/
+/icons/
+/store_assets/
+
+.vercel
+.env*.local

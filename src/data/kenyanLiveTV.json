@@ -1,0 +1,74 @@
+[
+  {
+    "id": "citizen-tv-ke",
+    "name": "Citizen TV",
+    "type": "youtube",
+    "youtubeId": "Cy2Pc0X1P7w",
+    "url": "https://www.youtube.com/watch?v=Cy2Pc0X1P7w",
+    "category": "News",
+    "country": "Kenya",
+    "countryCode": "KE",
+    "logo": "https://i.ytimg.com/vi/Cy2Pc0X1P7w/hqdefault.jpg",
+    "sortOrder": 1
+  },
+  {
+    "id": "ntv-kenya",
+    "name": "NTV Kenya",
+    "type": "youtube",
+    "youtubeId": "ZRDj5GXNezw",
+    "url": "https://www.youtube.com/watch?v=ZRDj5GXNezw",
+    "category": "News",
+    "country": "Kenya",
+    "countryCode": "KE",
+    "logo": "https://i.ytimg.com/vi/ZRDj5GXNezw/hqdefault.jpg",
+    "sortOrder": 2
+  },
+  {
+    "id": "ktn-kenya",
+    "name": "KTN News",
+    "type": "youtube",
+    "youtubeId": "vfnHjFpn1-c",
+    "url": "https://www.youtube.com/watch?v=vfnHjFpn1-c",
+    "category": "News",
+    "country": "Kenya",
+    "countryCode": "KE",
+    "logo": "https://i.ytimg.com/vi/vfnHjFpn1-c/hqdefault.jpg",
+    "sortOrder": 3
+  },
+  {
+    "id": "tv47-kenya",
+    "name": "TV47 Kenya",
+    "type": "youtube",
+    "youtubeId": "YkU4J25VCxE",
+    "url": "https://www.youtube.com/watch?v=YkU4J25VCxE",
+    "category": "News",
+    "country": "Kenya",
+    "countryCode": "KE",
+    "logo": "https://i.ytimg.com/vi/YkU4J25VCxE/hqdefault.jpg",
+    "sortOrder": 4
+  },
+  {
+    "id": "k24-kenya",
+    "name": "K24 TV",
+    "type": "youtube",
+    "youtubeId": "k8f4ZQAA5MU",
+    "url": "https://www.youtube.com/watch?v=k8f4ZQAA5MU",
+    "category": "News",
+    "country": "Kenya",
+    "countryCode": "KE",
+    "logo": "https://i.ytimg.com/vi/k8f4ZQAA5MU/hqdefault.jpg",
+    "sortOrder": 5
+  },
+  {
+    "id": "ramogi-tv",
+    "name": "Ramogi TV",
+    "type": "youtube",
+    "youtubeId": "u4LWd8kYXIg",
+    "url": "https://www.youtube.com/watch?v=u4LWd8kYXIg",
+    "category": "Entertainment",
+    "country": "Kenya",
+    "countryCode": "KE",
+    "logo": "https://i.ytimg.com/vi/u4LWd8kYXIg/hqdefault.jpg",
+    "sortOrder": 6
+  }
+]

@@ -1,0 +1,27 @@
+---
+description: StreamLux app and web — sports redirect, downloads, and streaming fallbacks
+globs: StreamLuxNative/**/*,src/**/*
+alwaysApply: false
+---
+
+# StreamLux App & Web Conventions
+
+## Sports matches
+- When a user taps any **live, upcoming, or finished match**, always open the arena inside the app WebView player.
+- Redirect URL: `https://streamlux.vercel.app/sports/arena/{fixtureId}`
+- Navigate via the `live` player route with the URL URL-encoded — never open the system browser and never use the legacy `sports` player route for match cards.
+- Do not change the web sports watch page auto-failover behavior unless explicitly requested.
+
+## Downloads
+- All movie/TV downloads must stay **inside the app** — never launch an external browser for download flows.
+- Primary: Vyla direct CDN dialog (`VylaDownloadDialog`).
+- Fallback when no links or on error: **VidVault** portal in `VidVaultWebViewOverlay` at `https://vidvault.ru/` with TMDB ID pre-filled.
+- On failure: show a clear message, keep the title in the local Room library (`registerDownloadIntent`), and never crash or force-close the app.
+- System `DownloadManager` for actual file saves is fine; the user must not be sent out to Chrome/browser to find downloads.
+
+## Web (STREAMLUX)
+- Downloads mirror native: **Option 1** = `VylaDownload` direct CDN links; **Option 2** = `VidVaultPortal` launcher → **new tab** at `https://vidvault.ru/` with TMDB pre-filled. Never iframe VidVault on web (iframe clicks redirect to ads).
+- Option 2 must always be visible in the download dropdown, not only on failure.
+- Register titles in Redux `downloadSlice` when download is requested.
+- Streaming: VidKing default; include VidNest, TouStream, AnimeHub, Fsonic, Miruro, MeowTV fallbacks in `resolver.ts`.
+- Sports web pages keep their own auto-failover — do not change unless explicitly requested.

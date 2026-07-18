@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="StreamLux" />
+  <link rel="apple-touch-icon" href="/icon.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/icon.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="/icon.png" />
+  <meta name="apple-touch-fullscreen" content="yes" />
+
+  <!-- Safari Pinned Tab Color -->
+  <link rel="mask-icon" href="/logo.svg" color="#ef4444" />
+
+  <!-- Android, Microsoft -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="msapplication-TileColor" content="#1a1a1a" />
+
+  <title>StreamLux | Free Movies, TV Shows & Live Sports Streaming</title>
+
+  <meta name="title" content="StreamLux | #1 Free Movies, TV Shows & Live Sports Streaming" />
+  <meta name="description"
+    content="StreamLux — The ultimate world-class destination for free movies, TV shows, and live sports. Watch HD streams of Nollywood, Bollywood, K-drama, and live football (EPL, UCL). Highly optimized for fast, cinematic streaming." />
+  <meta name="keywords"
+    content="StreamLux, watch free movies, free tv shows, live sports streaming, free football streaming, watch nollywood online, bollywood movies free, k-drama streaming, hulu alternative, netflix alternative free, hd movie streaming" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="StreamLux | World-Class Free Streaming" />
+  <meta property="og:description"
+    content="Experience cinematic quality with StreamLux. Free movies, TV shows, and live sports highlights in HD. The best alternative to paid streaming services." />
+  <meta property="og:image" content="https://streamlux.vercel.app/preview.png" />
+
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:title" content="StreamLux | Free HD Streaming" />
+  <meta property="twitter:description"
+    content="Watch your favorite movies and sports for free on StreamLux. Premium experience, zero cost." />
+  <meta property="twitter:image" content="https://streamlux.vercel.app/preview.png" />
+
+  <meta name="google-site-verification" content="AFMGedjZF5SYH7keB9CQ3xm0aVP4cU6mljkExb2r00c" />
+
+  <!-- Preconnect to Backend and Fonts for faster initial boot -->
+  <link rel="preconnect" href="https://streamlux.vercel.app" crossorigin />
+  <link rel="dns-prefetch" href="https://streamlux.vercel.app" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+
+
+
+  <!-- Adsterra Social Bar -->
+  <script src="https://pl29728096.effectivecpmnetwork.com/90/37/4f/90374f3251de7bd730f35ca6df6e4f28.js"></script>
+
+  <!-- Structured Data JSON-LD (SEO) -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "name": "StreamLux",
+          "url": "https://streamlux.vercel.app",
+          "description": "StreamLux — The ultimate world-class destination for free movies, TV shows, and live sports.",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://streamlux.vercel.app/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "StreamLux",
+          "applicationCategory": "EntertainmentApplication",
+          "operatingSystem": "Web, Android",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          }
+        }
+      ]
+    }
+  </script>
+
+  <!-- Bootstrap Cache Buster: Forces browser to discard stale YouTube data from v3/v4 -->
+  <script>
+    (function() {
+      const CURRENT_VERSION = '5.6.2';
+      const storedVersion = localStorage.getItem('STREAMLUX_VERSION');
+      if (storedVersion !== CURRENT_VERSION) {
+        console.log('[System] Stale version detected (' + storedVersion + '). Purging caches...');
+        // Only clear keys related to content engine to avoid logging users out
+        Object.keys(localStorage).forEach(key => {
+          if (key.includes('yt_cache') || key.includes('home-cache') || key.includes('detail-cache')) localStorage.removeItem(key);
+        });
+        localStorage.setItem('STREAMLUX_VERSION', CURRENT_VERSION);
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <noscript>
+    <div
+      style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #000000; color: #fff; text-align: center; padding: 20px;">
+      <div>
+        <h1>JavaScript Required</h1>
+        <p>You need to enable JavaScript to run this app.</p>
+      </div>
+    </div>
+  </noscript>
+
+  <div id="root">
+    <!-- Loading fallback while React loads -->
+    <!-- Premium Cinematic Loading Screen -->
+    <div
+      style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%); color: #fff; flex-direction: column; gap: 28px; position: relative; overflow: hidden;">
+      <!-- Ambient glow -->
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(255,107,53,0.08) 0%, transparent 70%); pointer-events: none; animation: pulse-load 3s ease-in-out infinite;"></div>
+      <!-- Logo spinner -->
+      <div style="position: relative; z-index: 1;">
+        <div
+          style="width: 64px; height: 64px; border: 3px solid rgba(255,255,255,0.06); border-top-color: #ff6b35; border-radius: 50%; animation: spin 0.8s linear infinite;">
+        </div>
+      </div>
+      <div style="position: relative; z-index: 1; text-align: center;">
+        <p style="font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.25em; color: #fff; margin: 0;">STREAMLUX</p>
+        <p style="font-family: 'Outfit', sans-serif; font-size: 0.7rem; color: rgba(255,255,255,0.3); letter-spacing: 0.4em; text-transform: uppercase; margin-top: 8px;">Cinema Awaits</p>
+      </div>
+      <style>
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes pulse-load {
+          0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+          50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+        }
+      </style>
+    </div>
+  </div>
+  <script type="module" src="/src/index.tsx"></script>
+</body>
+
+</html>

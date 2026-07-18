@@ -1,0 +1,605 @@
+/* Premium Typography — Outfit for UI, Bebas Neue for headings */
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Surface palette (Netflix Dark) */
+  --sl-surface-0: #000000;
+  --sl-surface-1: #0a0a0a;
+  --sl-surface-2: #111111;
+  --sl-text-muted: #8a8a8a;
+
+  /* Typography */
+  --sl-font-ui: 'Outfit', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --sl-font-heading: 'Bebas Neue', sans-serif;
+  --sl-font-body: 'Outfit', sans-serif;
+}
+
+[data-surface="night"] {
+  /* Night mode: still dark, but not pure-black */
+  --sl-surface-0: #050a18;
+  --sl-surface-1: #0a1225;
+  --sl-surface-2: #101b35;
+  --sl-text-muted: #94a3b8;
+}
+
+html {
+  @apply bg-dark;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  /* Safe area padding for notched iPhones */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+body {
+  @apply bg-dark text-gray-lighten font-outfit;
+  margin: 0;
+  padding: 0;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch; /* Kinetic scrolling for Safari */
+}
+
+#root {
+  @apply bg-dark;
+  min-height: 100dvh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* to prevent horizontal scrolling in small viewport width, I need to set the property overflow-x-hidden on both the body and html element */
+
+/* for the property position: sticky used on this website to work properly, we need to reset the property overflow to its default value on big viewport width, by adding: md:overflow-x-visible (because position: sticky doesn't work as expected when descendant element (body, html) has property overflow set to hidden)*/
+
+body,
+:root {
+  @apply overflow-x-hidden md:overflow-x-visible;
+}
+
+/* CUSTOM UTILITIES */
+.tw-pagination-btn {
+  @apply inline-block h-8 w-8 bg-dark-lighten rounded-full tw-flex-center hover:bg-dark-lighten-2 transition duration-300;
+}
+
+.tw-flex-center {
+  @apply flex justify-center items-center;
+}
+
+.tw-absolute-center {
+  @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
+}
+
+.tw-absolute-center-horizontal {
+  @apply absolute left-1/2 -translate-x-1/2;
+}
+
+.tw-absolute-center-vertical {
+  @apply absolute top-1/2 -translate-y-1/2;
+}
+
+.tw-black-backdrop {
+  background: linear-gradient(to left, transparent, rgba(0, 0, 0, 0.85) 65%);
+}
+
+.tw-black-backdrop-2 {
+  background: linear-gradient(90deg,
+      rgba(0, 0, 0, 0.6) 0%,
+      rgba(179, 179, 193, 0) 7%,
+      rgba(107, 107, 115, 0) 93%,
+      rgba(0, 0, 0, 0.6) 100%);
+}
+
+.tw-black-backdrop-3 {
+  background: linear-gradient(65deg, rgba(39, 42, 55, 1) 70%, transparent 140%);
+}
+
+.tw-multiline-ellipsis-3 {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: normal;
+
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.tw-multiline-ellipsis-2 {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: normal;
+
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* CUSTOM SLIDER */
+:root {
+  --swiper-theme-color: white !important;
+  --swiper-navigation-size: 15px !important;
+}
+
+.tw-banner-slider .swiper-button-prev {
+  @apply !top-[6%] !left-[2%] !z-20 hidden sm:block;
+}
+
+.tw-banner-slider .swiper-button-next {
+  @apply !top-[6%] !left-[5%] !z-20 hidden sm:block;
+}
+
+.tw-section-slider .swiper-button-prev {
+  --swiper-navigation-size: 25px !important;
+  z-index: 20 !important;
+}
+
+.tw-section-slider .swiper-button-next {
+  --swiper-navigation-size: 25px !important;
+  z-index: 20 !important;
+}
+
+/* CUSTOM SCROLLBAR*/
+::-webkit-scrollbar {
+  @apply w-[6px];
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-button {
+  @apply hidden;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-white/[0.08] rounded-full hover:bg-white/[0.15] transition duration-300;
+}
+
+select:focus {
+  outline: none !important;
+}
+
+input {
+  @apply outline-none;
+}
+
+/* CUSTOM SLIDER RANGE */
+.tw-slider-range::-webkit-slider-thumb {
+  @apply appearance-none h-4 w-4 rounded-full pointer-events-auto;
+  background-color: var(--color-primary, #ff6b35);
+}
+
+/* Dynamic Primary Color with Premium Transition */
+:root {
+  --color-primary: #ff6b35;
+  --color-primary-glow: rgba(255, 107, 53, 0.3);
+  --vibe-transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: var(--vibe-transition);
+}
+
+@property --color-primary {
+  syntax: '<color>';
+  initial-value: #ff6b35;
+  inherits: true;
+}
+
+/* Text color only for text-primary */
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+/* Background color only for bg-primary */
+.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+/* Border color only for border-primary */
+.border-primary {
+  border-color: var(--color-primary) !important;
+}
+
+/* Hover states */
+.hover\:bg-primary:hover {
+  background-color: var(--color-primary) !important;
+}
+
+.hover\:text-primary:hover {
+  color: var(--color-primary) !important;
+}
+
+.hover\:border-primary:hover {
+  border-color: var(--color-primary) !important;
+}
+
+/* CUSTOM INPUT BACKGROUND WHEN AUTOFILL FORM */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #49494b inset !important;
+}
+
+/* CUSTOM SELECTION TEXT COLOR */
+::selection {
+  background-color: var(--color-primary, #ff6b35);
+  color: #000000;
+}
+
+/* Cinematic Ambilight Animation */
+@keyframes pulse-glow {
+  0% {
+    transform: scale(1);
+    opacity: 0.12;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 0.18;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.12;
+  }
+}
+
+.tw-ambient-glow {
+  @apply fixed inset-0 pointer-events-none -z-10 transition-opacity duration-1000;
+  will-change: transform, opacity;
+  filter: blur(80px) saturate(1.5);
+  animation: pulse-glow 8s ease-in-out infinite;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.4) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+
+.tw-glass {
+  @apply bg-white/5 border border-white/10;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px); /* Specifically for Safari */
+}
+
+/* BRAND GLOWS */
+.glow-disney {
+  box-shadow: 0 0 20px rgba(0, 114, 210, 0.3);
+  background: linear-gradient(135deg, rgba(0, 114, 210, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+.glow-disney:hover {
+  box-shadow: 0 0 40px rgba(0, 114, 210, 0.6);
+  border-color: rgba(0, 114, 210, 0.8);
+}
+
+.glow-pixar {
+  box-shadow: 0 0 20px rgba(0, 173, 238, 0.3);
+  background: linear-gradient(135deg, rgba(0, 173, 238, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+.glow-pixar:hover {
+  box-shadow: 0 0 40px rgba(0, 173, 238, 0.6);
+  border-color: rgba(0, 173, 238, 0.8);
+}
+
+.glow-marvel {
+  box-shadow: 0 0 20px rgba(237, 29, 36, 0.3);
+  background: linear-gradient(135deg, rgba(237, 29, 36, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+.glow-marvel:hover {
+  box-shadow: 0 0 40px rgba(237, 29, 36, 0.6);
+  border-color: rgba(237, 29, 36, 0.8);
+}
+
+.glow-starwars {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+.glow-starwars:hover {
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.glow-natgeo {
+  box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+.glow-natgeo:hover {
+  box-shadow: 0 0 40px rgba(255, 204, 0, 0.6);
+  border-color: rgba(255, 204, 0, 0.8);
+}
+
+/* Fix for Safari -webkit-line-clamp bug */
+.tw-line-clamp-fix {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    background-position: 200% 0;
+    opacity: 0.5;
+  }
+}
+
+.tw-shimmer {
+  background: linear-gradient(110deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.08) 45%,
+      rgba(255, 255, 255, 0.15) 50%,
+      rgba(255, 255, 255, 0.08) 55%,
+      rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Elite Focus Rings for Accessibility/TV */
+.tw-focus-ring:focus-visible {
+  /* Softer focus ring (avoid harsh square white outline) */
+  @apply outline-none ring-2 ring-primary ring-opacity-60 ring-offset-0;
+}
+
+/* Accessibility: Increased Hit Targets */
+.tw-hit-target {
+  @apply relative cursor-pointer;
+}
+
+.tw-hit-target::before {
+  content: '';
+  @apply absolute -inset-4 z-[1];
+}
+
+.tw-hit-target > * {
+  @apply relative z-[2];
+}
+
+/* RTL Support — use logical properties only; never override flex-direction globally */
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* Specific directional utilities that need flipping in RTL */
+[dir="rtl"] .ml-4 {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
+[dir="rtl"] .mr-4 {
+  margin-right: 0 !important;
+  margin-left: 1rem !important;
+}
+
+[dir="rtl"] .pl-8 {
+  padding-left: 0 !important;
+  padding-right: 2rem !important;
+}
+
+[dir="rtl"] .pr-8 {
+  padding-right: 0 !important;
+  padding-left: 2rem !important;
+}
+
+/* Specific component flips */
+[dir="rtl"] .translate-x-full {
+  --tw-translate-x: -100% !important;
+}
+
+[dir="rtl"] .-translate-x-full {
+  --tw-translate-x: 100% !important;
+}
+
+/* Subtitle Readability with Black Glow */
+::cue {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  color: #ffffff !important;
+  font-family: 'Roboto', sans-serif !important;
+  font-size: 1.1em !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1) !important;
+}
+
+/* Scrollbar Utility for clean Elite UI */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none !important;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* ─── Heading font utility ─────────────────────────────────────────────────── */
+.font-heading {
+  font-family: var(--sl-font-heading);
+}
+
+.font-ui {
+  font-family: var(--sl-font-ui);
+}
+
+/* ─── prefers-reduced-motion ───────────────────────────────────────────────── */
+/* Respects user's OS-level accessibility setting to disable animations.        */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .tw-ambient-glow {
+    animation: none !important;
+  }
+
+  .tw-shimmer {
+    animation: none !important;
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* ─── Premium gradient utilities ───────────────────────────────────────────── */
+.sl-gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, rgba(255, 107, 53, 0.6) 100%);
+}
+
+.sl-gradient-dark {
+  background: linear-gradient(180deg, transparent 0%, var(--sl-surface-0) 100%);
+}
+
+.sl-glow-primary {
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.3), 0 0 60px rgba(255, 107, 53, 0.1);
+}
+
+.sl-glow-primary-strong {
+  box-shadow: 0 0 40px rgba(255, 107, 53, 0.5), 0 0 80px rgba(255, 107, 53, 0.2);
+}
+
+/* ─── Premium Cinema Utilities ─────────────────────────────────────────────── */
+.sl-cinema-border {
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.sl-cinema-border-hover:hover {
+  border-color: rgba(255, 107, 53, 0.3);
+}
+
+.sl-cinema-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.06) 20%, rgba(255, 255, 255, 0.06) 80%, transparent 100%);
+}
+
+.sl-text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sl-text-gradient-accent {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sl-section-title {
+  @apply text-xl md:text-2xl font-black text-white uppercase tracking-tight;
+  font-family: var(--sl-font-heading);
+  letter-spacing: 0.05em;
+}
+
+.sl-section-title::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 1.2em;
+  background: var(--color-primary);
+  border-radius: 2px;
+  margin-right: 12px;
+  vertical-align: middle;
+  box-shadow: 0 0 12px rgba(255, 107, 53, 0.4);
+}
+
+/* Premium glass card */
+.sl-glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 1.25rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sl-glass-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 107, 53, 0.2);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 107, 53, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Premium hover underline animation */
+.sl-hover-underline {
+  position: relative;
+}
+
+.sl-hover-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--color-primary);
+  border-radius: 1px;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 8px rgba(255, 107, 53, 0.4);
+}
+
+.sl-hover-underline:hover::after {
+  width: 100%;
+}
+
+/* Noise texture overlay for premium feel */
+.sl-noise::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.015;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes cinema-pan {
+  0% { transform: scale(1.05) translateX(0); }
+  50% { transform: scale(1.08) translateX(-1%); }
+  100% { transform: scale(1.05) translateX(0); }
+}
+
+.sl-cinema-pan {
+  animation: cinema-pan 20s ease-in-out infinite;
+}
+
+/* Premium badge */
+.sl-badge {
+  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider;
+  background: rgba(255, 107, 53, 0.15);
+  color: var(--color-primary);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+/* Premium skeleton loading */
+@keyframes cinema-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.sl-skeleton {
+  background: linear-gradient(110deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.05) 40%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.05) 60%,
+    rgba(255, 255, 255, 0.02) 100%);
+  background-size: 200% 100%;
+  animation: cinema-shimmer 1.8s ease-in-out infinite;
+  border-radius: 1.25rem;
+}
