@@ -435,7 +435,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => dispatch(toggleCinemaMode())}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all font-bold text-[10px] ${
+                    className={`hidden md:flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all font-bold text-[10px] ${
                       isCinemaMode ? 'bg-primary text-black' : 'bg-white/5 text-white hover:bg-white/10'
                     }`}
                   >
