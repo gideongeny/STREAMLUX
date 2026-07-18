@@ -315,7 +315,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
               </div>
 
               {/* ── ELITE EXTERNAL CONTROL BAR ── */}
-              <div className={`flex items-center gap-6 px-4 py-3 rounded-[2rem] bg-[#1a1c22]/98 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-700 w-full mt-2 ${
+              <div className={`relative flex items-center gap-6 px-4 py-3 rounded-[2rem] bg-[#1a1c22]/98 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all duration-700 w-full mt-2 overflow-visible ${
                 isCinemaMode ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'
               }`}>
 
@@ -342,7 +342,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 </div>
 
                 {/* Center Section: Server Selection — Dropdown on mobile, scrollable row on desktop */}
-                <div className="flex-1 flex items-center justify-center overflow-hidden gap-2">
+                <div className="flex-1 flex items-center justify-center overflow-visible gap-2">
                   <div className="flex items-center gap-1.5 shrink-0 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10">
                     <FaServer size={11} className="text-primary" />
                     <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Server</span>
@@ -366,7 +366,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                               animate={{ opacity: 1, y: 0, scale: 1 }}
                               exit={{ opacity: 0, y: -8, scale: 0.95 }}
                               transition={{ duration: 0.15 }}
-                              className="absolute bottom-full left-0 mb-2 w-56 bg-[#111114] border border-white/10 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden z-50"
+                              className="absolute top-full left-0 mt-2 w-56 bg-[#111114] border border-white/10 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden z-[200]"
                             >
                               <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
                                 <FaServer size={11} className="text-primary" />
