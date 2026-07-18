@@ -3,6 +3,8 @@ import { FunctionComponent, useEffect, useState, useRef, useCallback } from "rea
 import { AiFillStar, AiTwotoneCalendar } from "react-icons/ai";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { BsChevronDown } from "react-icons/bs";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
 import { db } from "../../shared/firebase";
 import {
@@ -73,6 +75,8 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
+  const serverDropdownRef = useRef<HTMLDivElement>(null);
+  const [showServerDropdown, setShowServerDropdown] = useState(false);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!scrollRef.current) return;
@@ -98,6 +102,21 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     const x = e.pageX - scrollRef.current.offsetLeft;
     const walk = (x - startX.current) * 2; // Increase scroll speed
     scrollRef.current.scrollLeft = scrollLeft.current - walk;
+  }, []);
+
+  // Close server dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (serverDropdownRef.current && !serverDropdownRef.current.contains(e.target as Node)) {
+        setShowServerDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
   }, []);
 
 
@@ -322,36 +341,86 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                   )}
                 </div>
 
-                {/* Center Section: Server Selection — Full user control */}
+                {/* Center Section: Server Selection — Dropdown on mobile, scrollable row on desktop */}
                 <div className="flex-1 flex items-center justify-center overflow-hidden gap-2">
                   <div className="flex items-center gap-1.5 shrink-0 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10">
                     <FaServer size={11} className="text-primary" />
                     <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Server</span>
                   </div>
                   {sources.length > 0 ? (
-                    <div
-                      ref={scrollRef}
-                      className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide max-w-full px-1 cursor-grab select-none"
-                      onMouseDown={handleMouseDown}
-                      onMouseLeave={handleMouseLeave}
-                      onMouseUp={handleMouseUp}
-                      onMouseMove={handleMouseMove}
-                    >
-                      {sources.map((source: any, idx: number) => (
+                    <>
+                      {/* ── MOBILE: Dropdown ── */}
+                      <div ref={serverDropdownRef} className="relative md:hidden">
                         <button
-                          key={idx}
-                          onClick={() => setSelectedSourceIndex(idx)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-all text-[10px] font-black uppercase tracking-widest shrink-0 ${
-                            selectedSourceIndex === idx
-                              ? 'bg-primary text-black shadow-lg shadow-primary/30'
-                              : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'
-                          }`}
+                          onClick={() => setShowServerDropdown(!showServerDropdown)}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-black font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/30 transition-all"
                         >
-                          <FaServer size={10} className={selectedSourceIndex === idx ? 'text-black' : 'text-primary'} />
-                          {source.name || `Server ${idx + 1}`}
+                          <FaServer size={10} />
+                          {sources[selectedSourceIndex]?.name || `Server ${selectedSourceIndex + 1}`}
+                          <BsChevronDown size={10} className={`transition-transform duration-200 ${showServerDropdown ? 'rotate-180' : ''}`} />
                         </button>
-                      ))}
-                    </div>
+                        <AnimatePresence>
+                          {showServerDropdown && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute bottom-full left-0 mb-2 w-56 bg-[#111114] border border-white/10 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden z-50"
+                            >
+                              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+                                <FaServer size={11} className="text-primary" />
+                                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Select Server</span>
+                              </div>
+                              <div className="py-1.5 max-h-60 overflow-y-auto">
+                                {sources.map((source: any, idx: number) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() => { setSelectedSourceIndex(idx); setShowServerDropdown(false); }}
+                                    className={`w-full flex items-center justify-between px-4 py-3 text-xs transition-all ${
+                                      selectedSourceIndex === idx
+                                        ? 'text-primary bg-primary/10 font-bold'
+                                        : 'text-gray-300 hover:bg-white/5'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <FaServer size={10} className={selectedSourceIndex === idx ? 'text-primary' : 'text-gray-500'} />
+                                      <span className="font-black uppercase tracking-widest">{source.name || `Server ${idx + 1}`}</span>
+                                    </div>
+                                    {selectedSourceIndex === idx && <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(255,165,0,0.5)]" />}
+                                  </button>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* ── DESKTOP: Draggable scrollable row ── */}
+                      <div
+                        ref={scrollRef}
+                        className="hidden md:flex items-center gap-1.5 overflow-x-auto scrollbar-hide max-w-full px-1 cursor-grab select-none"
+                        onMouseDown={handleMouseDown}
+                        onMouseLeave={handleMouseLeave}
+                        onMouseUp={handleMouseUp}
+                        onMouseMove={handleMouseMove}
+                      >
+                        {sources.map((source: any, idx: number) => (
+                          <button
+                            key={idx}
+                            onClick={() => setSelectedSourceIndex(idx)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-all text-[10px] font-black uppercase tracking-widest shrink-0 ${
+                              selectedSourceIndex === idx
+                                ? 'bg-primary text-black shadow-lg shadow-primary/30'
+                                : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'
+                            }`}
+                          >
+                            <FaServer size={10} className={selectedSourceIndex === idx ? 'text-black' : 'text-primary'} />
+                            {source.name || `Server ${idx + 1}`}
+                          </button>
+                        ))}
+                      </div>
+                    </>
                   ) : (
                     <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5">
                        <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
