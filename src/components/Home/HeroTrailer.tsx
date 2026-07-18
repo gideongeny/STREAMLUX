@@ -11,7 +11,7 @@ interface HeroTrailerProps {
     fallbackImageUrl?: string; // Poster or backdrop to show if trailer fails
 }
 
-const TRAILER_PLAY_TIMEOUT_MS = 5000;
+const TRAILER_PLAY_TIMEOUT_MS = 10000;
 
 const HeroTrailer: FC<HeroTrailerProps> = ({
     mediaId,
@@ -80,6 +80,8 @@ const HeroTrailer: FC<HeroTrailerProps> = ({
                 // We pick the best YouTube trailer available
                 const trailer = videos.find(
                     (v: any) => v.type === "Trailer" && v.site === "YouTube"
+                ) || videos.find(
+                    (v: any) => v.type === "Teaser" && v.site === "YouTube"
                 );
 
                 if (trailer?.key) {

@@ -174,7 +174,8 @@ export const getMovieBannerInfo = async (movies: Item[]): Promise<BannerInfo[]> 
       
       const details = detailsRes.data;
       const videos = videosRes.data.results || [];
-      const trailer = videos.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key;
+      const trailer = videos.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key 
+                   || videos.find((v: any) => v.type === "Teaser" && v.site === "YouTube")?.key;
                    
       const logo = details.images?.logos?.find((l: any) => l.iso_639_1 === "en")?.file_path 
                 || details.images?.logos?.[0]?.file_path;
@@ -199,7 +200,8 @@ export const getTVBannerInfo = async (tvs: Item[]): Promise<BannerInfo[]> => {
 
       const details = detailsRes.data;
       const videos = videosRes.data.results || [];
-      const trailer = videos.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key;
+      const trailer = videos.find((v: any) => v.type === "Trailer" && v.site === "YouTube")?.key
+                   || videos.find((v: any) => v.type === "Teaser" && v.site === "YouTube")?.key;
 
       const logo = details.images?.logos?.find((l: any) => l.iso_639_1 === "en")?.file_path 
                 || details.images?.logos?.[0]?.file_path;

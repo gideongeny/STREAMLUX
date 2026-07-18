@@ -87,7 +87,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
                 <div className="relative w-full h-full">
                   {/* Poster image - always visible as base layer */}
                   <LazyLoadImage
-                    src={resizeImage(film.backdrop_path, "w1280")}
+                    src={resizeImage(film.backdrop_path || film.poster_path, "w1280")}
                     alt="Backdrop image"
                     effect="blur"
                     className="absolute inset-0 w-full h-full object-cover object-top md:object-center"
@@ -207,7 +207,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
                             </div>
                               {/* MovieBox Style Meta info overlay */}
                               <div className="flex items-center gap-3 text-gray-300 font-bold text-sm mb-4">
-                                <img src="/icons/tmdb.svg" alt="" className="w-5 h-5 grayscale opacity-70" />
+                                <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_1-5bdc75aaebeb75dc7ae79426ddd9be3b2be1e342510f8202baf6bffa71d7f5c4.svg" alt="TMDB" className="w-5 h-5 grayscale opacity-70" />
                                 <span>{film.release_date?.split('-')[0] || film.first_air_date?.split('-')[0] || "2026"}</span>
                                 <span className="w-1 h-1 rounded-full bg-gray-600" />
                                 <span className="text-xs uppercase tracking-widest">{dataDetail?.find(d => Number(d.id) === Number(film.id))?.genre?.[0]?.name || "Premium"}</span>
