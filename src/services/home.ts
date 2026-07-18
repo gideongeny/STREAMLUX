@@ -219,29 +219,13 @@ export const getHomeMovies = async (history: Item[]): Promise<HomeFilms> => {
   const endpoints = {
     Trending: "/trending/movie/day",
     Hot: "/movie/popular",
-    Action: "/discover/movie?with_genres=28",
-    Comedy: "/discover/movie?with_genres=35",
-    Horror: "/discover/movie?with_genres=27",
-    SciFi: "/discover/movie?with_genres=878",
-    Drama: "/discover/movie?with_genres=18",
-    Romance: "/discover/movie?with_genres=10749",
-    Animation: "/discover/movie?with_genres=16",
-    Family: "/discover/movie?with_genres=10751",
-    Crime: "/discover/movie?with_genres=80",
-    Mystery: "/discover/movie?with_genres=9648",
-    Documentary: "/discover/movie?with_genres=99",
-    War: "/discover/movie?with_genres=10752",
-    History: "/discover/movie?with_genres=36",
-    Music: "/discover/movie?with_genres=10402",
-    Western: "/discover/movie?with_genres=37",
-    TVMovies: "/discover/movie?with_genres=10770",
   };
 
   const results: HomeFilms = {};
   const seenIds = new Set<string | number>();
 
   // Fetch YouTube content in parallel for all genres
-  const keysToFetch = ["Trending", "Hot", "Action", "Comedy", "Horror", "SciFi", "Drama", "Romance", "Animation", "Family", "Crime", "Mystery", "Documentary", "War", "History", "Music", "Western", "TVMovies"];
+  const keysToFetch = ["Trending", "Hot"];
   
   const ytFetchPromises = keysToFetch.map(key => {
     if (key === "Trending" || key === "Hot") return getYouTubeMovies().catch(() => []);
@@ -272,7 +256,7 @@ export const getHomeMovies = async (history: Item[]): Promise<HomeFilms> => {
   }
 
   const keys = Object.keys(endpoints);
-  const chunks = [keys.slice(0, 6), keys.slice(6, 12), keys.slice(12)];
+  const chunks = [keys];
 
   for (const chunk of chunks) {
     await new Promise((r) => setTimeout(r, 300));
@@ -321,28 +305,13 @@ export const getHomeTVs = async (history: Item[]): Promise<HomeFilms> => {
   const endpoints = {
     Trending: "/trending/tv/day",
     Hot: "/tv/popular",
-    Action: "/discover/tv?with_genres=10759",
-    Animation: "/discover/tv?with_genres=16",
-    Comedy: "/discover/tv?with_genres=35",
-    Crime: "/discover/tv?with_genres=80",
-    Documentary: "/discover/tv?with_genres=99",
-    Drama: "/discover/tv?with_genres=18",
-    Family: "/discover/tv?with_genres=10751",
-    Kids: "/discover/tv?with_genres=10762",
-    Mystery: "/discover/tv?with_genres=9648",
-    News: "/discover/tv?with_genres=10763",
-    Reality: "/discover/tv?with_genres=10764",
-    SciFi: "/discover/tv?with_genres=10765",
-    Soap: "/discover/tv?with_genres=10766",
-    Talk: "/discover/tv?with_genres=10767",
-    War: "/discover/tv?with_genres=10768",
   };
 
   const results: HomeFilms = {};
   const seenIds = new Set<string | number>();
 
   // Fetch YouTube TV Shows in parallel for all genres
-  const keysToFetch = ["Trending", "Hot", "Action", "Animation", "Comedy", "Crime", "Documentary", "Drama", "Family", "Kids", "Mystery", "News", "Reality", "SciFi", "Soap", "Talk", "War"];
+  const keysToFetch = ["Trending", "Hot"];
   
   const ytFetchPromises = keysToFetch.map(key => {
     if (key === "Trending" || key === "Hot") return getYouTubeTVShows().catch(() => []);
@@ -371,7 +340,7 @@ export const getHomeTVs = async (history: Item[]): Promise<HomeFilms> => {
   }
 
   const keys = Object.keys(endpoints);
-  const chunks = [keys.slice(0, 6), keys.slice(6, 12), keys.slice(12)];
+  const chunks = [keys];
 
   for (const chunk of chunks) {
     await new Promise((r) => setTimeout(r, 300));

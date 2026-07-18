@@ -256,7 +256,7 @@ const VylaDownload: React.FC<VylaDownloadProps> = ({
           </button>
 
           {isOpen && (
-            <div className="absolute right-0 top-full mt-1 w-64 bg-[#111114] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+            <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1 w-64 bg-[#111114] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
               <div className="p-1.5">{panelContent}</div>
             </div>
           )}
@@ -288,7 +288,7 @@ const VylaDownload: React.FC<VylaDownloadProps> = ({
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-full mt-2 w-72 bg-[#111114] border border-white/10 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden z-50">
+          <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-72 bg-[#111114] border border-white/10 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] overflow-hidden z-50">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <AiOutlineDownload className="text-primary" size={16} />

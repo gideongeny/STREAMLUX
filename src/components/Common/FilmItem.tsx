@@ -117,7 +117,6 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
         placeholder={<div className={`w-full ${item.media_type === 'sports_video' ? 'aspect-video' : 'aspect-[2/3]'} bg-dark-lighten rounded-md animate-pulse`} />}
       >
         <motion.div
-          whileTap={{ scale: 0.95 }}
           style={{
             rotateX: !isNative && isFullyHovered ? rotateX : 0,
             rotateY: !isNative && isFullyHovered ? rotateY : 0,
@@ -127,7 +126,7 @@ const FilmItem: FunctionComponent<FilmItemProps> = ({ item }) => {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           layoutId={isNative ? undefined : `item-${item.id}`}
-          className="shadow-cinema-card bg-cinema-charcoal pb-2 rounded-cinema overflow-hidden transition-all duration-500 ease-cinema relative group hover:shadow-cinema-hover hover:border-primary/20 will-change-transform border border-white/[0.04]"
+          className="shadow-cinema-card bg-cinema-charcoal pb-2 rounded-cinema overflow-hidden transition-all duration-500 ease-cinema relative group hover:shadow-cinema-hover hover:border-primary/20 will-change-transform border border-white/[0.04] active:scale-95"
         >
           {/* Moving Glossy Highlight - Disabled on native for perf */}
           {!isNative && (
