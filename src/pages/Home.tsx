@@ -233,30 +233,7 @@ const Home: FC = () => {
     });
   };
 
-  const handleSwipeTouchStart = (e: React.TouchEvent) => {
-    swipeStartRef.current = {
-      x: e.touches[0]?.clientX ?? 0,
-      y: e.touches[0]?.clientY ?? 0,
-      time: Date.now(),
-    };
-  };
 
-  const handleSwipeTouchEnd = (e: React.TouchEvent) => {
-    // Only allow swiping between Movies and TV Shows. 
-    // If the user is on Sports, Live TV, or Music, disable swiping.
-    if (currentTab !== 'tv' && currentTab !== 'movie') return;
-
-    const dx = (e.changedTouches[0]?.clientX ?? 0) - swipeStartRef.current.x;
-    const dy = (e.changedTouches[0]?.clientY ?? 0) - swipeStartRef.current.y;
-    const dt = Date.now() - swipeStartRef.current.time;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 400) {
-      const idx = HOME_TABS.indexOf(currentTab);
-      handleTabChange(dx < 0
-        ? HOME_TABS[(idx + 1) % HOME_TABS.length]
-        : HOME_TABS[(idx - 1 + HOME_TABS.length) % HOME_TABS.length]
-      );
-    }
-  };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -291,7 +268,7 @@ const Home: FC = () => {
       <TopSearchBar activeTab={currentTab} onSearch={setSearchQuery} />
       <AmbientGlow imageUrl={activeGlowImage} activeBrand={activeBrand} />
 
-      <div className="flex items-start relative max-w-full overflow-x-hidden" onTouchStart={handleSwipeTouchStart} onTouchEnd={handleSwipeTouchEnd}>
+      <div className="flex items-start relative max-w-full overflow-x-hidden">
         <div 
           className={`flex-grow md:pt-24 pt-16 pb-7 md:px-[2vw] px-[4vw] min-h-screen bg-cinema-black relative z-0 overflow-x-hidden transition-all duration-700 ease-cinema`}
           style={{ 
