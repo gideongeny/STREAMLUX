@@ -342,7 +342,7 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
                 </div>
 
                 {/* Center Section: Server Selection — Dropdown on mobile, scrollable row on desktop */}
-                <div className="flex-1 flex items-center justify-center overflow-visible gap-2">
+                <div className="flex-1 min-w-0 flex items-center justify-center overflow-visible gap-2">
                   <div className="flex items-center gap-1.5 shrink-0 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10">
                     <FaServer size={11} className="text-primary" />
                     <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Server</span>
