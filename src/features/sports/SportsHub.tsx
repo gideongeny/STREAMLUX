@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { SportMatch } from './types';
 import MatchCard from './MatchCard';
+import { MdSportsSoccer, MdSportsBasketball, MdSportsBaseball, MdSportsFootball, MdSportsHockey, MdSportsMotorsports, MdSportsKabaddi, MdSportsRugby, MdSportsTennis, MdSportsCricket, MdLocalFireDepartment } from "react-icons/md";
 import { SportsFixtureConfig } from '../../shared/constants';
 import { getWatchFootyLive, getWatchFootyScheduled, watchfootyToSportMatch } from '../../services/watchfootyAPI';
 
@@ -36,18 +37,19 @@ const SportsHub: React.FC<SportsHubProps> = ({ searchQuery = "" }) => {
   const [liveOnly, setLiveOnly] = useState(false);
   const [activeCategory, setActiveCategory] = useState('Home');
 
+
   const categories = [
-    { id: 'Home', name: 'Home', icon: '🔥' },
-    { id: 'Football', name: 'Football', icon: '⚽' },
-    { id: 'Basketball', name: 'Basketball', icon: '🏀' },
-    { id: 'Baseball', name: 'Baseball', icon: '⚾' },
-    { id: 'American Football', name: 'American Football', icon: '🏈' },
-    { id: 'Ice Hockey', name: 'Hockey', icon: '🏒' },
-    { id: 'Motorsport', name: 'Racing', icon: '🏎️' },
-    { id: 'Fighting', name: 'Fighting', icon: '🥊' },
-    { id: 'Rugby', name: 'Rugby', icon: '🏉' },
-    { id: 'Tennis', name: 'Tennis', icon: '🎾' },
-    { id: 'Cricket', name: 'Cricket', icon: '🏏' },
+    { id: 'Home', name: 'Home', icon: <MdLocalFireDepartment size={16} className="text-primary" /> },
+    { id: 'Football', name: 'Football', icon: <MdSportsSoccer size={16} /> },
+    { id: 'Basketball', name: 'Basketball', icon: <MdSportsBasketball size={16} /> },
+    { id: 'Baseball', name: 'Baseball', icon: <MdSportsBaseball size={16} /> },
+    { id: 'American Football', name: 'American Football', icon: <MdSportsFootball size={16} /> },
+    { id: 'Ice Hockey', name: 'Hockey', icon: <MdSportsHockey size={16} /> },
+    { id: 'Motorsport', name: 'Racing', icon: <MdSportsMotorsports size={16} /> },
+    { id: 'Fighting', name: 'Fighting', icon: <MdSportsKabaddi size={16} /> },
+    { id: 'Rugby', name: 'Rugby', icon: <MdSportsRugby size={16} /> },
+    { id: 'Tennis', name: 'Tennis', icon: <MdSportsTennis size={16} /> },
+    { id: 'Cricket', name: 'Cricket', icon: <MdSportsCricket size={16} /> },
   ];
 
   useEffect(() => {

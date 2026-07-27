@@ -20,7 +20,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     {
         id: '1',
         type: 'new_release',
-        title: '🎬 New Release Today',
+        title: 'New Release Today',
         body: 'Highly anticipated titles are now streaming on StreamLux.',
         time: '2 min ago',
         read: false,
@@ -29,7 +29,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     {
         id: '2',
         type: 'sports',
-        title: '⚽ Match Starting Soon',
+        title: 'Match Starting Soon',
         body: 'Premier League: Liverpool vs Man City kicks off in 30 minutes.',
         time: '5 min ago',
         read: false,
@@ -38,7 +38,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     {
         id: '3',
         type: 'trending',
-        title: '🔥 Trending Right Now',
+        title: 'Trending Right Now',
         body: '10 titles are going viral globally. See what everyone is watching.',
         time: '1 hr ago',
         read: true,
@@ -47,7 +47,7 @@ const DEMO_NOTIFICATIONS: Notification[] = [
     {
         id: '4',
         type: 'reminder',
-        title: '📅 New Episodes Available',
+        title: 'New Episodes Available',
         body: 'Your saved shows have new episodes ready to binge.',
         time: '3 hrs ago',
         read: true,
@@ -66,9 +66,9 @@ const NotificationBell: FC<NotificationBellProps> = ({ position = 'left' }) => {
         if (existing.length === 0) {
             // Seed with elite defaults
             const defaults: HubNotification[] = [
-                { id: 'e1', type: 'new_release', title: '🎬 Released Today: The Super Mario Movie', body: 'The galaxy awaits! Experience the magic of Mario & Luigi now.', time: 'Just now', read: false },
-                { id: 'e2', type: 'trending', title: '🔥 Trending: John Wick: Chapter 4', body: 'Action movie fans are hailing this as a masterpiece. Join the buzz.', time: '1 hr ago', read: false },
-                { id: 'e3', type: 'sports', title: '⚽ Champions League Final', body: 'Real Madrid vs Man City. Tactical breakdown and highlights ready.', time: '3 hrs ago', read: true }
+                { id: 'e1', type: 'new_release', title: 'Released Today: The Super Mario Movie', body: 'The galaxy awaits! Experience the magic of Mario & Luigi now.', time: 'Just now', read: false },
+                { id: 'e2', type: 'trending', title: 'Trending: John Wick: Chapter 4', body: 'Action movie fans are hailing this as a masterpiece. Join the buzz.', time: '1 hr ago', read: false },
+                { id: 'e3', type: 'sports', title: 'Champions League Final', body: 'Real Madrid vs Man City. Tactical breakdown and highlights ready.', time: '3 hrs ago', read: true }
             ];
             // Don't save to storage yet, just for first view or let hub handle it
             return defaults;

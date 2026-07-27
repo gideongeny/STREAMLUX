@@ -37,9 +37,9 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: true,
-      refetchOnMount: true,        // Refresh when navigating back to a page
-      staleTime: 1000 * 10,       // 10 seconds — data stays "fresh" briefly
-      cacheTime: 1000 * 60 * 30,  // 30 min — keep in memory for cleanup
+      refetchOnMount: false,       // Prevent refetching simply because the user navigated back
+      staleTime: 1000 * 60 * 5,   // 5 minutes — data stays fresh
+      cacheTime: 1000 * 60 * 60,  // 1 hour — keep in memory for cleanup
     },
   },
 });

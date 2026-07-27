@@ -350,53 +350,58 @@ const Profile: FunctionComponent<ProfileProps> = () => {
               </div>
 
               {firebaseUser && (
-                <div className="mt-12 bg-white/5 p-6 rounded-3xl border border-white/5 mb-20">
-                  <h3 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Security Controls</h3>
-                  <EmailVerification setIsUpdating={setIsUpdating} />
+                <div className="mt-12 group relative overflow-hidden bg-gradient-to-br from-white/[0.03] to-transparent p-8 rounded-[40px] border border-white/5 transition-all hover:border-white/10 shadow-premium-lg">
+                  <h3 className="text-white text-xl font-black mb-6 uppercase tracking-tighter flex items-center gap-3">
+                    <span className="w-8 h-1 bg-red-500 rounded-full" />
+                    Security Controls
+                  </h3>
+                  <div className="space-y-6">
+                    <EmailVerification setIsUpdating={setIsUpdating} />
 
-                  <Password
-                    onShowPromptReAuthForPassword={() =>
-                      setIsShowPromptReAuthFor("password")
-                    }
-                    isUpdatedPassword={isUpdatedPassword}
-                    setIsUpdatedPassword={setIsUpdatedPassword}
-                    newPasswordValueRef={newPasswordValueRef}
-                  />
+                    <Password
+                      onShowPromptReAuthForPassword={() =>
+                        setIsShowPromptReAuthFor("password")
+                      }
+                      isUpdatedPassword={isUpdatedPassword}
+                      setIsUpdatedPassword={setIsUpdatedPassword}
+                      newPasswordValueRef={newPasswordValueRef}
+                    />
 
                     <DeleteAccount
-                    onShowPromptReAuthForDeleteAccount={() =>
-                      setIsShowPromptReAuthFor("delete")
-                    }
-                  />
+                      onShowPromptReAuthForDeleteAccount={() =>
+                        setIsShowPromptReAuthFor("delete")
+                      }
+                    />
+                  </div>
                 </div>
               )}
 
-              {/* General Information Section migrated from legacy sidebar */}
-              <div className="mt-12 mb-20">
-                <h2 className="text-white text-2xl font-black uppercase tracking-tighter mb-4 flex items-center gap-3">
+              {/* General Information Section */}
+              <div className="mt-12 mb-20 group relative overflow-hidden bg-gradient-to-br from-white/[0.02] to-transparent p-8 rounded-[40px] border border-white/5">
+                <h2 className="text-white text-2xl font-black uppercase tracking-tighter mb-6 flex items-center gap-3">
                   <span className="w-8 h-1 bg-gray-500 rounded-full" />
                   General & Legal
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                  <a href="https://github.com/STREAMLUX/STREAMLUX" target="_blank" rel="noreferrer" className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl border border-white/5 transition flex flex-col gap-1">
-                    <span className="text-white font-bold text-sm">Check for Updates</span>
+                  <a href="https://github.com/STREAMLUX/STREAMLUX" target="_blank" rel="noreferrer" className="bg-white/5 hover:bg-white/10 p-5 rounded-3xl border border-white/5 hover:border-white/20 transition-all duration-300 flex flex-col gap-1 hover:scale-[1.02]">
+                    <span className="text-white font-black text-sm uppercase tracking-widest">Check for Updates</span>
                     <span className="text-gray-500 text-xs">Visit Official Website</span>
                   </a>
-                  <Link to="/ai" className="bg-white/5 hover:bg-primary/20 p-4 rounded-2xl border border-white/5 hover:border-primary/50 transition flex flex-col gap-1">
-                    <span className="text-primary font-bold text-sm">Genius AI Assistant</span>
-                    <span className="text-gray-500 text-xs">AI Powered Discoveries</span>
+                  <Link to="/ai" className="bg-gradient-to-br from-primary/10 to-transparent hover:from-primary/20 p-5 rounded-3xl border border-primary/20 hover:border-primary/50 transition-all duration-300 flex flex-col gap-1 hover:scale-[1.02] shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                    <span className="text-primary font-black text-sm uppercase tracking-widest">Genius AI Assistant</span>
+                    <span className="text-primary/60 text-xs font-bold">AI Powered Discoveries</span>
                   </Link>
-                  <a href="https://g.co/kgs/4nLpS2q" target="_blank" rel="noreferrer" className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl border border-white/5 transition flex flex-col gap-1">
-                    <span className="text-white font-bold text-sm">Find us on Google</span>
+                  <a href="https://g.co/kgs/4nLpS2q" target="_blank" rel="noreferrer" className="bg-white/5 hover:bg-white/10 p-5 rounded-3xl border border-white/5 hover:border-white/20 transition-all duration-300 flex flex-col gap-1 hover:scale-[1.02]">
+                    <span className="text-white font-black text-sm uppercase tracking-widest">Find us on Google</span>
                     <span className="text-gray-500 text-xs">Leave a review</span>
                   </a>
-                  <a href="https://doc-hosting.flycricket.io/streamlux-privacy-policy/98a39151-51de-4674-8d4e-0309990e796e/privacy" target="_blank" rel="noreferrer" className="bg-white/5 hover:bg-white/10 p-4 rounded-2xl border border-white/5 transition flex flex-col gap-1">
-                    <span className="text-white font-bold text-sm">Privacy Policy</span>
+                  <a href="https://doc-hosting.flycricket.io/streamlux-privacy-policy/98a39151-51de-4674-8d4e-0309990e796e/privacy" target="_blank" rel="noreferrer" className="bg-white/5 hover:bg-white/10 p-5 rounded-3xl border border-white/5 hover:border-white/20 transition-all duration-300 flex flex-col gap-1 hover:scale-[1.02]">
+                    <span className="text-white font-black text-sm uppercase tracking-widest">Privacy Policy</span>
                     <span className="text-gray-500 text-xs">User Agreement</span>
                   </a>
                 </div>
-                <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
-                  <p className="text-red-400 font-bold text-xs uppercase mb-1 tracking-widest">Disclaimer</p>
+                <div className="mt-8 p-6 bg-red-500/5 border border-red-500/10 rounded-3xl">
+                  <p className="text-red-400 font-black text-[10px] uppercase mb-2 tracking-widest">Disclaimer</p>
                   <p className="text-gray-400 text-xs leading-relaxed">
                     StreamLux does not store any files on our server, we only linked to the media which is hosted on 3rd party services.
                   </p>

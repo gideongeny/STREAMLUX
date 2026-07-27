@@ -32,6 +32,11 @@ const COLLECTION_IDS = [
   8650,   // Transformers
   404609, // John Wick
   2980,   // Shrek
+  1733,   // The Mummy Collection
+  304,    // Ocean's Collection
+  1575,   // Rocky Collection
+  131294, // Ant-Man
+  434424, // Deadpool
 ];
 
 const CACHE_KEY = "streamlux_collections_v1";
@@ -60,7 +65,7 @@ const CollectionsSlider: FC = () => {
       for (let i = 0; i < COLLECTION_IDS.length; i += BATCH_SIZE) {
         const batch = COLLECTION_IDS.slice(i, i + BATCH_SIZE);
         const batchResults = await Promise.all(batch.map((id) => getTMDBCollection(id)));
-        batchResults.filter(Boolean).forEach((c) => found.push(c));
+        batchResults.filter(Boolean).filter(c => c.parts && c.parts.length >= 2).forEach((c) => found.push(c));
         if (found.length > 0) {
           setCollections([...found]);
           setLoading(false);

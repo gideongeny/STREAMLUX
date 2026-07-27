@@ -10,11 +10,7 @@ import MainHomeFilm from "../components/Home/MainHomeFilm";
 import DiverseNavigation from "../components/Common/DiverseNavigation";
 import DiverseContent from "../components/Home/DiverseContent";
 import CinematicMoments from "../components/Home/CinematicMoments";
-import SportsChannelsCarousel from "../components/Sports/SportsChannelsCarousel";
 import SportsHub from "../features/sports/SportsHub";
-import LiveSportsTicker from "../components/Sports/LiveSportsTicker";
-import LiveTVTicker from "../components/LiveTV/LiveTVTicker";
-import FeaturedLiveStreams from "../components/LiveTV/FeaturedLiveStreams";
 import LiveTVHub from "../features/livetv/LiveTVHub";
 import MusicHub from "../features/music/MusicHub";
 import ContinueWatching from "../components/Home/ContinueWatching";
@@ -98,7 +94,7 @@ const Home: FC = () => {
 
   const swipeStartRef = useRef({ x: 0, y: 0, time: 0 });
 
-  // Read active brand from URL \u2014 safe
+  // Read active brand from URL — safe
   const activeBrand = (() => {
     try {
       return new URLSearchParams(location.search).get("brand");
@@ -202,7 +198,7 @@ const Home: FC = () => {
     vote_average: 0,
   }));
 
-  // Always fetch both tabs eagerly \u2014 Keep-Alive: data is ready instantly when switching
+  // Always fetch both tabs eagerly — Keep-Alive: data is ready instantly when switching
   const {
     data: dataMovie,
     isLoading: isLoadingMovie,
@@ -447,7 +443,6 @@ const Home: FC = () => {
 
                     {currentTab === 'sports' && (
                       <div className="mt-6 flex flex-col">
-                        <SportsChannelsCarousel />
                         <div className="mt-4">
                           <SportsHub searchQuery={searchQuery} />
                         </div>

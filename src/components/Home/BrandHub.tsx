@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper";
 import "swiper/css";
+import { MdMovie } from "react-icons/md";
 
 const BRANDS = [
   {
@@ -90,8 +91,13 @@ const BrandCard: FC<BrandCardProps> = ({ brand, onClick }) => {
 
   const handleMouseEnter = () => {
     if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
+      // Ensure the promise is handled correctly to avoid "The play() request was interrupted"
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Auto-play was prevented
+        });
+      }
     }
   };
 
@@ -170,8 +176,9 @@ const BrandHub: FC<BrandHubProps> = ({ className }) => {
     <div className={`py-6 md:py-10 ${className || ""}`}>
       <div className="flex items-center justify-between mb-4 md:mb-6 px-4 md:px-0">
         <div>
-          <h2 className="text-lg md:text-2xl font-black text-white tracking-tighter uppercase">
-            🎬 Brand <span className="text-primary">Universe</span>
+          <h2 className="text-lg md:text-2xl font-black text-white tracking-tighter uppercase flex items-center gap-2">
+            <MdMovie className="text-primary text-2xl md:text-3xl" />
+            Brand <span className="text-primary">Universe</span>
           </h2>
           <p className="text-gray-400 text-[10px] md:text-xs mt-0.5 md:mt-1">
             Featured Studios • Automatic Discovery

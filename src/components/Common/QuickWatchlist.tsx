@@ -57,7 +57,7 @@ const QuickWatchlist: FC<QuickWatchlistProps> = ({ item, className = '', size = 
                 position: 'bottom-right',
                 autoClose: 2000,
                 hideProgressBar: true,
-                icon: '🎬',
+                icon: '▶',
             });
         } else {
             toast.info(`Removed from Watchlist`, {
