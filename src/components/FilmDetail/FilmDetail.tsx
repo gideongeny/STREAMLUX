@@ -246,7 +246,11 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
 
       <ToastContainer />
 
-      <div className="flex flex-col md:flex-row">
+      <div className="flex flex-col md:flex-row relative w-full pb-10">
+        {/* SEAMLESS BOTTOM BACKGROUND */}
+        <div className="absolute top-[40vh] md:top-[60vh] left-0 right-0 h-[30vh] bg-gradient-to-b from-transparent to-[#111114] z-[-1] pointer-events-none"></div>
+        <div className="absolute top-[70vh] md:top-[90vh] left-0 right-0 bottom-0 bg-[#111114] z-[-1] pointer-events-none"></div>
+
         {!isMobile && <SidebarMini />}
         {isMobile && (
           <Sidebar
@@ -480,9 +484,9 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
           )}
 
           {/* DETAIL INFORMATION */}
-          <div className="flex z-20 relative flex-col md:flex-row mt-10 md:mt-16 bg-gradient-to-b from-transparent via-dark/90 to-dark pt-10">
+          <div className="flex z-20 relative flex-col md:flex-row mt-10 md:mt-16 pt-10">
             {!isMobile && (
-              <div className="shrink-0 md:max-w-[150px] w-full flex items-center md:flex-col justify-center flex-row gap-20 mt-20 md:border-r border-dark-lighten pt-16">
+              <div className="shrink-0 md:max-w-[150px] w-full flex items-center md:flex-col justify-center flex-row gap-20 mt-20 pt-16">
                 <div className="flex flex-col gap-6 items-center">
                   <p className="text-white/40 font-black text-xs uppercase tracking-[0.2em]">RATING</p>
                   {!isMobile && (
@@ -558,7 +562,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
               </div>
             )}
 
-            <div className="flex-grow min-h-[500px] md:border-r border-dark-lighten md:px-16 px-5 md:py-7 pt-40">
+            <div className="flex-grow min-h-[500px] md:px-16 px-5 md:py-7 pt-40">
               {/* {!detail && <Skeleton className="w-full h-[500px]" />} */}
               <FilmTabInfo detail={detail} {...others} />
             </div>
@@ -642,7 +646,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
           </div>
         </div>
 
-        <div className="shrink-0 md:max-w-[310px] w-full relative px-6 md:mt-0 pt-[40vh] md:pt-[60vh] bg-gradient-to-b from-transparent via-dark/90 to-dark">
+        <div className="shrink-0 md:max-w-[310px] w-full relative px-6 md:mt-0 pt-[40vh] md:pt-[60vh]">
           {!isMobile && <SearchBox />}
           {/* <RecommendGenres /> */}
           <RightbarFilms
@@ -654,8 +658,9 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
           />
         </div>
       </div>
-
-      <Footer />
+      <div className="bg-[#111114] relative z-20 mt-[-2px]">
+        <Footer />
+      </div>
     </>
   );
 };
