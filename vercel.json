@@ -2,6 +2,29 @@
   "installCommand": "npm install --include=optional",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://vidsrc.me https://vidsrc.to https://vidsrc.cc https://vidsrc.pro https://vidsrc.xyz https://vidsrc.vip https://vidlink.pro https://vidking.net https://embed.su https://autoembed.cc https://embed.smashystream.com https://www.2embed.cc https://multiembed.mov https://vidnest.fun https://toustream.xyz https://indraembed.netlify.app https://meowtv.vercel.app https://player.embed-api.stream https://dropfile.cc https://moviesapi.club; connect-src 'self' https:; font-src 'self' https:; worker-src 'self' blob:;"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Cross-Origin-Embedder-Policy",
+          "value": "unsafe-none"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!api/).*)",
