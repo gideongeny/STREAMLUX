@@ -570,8 +570,6 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
               </div>
             </div>
           </div>
-
-          <Footer />
         </div>
 
       </div>

@@ -658,9 +658,6 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
           />
         </div>
       </div>
-      <div className="bg-[#111114] relative z-20 mt-[-2px]">
-        <Footer />
-      </div>
     </>
   );
 };
