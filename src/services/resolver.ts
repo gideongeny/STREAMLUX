@@ -298,7 +298,15 @@ export class ResolverService {
         const tmdbId = id.toString();
 
         sources.push(
-            // T1 - VidKing default (most reliable embed)
+            // T1 - VidSrc.me (PRIMARY — set as first server per user preference)
+            {
+                name: "VidSrc.me",
+                url: mediaType === "movie"
+                    ? `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`
+                    : `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${season || 1}&episode=${episode || 1}`,
+                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: -2
+            },
+            // T2 - VidKing
             {
                 name: "VidKing",
                 url: mediaType === "movie"
@@ -306,14 +314,7 @@ export class ResolverService {
                     : `https://vidking.net/embed/tv/${tmdbId}/${season || 1}/${episode || 1}`,
                 quality: "4K/1080p", speed: "fast", status: "active", type: "embed", priority: -1
             },
-            // T2 - VidSrc family
-            {
-                name: "VidSrc.me",
-                url: mediaType === "movie"
-                    ? `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`
-                    : `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${season || 1}&episode=${episode || 1}`,
-                quality: "1080p", speed: "fast", status: "active", type: "embed", priority: 3
-            },
+            // T3 - VidSrc family
             {
                 name: "VidSrc",
                 url: mediaType === "movie"

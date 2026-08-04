@@ -160,8 +160,11 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
           quality: s.quality,
           type: s.type
         })));
+        // Default to VidSrc.me — the preferred first server
+        const vidSrcMeIdx = resolved.findIndex(s => s.name === 'VidSrc.me');
         const vidKingIdx = resolved.findIndex(s => s.name === 'VidKing');
-        setSelectedSourceIndex(vidKingIdx >= 0 ? vidKingIdx : 0);
+        const defaultIdx = vidSrcMeIdx >= 0 ? vidSrcMeIdx : vidKingIdx >= 0 ? vidKingIdx : 0;
+        setSelectedSourceIndex(defaultIdx);
       } catch (error) {
         console.error("Failed to resolve sources:", error);
         setSources([]);
