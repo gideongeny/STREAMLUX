@@ -235,7 +235,7 @@ const Home: FC = () => {
     const hour = new Date().getHours();
     if (hour < 12) return { text: "Good Morning", mood: "🌅 Morning Boost" };
     if (hour < 18) return { text: "Good Afternoon", mood: "☀️ Daily Hits" };
-    if (hour < 22) return { text: "Good Evening", mood: "🎬 Prime Time" };
+    if (hour < 22) return { text: "Good Evening", mood: "Prime Time" };
     return { text: "Late Night", mood: "🌙 Night Cinephile" };
   };
 

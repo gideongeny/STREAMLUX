@@ -258,15 +258,17 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
         <div className="flex-grow min-h-screen">
           {/* BACKDROP AND GENERAL INFORMATION */}
           {!detail && (
-            <Skeleton className="h-[400px] rounded-bl-2xl "></Skeleton>
+            <Skeleton className="h-[400px] rounded-bl-2xl relative z-10"></Skeleton>
           )}
           {detail && (
-            <div
-              style={{
-                backgroundImage: `url(${resizeImage(detail.backdrop_path)})`,
-              }}
-              className="bg-cover bg-center bg-no-repeat md:h-[400px] h-[300px] rounded-bl-2xl relative overflow-hidden"
-            >
+            <>
+              {/* FIXED CINEMATIC BACKGROUND */}
+              <div className="fixed inset-0 z-0 overflow-hidden bg-dark">
+                <div 
+                  className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
+                  style={{ backgroundImage: `url(${resizeImage(detail.backdrop_path, "original")})` }}
+                />
+                <div className="absolute inset-0 opacity-60">
               {/* Auto-playing Trailer Backdrop - World-Class Feature */}
               <HeroTrailer
                 mediaId={isNaN(Number(detail.id)) ? undefined : Number(detail.id)}
@@ -277,8 +279,15 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                 fallbackImageUrl={detail.backdrop_path || detail.poster_path}
               />
 
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-dark/90 via-dark/40 to-transparent" />
+              </div>
+
+              {/* FOREGROUND CONTENT */}
+              <div className="relative z-10 pt-[15vh] md:pt-[25vh] pb-10">
               {/* Mute/Unmute Toggle - Detail Page Overlay */}
-              <div className="absolute bottom-6 right-6 z-50">
+              <div className="absolute top-10 right-6 z-50">
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -291,8 +300,8 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                 </motion.button>
               </div>
 
-              <div className="bg-gradient-to-br from-transparent to-black/70 h-full rounded-bl-2xl relative z-10">
-                <div className="flex flex-col md:flex-row bottom-[-40%] md:bottom-[-20%]  items-start tw-absolute-center-horizontal w-full max-w-[1000px]">
+              <div className="w-full relative z-10 px-4 md:px-0">
+                <div className="flex flex-col md:flex-row items-start tw-absolute-center-horizontal w-full max-w-[1000px]">
                   {/* POSTER */}
                   <div className="flex flex-col md:flex-row gap-5 items-start md:items-center">
                     <div className="shrink-0 w-[185px] ml-3 md:ml-0">
@@ -483,7 +492,8 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                   )}
                 </div>
               </div>
-            </div>
+              </div>
+            </>
           )}
 
           {/* DETAIL INFORMATION */}

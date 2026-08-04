@@ -66,7 +66,7 @@ const ComingSoonSlider: FC = () => {
 
     return (
         <SectionSlider
-            title="🎬 Coming Soon"
+            title="Coming Soon"
             films={data}
         />
     );

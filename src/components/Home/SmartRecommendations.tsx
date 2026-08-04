@@ -50,7 +50,7 @@ const SmartRecommendations: FC = () => {
         <ErrorBoundary fallback={null}>
             <div className="mt-8">
                 <SectionSlider
-                    title="✨ Because You Watched"
+                    title="Because You Watched"
                     films={recommendations}
                     isLoading={isLoading}
                     limitNumber={15}

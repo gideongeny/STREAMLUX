@@ -6,7 +6,7 @@ interface SeasonalBannerProps {
 
 const SeasonalBanner: React.FC<SeasonalBannerProps> = ({ onSelectCategory }) => {
     const seasons = [
-        { id: 'trending', label: '🔥 Trending Now', query: 'trending movies 2024' },
+        { id: 'trending', label: 'Trending Now', query: 'trending movies 2024' },
         { id: 'holiday', label: '🎄 Holiday Specials', query: 'christmas movies' },
         { id: 'action', label: '💥 High Octane Action', query: 'action movies 2024' },
         { id: 'horror', label: '👻 Spooky Season', query: 'horror movies' },

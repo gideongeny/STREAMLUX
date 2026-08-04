@@ -246,14 +246,26 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
     <>
       <Title value={`Watch: ${title} | StreamLux`} />
 
-      <div className={`flex relative min-h-screen bg-dark-lighten transition-colors duration-1000 ${isCinemaMode ? 'bg-[#050505]' : 'bg-dark-lighten'}`}>
+      <div className={`flex relative min-h-screen transition-colors duration-1000 ${isCinemaMode ? 'bg-[#050505]' : 'bg-transparent'}`}>
+
+        {/* FIXED CINEMATIC BACKGROUND */}
+        {!isCinemaMode && (
+          <div className="fixed inset-0 z-0 overflow-hidden bg-dark-lighten">
+            <div 
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
+              style={{ backgroundImage: `url(${resizeImage(poster || "", "original")})` }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-dark-lighten via-dark-lighten/90 to-dark-lighten/50" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
+          </div>
+        )}
 
         <Sidebar
           isSidebarActive={isSidebarActive}
           onCloseSidebar={() => setIsSidebarActive(false)}
         />
 
-        <div className="flex-grow min-w-0 pt-14 md:pt-0">
+        <div className="flex-grow min-w-0 pt-14 md:pt-0 relative z-10">
 
           <div className={`md:hidden fixed top-0 left-0 w-full z-40 px-4 py-3 flex items-center justify-between border-b border-white/5 transition-all duration-700 ${isCinemaMode ? 'bg-black/40 backdrop-blur-3xl opacity-0 hover:opacity-100' : 'bg-dark-lighten/90 backdrop-blur-md'}`}>
             <Link to="/" className="flex gap-2 items-center">

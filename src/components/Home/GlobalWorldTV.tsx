@@ -31,14 +31,16 @@ const GlobalWorldTV: FC = () => {
   const [sliders, setSliders] = useState<RegionSlider[]>([
     { title: "K-Dramas & Korean Cinema", emoji: "🇰🇷", items: [], isLoading: true },
     { title: "Anime & J-Dramas",          emoji: "🇯🇵", items: [], isLoading: true },
-    { title: "African Originals",          emoji: "🌍", items: [], isLoading: true },
-    { title: "Turkish Dramas (Diziler)",   emoji: "🇹🇷", items: [], isLoading: true },
-    { title: "Bollywood & Indian Cinema",  emoji: "🇮🇳", items: [], isLoading: true },
-    { title: "Asian Dramas",               emoji: "🌏", items: [], isLoading: true },
-    { title: "British & European TV",      emoji: "🇬🇧", items: [], isLoading: true },
-    { title: "Latin American Content",     emoji: "🌎", items: [], isLoading: true },
-    { title: "Nollywood Movies",           emoji: "🎬", items: [], isLoading: true },
-    { title: "Bollywood Movies",           emoji: "💃", items: [], isLoading: true },
+    { title: "K-Dramas & Korean Cinema", items: [], isLoading: true },
+    { title: "Anime & J-Dramas",          items: [], isLoading: true },
+    { title: "African Originals",          items: [], isLoading: true },
+    { title: "Turkish Dramas (Diziler)",   items: [], isLoading: true },
+    { title: "Bollywood & Indian Cinema",  items: [], isLoading: true },
+    { title: "Asian Dramas",               items: [], isLoading: true },
+    { title: "British & European TV",      items: [], isLoading: true },
+    { title: "Latin American Content",     items: [], isLoading: true },
+    { title: "Nollywood Movies",           items: [], isLoading: true },
+    { title: "Bollywood Movies",           items: [], isLoading: true },
   ]);
 
   useEffect(() => {
@@ -65,16 +67,16 @@ const GlobalWorldTV: FC = () => {
         ]);
 
       const newSliders: RegionSlider[] = [
-        { title: "K-Dramas & Korean Cinema", emoji: "🇰🇷", items: korean.status    === "fulfilled" ? korean.value    : [], isLoading: false },
-        { title: "Anime & J-Dramas",          emoji: "🇯🇵", items: japanese.status  === "fulfilled" ? japanese.value  : [], isLoading: false },
-        { title: "African Originals",          emoji: "🌍", items: african.status   === "fulfilled" ? african.value   : [], isLoading: false },
-        { title: "Turkish Dramas (Diziler)",   emoji: "🇹🇷", items: turkish.status   === "fulfilled" ? turkish.value   : [], isLoading: false },
-        { title: "Indian TV & Web Series",     emoji: "🇮🇳", items: indian.status    === "fulfilled" ? indian.value    : [], isLoading: false },
-        { title: "K/J/Thai/Chinese Dramas",    emoji: "🌏", items: asian.status     === "fulfilled" ? asian.value     : [], isLoading: false },
-        { title: "British & European TV",      emoji: "🇬🇧", items: british.status   === "fulfilled" ? british.value   : [], isLoading: false },
-        { title: "Latin American Content",     emoji: "🌎", items: latin.status     === "fulfilled" ? latin.value     : [], isLoading: false },
-        { title: "Nollywood Movies",           emoji: "🎬", items: nollywood.status === "fulfilled" ? nollywood.value : [], isLoading: false },
-        { title: "Bollywood Movies",           emoji: "💃", items: bollywood.status === "fulfilled" ? bollywood.value : [], isLoading: false },
+        { title: "K-Dramas & Korean Cinema", items: korean.status    === "fulfilled" ? korean.value    : [], isLoading: false },
+        { title: "Anime & J-Dramas",          items: japanese.status  === "fulfilled" ? japanese.value  : [], isLoading: false },
+        { title: "African Originals",          items: african.status   === "fulfilled" ? african.value   : [], isLoading: false },
+        { title: "Turkish Dramas (Diziler)",   items: turkish.status   === "fulfilled" ? turkish.value   : [], isLoading: false },
+        { title: "Indian TV & Web Series",     items: indian.status    === "fulfilled" ? indian.value    : [], isLoading: false },
+        { title: "K/J/Thai/Chinese Dramas",    items: asian.status     === "fulfilled" ? asian.value     : [], isLoading: false },
+        { title: "British & European TV",      items: british.status   === "fulfilled" ? british.value   : [], isLoading: false },
+        { title: "Latin American Content",     items: latin.status     === "fulfilled" ? latin.value     : [], isLoading: false },
+        { title: "Nollywood Movies",           items: nollywood.status === "fulfilled" ? nollywood.value : [], isLoading: false },
+        { title: "Bollywood Movies",           items: bollywood.status === "fulfilled" ? bollywood.value : [], isLoading: false },
       ];
 
       setSliders(newSliders);
