@@ -268,7 +268,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                   className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
                   style={{ backgroundImage: `url(${resizeImage(detail.backdrop_path, "original")})` }}
                 />
-                <div className="absolute inset-0 opacity-60">
+                <div className="absolute inset-0">
               {/* Auto-playing Trailer Backdrop - World-Class Feature */}
               <HeroTrailer
                 mediaId={isNaN(Number(detail.id)) ? undefined : Number(detail.id)}
@@ -301,7 +301,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
               </div>
 
               <div className="w-full relative z-10 px-4 md:px-0">
-                <div className="flex flex-col md:flex-row items-start tw-absolute-center-horizontal w-full max-w-[1000px]">
+                <div className="flex flex-col md:flex-row items-start mx-auto w-full max-w-[1000px]">
                   {/* POSTER */}
                   <div className="flex flex-col md:flex-row gap-5 items-start md:items-center">
                     <div className="shrink-0 w-[185px] ml-3 md:ml-0">
@@ -497,7 +497,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
           )}
 
           {/* DETAIL INFORMATION */}
-          <div className="flex z-20 relative flex-col md:flex-row mt-48 md:mt-0">
+          <div className="flex z-20 relative flex-col md:flex-row mt-10 md:mt-16 bg-gradient-to-b from-transparent via-dark/90 to-dark pt-10">
             {!isMobile && (
               <div className="shrink-0 md:max-w-[150px] w-full flex items-center md:flex-col justify-center flex-row gap-20 mt-20 md:border-r border-dark-lighten pt-16">
                 <div className="flex flex-col gap-6 items-center">
@@ -659,7 +659,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
           </div>
         </div>
 
-        <div className="shrink-0 md:max-w-[310px] w-full relative px-6 bg-dark/40 backdrop-blur-xl md:bg-transparent">
+        <div className="shrink-0 md:max-w-[310px] w-full relative px-6 bg-dark md:bg-dark/50 md:backdrop-blur-xl">
           {!isMobile && <SearchBox />}
           {/* <RecommendGenres /> */}
           <RightbarFilms
