@@ -101,17 +101,17 @@ const Explore = () => {
 
   const getRegionTitle = (region: string) => {
     const regionTitles: Record<string, string> = {
-      "africa": "🌍 African Cinema & TV",
-      "asia": "🌏 Asian Cinema",
-      "latin": "🌎 Latin American Cinema",
-      "middleeast": "🕌 Middle Eastern Cinema",
-      "nollywood": "🎬 Movies from the Nollywood industry (Nigeria)",
-      "bollywood": "🎭 Bollywood (Indian Movies)",
-      "korea": "🇰🇷 Korean Drama & Movies",
-      "japan": "🇯🇵 Japanese Anime & Movies",
-      "china": "🇨🇳 Chinese Cinema",
-      "philippines": "🇵🇭 Filipino Movies & TV",
-      "kenya": "🇰🇪 Kenyan Movies & TV"
+      "africa": "African Cinema & TV",
+      "asia": "Asian Cinema",
+      "latin": "Latin American Cinema",
+      "middleeast": "Middle Eastern Cinema",
+      "nollywood": "Movies from the Nollywood industry (Nigeria)",
+      "bollywood": "Bollywood (Indian Movies)",
+      "korea": "Korean Drama & Movies",
+      "japan": "Japanese Anime & Movies",
+      "china": "Chinese Cinema",
+      "philippines": "Filipino Movies & TV",
+      "kenya": "Kenyan Movies & TV"
     };
     return regionTitles[region] || "Explore Movies & TV Shows";
   };

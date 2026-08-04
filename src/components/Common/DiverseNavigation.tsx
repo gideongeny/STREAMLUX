@@ -273,7 +273,7 @@ const DiverseNavigation: React.FC = () => {
     <div className="py-8">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-white mb-4">
-          🌍 {t("Discover World Cinema")}
+          {t("Discover World Cinema")}
         </h2>
         <p className="text-gray-400 text-lg">
           {t("Explore movies and TV shows from around the world")}

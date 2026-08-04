@@ -275,7 +275,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                 youtubeId={isNaN(Number(detail.id)) ? detail.id.toString() : undefined}
                 mediaType={detail.media_type as "movie" | "tv"}
                 isActive={true}
-                muted={isMuted}
+                muted={false}
                 fallbackImageUrl={detail.backdrop_path || detail.poster_path}
               />
 
@@ -284,23 +284,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                 <div className="absolute inset-0 bg-gradient-to-r from-dark/90 via-dark/40 to-transparent" />
               </div>
 
-              {/* FOREGROUND CONTENT */}
-              <div className="relative z-10 pt-[15vh] md:pt-[25vh] pb-10">
-              {/* Mute/Unmute Toggle - Detail Page Overlay */}
-              <div className="absolute top-10 right-6 z-50">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsMuted(!isMuted)}
-                  className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-primary/80 transition-all duration-300"
-                  title={isMuted ? "Unmute Trailer" : "Mute Trailer"}
-                >
-                  <BsShareFill size={16} className="hidden" /> {/* Spacer/Reference */}
-                  {isMuted ? <span className="text-xl">🔇</span> : <span className="text-xl">🔊</span>}
-                </motion.button>
-              </div>
-
-              <div className="w-full relative z-10 px-4 md:px-0">
+              <div className="w-full relative z-10 px-4 md:px-0 pt-[25vh] md:pt-[45vh] pb-10">
                 <div className="flex flex-col md:flex-row items-start mx-auto w-full max-w-[1000px]">
                   {/* POSTER */}
                   <div className="flex flex-col md:flex-row gap-5 items-start md:items-center">
@@ -492,7 +476,6 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
                   )}
                 </div>
               </div>
-              </div>
             </>
           )}
 
@@ -659,7 +642,7 @@ const FilmDetail: FC<FilmInfo> = ({ similar, videos, detail, ...others }) => {
           </div>
         </div>
 
-        <div className="shrink-0 md:max-w-[310px] w-full relative px-6 bg-dark md:bg-dark/50 md:backdrop-blur-xl">
+        <div className="shrink-0 md:max-w-[310px] w-full relative px-6 md:mt-0 pt-[40vh] md:pt-[60vh] bg-gradient-to-b from-transparent via-dark/90 to-dark">
           {!isMobile && <SearchBox />}
           {/* <RecommendGenres /> */}
           <RightbarFilms

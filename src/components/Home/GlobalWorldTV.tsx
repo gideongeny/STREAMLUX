@@ -21,7 +21,6 @@ import SectionSlider from "../Slider/SectionSlider";
 
 interface RegionSlider {
   title: string;
-  emoji: string;
   items: Item[];
   isLoading: boolean;
 }
@@ -29,8 +28,6 @@ interface RegionSlider {
 const GlobalWorldTV: FC = () => {
   const { t } = useTranslation();
   const [sliders, setSliders] = useState<RegionSlider[]>([
-    { title: "K-Dramas & Korean Cinema", emoji: "🇰🇷", items: [], isLoading: true },
-    { title: "Anime & J-Dramas",          emoji: "🇯🇵", items: [], isLoading: true },
     { title: "K-Dramas & Korean Cinema", items: [], isLoading: true },
     { title: "Anime & J-Dramas",          items: [], isLoading: true },
     { title: "African Originals",          items: [], isLoading: true },
@@ -45,7 +42,7 @@ const GlobalWorldTV: FC = () => {
 
   useEffect(() => {
     const loadAll = async () => {
-      const cacheKey = "global-world-tv-v2";
+      const cacheKey = "global-world-tv-v3";
       const cached = safeStorage.getParsed<RegionSlider[] | null>(cacheKey, null);
       if (cached && cached.length > 0) {
         setSliders(cached);
@@ -106,7 +103,7 @@ const GlobalWorldTV: FC = () => {
         {visibleSliders.map((slider) => (
           <SectionSlider
             key={slider.title}
-            title={`${slider.emoji} ${slider.title}`}
+            title={slider.title}
             films={slider.isLoading ? undefined : slider.items}
             isLoading={slider.isLoading}
             limitNumber={20}
