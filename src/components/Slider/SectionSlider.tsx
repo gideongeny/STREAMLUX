@@ -69,6 +69,18 @@ const SectionSlider: FC<SectionSliderProps> = ({
       {title && (
         <div className="mb-8 flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
+            {/* Leading poster thumbnail (first film in section) — mirrors the reference UI */}
+            {displayFilms && displayFilms[0]?.poster_path && !BRAND_LOGOS[title.toLowerCase().replace(/\s/g, '')] && (
+              <div className="sl-category-icon" style={{ width: 44, height: 60 }}>
+                <img
+                  src={`https://image.tmdb.org/t/p/w92${displayFilms[0].poster_path}`}
+                  alt={displayFilms[0].title || displayFilms[0].name || ""}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
+              </div>
+            )}
             {BRAND_LOGOS[title.toLowerCase().replace(/\s/g, '')] ? (
               <img
                 src={BRAND_LOGOS[title.toLowerCase().replace(/\s/g, '')]}
@@ -117,7 +129,7 @@ const SectionSlider: FC<SectionSliderProps> = ({
                 .fill("")
                 .map((_, index) => (
                   <SwiperSlide key={index} style={{ width: cardWidth }}>
-                    <Skeleton className={`w-full aspect-[2/3] shadow-2xl rounded-[2rem]`} />
+                    <div className={`sl-skeleton-card w-full aspect-[2/3] shadow-2xl`} style={{ animationDelay: `${index * 0.08}s` }} />
                   </SwiperSlide>
                 ))}
             </>

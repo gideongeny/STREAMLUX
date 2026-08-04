@@ -332,14 +332,60 @@ input:-webkit-autofill:active {
 }
 
 .tw-shimmer {
-  background: linear-gradient(110deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.08) 45%,
-      rgba(255, 255, 255, 0.15) 50%,
-      rgba(255, 255, 255, 0.08) 55%,
-      rgba(255, 255, 255, 0) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(
+    90deg,
+    #1a1a1a 0%,
+    #2a2a2a 20%,
+    #333333 40%,
+    #2a2a2a 60%,
+    #1a1a1a 80%
+  );
+  background-size: 400% 100%;
+  animation: yt-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes yt-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: -100% 50%; }
+}
+
+/* YouTube-style skeleton card */
+.sl-skeleton-card {
+  background: linear-gradient(
+    90deg,
+    #1c1c1c 0%,
+    #2c2c2c 20%,
+    #383838 40%,
+    #2c2c2c 60%,
+    #1c1c1c 80%
+  );
+  background-size: 400% 100%;
+  animation: yt-shimmer 1.4s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+/* Staggered delay for multiple skeleton cards */
+.sl-skeleton-card:nth-child(1) { animation-delay: 0s; }
+.sl-skeleton-card:nth-child(2) { animation-delay: 0.1s; }
+.sl-skeleton-card:nth-child(3) { animation-delay: 0.2s; }
+.sl-skeleton-card:nth-child(4) { animation-delay: 0.3s; }
+.sl-skeleton-card:nth-child(5) { animation-delay: 0.4s; }
+.sl-skeleton-card:nth-child(6) { animation-delay: 0.5s; }
+
+/* Skeleton title line */
+.sl-skeleton-title {
+  background: linear-gradient(
+    90deg,
+    #1c1c1c 0%,
+    #2c2c2c 20%,
+    #383838 40%,
+    #2c2c2c 60%,
+    #1c1c1c 80%
+  );
+  background-size: 400% 100%;
+  animation: yt-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+  height: 14px;
 }
 
 @keyframes spin {
@@ -512,6 +558,22 @@ input:-webkit-autofill:active {
   margin-right: 12px;
   vertical-align: middle;
   box-shadow: 0 0 12px rgba(255, 107, 53, 0.4);
+}
+
+/* When poster icon is present as sibling before the title, hide the bar — the image acts as the visual anchor */
+.sl-category-icon + h3.sl-section-title::before {
+  display: none;
+}
+
+/* Category poster icon styles */
+.sl-category-icon {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Premium glass card */
