@@ -37,14 +37,18 @@ const ProviderWatch: React.FC = () => {
         providerCatalog.getStream(link, mediaType, provider).then(async (data) => {
             if (data && data.length > 0) {
                 setRawSources(data);
-                const mappedSources: VideoSource[] = data.map((s, idx) => ({
-                    name: s.server || `Server ${idx + 1} (${s.quality || '1080p'})`,
-                    url: s.link,
-                    quality: s.quality || '1080p',
-                    type: s.type === 'hls' || s.link.includes('.m3u8') ? 'hls' : 'direct',
-                    subtitles: s.subtitles || [],
-                    headers: s.headers,
-                }));
+                const mappedSources: VideoSource[] = data.map((s, idx) => {
+                    const isEmbed = s.type === 'embed' || /embed|\/e\/|\/v\/|player\.|autoembed|vidsrc|2embed|smashy/i.test(s.link);
+                    const isHls = s.type === 'hls' || s.link.includes('.m3u8');
+                    return {
+                        name: s.server || `Server ${idx + 1} (${s.quality || '1080p'})`,
+                        url: s.link,
+                        quality: s.quality || '1080p',
+                        type: (isEmbed ? 'embed' : (isHls ? 'hls' : 'direct')) as any,
+                        subtitles: s.subtitles || [],
+                        headers: s.headers,
+                    };
+                });
                 setSources(mappedSources);
                 setSelectedIdx(0);
                 setIsLoading(false);
@@ -63,14 +67,18 @@ const ProviderWatch: React.FC = () => {
 
                 if (fallbackStreams && fallbackStreams.length > 0) {
                     setRawSources(fallbackStreams);
-                    const mapped = fallbackStreams.map((s, idx) => ({
-                        name: s.server || `Backup ${idx + 1} (${s.quality || '1080p'})`,
-                        url: s.link,
-                        quality: s.quality || '1080p',
-                        type: s.type === 'hls' || s.link.includes('.m3u8') ? 'hls' : 'direct',
-                        subtitles: s.subtitles || [],
-                        headers: s.headers,
-                    }));
+                    const mapped = fallbackStreams.map((s, idx) => {
+                        const isEmbed = s.type === 'embed' || /embed|\/e\/|\/v\/|player\.|autoembed|vidsrc|2embed|smashy/i.test(s.link);
+                        const isHls = s.type === 'hls' || s.link.includes('.m3u8');
+                        return {
+                            name: s.server || `Backup ${idx + 1} (${s.quality || '1080p'})`,
+                            url: s.link,
+                            quality: s.quality || '1080p',
+                            type: (isEmbed ? 'embed' : (isHls ? 'hls' : 'direct')) as any,
+                            subtitles: s.subtitles || [],
+                            headers: s.headers,
+                        };
+                    });
                     setSources(mapped);
                     setSelectedIdx(0);
                     setIsLoading(false);

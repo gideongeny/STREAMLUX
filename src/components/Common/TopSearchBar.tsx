@@ -148,7 +148,7 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "", onSearch }) => {
             </button>
           )}
 
-          <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+          <Link to="/?tab=provider" className="flex items-center gap-2.5 shrink-0 group">
             <Logo className="w-8 h-8 md:w-9 md:h-9 filter drop-shadow-[0_0_8px_rgba(255,107,53,0.35)]" />
             <span className="hidden sm:inline-block font-black text-sm md:text-base tracking-wider uppercase text-white group-hover:text-primary transition-colors">
               STREAM<span className="text-primary">LUX</span>

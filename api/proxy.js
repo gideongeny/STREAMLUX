@@ -87,6 +87,44 @@ module.exports = async function handler(req, res) {
       return res.end();
     }
 
+    // Rewrite HLS .m3u8 playlists so that all chunk/segment requests route via the proxy
+    const isM3U8 = targetUrl.includes('.m3u8') || contentType.includes('mpegurl') || contentType.includes('application/x-mpegURL');
+    if (isM3U8 && method === 'GET') {
+      let bodyText = '';
+      response.data.setEncoding('utf8');
+      response.data.on('data', (chunk) => { bodyText += chunk; });
+      response.data.on('end', () => {
+        const rewritten = bodyText.split('\n').map((line) => {
+          const trimmed = line.trim();
+          if (!trimmed) return line;
+          if (trimmed.startsWith('#')) {
+            if (trimmed.includes('URI="')) {
+              return trimmed.replace(/URI="([^"]+)"/g, (match, p1) => {
+                try {
+                  const abs = new URL(p1, targetUrl).toString();
+                  return `URI="/api/proxy?url=${encodeURIComponent(abs)}&referer=${encodeURIComponent(referer)}"`;
+                } catch {
+                  return match;
+                }
+              });
+            }
+            return line;
+          }
+          try {
+            const abs = new URL(trimmed, targetUrl).toString();
+            return `/api/proxy?url=${encodeURIComponent(abs)}&referer=${encodeURIComponent(referer)}`;
+          } catch {
+            return line;
+          }
+        }).join('\n');
+
+        res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+        res.setHeader('Content-Length', Buffer.byteLength(rewritten));
+        res.send(rewritten);
+      });
+      return;
+    }
+
     // Clean up upstream stream if client disconnects early
     res.on('close', () => {
       if (response.data && typeof response.data.destroy === 'function') {

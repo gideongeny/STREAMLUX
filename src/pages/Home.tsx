@@ -130,13 +130,12 @@ const Home: FC = () => {
         });
       }
     } else if (!tabParam) {
-      // Handle navigation back to base '/' (e.g. clicking Home from Sports)
-      let defaultTab: any = "tv";
+      let defaultTab: any = "provider";
       try {
         const stored = localStorage.getItem("currentTab");
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed === "movie" || parsed === "tv") defaultTab = parsed;
+          if (["provider", "movie", "tv", "sports", "live-tv", "music"].includes(parsed)) defaultTab = parsed;
         }
       } catch {}
       
