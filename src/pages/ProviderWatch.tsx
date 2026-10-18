@@ -10,6 +10,7 @@ import SEO from '../components/Common/SEO';
 import TopSearchBar from '../components/Common/TopSearchBar';
 import Footer from '../components/Footer/Footer';
 import { downloadService } from '../services/download';
+import { proxyUrl } from '../services/corsProxy';
 import { toast } from 'react-toastify';
 
 const ProviderWatch: React.FC = () => {
@@ -99,13 +100,25 @@ const ProviderWatch: React.FC = () => {
             toast.error('No stream URL available to download');
             return;
         }
-        toast.info('Starting StreamLux Direct Download...', { position: 'top-center' });
-        downloadService.downloadSource(
-            link,
-            title,
-            currentSource.url,
-            mediaType
-        );
+
+        const cleanTitle = title.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_') || 'streamlux_video';
+        const filename = `${cleanTitle}.mp4`;
+
+        let downloadUrl = currentSource.url;
+        if (!downloadUrl.includes('/api/proxy')) {
+            const referer = currentSource.headers?.['Referer'] || currentSource.headers?.['referer'] || '';
+            downloadUrl = `${proxyUrl(downloadUrl)}${referer ? `&referer=${encodeURIComponent(referer)}` : ''}`;
+        }
+        downloadUrl += `${downloadUrl.includes('?') ? '&' : '?'}download=1&filename=${encodeURIComponent(filename)}`;
+
+        toast.info(`Starting direct download: ${filename}`, { position: 'top-center' });
+
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => a.remove(), 1000);
     };
 
     return (

@@ -72,7 +72,7 @@ const getInitialTab = (): "movie" | "tv" | "sports" | "live-tv" | "music" | "pro
   } catch {
     // ignore
   }
-  return "tv";
+  return "provider";
 };
 
 const Home: FC = () => {

@@ -66,7 +66,9 @@ const ProviderRowSlider: React.FC<ProviderRowSliderProps> = ({
                     <h2 className="text-sm md:text-base font-black text-white tracking-wide uppercase">
                         {title}
                     </h2>
-                    <span className="text-[10px] text-gray-500 font-mono">({posts.length || '...'})</span>
+                    <span className="text-[10px] text-[#FF6B35]/80 font-mono">
+                        {isLoading ? '• Syncing...' : `(${posts.length})`}
+                    </span>
                 </div>
 
                 {/* Left/Right Buttons */}
@@ -98,8 +100,12 @@ const ProviderRowSlider: React.FC<ProviderRowSliderProps> = ({
                     Array.from({ length: 6 }).map((_, idx) => (
                         <div
                             key={idx}
-                            className="shrink-0 w-[140px] sm:w-[170px] md:w-[190px] aspect-[2/3] rounded-xl bg-white/[0.04] animate-pulse border border-white/5"
-                        />
+                            className="shrink-0 w-[140px] sm:w-[170px] md:w-[190px] aspect-[2/3] rounded-2xl bg-gradient-to-b from-white/[0.06] via-white/[0.02] to-black/80 animate-pulse border border-white/5 relative overflow-hidden flex items-center justify-center shadow-lg"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center opacity-30">
+                                <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35]/50" />
+                            </div>
+                        </div>
                     ))
                 ) : (
                     posts.map((post, idx) => (

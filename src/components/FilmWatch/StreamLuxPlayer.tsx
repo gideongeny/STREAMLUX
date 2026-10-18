@@ -874,7 +874,6 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                         onStalled={handleBuffering}
                         onPlaying={() => { setIsLoading(false); setAutoplayBlocked(false); if (bufferCheckTimer.current) clearTimeout(bufferCheckTimer.current); }}
                         src={currentSource.url}
-                        crossOrigin="anonymous"
                         onClick={handleDoubleTap}
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}

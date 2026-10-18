@@ -1,18 +1,15 @@
 import { FC, FormEvent, useState, useEffect, useRef } from "react";
 import { BiSearch } from "react-icons/bi";
-import { MdClose, MdArrowBack, MdFolderSpecial } from "react-icons/md";
-import { GiHamburgerMenu } from "react-icons/gi";
+import { MdClose, MdArrowBack, MdFolderSpecial, MdBolt } from "react-icons/md";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDebounce } from "../../hooks/useDebounce";
 import { getSearchSuggestions } from "../../services/search";
+import { providerCatalog, ProviderPost } from "../../services/providers/providerCatalog";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
-import { useTypedPlaceholder } from "../../hooks/useTypedPlaceholder";
 import { useSidebar } from "../../hooks/useSidebar";
 import { Item } from "../../shared/types";
 import { tmdbImageSrc } from "../../shared/utils";
-import { safeStorage } from "../../utils/safeStorage";
-import LanguageSelector from "./LanguageSelector";
 import Logo from "./Logo";
 import { useAppSelector } from "../../store/hooks";
 import { sanitizeInput } from "../../utils/sanitize";
@@ -24,10 +21,20 @@ interface TopSearchBarProps {
   onSearch?: (query: string) => void;
 }
 
-const TopSearchBar: FC<TopSearchBarProps> = ({ className = "", activeTab = "movie", onSearch }) => {
+interface UnifiedSuggestion {
+  id: string;
+  title: string;
+  image: string;
+  subtitle: string;
+  providerValue?: string;
+  link?: string;
+  isProvider: boolean;
+}
+
+const TopSearchBar: FC<TopSearchBarProps> = ({ className = "", onSearch }) => {
   const [input, setInput] = useState("");
-  const debounced = useDebounce<string>(input);
-  const [suggestions, setSuggestions] = useState<Item[]>([]);
+  const debounced = useDebounce<string>(input, 250);
+  const [suggestions, setSuggestions] = useState<UnifiedSuggestion[]>([]);
   const [isFocused, setIsFocused] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
@@ -36,9 +43,7 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "", activeTab = "movi
   const containerRef = useRef<HTMLDivElement>(null);
   const { isMobile } = useCurrentViewportView();
   const currentUser = useAppSelector(state => state.auth.user);
-  const { toggle: toggleSidebar, isSidebarVisible, marginClass, widthClass } = useSidebar();
-  
-  const dynamicPlaceholder = useTypedPlaceholder();
+  const { marginClass, widthClass } = useSidebar();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,108 +53,120 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "", activeTab = "movi
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const getContextualPlaceholder = () => {
-    switch (activeTab) {
-      case 'sports': return "Search matches, teams, leagues...";
-      case 'live-tv': return "Search 100,000+ channels...";
-      case 'music': return "Search artists, songs, albums...";
-      default: return dynamicPlaceholder;
-    }
-  };
-
-  // Theme toggle removed for Cinematic Mode
-
   useEffect(() => {
-    if (activeTab === 'movie' || activeTab === 'tv') {
-      if (!debounced.trim()) { setSuggestions([]); return; }
-      getSearchSuggestions(debounced.trim()).then(setSuggestions).catch(() => setSuggestions([]));
-    } else {
+    const query = debounced.trim();
+    if (!query) {
       setSuggestions([]);
-      if (onSearch) onSearch(debounced);
+      return;
     }
-  }, [debounced, activeTab, onSearch]);
+
+    let isCurrent = true;
+
+    // Concurrent search: Query providers + TMDB suggestions
+    Promise.allSettled([
+      providerCatalog.searchAllProviders(query),
+      getSearchSuggestions(query),
+    ]).then(([provRes, tmdbRes]) => {
+      if (!isCurrent) return;
+
+      const unified: UnifiedSuggestion[] = [];
+
+      if (provRes.status === "fulfilled" && Array.isArray(provRes.value)) {
+        for (const p of provRes.value.slice(0, 5)) {
+          unified.push({
+            id: `p-${p.providerValue}-${p.link}`,
+            title: p.title,
+            image: p.image || '/logo.svg',
+            subtitle: `${p.providerValue || 'Provider'} • Direct`,
+            providerValue: p.providerValue,
+            link: p.link,
+            isProvider: true,
+          });
+        }
+      }
+
+      if (tmdbRes.status === "fulfilled" && Array.isArray(tmdbRes.value)) {
+        for (const s of tmdbRes.value.slice(0, 3)) {
+          unified.push({
+            id: `tmdb-${s.id}`,
+            title: s.title || s.name || 'Untitled',
+            image: tmdbImageSrc(s.poster_path, "w92"),
+            subtitle: `${s.media_type || 'Movie'} • ${s.release_date?.split('-')[0] || s.first_air_date?.split('-')[0] || 'HD'}`,
+            isProvider: false,
+          });
+        }
+      }
+
+      setSuggestions(unified);
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [debounced]);
 
   const submitHandler = (e: FormEvent) => {
     e.preventDefault();
     const sanitizedQuery = sanitizeInput(input);
     if (!sanitizedQuery.trim()) return;
-    // For media tabs: navigate to search page
-    if (activeTab === 'movie' || activeTab === 'tv') {
-      navigate(`/search?query=${encodeURIComponent(sanitizedQuery.trim())}`);
-      setSuggestions([]);
-      setIsFocused(false);
-      inputRef.current?.blur();
-    } else {
-      // For live-tv, music, sports: filter in-page only
-      if (onSearch) onSearch(sanitizedQuery.trim());
-      setSuggestions([]);
-      setIsFocused(false);
-      inputRef.current?.blur();
-    }
+
+    navigate(`/search?query=${encodeURIComponent(sanitizedQuery.trim())}`);
+    setSuggestions([]);
+    setIsFocused(false);
+    inputRef.current?.blur();
   };
 
-  const selectSuggestion = (s: Item) => {
-    navigate(`/${s.media_type}/${s.id}`);
+  const selectSuggestion = (s: UnifiedSuggestion) => {
+    if (s.isProvider && s.link) {
+      navigate(`/provider/info?link=${encodeURIComponent(s.link)}&title=${encodeURIComponent(s.title)}&provider=${encodeURIComponent(s.providerValue || '')}&image=${encodeURIComponent(s.image)}`);
+    } else {
+      const tmdbId = s.id.replace('tmdb-', '');
+      navigate(`/movie/${tmdbId}`);
+    }
     setInput("");
     setSuggestions([]);
     setIsFocused(false);
   };
 
-  const navLinks = [
-    { label: "TV Shows", path: "/?tab=tv", tab: "tv" },
-    { label: "Movies", path: "/?tab=movie", tab: "movie" },
-    { label: "Sports", path: "/?tab=sports", tab: "sports" },
-    { label: "Live TV", path: "/?tab=live-tv", tab: "live-tv" },
-    { label: "Music", path: "/?tab=music", tab: "music" },
-    { label: "⚡ Providers", path: "/?tab=provider", tab: "provider" },
-  ];
-
   return (
     <header 
       ref={containerRef}
       className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 flex flex-col ${
-        isScrolled ? "bg-black/80 backdrop-blur-[60px] shadow-[0_8px_32px_rgba(0,0,0,0.8)] border-b border-white/[0.04] py-2" : "bg-gradient-to-b from-black/80 via-black/40 to-transparent py-3 md:py-5"
-      } ${marginClass} ${widthClass}`}
+        isScrolled ? "bg-black/85 backdrop-blur-[60px] shadow-[0_8px_32px_rgba(0,0,0,0.85)] border-b border-white/[0.04] py-2.5" : "bg-gradient-to-b from-black/90 via-black/50 to-transparent py-3 md:py-4"
+      } ${marginClass} ${widthClass} ${className}`}
     >
-      <div className="max-w-[1920px] mx-auto w-full px-1 md:px-12 flex items-center justify-between gap-2 md:gap-4">
-        {/* Left: Sidebar Toggle & Logo & Nav */}
-        <div className="flex items-center gap-1 md:gap-10 shrink-0">
+      <div className="max-w-[1920px] mx-auto w-full px-3 md:px-10 flex items-center justify-between gap-3 md:gap-6">
+        {/* Left: Logo & Engine Badge */}
+        <div className="flex items-center gap-3 shrink-0">
           {location.pathname !== '/' && (
             <button 
               onClick={() => navigate(-1)}
-              className="text-white transition-all duration-300 hover:text-primary pl-1 opacity-100"
+              className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all duration-300 hover:text-primary"
+              title="Go Back"
             >
-              <MdArrowBack size={22} className="md:w-6 md:h-6" />
+              <MdArrowBack size={18} />
             </button>
           )}
 
-          <Link to="/" className="flex items-center shrink-0">
-            <Logo className="w-8 h-8 md:w-9 md:h-9 filter drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
+          <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+            <Logo className="w-8 h-8 md:w-9 md:h-9 filter drop-shadow-[0_0_8px_rgba(255,107,53,0.35)]" />
+            <span className="hidden sm:inline-block font-black text-sm md:text-base tracking-wider uppercase text-white group-hover:text-primary transition-colors">
+              STREAM<span className="text-primary">LUX</span>
+            </span>
           </Link>
 
-          {!isMobile && (
-            <nav className="flex items-center gap-8 ml-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  to={link.path}
-                  className={`text-[11px] font-bold uppercase tracking-[0.3em] transition-all duration-500 hover:text-white sl-hover-underline ${
-                    activeTab === link.tab ? "text-white" : "text-[#666]"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          )}
+          <span className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[10px] font-black tracking-widest text-gray-300 uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            36 Native Engines
+          </span>
         </div>
 
-        {/* Right: Search & Utils */}
-        <div className="flex items-center gap-2 md:gap-4 flex-1 justify-between md:justify-end max-w-2xl w-full">
+        {/* Center / Right: Unified Search & Utils */}
+        <div className="flex items-center gap-2.5 md:gap-4 flex-1 justify-end max-w-2xl w-full">
           <form 
             onSubmit={submitHandler}
-            className={`flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-2.5 rounded-full border transition-all duration-300 relative group flex-1 md:flex-none ${
-              isFocused ? "bg-[#0d0d0d] border-primary/40 shadow-[0_0_40px_rgba(255,107,53,0.15)] md:w-full" : "bg-white/[0.04] border-white/[0.06] md:w-80 hover:border-white/[0.1]"
+            className={`flex items-center gap-2 md:gap-3 px-3.5 md:px-5 py-2 md:py-2.5 rounded-full border transition-all duration-300 relative group flex-1 md:flex-none ${
+              isFocused ? "bg-[#0d0d0d] border-primary/50 shadow-[0_0_35px_rgba(255,107,53,0.2)] md:w-full" : "bg-white/[0.04] border-white/[0.08] md:w-80 hover:border-white/[0.15]"
             }`}
           >
             <BiSearch className={`shrink-0 ${isFocused ? "text-primary" : "text-gray-400"}`} size={16} />
@@ -159,60 +176,81 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "", activeTab = "movi
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onFocus={() => setIsFocused(true)}
-              onBlur={() => setTimeout(() => setIsFocused(false), 200)}
-              placeholder={isFocused ? "Search..." : getContextualPlaceholder()}
-              className="bg-transparent outline-none text-white text-[10px] md:text-xs w-full font-bold placeholder-gray-600 truncate"
+              onBlur={() => setTimeout(() => setIsFocused(false), 250)}
+              placeholder="Search movies, series across all engines..."
+              className="bg-transparent outline-none text-white text-[11px] md:text-xs w-full font-bold placeholder-gray-500 truncate"
             />
             {input && (
               <button type="button" onClick={() => setInput("")} className="text-gray-500 hover:text-white shrink-0">
-                <MdClose size={14} className="md:w-[18px] md:h-[18px]" />
+                <MdClose size={16} />
               </button>
             )}
 
+            {/* Live Search Suggestions Dropdown */}
             <AnimatePresence>
               {isFocused && suggestions.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-full left-0 right-0 mt-2 bg-[#1A1A1A] border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-[110]"
+                  className="absolute top-full left-0 right-0 mt-2 bg-[#0c0d12] border border-white/10 rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.95)] z-[110] divide-y divide-white/5"
                 >
-                  {suggestions.slice(0, 6).map((s) => (
+                  {suggestions.map((s) => (
                     <div
                       key={s.id}
                       onClick={() => selectSuggestion(s)}
-                      className="flex items-center gap-4 p-3 hover:bg-white/5 cursor-pointer transition-colors"
+                      className="flex items-center gap-3.5 p-3 hover:bg-white/[0.06] cursor-pointer transition-colors"
                     >
-                      <img src={tmdbImageSrc(s.poster_path, "w92")} alt="" className="w-10 h-14 object-cover rounded-md shrink-0" />
-                      <div className="overflow-hidden">
-                        <p className="text-white text-[11px] font-black uppercase tracking-tight truncate">{s.title || s.name}</p>
-                        <p className="text-gray-500 text-[10px] uppercase font-bold truncate">{s.media_type} • {s.release_date?.split('-')[0] || s.first_air_date?.split('-')[0]}</p>
+                      <img 
+                        src={s.image} 
+                        alt="" 
+                        className="w-9 h-12 object-cover rounded-lg shrink-0 bg-black/40 border border-white/10"
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/logo.svg'; }}
+                      />
+                      <div className="overflow-hidden flex-1 min-w-0">
+                        <p className="text-white text-xs font-black uppercase tracking-tight truncate">{s.title}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {s.isProvider && (
+                            <span className="px-1.5 py-0.2 rounded bg-primary/20 text-primary text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5">
+                              <MdBolt size={10} />
+                              Direct
+                            </span>
+                          )}
+                          <span className="text-gray-400 text-[10px] font-medium uppercase truncate">{s.subtitle}</span>
+                        </div>
                       </div>
                     </div>
                   ))}
+                  <div 
+                    onClick={() => {
+                      if (input.trim()) navigate(`/search?query=${encodeURIComponent(input.trim())}`);
+                    }}
+                    className="p-2.5 text-center text-[10px] font-bold text-primary hover:bg-primary/10 cursor-pointer uppercase tracking-wider transition-colors"
+                  >
+                    View all unified results for &quot;{input}&quot; →
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </form>
 
-          {/* ⚡ Provider Selector - Vega Engine Pill */}
-          <ProviderSelector className="hidden md:flex" />
+          {/* ⚡ Provider Selector - Vega Native Engine Pill */}
+          <ProviderSelector className="flex" />
 
-          <div className="flex items-center gap-2">
-            <LanguageSelector />
-          </div>
-
+          {/* Library Link */}
           <Link 
             to="/library"
-            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-[#555] hover:text-white hover:border-white/[0.15] hover:bg-white/[0.06] transition-all duration-500 shrink-0"
+            className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-gray-400 hover:text-white hover:border-white/[0.2] hover:bg-white/[0.08] transition-all duration-300 shrink-0"
             title="My Library"
           >
-            <MdFolderSpecial size={16} className="md:w-5 md:h-5" />
+            <MdFolderSpecial size={16} />
           </Link>
 
+          {/* Profile Avatar */}
           <div 
             onClick={() => navigate('/profile')}
-            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center text-primary font-black text-[10px] md:text-xs cursor-pointer hover:border-primary/50 hover:shadow-neon-primary transition-all duration-500 overflow-hidden shrink-0"
+            className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center text-primary font-black text-[10px] md:text-xs cursor-pointer hover:border-primary hover:shadow-neon-primary transition-all duration-300 overflow-hidden shrink-0"
+            title="My Profile"
           >
             {currentUser?.photoURL ? (
               <img src={currentUser.photoURL} alt="" className="w-full h-full object-cover" />

@@ -165,6 +165,56 @@ export class ProviderCatalogService {
     }
 
     /**
+     * Search across top providers concurrently (activeProvider, movieBoxWeb, vega, 4khdhub, multiStream, etc.)
+     */
+    public async searchAllProviders(query: string, page: number = 1): Promise<ProviderPost[]> {
+        if (!query || !query.trim()) return [];
+
+        const all = extensionManager.getProviders();
+        const searchProviders = [
+            this.activeProviderValue,
+            'movieBoxWeb',
+            'vega',
+            'multiStream',
+            '4khdhub',
+            'moviesdrive',
+            'mod',
+            'katmoviehd',
+            'topMovies',
+        ];
+
+        const uniqueValues = Array.from(new Set(searchProviders))
+            .filter(val => all.some(p => p.value === val && !p.disabled))
+            .slice(0, 6);
+
+        const settled = await Promise.allSettled(
+            uniqueValues.map(async (val) => {
+                const timeoutPromise = new Promise<ProviderPost[]>((resolve) =>
+                    setTimeout(() => resolve([]), 6500)
+                );
+                const searchPromise = this.searchPosts(query, page, val);
+                return Promise.race([searchPromise, timeoutPromise]);
+            })
+        );
+
+        const results: ProviderPost[] = [];
+        const seenLinks = new Set<string>();
+
+        for (const res of settled) {
+            if (res.status === 'fulfilled' && Array.isArray(res.value)) {
+                for (const item of res.value) {
+                    if (item.link && !seenLinks.has(item.link)) {
+                        seenLinks.add(item.link);
+                        results.push(item);
+                    }
+                }
+            }
+        }
+
+        return results;
+    }
+
+    /**
      * Get full movie/series metadata and stream/episode links
      */
     public async getMeta(link: string, providerValue?: string): Promise<ProviderMeta | null> {

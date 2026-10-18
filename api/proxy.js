@@ -76,6 +76,11 @@ module.exports = async function handler(req, res) {
       res.setHeader('Content-Length', response.headers['content-length']);
     }
 
+    if (req.query.download === '1' || req.query.dl === '1') {
+      const cleanFilename = (req.query.filename || 'video.mp4').replace(/[^a-zA-Z0-9._-]/g, '_');
+      res.setHeader('Content-Disposition', `attachment; filename="${cleanFilename}"`);
+    }
+
     res.status(response.status);
 
     if (method === 'HEAD') {
