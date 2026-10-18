@@ -130,9 +130,24 @@ export const resolveProviderStream = async (
         const streamCode = await fetchProviderModule(provider.value, 'stream');
         if (!streamCode) return [];
 
-        const result = await executeProvider(streamCode, 'getStream', {
-            id: request.tmdbId,
-            tmdbId: request.tmdbId,
+        const payload = {
+            id: String(request.tmdbId),
+            tmdbId: String(request.tmdbId),
+            imdbId: request.imdbId || '',
+            type: request.mediaType,
+            mediaType: request.mediaType,
+            season: request.season || 1,
+            episode: request.episode || 1,
+            title: request.title || '',
+            year: request.releaseYear || '',
+        };
+
+        const jsonLink = JSON.stringify(payload);
+
+        // 1. First attempt: Pass JSON link payload (works for MultiStream, AutoEmbed, MoviesAPI, etc.)
+        let result = await executeProvider(streamCode, 'getStream', {
+            link: jsonLink,
+            id: jsonLink,
             type: request.mediaType,
             mediaType: request.mediaType,
             season: request.season || 1,
@@ -140,6 +155,40 @@ export const resolveProviderStream = async (
             title: request.title || '',
             year: request.releaseYear || '',
         });
+
+        // 2. Second attempt: For search-based providers (like Vega, MoviesDrive, 4khdHub), query posts.js first
+        if ((!result || (Array.isArray(result) && result.length === 0)) && request.title) {
+            try {
+                const postsCode = await fetchProviderModule(provider.value, 'posts');
+                if (postsCode) {
+                    const searchResults = await executeProvider(postsCode, 'getSearchPosts', {
+                        searchQuery: request.title,
+                        page: 1,
+                        providerValue: provider.value,
+                    });
+                    if (Array.isArray(searchResults) && searchResults.length > 0) {
+                        const topMatch = searchResults[0];
+                        if (topMatch?.link) {
+                            const baseUrl = await providerContext.getBaseUrl(provider.value);
+                            const fullLink = topMatch.link.startsWith('http')
+                                ? topMatch.link
+                                : baseUrl
+                                ? `${baseUrl.replace(/\/+$/, '')}/${topMatch.link.replace(/^\/+/, '')}`
+                                : topMatch.link;
+
+                            result = await executeProvider(streamCode, 'getStream', {
+                                link: fullLink,
+                                type: request.mediaType,
+                                season: request.season || 1,
+                                episode: request.episode || 1,
+                            });
+                        }
+                    }
+                }
+            } catch (searchErr) {
+                console.warn(`[StreamLux] Search fallback failed for ${provider.display_name}:`, searchErr);
+            }
+        }
 
         if (!result) return [];
 

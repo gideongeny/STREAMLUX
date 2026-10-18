@@ -9,16 +9,19 @@
  *   const src = proxyUrl('https://www.123movies.net/...');
  */
 
-// Firebase project ID — ensure this matches .firebaserc
-const FIREBASE_PROJECT_ID = 'streamlux-67a84';
-const PROXY_BASE = `https://us-central1-${FIREBASE_PROJECT_ID}.cloudfunctions.net/proxy`;
+const getProxyBase = (): string => {
+    if (typeof window !== 'undefined' && window.location?.origin) {
+        return `${window.location.origin}/api/proxy`;
+    }
+    return 'https://streamlux.vercel.app/api/proxy';
+};
 
 /**
  * Wraps a URL so it goes through the server-side CORS proxy.
  * Use the returned URL wherever you'd use the original URL (iframe src, video src, fetch, etc.)
  */
 export const proxyUrl = (targetUrl: string): string => {
-    return `${PROXY_BASE}?url=${encodeURIComponent(targetUrl)}`;
+    return `${getProxyBase()}?url=${encodeURIComponent(targetUrl)}`;
 };
 
 /**

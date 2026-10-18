@@ -1,18 +1,18 @@
-﻿[
-  {
-    "display_name": "VMovies",
-    "value": "vega",
-    "version": "2.46",
-    "icon": "https://cdn.jsdelivr.net/gh/Zenda-Cross/vega-providers@main/assets/vega.png",
-    "type": "global",
-    "disabled": false,
-    "hasSettings": true
-  },
+[
   {
     "display_name": "MultiStream",
     "value": "autoEmbed",
     "version": "3.5",
     "icon": "https://cdn.jsdelivr.net/gh/Zenda-Cross/vega-providers@main/assets/autoEmbed.png",
+    "type": "global",
+    "disabled": false,
+    "hasSettings": true
+  },
+  {
+    "display_name": "VMovies",
+    "value": "vega",
+    "version": "2.46",
+    "icon": "https://cdn.jsdelivr.net/gh/Zenda-Cross/vega-providers@main/assets/vega.png",
     "type": "global",
     "disabled": false,
     "hasSettings": true

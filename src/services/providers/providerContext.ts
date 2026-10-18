@@ -104,13 +104,39 @@ const kvStore = {
     }
 };
 
+let cachedUrls: Record<string, any> | null = null;
+let lastUrlsFetch = 0;
+
+const getProviderBaseUrl = async (providerValue?: string): Promise<string> => {
+    if (!providerValue) return '';
+    try {
+        const now = Date.now();
+        if (!cachedUrls || now - lastUrlsFetch > 60 * 60 * 1000) {
+            const res = await fetch('https://raw.githubusercontent.com/Zenda-Cross/vega-providers/refs/heads/main/urls.json');
+            if (res.ok) {
+                cachedUrls = await res.json();
+                lastUrlsFetch = now;
+            }
+        }
+        if (cachedUrls) {
+            const lower = providerValue.toLowerCase();
+            for (const [k, v] of Object.entries(cachedUrls)) {
+                if (k.toLowerCase() === lower || (v as any)?.name?.toLowerCase() === lower) {
+                    return (v as any)?.url || '';
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to fetch provider URLs:', e);
+    }
+    return '';
+};
+
 export const providerContext: ProviderContext = {
     axios: createWebAxios(),
     cheerio,
     Crypto,
     commonHeaders,
-    getBaseUrl: async (providerValue?: string) => {
-        return '';
-    },
+    getBaseUrl: getProviderBaseUrl,
     kvStore,
 };
