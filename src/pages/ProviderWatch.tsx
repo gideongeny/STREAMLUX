@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdBolt, MdArrowBack, MdDownload, MdRefresh, MdErrorOutline } from 'react-icons/md';
 import { providerCatalog } from '../services/providers/providerCatalog';
+import { extensionManager } from '../services/providers/ExtensionManager';
 import { StreamSource } from '../services/providers/types';
 import StreamLuxPlayer, { VideoSource } from '../components/FilmWatch/StreamLuxPlayer';
 import SEO from '../components/Common/SEO';
@@ -32,11 +33,11 @@ const ProviderWatch: React.FC = () => {
         setIsLoading(true);
         setErrorMsg(null);
 
-        providerCatalog.getStream(link, mediaType, provider).then((data) => {
+        providerCatalog.getStream(link, mediaType, provider).then(async (data) => {
             if (data && data.length > 0) {
                 setRawSources(data);
                 const mappedSources: VideoSource[] = data.map((s, idx) => ({
-                    name: s.server || `Stream ${idx + 1} (${s.quality || '1080p'})`,
+                    name: s.server || `Server ${idx + 1} (${s.quality || '1080p'})`,
                     url: s.link,
                     quality: s.quality || '1080p',
                     type: s.type === 'hls' || s.link.includes('.m3u8') ? 'hls' : 'direct',
@@ -45,9 +46,40 @@ const ProviderWatch: React.FC = () => {
                 }));
                 setSources(mappedSources);
                 setSelectedIdx(0);
-            } else {
-                setErrorMsg('No direct streams returned by this provider. Try another server or provider.');
+                setIsLoading(false);
+                return;
             }
+
+            // Fallback: search other providers for working streams
+            try {
+                const cleanTitle = title.split(' - ')[0].trim();
+                const fallbackStreams = await extensionManager.resolveAllStreams({
+                    title: cleanTitle,
+                    mediaType,
+                    season: 1,
+                    episode: 1,
+                });
+
+                if (fallbackStreams && fallbackStreams.length > 0) {
+                    setRawSources(fallbackStreams);
+                    const mapped = fallbackStreams.map((s, idx) => ({
+                        name: s.server || `Backup ${idx + 1} (${s.quality || '1080p'})`,
+                        url: s.link,
+                        quality: s.quality || '1080p',
+                        type: s.type === 'hls' || s.link.includes('.m3u8') ? 'hls' : 'direct',
+                        subtitles: s.subtitles || [],
+                        headers: s.headers,
+                    }));
+                    setSources(mapped);
+                    setSelectedIdx(0);
+                    setIsLoading(false);
+                    return;
+                }
+            } catch (fbErr) {
+                console.warn('Fallback stream resolution error:', fbErr);
+            }
+
+            setErrorMsg('No direct streams returned by this provider. Try another server or provider.');
             setIsLoading(false);
         }).catch((err) => {
             console.error('Failed to extract stream:', err);

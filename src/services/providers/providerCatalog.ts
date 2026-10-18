@@ -2,6 +2,7 @@ import { extensionManager } from './ExtensionManager';
 import { fetchProviderModule, executeProvider } from './providerRunner';
 import { providerContext } from './providerContext';
 import { ProviderExtension, StreamSource } from './types';
+import { proxyUrl } from '../corsProxy';
 
 export interface CatalogRow {
     title: string;
@@ -202,6 +203,33 @@ export class ProviderCatalogService {
     }
 
     /**
+     * Get episodes list for a series season or audio track
+     */
+    public async getEpisodes(url: string, providerValue?: string): Promise<{ title: string; link: string; image?: string }[]> {
+        const val = providerValue || this.activeProviderValue;
+        try {
+            const code = await fetchProviderModule(val, 'episodes');
+            if (!code) return [];
+
+            const result = await executeProvider(code, 'getEpisodes', {
+                url,
+                providerContext,
+            });
+
+            if (Array.isArray(result)) {
+                return result.map((ep, i) => ({
+                    title: ep.title || `Episode ${i + 1}`,
+                    link: typeof ep.link === 'string' ? ep.link : JSON.stringify(ep.link),
+                    image: ep.image || '',
+                }));
+            }
+        } catch (e) {
+            console.warn(`[Catalog] Failed to load episodes for ${val}:`, e);
+        }
+        return [];
+    }
+
+    /**
      * Extract direct raw .m3u8 / .mp4 streams for playback
      */
     public async getStream(link: string, type: 'movie' | 'tv' | 'series' = 'movie', providerValue?: string): Promise<StreamSource[]> {
@@ -218,16 +246,25 @@ export class ProviderCatalogService {
 
             if (result) {
                 const list = Array.isArray(result) ? result : [result];
-                return list.map(s => ({
-                    server: s.server || 'Direct HD',
-                    link: s.link,
-                    type: s.type || (s.link?.includes('.m3u8') ? 'm3u8' : 'mp4'),
-                    quality: s.quality || '1080p',
-                    subtitles: s.subtitles || [],
-                    headers: s.headers,
-                    skip: s.skip,
-                    providerValue: val,
-                })).filter(s => s.link && typeof s.link === 'string' && s.link.startsWith('http'));
+                return list.map(s => {
+                    const rawLink = s.link;
+                    const hasHeaders = s.headers && (s.headers['Referer'] || s.headers['referer']);
+                    // If stream requires Referer header and running in browser, route via proxy
+                    const streamLink = (hasHeaders && typeof window !== 'undefined' && !rawLink.includes('/api/proxy'))
+                        ? `${proxyUrl(rawLink)}&referer=${encodeURIComponent(s.headers['Referer'] || s.headers['referer'])}`
+                        : rawLink;
+
+                    return {
+                        server: s.server || 'Direct HD',
+                        link: streamLink,
+                        type: s.type || (streamLink?.includes('.m3u8') ? 'm3u8' : 'mp4'),
+                        quality: s.quality || '1080p',
+                        subtitles: s.subtitles || [],
+                        headers: s.headers,
+                        skip: s.skip,
+                        providerValue: val,
+                    };
+                }).filter(s => s.link && typeof s.link === 'string' && s.link.startsWith('http'));
             }
         } catch (e) {
             console.warn(`[Catalog] Failed to getStream for ${val}:`, e);

@@ -20,6 +20,8 @@ const ProviderInfo: React.FC = () => {
     const [meta, setMeta] = useState<ProviderMeta | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedSeasonIdx, setSelectedSeasonIdx] = useState(0);
+    const [episodes, setEpisodes] = useState<{ title: string; link: string; image?: string; type?: string }[]>([]);
+    const [isLoadingEpisodes, setIsLoadingEpisodes] = useState(false);
 
     useEffect(() => {
         if (!link) return;
@@ -33,6 +35,43 @@ const ProviderInfo: React.FC = () => {
             setIsLoading(false);
         });
     }, [link, providerParam]);
+
+    // Load episodes when season tab or meta changes
+    useEffect(() => {
+        if (!meta) return;
+        const currentSeason = meta.linkList?.[selectedSeasonIdx] || meta.linkList?.[0];
+        if (!currentSeason) {
+            setEpisodes([]);
+            return;
+        }
+
+        // 1. Direct links provided on the season item
+        if (currentSeason.directLinks && currentSeason.directLinks.length > 0) {
+            setEpisodes(currentSeason.directLinks.map((d: any, i: number) => ({
+                title: d.title || `Episode ${i + 1}`,
+                link: d.link,
+                image: '',
+                type: d.type || 'HD',
+            })));
+            return;
+        }
+
+        // 2. Fetch episodes through providerCatalog.getEpisodes
+        const epLink = (currentSeason as any).episodesLink || (currentSeason as any).link;
+        if (epLink) {
+            setIsLoadingEpisodes(true);
+            providerCatalog.getEpisodes(epLink, providerParam).then((res) => {
+                setEpisodes(res || []);
+                setIsLoadingEpisodes(false);
+            }).catch((err) => {
+                console.error('Failed to load episodes:', err);
+                setEpisodes([]);
+                setIsLoadingEpisodes(false);
+            });
+        } else {
+            setEpisodes([]);
+        }
+    }, [meta, selectedSeasonIdx, providerParam]);
 
     const displayTitle = meta?.title || titleParam || 'Stream Title';
     const displayPoster = meta?.poster || initialImage || meta?.image || '/logo.svg';
@@ -199,27 +238,39 @@ const ProviderInfo: React.FC = () => {
                         </div>
 
                         {/* Episodes Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            {(currentSeason?.directLinks || []).map((ep, epIdx) => (
-                                <button
-                                    key={epIdx}
-                                    onClick={() => handlePlayEpisode(ep.link, ep.title || `Episode ${epIdx + 1}`)}
-                                    className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.03] hover:bg-[#FF6B35]/15 border border-white/5 hover:border-[#FF6B35]/40 transition-all duration-300 text-left group shadow-sm hover:shadow-[0_0_20px_rgba(255,107,53,0.2)]"
-                                >
-                                    <div className="min-w-0 pr-3">
-                                        <span className="text-[10px] font-black uppercase tracking-wider text-[#FF6B35] block">
-                                            {ep.type || 'HD'}
-                                        </span>
-                                        <h4 className="text-xs font-bold text-white group-hover:text-[#FF6B35] transition-colors truncate">
-                                            {ep.title || `Episode ${epIdx + 1}`}
-                                        </h4>
-                                    </div>
-                                    <div className="w-8 h-8 rounded-full bg-white/10 group-hover:bg-[#FF6B35] group-hover:text-black flex items-center justify-center text-white shrink-0 transition-colors">
-                                        <MdPlayArrow size={18} className="fill-current ml-0.5" />
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
+                        {isLoadingEpisodes ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {Array.from({ length: 8 }).map((_, i) => (
+                                    <div key={i} className="h-16 rounded-xl bg-white/[0.04] animate-pulse border border-white/5" />
+                                ))}
+                            </div>
+                        ) : episodes.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {episodes.map((ep, epIdx) => (
+                                    <button
+                                        key={epIdx}
+                                        onClick={() => handlePlayEpisode(ep.link, ep.title || `Episode ${epIdx + 1}`)}
+                                        className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.03] hover:bg-[#FF6B35]/15 border border-white/5 hover:border-[#FF6B35]/40 transition-all duration-300 text-left group shadow-sm hover:shadow-[0_0_20px_rgba(255,107,53,0.2)]"
+                                    >
+                                        <div className="min-w-0 pr-3">
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-[#FF6B35] block">
+                                                {ep.type || 'Episode'}
+                                            </span>
+                                            <h4 className="text-xs font-bold text-white group-hover:text-[#FF6B35] transition-colors truncate">
+                                                {ep.title || `Episode ${epIdx + 1}`}
+                                            </h4>
+                                        </div>
+                                        <div className="w-8 h-8 rounded-full bg-white/10 group-hover:bg-[#FF6B35] group-hover:text-black flex items-center justify-center text-white shrink-0 transition-colors">
+                                            <MdPlayArrow size={18} className="fill-current ml-0.5" />
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="py-8 text-center text-gray-500 text-xs">
+                                No episodes found for this season or audio track.
+                            </div>
+                        )}
                     </div>
                 )}
             </main>
