@@ -16,6 +16,7 @@ import LanguageSelector from "./LanguageSelector";
 import Logo from "./Logo";
 import { useAppSelector } from "../../store/hooks";
 import { sanitizeInput } from "../../utils/sanitize";
+import ProviderSelector from "../Navigation/ProviderSelector";
 
 interface TopSearchBarProps {
   className?: string;
@@ -100,6 +101,7 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "", activeTab = "movi
     { label: "Sports", path: "/?tab=sports", tab: "sports" },
     { label: "Live TV", path: "/?tab=live-tv", tab: "live-tv" },
     { label: "Music", path: "/?tab=music", tab: "music" },
+    { label: "⚡ Providers", path: "/?tab=provider", tab: "provider" },
   ];
 
   return (
@@ -192,6 +194,9 @@ const TopSearchBar: FC<TopSearchBarProps> = ({ className = "", activeTab = "movi
               )}
             </AnimatePresence>
           </form>
+
+          {/* ⚡ Provider Selector - Vega Engine Pill */}
+          <ProviderSelector className="hidden md:flex" />
 
           <div className="flex items-center gap-2">
             <LanguageSelector />

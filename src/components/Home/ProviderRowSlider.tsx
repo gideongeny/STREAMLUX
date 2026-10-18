@@ -1,0 +1,111 @@
+import React, { useRef, useState, useEffect } from 'react';
+import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
+import { providerCatalog, ProviderPost } from '../../services/providers/providerCatalog';
+import ProviderPostCard from './ProviderPostCard';
+
+interface ProviderRowSliderProps {
+    title: string;
+    filter: string;
+    providerValue: string;
+    onFirstItemLoaded?: (post: ProviderPost) => void;
+}
+
+const ProviderRowSlider: React.FC<ProviderRowSliderProps> = ({
+    title,
+    filter,
+    providerValue,
+    onFirstItemLoaded
+}) => {
+    const [posts, setPosts] = useState<ProviderPost[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        let isMounted = true;
+        setIsLoading(true);
+
+        providerCatalog.getPosts(filter, 1, providerValue).then((data) => {
+            if (!isMounted) return;
+            setPosts(data || []);
+            setIsLoading(false);
+            if (data && data.length > 0 && onFirstItemLoaded) {
+                onFirstItemLoaded(data[0]);
+            }
+        }).catch(() => {
+            if (isMounted) setIsLoading(false);
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [filter, providerValue]);
+
+    const scroll = (direction: 'left' | 'right') => {
+        if (!scrollRef.current) return;
+        const offset = direction === 'left' ? -600 : 600;
+        scrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+    };
+
+    if (!isLoading && posts.length === 0) {
+        return null;
+    }
+
+    return (
+        <section className="mb-10 relative group/row">
+            {/* Row Title */}
+            <div className="flex items-center justify-between mb-3 px-1 md:px-0">
+                <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-4 bg-[#FF6B35] rounded-full" />
+                    <h2 className="text-sm md:text-base font-black text-white tracking-wide uppercase">
+                        {title}
+                    </h2>
+                    <span className="text-[10px] text-gray-500 font-mono">({posts.length || '...'})</span>
+                </div>
+
+                {/* Left/Right Buttons */}
+                <div className="hidden md:flex items-center gap-1.5">
+                    <button
+                        onClick={() => scroll('left')}
+                        className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white transition-colors"
+                        aria-label="Scroll left"
+                    >
+                        <MdChevronLeft size={18} />
+                    </button>
+                    <button
+                        onClick={() => scroll('right')}
+                        className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white transition-colors"
+                        aria-label="Scroll right"
+                    >
+                        <MdChevronRight size={18} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Slider Container */}
+            <div
+                ref={scrollRef}
+                className="flex items-center gap-3 md:gap-4 overflow-x-auto scrollbar-none py-2 px-1 scroll-smooth"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+                {isLoading ? (
+                    Array.from({ length: 6 }).map((_, idx) => (
+                        <div
+                            key={idx}
+                            className="shrink-0 w-[140px] sm:w-[170px] md:w-[190px] aspect-[2/3] rounded-xl bg-white/[0.04] animate-pulse border border-white/5"
+                        />
+                    ))
+                ) : (
+                    posts.map((post, idx) => (
+                        <ProviderPostCard
+                            key={`${post.link}-${idx}`}
+                            post={post}
+                            providerValue={providerValue}
+                        />
+                    ))
+                )}
+            </div>
+        </section>
+    );
+};
+
+export default ProviderRowSlider;

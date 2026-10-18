@@ -42,6 +42,7 @@ import HomeSkeleton from "../components/Home/HomeSkeleton";
 import Logo from "../components/Common/Logo";
 import { Item } from "../shared/types";
 import { useSidebar } from "../hooks/useSidebar";
+import ProviderHomeContent from "../components/Home/ProviderHomeContent";
 
 const BRAND_LOGOS: Record<string, string> = {
   disney: "/logos/Walt-Disney-Logo-1.png",
@@ -55,18 +56,18 @@ const BRAND_LOGOS: Record<string, string> = {
   cartoonnetwork: "/logos/Cartoon-Network-logo.jpg",
 };
 
-const getInitialTab = (): "movie" | "tv" | "sports" | "live-tv" | "music" => {
+const getInitialTab = (): "movie" | "tv" | "sports" | "live-tv" | "music" | "provider" => {
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get("tab");
-    if (tabParam && ["movie", "tv", "sports", "live-tv", "music"].includes(tabParam)) {
+    if (tabParam && ["movie", "tv", "sports", "live-tv", "music", "provider"].includes(tabParam)) {
       return tabParam as any;
     }
 
     const stored = typeof window !== "undefined" ? localStorage.getItem("currentTab") : null;
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (["movie", "tv", "sports", "live-tv", "music"].includes(parsed)) return parsed;
+      if (["movie", "tv", "sports", "live-tv", "music", "provider"].includes(parsed)) return parsed;
     }
   } catch {
     // ignore
@@ -84,7 +85,7 @@ const Home: FC = () => {
   const dispatch = useAppDispatch();
   const [activeGlowImage, setActiveGlowImage] = useState<string | undefined>(undefined);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [currentTab, setCurrentTab] = useState<"movie" | "tv" | "sports" | "live-tv" | "music">(getInitialTab);
+  const [currentTab, setCurrentTab] = useState<"movie" | "tv" | "sports" | "live-tv" | "music" | "provider">(getInitialTab);
   const [isPending, startTransition] = useTransition();
   const [isTabLoading, setIsTabLoading] = useState(false);
   const [brandMovies, setBrandMovies] = useState<Item[]>([]);
@@ -120,7 +121,7 @@ const Home: FC = () => {
     const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get("tab");
     
-    if (tabParam && ["movie", "tv", "sports", "live-tv", "music"].includes(tabParam)) {
+    if (tabParam && ["movie", "tv", "sports", "live-tv", "music", "provider"].includes(tabParam)) {
       if (tabParam !== currentTab) {
         setIsTabLoading(true);
         startTransition(() => {
@@ -215,7 +216,7 @@ const Home: FC = () => {
 
   const HOME_TABS: Array<"tv" | "movie"> = ["tv", "movie"];
 
-  const handleTabChange = (tab: "movie" | "tv" | "sports" | "live-tv" | "music") => {
+  const handleTabChange = (tab: "movie" | "tv" | "sports" | "live-tv" | "music" | "provider") => {
     // Pause music if moving away from music tab as requested
     if (currentTab === "music" && tab !== "music") {
       dispatch(pause());
@@ -458,6 +459,12 @@ const Home: FC = () => {
                     {currentTab === 'music' && (
                       <div className="mt-6">
                         <MusicHub isEmbed searchQuery={searchQuery} />
+                      </div>
+                    )}
+
+                    {currentTab === 'provider' && (
+                      <div className="mt-6">
+                        <ProviderHomeContent />
                       </div>
                     )}
 

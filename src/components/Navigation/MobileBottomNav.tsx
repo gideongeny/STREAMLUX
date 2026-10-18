@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { MdExplore, MdFolderSpecial, MdSportsSoccer, MdHomeFilled, MdMovie } from 'react-icons/md';
+import { MdExplore, MdFolderSpecial, MdSportsSoccer, MdHomeFilled, MdMovie, MdFlashOn } from 'react-icons/md';
 import { BiSearch } from 'react-icons/bi';
 import { FiTv, FiMusic } from "react-icons/fi";
 import { useTranslation } from 'react-i18next';
@@ -13,10 +13,11 @@ const MobileBottomNav: FC = () => {
   const location = useLocation();
 
   const NAV_ITEMS = [
-    { icon: <MdHomeFilled size={24} />, label: t("Home"), path: "/", matchTabs: ["movie", "tv", null] },
-    { icon: <MdSportsSoccer size={24} />, label: t("Sports"), path: "/?tab=sports", matchTabs: ["sports"] },
-    { icon: <FiTv size={24} />, label: t("Live TV"), path: "/?tab=live-tv", matchTabs: ["live-tv"] },
-    { icon: <FiMusic size={24} />, label: t("Music"), path: "/?tab=music", matchTabs: ["music"] },
+    { icon: <MdHomeFilled size={22} />, label: t("Home"), path: "/", matchTabs: ["movie", "tv", null] },
+    { icon: <MdSportsSoccer size={22} />, label: t("Sports"), path: "/?tab=sports", matchTabs: ["sports"] },
+    { icon: <FiTv size={22} />, label: t("Live TV"), path: "/?tab=live-tv", matchTabs: ["live-tv"] },
+    { icon: <FiMusic size={22} />, label: t("Music"), path: "/?tab=music", matchTabs: ["music"] },
+    { icon: <MdFlashOn size={22} />, label: "Providers", path: "/?tab=provider", matchTabs: ["provider"] },
   ];
 
   const currentTab = new URLSearchParams(location.search).get("tab");

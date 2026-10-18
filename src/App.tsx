@@ -43,6 +43,8 @@ const LiveTVHub = lazy(() => import("./features/livetv/LiveTVHub"));
 const TVWatchPage = lazy(() => import("./features/livetv/TVWatchPage"));
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
+const ProviderInfo = lazy(() => import("./pages/ProviderInfo"));
+const ProviderWatch = lazy(() => import("./pages/ProviderWatch"));
 
 import { auth, db } from "./shared/firebase";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
@@ -529,6 +531,8 @@ function App() {
                   <Route path="tv/:id" element={<TVInfo />} />
                   <Route path="movie/:id/watch" element={<MovieWatch />} />
                   <Route path="tv/:id/watch" element={<TVWatch />} />
+                  <Route path="provider/info" element={<ProviderInfo />} />
+                  <Route path="provider/watch" element={<ProviderWatch />} />
                   <Route path="sports" element={<Navigate to="/?tab=sports" replace />} />
                   <Route path="sports/arena/:fixtureId" element={<SportsWatch />} />
                   <Route path="sports/:leagueId/:matchId/watch" element={<Navigate to="/sports/arena/:matchId" replace />} />

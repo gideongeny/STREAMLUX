@@ -112,6 +112,12 @@ export const executeProvider = async (
                 signal: new AbortController().signal
             });
         }
+        if (exportedFunc !== undefined && exportedFunc !== null) {
+            return exportedFunc;
+        }
+        if (exportName === 'catalog') {
+            return module.exports?.catalog || exports?.catalog || module.exports || exports;
+        }
         return null;
     } catch (err) {
         console.warn(`[StreamLux Provider Runner] Execution failed for ${exportName}:`, err);
