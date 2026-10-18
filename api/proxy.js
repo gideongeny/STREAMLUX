@@ -11,9 +11,28 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const targetUrl = req.query.url;
+  // Extract and decode target URL carefully
+  let targetUrl = req.query.url;
   if (!targetUrl || typeof targetUrl !== 'string') {
     return res.status(400).json({ error: 'Missing target url parameter' });
+  }
+
+  // Handle cases where the URL itself has unescaped ampersands in query parameters
+  if (req.url && req.url.includes('url=')) {
+    const urlIdx = req.url.indexOf('url=');
+    let raw = req.url.slice(urlIdx + 4);
+    const refererIdx = raw.indexOf('&referer=');
+    if (refererIdx !== -1) {
+      raw = raw.slice(0, refererIdx);
+    }
+    try {
+      const decoded = decodeURIComponent(raw);
+      if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
+        targetUrl = decoded;
+      }
+    } catch {
+      // Use original targetUrl if decode fails
+    }
   }
 
   try {
@@ -31,18 +50,20 @@ module.exports = async function handler(req, res) {
       forwardHeaders['Range'] = req.headers.range;
     }
 
+    const method = req.method === 'HEAD' ? 'HEAD' : (req.method === 'POST' ? 'POST' : 'GET');
+
     const response = await axios({
-      method: req.method === 'POST' ? 'POST' : 'GET',
+      method,
       url: targetUrl,
       data: req.method === 'POST' ? req.body : undefined,
       headers: forwardHeaders,
-      responseType: 'arraybuffer',
+      responseType: 'stream',
       validateStatus: () => true, // Forward all status codes
-      timeout: 15000,
+      timeout: 30000,
       maxRedirects: 5,
     });
 
-    const contentType = response.headers['content-type'] || 'text/html';
+    const contentType = response.headers['content-type'] || 'application/octet-stream';
     res.setHeader('Content-Type', contentType);
 
     if (response.headers['content-range']) {
@@ -55,11 +76,26 @@ module.exports = async function handler(req, res) {
       res.setHeader('Content-Length', response.headers['content-length']);
     }
 
-    res.status(response.status).send(Buffer.from(response.data));
-  } catch (err) {
-    res.status(500).json({
-      error: 'Proxy request failed',
-      message: err.message,
+    res.status(response.status);
+
+    if (method === 'HEAD') {
+      return res.end();
+    }
+
+    // Clean up upstream stream if client disconnects early
+    res.on('close', () => {
+      if (response.data && typeof response.data.destroy === 'function') {
+        response.data.destroy();
+      }
     });
+
+    response.data.pipe(res);
+  } catch (err) {
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: 'Proxy request failed',
+        message: err.message,
+      });
+    }
   }
 };

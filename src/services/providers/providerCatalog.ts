@@ -248,14 +248,15 @@ export class ProviderCatalogService {
                 const list = Array.isArray(result) ? result : [result];
                 return list.map(s => {
                     const rawLink = s.link;
-                    const hasHeaders = s.headers && (s.headers['Referer'] || s.headers['referer']);
-                    // If stream requires Referer header and running in browser, route via proxy
-                    const streamLink = (hasHeaders && typeof window !== 'undefined' && !rawLink.includes('/api/proxy'))
-                        ? `${proxyUrl(rawLink)}&referer=${encodeURIComponent(s.headers['Referer'] || s.headers['referer'])}`
+                    const reqReferer = s.headers?.['Referer'] || s.headers?.['referer'] || s.headers?.['Origin'] || s.headers?.['origin'] || (rawLink.includes('hakunaymatata') ? 'https://officialmoviebox.com/' : undefined);
+                    const needsProxy = (reqReferer || /hakunaymatata|hubcloud|vcloud|gdflix|fastdl|moviesdrive/i.test(rawLink)) && typeof window !== 'undefined';
+
+                    const streamLink = (needsProxy && !rawLink.includes('/api/proxy'))
+                        ? `${proxyUrl(rawLink)}${reqReferer ? `&referer=${encodeURIComponent(reqReferer)}` : ''}`
                         : rawLink;
 
                     return {
-                        server: s.server || 'Direct HD',
+                        server: s.server || `Stream ${s.quality || 'HD'}`,
                         link: streamLink,
                         type: s.type || (streamLink?.includes('.m3u8') ? 'm3u8' : 'mp4'),
                         quality: s.quality || '1080p',

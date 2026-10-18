@@ -23,6 +23,7 @@ import SubtitleSelector from './SubtitleSelector';
 import { useSearchParams } from 'react-router-dom';
 import { downloadService } from '../../services/download';
 import Hls from '@swarmcloud/hls';
+import { proxyUrl } from '../../services/corsProxy';
 
 export interface VideoSource {
     name: string;
@@ -154,6 +155,8 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
     const lastTapTime = useRef<number>(0);
     const swipeStart = useRef<{ x: number, y: number } | null>(null);
     const hlsRef = useRef<Hls | null>(null);
+    // Tracks whether we've already retried the current source through the streaming proxy
+    const proxyRetried = useRef(false);
 
     // Sync with external selectedSourceIndex prop
     useEffect(() => {
@@ -341,6 +344,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         setIsDirect(direct);
         setVideoError(false);
         setIsLoading(true);
+        proxyRetried.current = false; // reset per source-switch
 
         if (!direct) {
             setShowAdSkip(false);
@@ -456,6 +460,7 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         setIsLoading(selectedSourceIndex !== undefined && selectedSourceIndex >= 0);
         setAudioTracks([]);
         setActiveAudio('');
+        proxyRetried.current = false; // reset proxy retry for new source
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [normalizedSources[0]?.url, selectedSourceIndex]);
 
@@ -500,12 +505,31 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         setShowSubtitleMenu(false);
     };
 
-    const handleVideoError = () => { 
+    const handleVideoError = () => {
+        const video = videoRef.current;
+        const url = currentSource?.url;
+
+        // ── Auto-retry via streaming proxy ────────────────────────────
+        // If the direct URL failed (e.g. CORS / Referer rejection) and we haven't
+        // already retried through the proxy, swap in the proxied URL silently.
+        if (video && url && !proxyRetried.current && !url.includes('/api/proxy')) {
+            proxyRetried.current = true;
+            const proxied = proxyUrl(url);
+            console.info(`[StreamLux] Direct URL failed — retrying via proxy: ${proxied}`);
+            toast.info('Retrying with direct stream proxy...', { position: 'top-center', autoClose: 2500 });
+            setIsLoading(true);
+            setVideoError(false);
+            video.src = proxied;
+            video.load();
+            video.play().catch(() => {});
+            return;
+        }
+
         if (currentSource?.name) resolverService.reportPlaybackFailure(currentSource.name);
-        setVideoError(true); 
-        setIsLoading(false); 
-        toast.error(t("Source unavailable. Please select another server."), { position: "top-center", autoClose: 4000 });
-        if (onError) onError(); 
+        setVideoError(true);
+        setIsLoading(false);
+        toast.error(t('Source unavailable. Please select another server.'), { position: 'top-center', autoClose: 4000 });
+        if (onError) onError();
     };
     
     const handleVideoLoad = () => { 
