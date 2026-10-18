@@ -175,7 +175,7 @@ const Search: FC = () => {
 
         {/* Filters and Count Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-white/5">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <div className="flex items-center gap-2 overflow-x-auto streamlux-category-scroll pb-2">
             <button
               onClick={() => setFilter("all")}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${

@@ -47,9 +47,32 @@ const ProviderRowSlider: React.FC<ProviderRowSliderProps> = ({
         };
     }, [filter, providerValue]);
 
+    const isDragging = useRef(false);
+    const startX = useRef(0);
+    const scrollStart = useRef(0);
+
+    const onMouseDown = (e: React.MouseEvent) => {
+        if (!scrollRef.current) return;
+        isDragging.current = true;
+        startX.current = e.pageX - scrollRef.current.offsetLeft;
+        scrollStart.current = scrollRef.current.scrollLeft;
+    };
+
+    const onMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging.current || !scrollRef.current) return;
+        e.preventDefault();
+        const x = e.pageX - scrollRef.current.offsetLeft;
+        const walk = (x - startX.current) * 1.5;
+        scrollRef.current.scrollLeft = scrollStart.current - walk;
+    };
+
+    const onMouseUp = () => {
+        isDragging.current = false;
+    };
+
     const scroll = (direction: 'left' | 'right') => {
         if (!scrollRef.current) return;
-        const offset = direction === 'left' ? -600 : 600;
+        const offset = direction === 'left' ? -480 : 480;
         scrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
     };
 
@@ -59,7 +82,7 @@ const ProviderRowSlider: React.FC<ProviderRowSliderProps> = ({
 
     return (
         <section className="mb-10 relative group/row">
-            {/* Row Title */}
+            {/* Row Title & Navigation Controls */}
             <div className="flex items-center justify-between mb-3 px-1 md:px-0">
                 <div className="flex items-center gap-2">
                     <div className="w-1.5 h-4 bg-[#FF6B35] rounded-full" />
@@ -71,30 +94,35 @@ const ProviderRowSlider: React.FC<ProviderRowSliderProps> = ({
                     </span>
                 </div>
 
-                {/* Left/Right Buttons */}
-                <div className="hidden md:flex items-center gap-1.5">
+                {/* Left/Right Buttons - Visible on all screen sizes */}
+                <div className="flex items-center gap-1.5">
                     <button
                         onClick={() => scroll('left')}
-                        className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white transition-colors"
+                        className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/15 active:bg-[#FF6B35] active:text-black border border-white/10 flex items-center justify-center text-gray-300 hover:text-white transition-colors"
                         aria-label="Scroll left"
+                        title="Scroll left"
                     >
                         <MdChevronLeft size={18} />
                     </button>
                     <button
                         onClick={() => scroll('right')}
-                        className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white transition-colors"
+                        className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/15 active:bg-[#FF6B35] active:text-black border border-white/10 flex items-center justify-center text-gray-300 hover:text-white transition-colors"
                         aria-label="Scroll right"
+                        title="Scroll right"
                     >
                         <MdChevronRight size={18} />
                     </button>
                 </div>
             </div>
 
-            {/* Slider Container */}
+            {/* Slider Container with visible sleek scrollbar and mouse-drag + touch-swipe */}
             <div
                 ref={scrollRef}
-                className="flex items-center gap-3 md:gap-4 overflow-x-auto scrollbar-none py-2 px-1 scroll-smooth"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                onMouseDown={onMouseDown}
+                onMouseMove={onMouseMove}
+                onMouseUp={onMouseUp}
+                onMouseLeave={onMouseUp}
+                className="flex items-center gap-3 md:gap-4 overflow-x-auto streamlux-category-scroll pb-3 pt-1 px-1 cursor-grab active:cursor-grabbing select-none"
             >
                 {isLoading ? (
                     Array.from({ length: 6 }).map((_, idx) => (

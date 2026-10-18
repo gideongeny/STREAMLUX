@@ -235,7 +235,7 @@ const ProviderWatch: React.FC = () => {
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                        <div className="flex items-center gap-2 overflow-x-auto streamlux-category-scroll pb-2">
                             {sources.map((s, idx) => (
                                 <button
                                     key={idx}
