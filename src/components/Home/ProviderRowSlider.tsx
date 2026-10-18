@@ -8,13 +8,15 @@ interface ProviderRowSliderProps {
     filter: string;
     providerValue: string;
     onFirstItemLoaded?: (post: ProviderPost) => void;
+    onItemsLoaded?: (count: number) => void;
 }
 
 const ProviderRowSlider: React.FC<ProviderRowSliderProps> = ({
     title,
     filter,
     providerValue,
-    onFirstItemLoaded
+    onFirstItemLoaded,
+    onItemsLoaded
 }) => {
     const [posts, setPosts] = useState<ProviderPost[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -26,13 +28,18 @@ const ProviderRowSlider: React.FC<ProviderRowSliderProps> = ({
 
         providerCatalog.getPosts(filter, 1, providerValue).then((data) => {
             if (!isMounted) return;
-            setPosts(data || []);
+            const valid = data || [];
+            setPosts(valid);
             setIsLoading(false);
-            if (data && data.length > 0 && onFirstItemLoaded) {
-                onFirstItemLoaded(data[0]);
+            if (onItemsLoaded) onItemsLoaded(valid.length);
+            if (valid.length > 0 && onFirstItemLoaded) {
+                onFirstItemLoaded(valid[0]);
             }
         }).catch(() => {
-            if (isMounted) setIsLoading(false);
+            if (isMounted) {
+                setIsLoading(false);
+                if (onItemsLoaded) onItemsLoaded(0);
+            }
         });
 
         return () => {

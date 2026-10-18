@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BiSearch } from 'react-icons/bi';
 import { MdClose, MdCheckCircle, MdBolt, MdFilterList } from 'react-icons/md';
@@ -85,28 +86,29 @@ const ProviderSelector: React.FC<ProviderSelectorProps> = ({ className = '', onP
             </button>
 
             {/* Provider Modal / Drawer */}
-            <AnimatePresence>
-                {isOpen && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-                        {/* Backdrop */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsOpen(false)}
-                            className="absolute inset-0 bg-black/85 backdrop-blur-md"
-                        />
+            {typeof document !== 'undefined' && createPortal(
+                <AnimatePresence>
+                    {isOpen && (
+                        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-6 overflow-hidden">
+                            {/* Backdrop */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setIsOpen(false)}
+                                className="fixed inset-0 bg-black/85 backdrop-blur-md"
+                            />
 
-                        {/* Modal Box */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                            className="relative w-full max-w-2xl max-h-[85vh] bg-[#0c0d12] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(255,107,53,0.15)] overflow-hidden flex flex-col z-10"
-                        >
-                            {/* Modal Header */}
-                            <div className="p-4 md:p-6 border-b border-white/10 flex items-center justify-between bg-black/40">
+                            {/* Modal Box */}
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                                className="relative w-full max-w-2xl max-h-[85vh] my-auto bg-[#0c0d12] border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(255,107,53,0.25)] overflow-hidden flex flex-col z-10"
+                            >
+                                {/* Modal Header */}
+                                <div className="p-4 md:p-6 border-b border-white/10 flex items-center justify-between bg-black/40">
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-7 h-7 rounded-lg bg-[#FF6B35]/20 flex items-center justify-center text-[#FF6B35]">
@@ -263,7 +265,9 @@ const ProviderSelector: React.FC<ProviderSelectorProps> = ({ className = '', onP
                         </motion.div>
                     </div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence>,
+            document.body
+        )}
         </>
     );
 };

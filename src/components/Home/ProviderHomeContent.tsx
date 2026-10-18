@@ -17,9 +17,12 @@ const ProviderHomeContent: React.FC<ProviderHomeContentProps> = ({ className = '
     const [catalogRows, setCatalogRows] = useState<CatalogRow[]>([]);
     const [heroPost, setHeroPost] = useState<ProviderPost | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [postsCounts, setPostsCounts] = useState<Record<string, number>>({});
 
     const loadCatalog = (providerVal: string) => {
         setIsLoading(true);
+        setPostsCounts({});
+        setHeroPost(null);
         providerCatalog.getCatalog(providerVal).then((rows) => {
             setCatalogRows(rows && rows.length > 0 ? rows : [{ title: 'Featured Content', filter: '' }]);
             setIsLoading(false);
@@ -35,7 +38,6 @@ const ProviderHomeContent: React.FC<ProviderHomeContentProps> = ({ className = '
         const handleProviderChange = (e: any) => {
             const newProvider = e.detail || providerCatalog.getActiveProvider();
             setActiveProvider(newProvider);
-            setHeroPost(null);
             loadCatalog(newProvider.value);
         };
 
@@ -173,15 +175,45 @@ const ProviderHomeContent: React.FC<ProviderHomeContentProps> = ({ className = '
                         ))}
                     </div>
                 ) : (
-                    catalogRows.map((row, idx) => (
-                        <ProviderRowSlider
-                            key={`${activeProvider.value}-${row.filter || idx}`}
-                            title={row.title}
-                            filter={row.filter}
-                            providerValue={activeProvider.value}
-                            onFirstItemLoaded={idx === 0 && !heroPost ? (post) => setHeroPost(post) : undefined}
-                        />
-                    ))
+                    <>
+                        {catalogRows.map((row, idx) => (
+                            <ProviderRowSlider
+                                key={`${activeProvider.value}-${row.filter || idx}`}
+                                title={row.title}
+                                filter={row.filter}
+                                providerValue={activeProvider.value}
+                                onFirstItemLoaded={idx === 0 && !heroPost ? (post) => setHeroPost(post) : undefined}
+                                onItemsLoaded={(count) => {
+                                    setPostsCounts((prev) => ({ ...prev, [row.filter || String(idx)]: count }));
+                                }}
+                            />
+                        ))}
+
+                        {/* Fallback card if provider has 0 titles in its current catalog */}
+                        {Object.keys(postsCounts).length >= catalogRows.length &&
+                         Object.values(postsCounts).reduce((a, b) => a + b, 0) === 0 &&
+                         catalogRows.length > 0 && (
+                            <div className="py-16 px-6 text-center rounded-2xl bg-white/[0.02] border border-white/5 my-6 flex flex-col items-center justify-center max-w-xl mx-auto shadow-2xl">
+                                <div className="w-12 h-12 rounded-full bg-[#FF6B35]/20 text-[#FF6B35] flex items-center justify-center mb-4">
+                                    <MdBolt size={24} />
+                                </div>
+                                <h3 className="text-lg font-black text-white mb-2">Connecting to {activeProvider.display_name}...</h3>
+                                <p className="text-xs text-gray-400 mb-6 max-w-md">
+                                    This provider is currently synchronizing its catalog. You can reload or choose from 35 other high-speed direct engines like MultiStream, MoviesDrive, or Vega.
+                                </p>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => loadCatalog(activeProvider.value)}
+                                        className="px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-colors"
+                                    >
+                                        <MdRefresh size={16} />
+                                        <span>Retry</span>
+                                    </button>
+                                    <ProviderSelector />
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

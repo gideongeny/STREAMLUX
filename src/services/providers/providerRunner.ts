@@ -1,5 +1,6 @@
 import { ProviderExtension, StreamSource, MediaPlayRequest } from './types';
 import { providerContext } from './providerContext';
+import { proxyUrl } from '../corsProxy';
 
 // Primary CDN and GitHub raw fallbacks for Vega Zenda-Cross providers
 const PROVIDER_BASES = [
@@ -57,6 +58,61 @@ export const fetchProviderModule = async (providerValue: string, moduleName: str
 };
 
 /**
+ * Proxied fetch implementation to bypass browser CORS restrictions and forbidden headers for provider scripts
+ */
+export const providerFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    let url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+
+    if (typeof window !== 'undefined' && (url.startsWith('http://') || url.startsWith('https://'))) {
+        const isLocal = url.includes(window.location.host);
+        const isCORSAllowed =
+            url.includes('raw.githubusercontent.com') ||
+            url.includes('cdn.jsdelivr.net') ||
+            url.includes('fastly.jsdelivr.net') ||
+            url.includes('cinemeta-catalogs.strem.io');
+
+        if (!isLocal && !isCORSAllowed) {
+            let referer = '';
+            if (init?.headers) {
+                if (typeof (init.headers as any).get === 'function') {
+                    referer = (init.headers as any).get('Referer') || (init.headers as any).get('referer') || '';
+                } else {
+                    referer = (init.headers as any)['Referer'] || (init.headers as any)['referer'] || '';
+                }
+            }
+            url = proxyUrl(url) + (referer ? `&referer=${encodeURIComponent(referer)}` : '');
+        }
+    }
+
+    if (typeof window !== 'undefined' && init?.headers) {
+        // Strip forbidden headers that browsers refuse in fetch
+        try {
+            const cleanHeaders: Record<string, string> = {};
+            if (typeof (init.headers as any).forEach === 'function') {
+                (init.headers as any).forEach((val: string, key: string) => {
+                    const lk = key.toLowerCase();
+                    if (lk !== 'user-agent' && lk !== 'referer' && lk !== 'host' && lk !== 'cookie') {
+                        cleanHeaders[key] = val;
+                    }
+                });
+            } else {
+                for (const [k, v] of Object.entries(init.headers)) {
+                    const lk = k.toLowerCase();
+                    if (lk !== 'user-agent' && lk !== 'referer' && lk !== 'host' && lk !== 'cookie') {
+                        cleanHeaders[k] = String(v);
+                    }
+                }
+            }
+            return window.fetch(url, { ...init, headers: cleanHeaders });
+        } catch {
+            return window.fetch(url, { signal: init.signal });
+        }
+    }
+
+    return fetch(url, init);
+};
+
+/**
  * Execute a provider module safely in browser context
  */
 export const executeProvider = async (
@@ -68,7 +124,15 @@ export const executeProvider = async (
         const exports: Record<string, any> = {};
         const module = { exports };
 
-        // Evaluate provider code in isolated scope
+        const providerGlobal = {
+            fetch: providerFetch,
+            axios: providerContext.axios,
+            cheerio: providerContext.cheerio,
+            commonHeaders: providerContext.commonHeaders,
+            getBaseUrl: providerContext.getBaseUrl,
+        };
+
+        // Evaluate provider code in isolated scope with proxied fetch & providerGlobal
         const runner = new Function(
             'exports',
             'module',
@@ -80,6 +144,8 @@ export const executeProvider = async (
             'setInterval',
             'clearInterval',
             'providerContext',
+            'providerGlobal',
+            'fetch',
             `"use strict";\n${code}`
         );
 
@@ -93,7 +159,9 @@ export const executeProvider = async (
             clearTimeout,
             setInterval,
             clearInterval,
-            providerContext
+            providerContext,
+            providerGlobal,
+            providerFetch
         );
 
         const exportedFunc =

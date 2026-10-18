@@ -24,11 +24,26 @@ const createWebAxios = (): AxiosInstance => {
             const url = config.url;
             const isAbsolute = url.startsWith('http://') || url.startsWith('https://');
             const isLocal = isAbsolute && url.includes(window.location.host);
+            const isCORSAllowed =
+                url.includes('raw.githubusercontent.com') ||
+                url.includes('cdn.jsdelivr.net') ||
+                url.includes('fastly.jsdelivr.net') ||
+                url.includes('cinemeta-catalogs.strem.io');
 
-            if (isAbsolute && !isLocal) {
+            if (isAbsolute && !isLocal && !isCORSAllowed) {
                 // Route through CORS proxy with referer parameter if provided
                 const referer = config.headers?.['Referer'] || config.headers?.['referer'];
                 config.url = proxyUrl(url) + (referer ? `&referer=${encodeURIComponent(String(referer))}` : '');
+            }
+
+            // Remove unsafe headers that browsers refuse or complain about
+            if (config.headers) {
+                delete (config.headers as any)['User-Agent'];
+                delete (config.headers as any)['user-agent'];
+                delete (config.headers as any)['Referer'];
+                delete (config.headers as any)['referer'];
+                delete (config.headers as any)['Host'];
+                delete (config.headers as any)['host'];
             }
         }
         return config;
