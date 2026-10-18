@@ -29,6 +29,8 @@ export interface VideoSource {
     url: string;
     quality?: string;
     type?: 'embed' | 'direct' | 'hls';
+    subtitles?: any[];
+    headers?: Record<string, string>;
 }
 
 interface AudioTrackInfo {
@@ -208,6 +210,23 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
 
     const currentSource = normalizedSources[currentIndex];
 
+    const mergedSubtitles = React.useMemo(() => {
+        const list: SubtitleTrack[] = [...(subtitleTracks || [])];
+        if (currentSource?.subtitles && Array.isArray(currentSource.subtitles)) {
+            currentSource.subtitles.forEach((sub: any, i: number) => {
+                const src = sub.uri || sub.file || sub.url;
+                if (src && !list.some(existing => existing.src === src)) {
+                    list.push({
+                        src,
+                        label: sub.title || sub.label || sub.language || `Subtitle ${i + 1}`,
+                        language: sub.language || sub.lang || 'en'
+                    });
+                }
+            });
+        }
+        return list;
+    }, [subtitleTracks, currentSource]);
+
     // ── Fullscreen controls auto-hide ──────────────────────────────
     const resetHideTimer = useCallback(() => {
         setControlsVisible(true);
@@ -367,6 +386,14 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                     enableWorker: true,
                     lowLatencyMode: true,
                     backBufferLength: 60 * 1.5,
+                    xhrSetup: (xhr) => {
+                        const hdrs = (currentSource as any)?.headers;
+                        if (hdrs && typeof hdrs === 'object') {
+                            Object.entries(hdrs).forEach(([k, v]) => {
+                                try { xhr.setRequestHeader(k, String(v)); } catch {}
+                            });
+                        }
+                    },
                     p2pConfig: {
                         logLevel: 'error',
                     }
@@ -829,8 +856,15 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                         onTouchMove={handleTouchMove}
                         onTouchEnd={handleTouchEnd}
                     >
-                        {subtitleTracks.map((track) => (
-                            <track key={track.language} kind="subtitles" src={track.src} srcLang={track.language} label={track.label} default={track.language === 'en'} />
+                        {mergedSubtitles.map((track, idx) => (
+                            <track 
+                                key={`${track.language}-${idx}`} 
+                                kind="subtitles" 
+                                src={track.src} 
+                                srcLang={track.language} 
+                                label={track.label} 
+                                default={track.language === 'en' || track.language === 'English'} 
+                            />
                         ))}
                     </video>
 
@@ -900,7 +934,45 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
                             </div>
                         )}
 
-
+                        {mergedSubtitles.length > 0 && (
+                            <div className="relative">
+                                <button onClick={(e) => { e.stopPropagation(); setShowSubtitleMenu(!showSubtitleMenu); }} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur border border-white/10 rounded-lg text-white hover:bg-black/90 transition text-xs font-medium">
+                                    <FaClosedCaptioning size={13} />
+                                    <span>{activeSubtitle !== 'off' ? (mergedSubtitles.find(s => s.language === activeSubtitle)?.label || 'CC On') : 'CC'}</span>
+                                </button>
+                                <AnimatePresence>
+                                    {showSubtitleMenu && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                                            className="absolute bottom-full right-0 mb-3 w-48 bg-[#0a0a1a]/95 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-3 z-[100] max-h-60 overflow-y-auto"
+                                        >
+                                            <div className="px-4 pb-2 text-[10px] text-gray-500 uppercase tracking-widest font-black flex items-center gap-2 border-b border-white/5 mb-2">
+                                                <FaClosedCaptioning className="text-primary" /> {t('Subtitles')}
+                                            </div>
+                                            <button 
+                                                onClick={() => handleSubtitleChange('off')} 
+                                                className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-center justify-between ${activeSubtitle === 'off' ? 'text-primary bg-primary/10 font-bold' : 'text-gray-300 hover:bg-white/5'}`}
+                                            >
+                                                <span>{t('Off')}</span>
+                                                {activeSubtitle === 'off' && <span className="w-2 h-2 rounded-full bg-primary" />}
+                                            </button>
+                                            {mergedSubtitles.map((sub, idx) => (
+                                                <button 
+                                                    key={`${sub.language}-${idx}`} 
+                                                    onClick={() => handleSubtitleChange(sub.language)} 
+                                                    className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-center justify-between ${activeSubtitle === sub.language ? 'text-primary bg-primary/10 font-bold' : 'text-gray-300 hover:bg-white/5'}`}
+                                                >
+                                                    <span className="truncate pr-2">{sub.label}</span>
+                                                    {activeSubtitle === sub.language && <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
+                                                </button>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        )}
                     </div>
                 </div>
             ) : (

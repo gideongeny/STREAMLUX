@@ -158,12 +158,15 @@ const FilmWatch: FunctionComponent<FilmWatchProps & getWatchReturnedType> = ({
           name: s.name,
           url: s.url,
           quality: s.quality,
-          type: s.type
+          type: s.type,
+          subtitles: s.subtitles,
+          headers: s.headers
         })));
-        // Default to VidSrc.me — the preferred first server
+        // Default to first direct Vega provider (⚡) if available, otherwise VidSrc.me or first source
+        const directVegaIdx = resolved.findIndex(s => s.name.startsWith('⚡') || s.type === 'direct');
         const vidSrcMeIdx = resolved.findIndex(s => s.name === 'VidSrc.me');
         const vidKingIdx = resolved.findIndex(s => s.name === 'VidKing');
-        const defaultIdx = vidSrcMeIdx >= 0 ? vidSrcMeIdx : vidKingIdx >= 0 ? vidKingIdx : 0;
+        const defaultIdx = directVegaIdx >= 0 ? directVegaIdx : (vidSrcMeIdx >= 0 ? vidSrcMeIdx : (vidKingIdx >= 0 ? vidKingIdx : 0));
         setSelectedSourceIndex(defaultIdx);
       } catch (error) {
         console.error("Failed to resolve sources:", error);

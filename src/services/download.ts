@@ -179,6 +179,23 @@ export class DownloadService {
       progress.progress = 20;
       onProgress?.(progress);
 
+      // STEP 0: Direct Video File Check (.mp4, .mkv, .webm, etc.)
+      const primaryUrl = downloadInfo.sources[0];
+      if (primaryUrl && (/\.(mp4|mkv|webm|avi)(\?.*)?$/i.test(primaryUrl) || primaryUrl.includes('/download/'))) {
+        progress.message = "Direct video stream detected. Starting download...";
+        progress.progress = 100;
+        progress.status = "completed";
+        onProgress?.(progress);
+        const a = document.createElement('a');
+        a.href = primaryUrl;
+        a.download = this.generateFilename(downloadInfo);
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        return;
+      }
+
       // STEP 1: Scraper Link Check (Highest Reliability if available)
       const { hasDownloads, enrichWithDownloads } = require('./hybridContent');
       if (hasDownloads(downloadInfo.title)) {

@@ -1,6 +1,7 @@
 import { getBackendBase } from "./download";
 import { doc, getDoc, setDoc, updateDoc, increment } from "firebase/firestore";
 import { db } from "../shared/firebase";
+import { extensionManager } from "./providers/ExtensionManager";
 // Proxy Helpers - backend expects /api/proxy, /api/download, /api/resolve
 const getApiBase = () => getBackendBase() + "/api";
 
@@ -47,8 +48,10 @@ export interface ResolvedSource {
     quality: string;
     speed: "fast" | "medium" | "slow";
     status: "active" | "slow" | "down" | "checking";
-    type: "embed" | "direct";
+    type: "embed" | "direct" | "hls";
     priority: number; // Lower = higher priority
+    subtitles?: any[];
+    headers?: Record<string, string>;
 }
 
 export class ResolverService {
@@ -261,6 +264,34 @@ export class ResolverService {
         }
 
         let sources: ResolvedSource[] = [];
+
+        // 0. Vega / Zenda-Cross Multi-Providers (Priority: Top / Direct Ad-Free)
+        try {
+            const providerStreams = await extensionManager.resolveAllStreams({
+                tmdbId: id,
+                mediaType,
+                season,
+                episode,
+                title,
+                imdbId
+            });
+
+            providerStreams.forEach((stream, idx) => {
+                sources.push({
+                    name: `⚡ ${stream.server}`,
+                    url: stream.link,
+                    quality: stream.quality || "1080p",
+                    speed: "fast",
+                    status: "active",
+                    type: "direct",
+                    priority: -100 + idx, // Absolute top priority
+                    subtitles: stream.subtitles,
+                    headers: stream.headers
+                });
+            });
+        } catch (e) {
+            console.warn("[StreamLux] Vega provider resolution failed/skipped", e);
+        }
 
         // 0. Raw API Extractors (Priority: Maximum)
         // Consumet API (FlixHQ / Zoro) provides direct .m3u8 links
