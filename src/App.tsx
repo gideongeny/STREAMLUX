@@ -76,7 +76,6 @@ import MobileBottomNav from "./components/Navigation/MobileBottomNav";
 import ErrorBoundary from "./components/Common/ErrorBoundary";
 import GeniusAI from "./components/Common/GeniusAI";
 import CookieConsent from "./components/Common/CookieConsent";
-import OnboardingOverlay from "./components/Common/OnboardingOverlay";
 import GlobalAudioPlayer from "./features/music/GlobalAudioPlayer";
 import { AdsterraNativeBanner } from "./components/AdsterraNativeBanner";
 
@@ -593,7 +592,6 @@ function App() {
           <MobileBottomNav />
           <GeniusAI />
           <CookieConsent />
-          <OnboardingOverlay />
           <GlobalAudioPlayer />
         </div>
 
