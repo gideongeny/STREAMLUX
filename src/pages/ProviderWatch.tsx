@@ -34,6 +34,55 @@ const ProviderWatch: React.FC = () => {
         setIsLoading(true);
         setErrorMsg(null);
 
+        let linkParsed: any = null;
+        try {
+            linkParsed = JSON.parse(link);
+        } catch {}
+        const tmdbId = linkParsed?.tmdbId || linkParsed?.id || undefined;
+        const imdbId = linkParsed?.imdbId || undefined;
+        const season = Number(linkParsed?.season) || 1;
+        const episode = Number(linkParsed?.episode) || 1;
+        const cleanTitle = (linkParsed?.title || title.split(' - ')[0]).trim();
+
+        const fetchBackupStreams = async () => {
+            try {
+                const backups = await extensionManager.resolveAllStreams({
+                    title: cleanTitle,
+                    tmdbId: tmdbId ? Number(tmdbId) : undefined,
+                    imdbId,
+                    mediaType,
+                    season,
+                    episode,
+                });
+
+                if (backups && backups.length > 0) {
+                    const mappedBackups: VideoSource[] = backups.map((s, idx) => {
+                        const isEmbed = s.type === 'embed' || /embed|\/e\/|\/v\/|player\.|autoembed|vidsrc|2embed|smashy/i.test(s.link);
+                        const isHls = s.type === 'hls' || s.link.includes('.m3u8');
+                        const serverName = s.server ? `Backup: ${s.server}` : `Backup Server ${idx + 1} (${s.quality || '1080p'})`;
+                        return {
+                            name: serverName,
+                            url: s.link,
+                            quality: s.quality || '1080p',
+                            type: (isEmbed ? 'embed' : (isHls ? 'hls' : 'direct')) as any,
+                            subtitles: s.subtitles || [],
+                            headers: s.headers,
+                        };
+                    });
+
+                    setSources((prev) => {
+                        const existingUrls = new Set(prev.map(p => p.url));
+                        const uniqueBackups = mappedBackups.filter(b => !existingUrls.has(b.url));
+                        return [...prev, ...uniqueBackups];
+                    });
+                    return mappedBackups;
+                }
+            } catch (fbErr) {
+                console.warn('Backup stream resolution error:', fbErr);
+            }
+            return [];
+        };
+
         providerCatalog.getStream(link, mediaType, provider).then(async (data) => {
             if (data && data.length > 0) {
                 setRawSources(data);
@@ -52,46 +101,32 @@ const ProviderWatch: React.FC = () => {
                 setSources(mappedSources);
                 setSelectedIdx(0);
                 setIsLoading(false);
+
+                // Fetch resilient backup servers in the background so failover is instantaneous
+                fetchBackupStreams().catch(() => {});
                 return;
             }
 
-            // Fallback: search other providers for working streams
-            try {
-                const cleanTitle = title.split(' - ')[0].trim();
-                const fallbackStreams = await extensionManager.resolveAllStreams({
-                    title: cleanTitle,
-                    mediaType,
-                    season: 1,
-                    episode: 1,
-                });
-
-                if (fallbackStreams && fallbackStreams.length > 0) {
-                    setRawSources(fallbackStreams);
-                    const mapped = fallbackStreams.map((s, idx) => {
-                        const isEmbed = s.type === 'embed' || /embed|\/e\/|\/v\/|player\.|autoembed|vidsrc|2embed|smashy/i.test(s.link);
-                        const isHls = s.type === 'hls' || s.link.includes('.m3u8');
-                        return {
-                            name: s.server || `Backup ${idx + 1} (${s.quality || '1080p'})`,
-                            url: s.link,
-                            quality: s.quality || '1080p',
-                            type: (isEmbed ? 'embed' : (isHls ? 'hls' : 'direct')) as any,
-                            subtitles: s.subtitles || [],
-                            headers: s.headers,
-                        };
-                    });
-                    setSources(mapped);
-                    setSelectedIdx(0);
-                    setIsLoading(false);
-                    return;
-                }
-            } catch (fbErr) {
-                console.warn('Fallback stream resolution error:', fbErr);
+            // Primary provider returned 0 streams, immediately resolve backups
+            const fallbackMapped = await fetchBackupStreams();
+            if (fallbackMapped.length > 0) {
+                setSelectedIdx(0);
+                setIsLoading(false);
+                return;
             }
 
             setErrorMsg('No direct streams returned by this provider. Try another server or provider.');
             setIsLoading(false);
-        }).catch((err) => {
-            console.error('Failed to extract stream:', err);
+        }).catch(async (err) => {
+            console.error('Failed to extract stream from primary provider:', err);
+            // Attempt backup resolution on extraction failure
+            const fallbackMapped = await fetchBackupStreams();
+            if (fallbackMapped.length > 0) {
+                setSelectedIdx(0);
+                setIsLoading(false);
+                return;
+            }
+
             setErrorMsg('Extraction error. Please try another provider.');
             setIsLoading(false);
         });

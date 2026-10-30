@@ -526,9 +526,26 @@ const StreamLuxPlayer: React.FC<VideoPlayerProps> = ({
         }
 
         if (currentSource?.name) resolverService.reportPlaybackFailure(currentSource.name);
+
+        // Auto-failover to next server if multiple sources exist so the user never gets stuck on an error screen
+        if (normalizedSources.length > 1 && currentIndex < normalizedSources.length - 1) {
+            const nextIdx = currentIndex + 1;
+            const nextSource = normalizedSources[nextIdx];
+            console.info(`[StreamLux] Playback failed for ${currentSource?.name || 'server'} — auto-advancing to server ${nextIdx + 1} (${nextSource?.name})`);
+            toast.info(`Server "${currentSource?.name || 'Current'}" unavailable. Auto-switching to ${nextSource?.name || 'next server'}...`, {
+                position: 'top-center',
+                autoClose: 2500,
+            });
+            proxyRetried.current = false;
+            setVideoError(false);
+            setIsLoading(true);
+            setCurrentIndex(nextIdx);
+            return;
+        }
+
         setVideoError(true);
         setIsLoading(false);
-        toast.error(t('Source unavailable. Please select another server.'), { position: 'top-center', autoClose: 4000 });
+        toast.error(t('All servers failed. Please try another provider.'), { position: 'top-center', autoClose: 4000 });
         if (onError) onError();
     };
     

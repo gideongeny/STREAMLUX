@@ -3,28 +3,34 @@ import { providerContext } from './providerContext';
 import { proxyUrl } from '../corsProxy';
 
 // Primary CDN and GitHub raw fallbacks for Vega Zenda-Cross providers
+// Raw GitHub is primary to ensure real-time scraper updates matching Android app
 const PROVIDER_BASES = [
-    'https://cdn.jsdelivr.net/gh/Zenda-Cross/vega-providers@main/dist',
+    'https://raw.githubusercontent.com/Zenda-Cross/vega-providers/main/dist',
     'https://raw.githubusercontent.com/Zenda-Cross/vega-providers/refs/heads/main/dist',
+    'https://cdn.jsdelivr.net/gh/Zenda-Cross/vega-providers@main/dist',
     'https://fastly.jsdelivr.net/gh/Zenda-Cross/vega-providers@main/dist'
 ];
 
 // Memory cache for fetched provider code
 const moduleCache = new Map<string, string>();
+const SCRIPT_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 /**
  * Fetch module code with multi-mirror failover and caching
  */
 export const fetchProviderModule = async (providerValue: string, moduleName: string = 'stream'): Promise<string | null> => {
     const cacheKey = `${providerValue}_${moduleName}`;
+    const now = Date.now();
+
     if (moduleCache.has(cacheKey)) {
         return moduleCache.get(cacheKey)!;
     }
 
-    // Check localStorage cache
+    // Check localStorage cache with 24-hour expiration
     try {
         const stored = localStorage.getItem(`streamlux_mod_${cacheKey}`);
-        if (stored) {
+        const storedTs = parseInt(localStorage.getItem(`streamlux_mod_ts_${cacheKey}`) || '0', 10);
+        if (stored && (now - storedTs < SCRIPT_CACHE_TTL_MS)) {
             moduleCache.set(cacheKey, stored);
             return stored;
         }
@@ -45,6 +51,7 @@ export const fetchProviderModule = async (providerValue: string, moduleName: str
                     moduleCache.set(cacheKey, code);
                     try {
                         localStorage.setItem(`streamlux_mod_${cacheKey}`, code);
+                        localStorage.setItem(`streamlux_mod_ts_${cacheKey}`, String(now));
                     } catch {}
                     return code;
                 }
@@ -53,6 +60,15 @@ export const fetchProviderModule = async (providerValue: string, moduleName: str
             // Try next mirror
         }
     }
+
+    // If fetch failed but we have stale cache, use it as fallback rather than failing completely
+    try {
+        const stale = localStorage.getItem(`streamlux_mod_${cacheKey}`);
+        if (stale) {
+            moduleCache.set(cacheKey, stale);
+            return stale;
+        }
+    } catch {}
 
     return null;
 };
@@ -149,10 +165,17 @@ export const executeProvider = async (
             `"use strict";\n${code}`
         );
 
+        const customRequire = (name: string) => {
+            if (name === 'cheerio') return providerContext.cheerio;
+            if (name === 'axios') return providerContext.axios;
+            if (name === 'crypto' || name === 'crypto-js') return providerContext.Crypto;
+            return {};
+        };
+
         runner(
             exports,
             module,
-            () => ({}),
+            customRequire,
             console,
             Promise,
             setTimeout,
@@ -174,11 +197,29 @@ export const executeProvider = async (
             exports?.stream;
 
         if (typeof exportedFunc === 'function') {
-            return await exportedFunc({
+            const link = args?.link || args?.id || '';
+            const type = args?.type || args?.mediaType || 'movie';
+            const signal = args?.signal || new AbortController().signal;
+            const fullArgs = {
                 ...args,
+                link,
+                type,
                 providerContext,
-                signal: new AbortController().signal
-            });
+                signal,
+                isDownload: Boolean(args?.isDownload),
+            };
+
+            try {
+                const res = await exportedFunc(fullArgs);
+                if (res !== undefined && res !== null) return res;
+            } catch (objErr) {
+                // If provider expected positional arguments: (link, type, signal)
+                try {
+                    return await exportedFunc(link, type, signal);
+                } catch {
+                    throw objErr;
+                }
+            }
         }
         if (exportedFunc !== undefined && exportedFunc !== null) {
             return exportedFunc;
