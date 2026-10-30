@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdBolt, MdArrowBack, MdDownload, MdRefresh, MdErrorOutline } from 'react-icons/md';
@@ -12,6 +12,7 @@ import Footer from '../components/Footer/Footer';
 import { downloadService } from '../services/download';
 import { proxyUrl } from '../services/corsProxy';
 import { toast } from 'react-toastify';
+import { addToLocalHistory } from '../services/localWatchHistory';
 
 const ProviderWatch: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -22,12 +23,46 @@ const ProviderWatch: React.FC = () => {
     const provider = searchParams.get('provider') || providerCatalog.getActiveProvider().value;
     const mediaType = (searchParams.get('type') || 'movie') as 'movie' | 'tv';
     const poster = searchParams.get('poster') || '';
+    // Optional TMDB metadata passed through URL for richer history entries
+    const tmdbIdParam = searchParams.get('tmdbId') || '';
+    const posterPathParam = searchParams.get('posterPath') || '';
+    const backdropParam = searchParams.get('backdrop') || '';
+    const releaseDateParam = searchParams.get('releaseDate') || '';
+    const overviewParam = searchParams.get('overview') || '';
+    const ratingParam = searchParams.get('rating') || '';
 
     const [sources, setSources] = useState<VideoSource[]>([]);
     const [rawSources, setRawSources] = useState<StreamSource[]>([]);
     const [selectedIdx, setSelectedIdx] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    // Track whether we've already logged this play session to history
+    const historyRecorded = React.useRef(false);
+
+    /** Save a history record once streams resolve successfully */
+    const recordToHistory = (streamTitle: string) => {
+        if (historyRecorded.current) return;
+        historyRecorded.current = true;
+
+        let linkParsed: any = null;
+        try { linkParsed = JSON.parse(link); } catch {}
+
+        const resolvedId = tmdbIdParam || linkParsed?.tmdbId || linkParsed?.id || streamTitle;
+        const cleanTitle = streamTitle.split(' - ')[0].trim();
+
+        addToLocalHistory({
+            id: resolvedId,
+            title: cleanTitle,
+            poster_path: posterPathParam || (poster.replace('https://image.tmdb.org/t/p/w342', '') || ''),
+            backdrop_path: backdropParam || '',
+            media_type: mediaType === 'tv' ? 'tv' : 'movie',
+            provider,
+            vote_average: ratingParam ? parseFloat(ratingParam) : undefined,
+            release_date: mediaType === 'movie' ? releaseDateParam : undefined,
+            first_air_date: mediaType === 'tv' ? releaseDateParam : undefined,
+            overview: overviewParam || undefined,
+        });
+    };
 
     const loadStreams = () => {
         if (!link) return;
@@ -102,6 +137,9 @@ const ProviderWatch: React.FC = () => {
                 setSelectedIdx(0);
                 setIsLoading(false);
 
+                // Record to history now that streams are confirmed working
+                recordToHistory(title);
+
                 // Fetch resilient backup servers in the background so failover is instantaneous
                 fetchBackupStreams().catch(() => {});
                 return;
@@ -112,6 +150,8 @@ const ProviderWatch: React.FC = () => {
             if (fallbackMapped.length > 0) {
                 setSelectedIdx(0);
                 setIsLoading(false);
+                // Record even when we fell back to backup providers
+                recordToHistory(title);
                 return;
             }
 
@@ -124,6 +164,7 @@ const ProviderWatch: React.FC = () => {
             if (fallbackMapped.length > 0) {
                 setSelectedIdx(0);
                 setIsLoading(false);
+                recordToHistory(title);
                 return;
             }
 
